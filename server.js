@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 require('dotenv').config();
 
 // Dynamic Safe Firebase Admin SDK Loader (Prevents crashes in serverless bundling)
@@ -307,6 +307,89 @@ function saveUsersData(data) {
       }
     })();
   }
+}
+
+// Synchronize HTML default attributes in public/index.html to match active settings
+function updateHtmlDefaults(settings) {
+  try {
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    if (!fs.existsSync(htmlPath)) return;
+    let html = fs.readFileSync(htmlPath, 'utf8');
+
+    // 1. Require Login
+    const reqLogin = settings.requireLogin !== false;
+    html = html.replace(/(<input type="checkbox" id="settingRequireLoginToggle" class="sr-only")[^>]*>/, '$1' + (reqLogin ? ' checked>' : '>'));
+    html = html.replace(/(<input type="checkbox" id="modalRequireLoginToggle" class="sr-only")[^>]*>/, '$1' + (reqLogin ? ' checked>' : '>'));
+    html = html.replace(/(<span id="badgeRequireLoginStatus" class="[^"]*">)[^<]*(<\/span>)/, '$1' + (reqLogin ? 'Protected' : 'Public') + '$2');
+
+    // 2. Allow Registration
+    const allowReg = settings.allowRegistration !== false;
+    html = html.replace(/(<input type="checkbox" id="modalAllowRegistrationToggle" class="sr-only")[^>]*>/, '$1' + (allowReg ? ' checked>' : '>'));
+    html = html.replace(/(<span id="badgeAllowRegistrationStatus" class="[^"]*">)[^<]*(<\/span>)/, '$1' + (allowReg ? 'Open' : 'Closed') + '$2');
+
+    // 3. Admin Approval
+    const reqAppr = settings.requireAdminApproval === true;
+    html = html.replace(/(<input type="checkbox" id="settingRequireApprovalToggle" class="sr-only")[^>]*>/, '$1' + (reqAppr ? ' checked>' : '>'));
+    html = html.replace(/(<input type="checkbox" id="modalRequireApprovalToggle" class="sr-only")[^>]*>/, '$1' + (reqAppr ? ' checked>' : '>'));
+    html = html.replace(/(<span id="badgeRequireApprovalStatus" class="[^"]*">)[^<]*(<\/span>)/, '$1' + (reqAppr ? 'Required' : 'Instant') + '$2');
+
+    // 4. Email Verification
+    const reqEmail = settings.requireEmailVerification === true;
+    html = html.replace(/(<input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only")[^>]*>/, '$1' + (reqEmail ? ' checked>' : '>'));
+    html = html.replace(/(<input type="checkbox" id="modalRequireEmailVerificationToggle" class="sr-only")[^>]*>/, '$1' + (reqEmail ? ' checked>' : '>'));
+    html = html.replace(/(<span id="badgeRequireEmailVerificationStatus" class="[^"]*">)[^<]*(<\/span>)/, '$1' + (reqEmail ? 'Required' : 'Disabled') + '$2');
+
+    fs.writeFileSync(htmlPath, html, 'utf8');
+  } catch (e) {
+    console.warn('[HTML Sync] Warning updating index.html defaults:', e.message);
+  }
+}
+
+// Synchronize Admin Settings and File Changes directly to GitHub Repository
+let gitSyncQueue = Promise.resolve();
+
+function runGitCommand(args) {
+  return new Promise((resolve, reject) => {
+    execFile('git', args, { cwd: __dirname }, (error, stdout, stderr) => {
+      if (error) reject({ error, stdout: (stdout || '').trim(), stderr: (stderr || '').trim() });
+      else resolve({ stdout: (stdout || '').trim(), stderr: (stderr || '').trim() });
+    });
+  });
+}
+
+function syncChangesToGitHub(commitMessage = 'config(admin): update system settings via admin dashboard') {
+  if (isVercel || !fs.existsSync(path.join(__dirname, '.git'))) {
+    return Promise.resolve();
+  }
+
+  gitSyncQueue = gitSyncQueue.then(async () => {
+    try {
+      const filesToStage = ['data/users.json', 'data/radar_watchlist.json', 'public/index.html'].filter(f => fs.existsSync(path.join(__dirname, f)));
+      if (filesToStage.length === 0) return;
+
+      await runGitCommand(['add', ...filesToStage]);
+
+      // Check if there are staged differences
+      try {
+        await runGitCommand(['diff', '--cached', '--quiet']);
+        // No differences to commit
+        return;
+      } catch (diffErr) {
+        // Exit code 1 means changes exist
+        const safeMsg = commitMessage.replace(/[\r\n]+/g, ' ').trim();
+        const commitRes = await runGitCommand(['commit', '-m', safeMsg]);
+        console.log(`[GitHub Sync] 💾 Committed changes:\n${commitRes.stdout}`);
+        const pushRes = await runGitCommand(['push', 'origin', 'main']);
+        console.log(`[GitHub Sync] 🚀 Synced changes to GitHub repo (${commitMessage}):\n${pushRes.stdout || pushRes.stderr}`);
+      }
+    } catch (err) {
+      console.warn('[GitHub Sync] ⚠️ Git push notice:', err.stderr || err.error?.message || err.message);
+    }
+  }).catch(err => {
+    console.warn('[GitHub Sync] ⚠️ Git sync promise error:', err.message);
+  });
+
+  return gitSyncQueue;
 }
 
 // Initialize Firebase upon startup
@@ -2744,6 +2827,9 @@ app.post('/api/users/add', requireAdmin, async (req, res) => {
   // Auto-sync new user to Firebase
   await syncUserToFirebase(newUser, 'update', cleanPassword);
 
+  // Auto-sync new user directly to GitHub repository
+  syncChangesToGitHub(`admin: add user @${cleanUsername} [via Admin Dashboard]`);
+
   res.json({
     success: true,
     message: `User ${cleanUsername} created successfully in local DB and Firebase.`,
@@ -2781,6 +2867,9 @@ app.post('/api/users/edit', requireAdmin, async (req, res) => {
 
   // Auto-sync updated user to Firebase
   await syncUserToFirebase(user, 'update');
+
+  // Auto-sync edit directly to GitHub repository
+  syncChangesToGitHub(`admin: update user @${user.username} [via Admin Dashboard]`);
 
   res.json({
     success: true,
@@ -2823,6 +2912,9 @@ app.post('/api/users/delete', requireAdmin, async (req, res) => {
   // Auto-delete from Cloud Firestore and Firebase Auth
   await syncUserToFirebase(userToDelete, 'delete');
 
+  // Auto-sync deletion directly to GitHub repository
+  syncChangesToGitHub(`admin: delete user @${userToDelete.username} [via Admin Dashboard]`);
+
   res.json({ success: true, message: `User "${userToDelete.username}" removed from local DB and Firebase.` });
 });
 
@@ -2843,6 +2935,9 @@ app.post('/api/users/toggle-status', requireAdmin, async (req, res) => {
 
   // Auto-sync status change to Firebase Auth & Firestore
   await syncUserToFirebase(user, 'update');
+
+  // Auto-sync status change directly to GitHub repository
+  syncChangesToGitHub(`admin: set status of @${user.username} to ${user.status} [via Admin Dashboard]`);
 
   res.json({
     success: true,
@@ -2870,6 +2965,9 @@ app.post('/api/users/approve', requireAdmin, async (req, res) => {
 
   // Auto-sync active status to Firebase Auth & Firestore
   await syncUserToFirebase(user, 'update');
+
+  // Auto-sync user approval directly to GitHub repository
+  syncChangesToGitHub(`admin: approve user @${user.username} [via Admin Dashboard]`);
 
   res.json({
     success: true,
@@ -2900,10 +2998,13 @@ app.post('/api/users/update-password', requireAdmin, async (req, res) => {
   // Auto-sync password update to Firebase Auth & Firestore
   await syncUserToFirebase(user, 'update', cleanPassword);
 
+  // Auto-sync password update directly to GitHub repository
+  syncChangesToGitHub(`admin: update password for @${user.username} [via Admin Dashboard]`);
+
   res.json({ success: true, message: `Password for ${user.username} updated in local DB and Firebase.` });
 });
 
-// 10. Update Access Control Settings (Admin-only + Auto Firebase Sync)
+// 10. Update Access Control Settings (Admin-only + Auto Firebase & GitHub Sync)
 app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   const { requireLogin, requireAdminApproval, requireEmailVerification, allowRegistration, authNotice, authNoticeEnabled } = req.body;
   const data = loadUsersData();
@@ -2929,6 +3030,9 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   }
   saveUsersData(data);
 
+  // Update HTML file inline defaults for offline/static consistency
+  updateHtmlDefaults(data.settings);
+
   // Sync settings to Cloud Firestore if connected
   if (firestoreDb && isFirebaseConnected) {
     try {
@@ -2939,7 +3043,17 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
     }
   }
 
-  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}, EmailVerification=${data.settings.requireEmailVerification !== false}, AllowReg=${data.settings.allowRegistration !== false}, Notice="${data.settings.authNotice || ''}"`);
+  // Auto-sync setting change directly to GitHub repository
+  const summary = [];
+  if (requireLogin !== undefined) summary.push(`Login: ${data.settings.requireLogin ? 'ON' : 'OFF'}`);
+  if (requireAdminApproval !== undefined) summary.push(`Approval: ${data.settings.requireAdminApproval ? 'ON' : 'OFF'}`);
+  if (requireEmailVerification !== undefined) summary.push(`Email Verification: ${data.settings.requireEmailVerification ? 'ON' : 'OFF'}`);
+  if (allowRegistration !== undefined) summary.push(`Signup: ${data.settings.allowRegistration !== false ? 'ON' : 'OFF'}`);
+  if (authNotice !== undefined || authNoticeEnabled !== undefined) summary.push(`Notice: ${data.settings.authNoticeEnabled !== false && data.settings.authNotice ? 'ACTIVE' : 'OFF'}`);
+  const summaryStr = summary.length ? ` (${summary.join(', ')})` : '';
+  syncChangesToGitHub(`config(settings): update access control toggles${summaryStr} [via Admin Dashboard]`);
+
+  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval === true}, EmailVerification=${data.settings.requireEmailVerification === true}, AllowReg=${data.settings.allowRegistration !== false}, Notice="${data.settings.authNotice || ''}"`);
   res.json({
     success: true,
     require_login: data.settings?.requireLogin !== false,

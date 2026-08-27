@@ -1741,10 +1741,41 @@
   <!-- ============================================== -->
   <!-- User Login / Sign In / Registration Modal -->
   <!-- ============================================== -->
-  <div id="userLoginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+  <!-- ============================================== -->
+  <!-- User Login / Sign In / Registration Modal (Redesigned with Firebase Auth) -->
+  <!-- ============================================== -->
+  <div id="userLoginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full max-h-[94vh] flex flex-col p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
       
-      <!-- Login & Register Segmented Tabs -->
+      <!-- Brand Header & Firebase Badge -->
+      <div class="text-center space-y-1.5 pb-1">
+        <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10.5px] font-extrabold text-amber-600 dark:text-amber-400">
+          <i class="fa-solid fa-fire text-amber-500"></i>
+          <span>Firebase Authentication</span>
+        </div>
+        <h3 class="font-black text-lg text-slate-900 dark:text-white tracking-tight">RailSeat Finder BD</h3>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">Real-time Bangladesh Railway Seat Tracker</p>
+      </div>
+
+      <!-- Top Primary Action: 1-Click Google Sign-In -->
+      <button type="button" id="firebaseGoogleSignInBtn" class="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-800 dark:text-slate-100 font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center justify-center space-x-3 cursor-pointer group active:scale-[0.98]">
+        <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span class="font-extrabold">Continue with Google</span>
+      </button>
+
+      <!-- Elegant Divider -->
+      <div class="relative flex py-0.5 items-center">
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+        <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">or with username</span>
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+      </div>
+
+      <!-- Segmented Tabs for Traditional Sign In / Sign Up -->
       <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl shrink-0">
         <button type="button" id="loginTabBtn" class="py-2 rounded-lg font-extrabold text-xs bg-purple-600 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
           <i class="fa-solid fa-right-to-bracket"></i>
@@ -1758,17 +1789,11 @@
 
       <!-- SECTION 1: Sign In -->
       <div id="loginSection" class="space-y-3 flex-1">
-        <div class="text-center space-y-1 pb-1">
-          <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Sign In to RailSeat BD</h3>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">Enter your approved account credentials to view live data</p>
-        </div>
-
-        <!-- Login Form -->
         <form id="userLoginForm" class="space-y-3 text-xs">
           <div>
-            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Username</label>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Username / Email</label>
             <div class="relative">
-              <input type="text" id="loginUsername" placeholder="Enter your username" required
+              <input type="text" id="loginUsername" placeholder="Enter username or email" required
                 class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
               <i class="fa-solid fa-user text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
             </div>
@@ -1778,8 +1803,11 @@
             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
             <div class="relative">
               <input type="password" id="loginPassword" placeholder="••••••••" required
-                class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                class="w-full pl-8 pr-9 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
               <i class="fa-solid fa-key text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+              <button type="button" id="toggleLoginPasswordBtn" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer">
+                <i class="fa-regular fa-eye text-xs"></i>
+              </button>
             </div>
           </div>
 
@@ -1791,26 +1819,9 @@
             </label>
           </div>
 
-          <button type="submit" id="submitLoginBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+          <button type="submit" id="submitLoginBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
             <i class="fa-solid fa-right-to-bracket"></i>
             <span>Sign In to Dashboard</span>
-          </button>
-
-          <!-- Firebase Google Sign-In Option -->
-          <div class="relative flex py-1 items-center">
-            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-            <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-slate-400">or sign in with</span>
-            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-          </div>
-
-          <button type="button" id="firebaseGoogleSignInBtn" class="w-full py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/70 text-slate-800 dark:text-slate-200 font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span>Sign in with Google</span>
           </button>
 
           <p id="loginErrorMsg" class="text-xs text-rose-500 font-semibold text-center min-h-[1rem]"></p>
@@ -1819,15 +1830,10 @@
 
       <!-- SECTION 2: Create Account / Register -->
       <div id="registerSection" class="hidden space-y-3 flex-1">
-        <div class="text-center space-y-1 pb-1">
-          <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Create New Account</h3>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">Register as a Viewer. Admin approval is required before login.</p>
-        </div>
-
         <!-- Security / Approval Banner -->
         <div class="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-[10.5px] text-amber-800 dark:text-amber-300 flex items-start space-x-2">
           <i class="fa-solid fa-shield-halved mt-0.5 shrink-0 text-amber-600"></i>
-          <span><strong>Approval Policy:</strong> Your account will be submitted for 1-time Administrator approval before you can access the live dashboard.</span>
+          <span><strong>Approval Policy:</strong> Your account will be submitted for 1-time Administrator approval before dashboard access is unlocked.</span>
         </div>
 
         <!-- Registration Form -->
@@ -1856,38 +1862,80 @@
               class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
           </div>
 
-          <button type="submit" id="submitRegisterBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+          <button type="submit" id="submitRegisterBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
             <i class="fa-solid fa-user-plus"></i>
             <span>Submit Registration</span>
-          </button>
-
-          <!-- Firebase Google Quick Register Option -->
-          <div class="relative flex py-0.5 items-center">
-            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-            <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-slate-400">or sign up with</span>
-            <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
-          </div>
-
-          <button type="button" id="firebaseGoogleRegisterBtn" class="w-full py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/70 text-slate-800 dark:text-slate-200 font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span>Register with Google</span>
           </button>
 
           <p id="registerStatusMsg" class="text-xs font-semibold text-center min-h-[1rem]"></p>
         </form>
       </div>
 
+      <!-- Modal Footer -->
       <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
-        <span><i class="fa-solid fa-lock text-purple-500 mr-1"></i> Encrypted with Salted Scrypt</span>
+        <button type="button" id="openFirebaseConfigBtn" class="text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer">
+          <i class="fa-solid fa-gear"></i>
+          <span>Firebase Setup</span>
+        </button>
         <button id="closeLoginModalBtn" type="button" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold cursor-pointer">Close</button>
       </div>
     </div>
   </div>
+
+  <!-- ============================================== -->
+  <!-- Firebase Web App Configuration Modal -->
+  <!-- ============================================== -->
+  <div id="firebaseConfigModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-3.5 text-xs overflow-y-auto modal-dialog-responsive">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-fire text-amber-500 text-sm"></i>
+          <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">Firebase Web Config</h4>
+        </div>
+        <button id="closeFirebaseConfigBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">Enter your Firebase Web App configuration to enable 1-Click Google Sign-In.</p>
+
+      <div class="p-2.5 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 rounded-xl text-[10.5px] text-purple-900 dark:text-purple-300 space-y-1">
+        <div class="font-bold flex items-center gap-1">
+          <i class="fa-solid fa-arrow-up-right-from-square text-purple-600"></i>
+          <span>Where to find Web API Key:</span>
+        </div>
+        <div>Firebase Console &rarr; Project Settings &rarr; General tab &rarr; "Web API Key".</div>
+        <a id="firebaseConsoleLink" href="https://console.firebase.google.com/project/railseat-finder-bd/settings/general" target="_blank" class="inline-block font-extrabold text-purple-600 dark:text-purple-400 hover:underline pt-0.5">
+          Open Firebase Console &rarr;
+        </a>
+      </div>
+
+      <form id="firebaseConfigForm" class="space-y-3">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Firebase Web API Key *</label>
+          <input type="text" id="firebaseCfgApiKey" placeholder="e.g. AIzaSy..." required
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Project ID</label>
+          <input type="text" id="firebaseCfgProjectId" value="railseat-finder-bd"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-mono focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Auth Domain</label>
+          <input type="text" id="firebaseCfgAuthDomain" value="railseat-finder-bd.firebaseapp.com"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-mono focus:outline-none">
+        </div>
+
+        <button type="submit" id="saveFirebaseConfigBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Save & Initialize Firebase</span>
+        </button>
+
+        <p id="firebaseConfigStatusMsg" class="text-xs font-semibold text-center min-h-[1rem]"></p>
+      </form>
     </div>
   </div>
 

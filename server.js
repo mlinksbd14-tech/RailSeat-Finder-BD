@@ -2683,13 +2683,68 @@ if (!process.env.VERCEL) {
   setTimeout(runBackgroundRadarCycle, 5000);
 }
 
-// --- Firebase Cloud Status Endpoint ---
+// --- Firebase Cloud Status & Config Endpoints ---
 app.get('/api/firebase/status', (req, res) => {
   res.json({
     success: true,
     connected: isFirebaseConnected,
     project_id: firebaseProjectId || null,
     mode: isFirebaseConnected ? 'Cloud Firestore' : 'Local JSON'
+  });
+});
+
+app.get('/api/firebase/config', (req, res) => {
+  const data = loadUsersData();
+  const savedCfg = data.settings?.firebaseWebConfig || {};
+  const projectId = savedCfg.projectId || firebaseProjectId || process.env.FIREBASE_PROJECT_ID || 'railseat-finder-bd';
+  const apiKey = savedCfg.apiKey || process.env.FIREBASE_WEB_API_KEY || '';
+  const authDomain = savedCfg.authDomain || (projectId ? `${projectId}.firebaseapp.com` : '');
+  const appId = savedCfg.appId || process.env.FIREBASE_APP_ID || '';
+
+  res.json({
+    success: true,
+    configured: !!(apiKey && projectId),
+    projectId,
+    apiKey,
+    authDomain,
+    appId,
+    firebaseConsoleUrl: `https://console.firebase.google.com/project/${projectId}/settings/general`
+  });
+});
+
+app.post('/api/firebase/config', (req, res) => {
+  const { apiKey, authDomain, projectId, appId } = req.body;
+  if (!apiKey || typeof apiKey !== 'string') {
+    return res.status(400).json({ success: false, error: 'Firebase Web API Key is required.' });
+  }
+
+  const cleanApiKey = apiKey.trim();
+  const cleanProjectId = (projectId || firebaseProjectId || 'railseat-finder-bd').trim();
+  const cleanAuthDomain = (authDomain || `${cleanProjectId}.firebaseapp.com`).trim();
+  const cleanAppId = (appId || '').trim();
+
+  const data = loadUsersData();
+  if (!data.settings) data.settings = {};
+  data.settings.firebaseWebConfig = {
+    apiKey: cleanApiKey,
+    projectId: cleanProjectId,
+    authDomain: cleanAuthDomain,
+    appId: cleanAppId,
+    updatedAt: new Date().toISOString()
+  };
+
+  saveUsersData(data);
+  console.log(`[Firebase Config] 🔑 Updated Firebase Web Client Config (Project: ${cleanProjectId})`);
+
+  res.json({
+    success: true,
+    message: 'Firebase Web App configuration saved successfully!',
+    config: {
+      projectId: cleanProjectId,
+      apiKey: cleanApiKey,
+      authDomain: cleanAuthDomain,
+      appId: cleanAppId
+    }
   });
 });
 

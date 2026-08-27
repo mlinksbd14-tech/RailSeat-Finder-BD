@@ -2114,5 +2114,10 @@ function startServer(portToTry) {
   });
 }
 
-startServer(PORT);
+// Only listen when executed directly (not in Vercel serverless environment)
+if (!process.env.VERCEL) {
+  startServer(PORT);
+}
+
+module.exports = app;
 

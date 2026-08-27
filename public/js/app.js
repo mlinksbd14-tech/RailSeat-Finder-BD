@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isAuthenticated: false,
     authUserData: null,
     requireLogin: true,
-    requireAdminApproval: true,
+    requireAdminApproval: false,
     requireEmailVerification: false,
     allowRegistration: true,
     authNotice: '',
@@ -4567,8 +4567,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       state.requireLogin = (data.require_login !== false);
-      state.requireAdminApproval = (data.require_admin_approval !== false);
-      state.requireEmailVerification = (data.require_email_verification !== false);
+      state.requireAdminApproval = (data.require_admin_approval === true);
+      state.requireEmailVerification = (data.require_email_verification === true);
       state.allowRegistration = (data.allow_registration !== false);
       state.authNotice = data.auth_notice || '';
       state.authNoticeEnabled = (data.auth_notice_enabled !== false);
@@ -4674,10 +4674,10 @@ document.addEventListener('DOMContentLoaded', () => {
           state.requireLogin = (data.require_login !== false);
         }
         if (data.require_admin_approval !== undefined) {
-          state.requireAdminApproval = (data.require_admin_approval !== false);
+          state.requireAdminApproval = (data.require_admin_approval === true);
         }
         if (data.require_email_verification !== undefined) {
-          state.requireEmailVerification = (data.require_email_verification !== false);
+          state.requireEmailVerification = (data.require_email_verification === true);
         }
         if (data.allow_registration !== undefined) {
           state.allowRegistration = (data.allow_registration !== false);
@@ -5041,24 +5041,26 @@ document.addEventListener('DOMContentLoaded', () => {
           : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300';
       }
       if (badgeRequireApprovalStatus) {
-        badgeRequireApprovalStatus.textContent = state.requireAdminApproval ? 'Required' : 'Instant (Auto)';
-        badgeRequireApprovalStatus.className = state.requireAdminApproval
+        const isReq = (state.requireAdminApproval === true);
+        badgeRequireApprovalStatus.textContent = isReq ? 'Required' : 'Instant (Auto)';
+        badgeRequireApprovalStatus.className = isReq
           ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300';
       }
       if (badgeRequireEmailVerificationStatus) {
-        badgeRequireEmailVerificationStatus.textContent = state.requireEmailVerification ? 'Required' : 'Disabled (Instant)';
-        badgeRequireEmailVerificationStatus.className = state.requireEmailVerification
+        const isReq = (state.requireEmailVerification === true);
+        badgeRequireEmailVerificationStatus.textContent = isReq ? 'Required' : 'Disabled (Instant)';
+        badgeRequireEmailVerificationStatus.className = isReq
           ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
           : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
       }
-      if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
-      if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+      if (modalRequireLoginToggle) modalRequireLoginToggle.checked = (state.requireLogin !== false);
+      if (settingRequireLoginToggle) settingRequireLoginToggle.checked = (state.requireLogin !== false);
       if (modalAllowRegistrationToggle) modalAllowRegistrationToggle.checked = (state.allowRegistration !== false);
-      if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
-      if (settingRequireApprovalToggle) settingRequireApprovalToggle.checked = state.requireAdminApproval;
-      if (modalRequireEmailVerificationToggle) modalRequireEmailVerificationToggle.checked = state.requireEmailVerification;
-      if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.checked = state.requireEmailVerification;
+      if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = (state.requireAdminApproval === true);
+      if (settingRequireApprovalToggle) settingRequireApprovalToggle.checked = (state.requireAdminApproval === true);
+      if (modalRequireEmailVerificationToggle) modalRequireEmailVerificationToggle.checked = (state.requireEmailVerification === true);
+      if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.checked = (state.requireEmailVerification === true);
 
       if (adminAuthNoticeToggle) adminAuthNoticeToggle.checked = (state.authNoticeEnabled !== false);
       if (adminAuthNoticeInput && document.activeElement !== adminAuthNoticeInput) {
@@ -5135,7 +5137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success) {
-          state.requireAdminApproval = (data.require_admin_approval !== false);
+          state.requireAdminApproval = (data.require_admin_approval === true);
           updateAccessControlBadges();
           showToast(
             state.requireAdminApproval
@@ -5171,7 +5173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success) {
-          state.requireEmailVerification = (data.require_email_verification !== false);
+          state.requireEmailVerification = (data.require_email_verification === true);
           updateAccessControlBadges();
           showToast(
             state.requireEmailVerification
@@ -5275,8 +5277,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (doc && doc.exists) {
               const data = doc.data() || {};
               if (data.requireLogin !== undefined) state.requireLogin = (data.requireLogin !== false);
-              if (data.requireAdminApproval !== undefined) state.requireAdminApproval = (data.requireAdminApproval !== false);
-              if (data.requireEmailVerification !== undefined) state.requireEmailVerification = (data.requireEmailVerification !== false);
+              if (data.requireAdminApproval !== undefined) state.requireAdminApproval = (data.requireAdminApproval === true);
+              if (data.requireEmailVerification !== undefined) state.requireEmailVerification = (data.requireEmailVerification === true);
               if (data.allowRegistration !== undefined) state.allowRegistration = (data.allowRegistration !== false);
               if (data.authNotice !== undefined) state.authNotice = data.authNotice || '';
               if (data.authNoticeEnabled !== undefined) state.authNoticeEnabled = (data.authNoticeEnabled !== false);

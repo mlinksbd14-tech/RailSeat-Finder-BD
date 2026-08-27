@@ -2169,8 +2169,8 @@ app.get('/api/user-auth/status', (req, res) => {
   res.json({
     success: true,
     require_login: data.settings?.requireLogin !== false,
-    require_admin_approval: data.settings?.requireAdminApproval !== false,
-    require_email_verification: data.settings?.requireEmailVerification !== false,
+    require_admin_approval: data.settings?.requireAdminApproval === true,
+    require_email_verification: data.settings?.requireEmailVerification === true,
     allow_registration: data.settings?.allowRegistration !== false,
     auth_notice: data.settings?.authNotice || '',
     auth_notice_enabled: data.settings?.authNoticeEnabled !== false,
@@ -2236,8 +2236,8 @@ app.post('/api/user-auth/register', async (req, res) => {
     }
   }
 
-  const requireApproval = data.settings?.requireAdminApproval !== false;
-  const requireEmailVerification = data.settings?.requireEmailVerification !== false;
+  const requireApproval = data.settings?.requireAdminApproval === true;
+  const requireEmailVerification = data.settings?.requireEmailVerification === true;
   const role = isFirstUser ? 'admin' : 'viewer';
   const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
   const canViewDashboard = isFirstUser || !requireApproval;
@@ -2484,7 +2484,7 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
         finalUsername = `${generatedUsername}${counter++}`;
       }
 
-      const requireApproval = data.settings?.requireAdminApproval !== false;
+      const requireApproval = data.settings?.requireAdminApproval === true;
       const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
       const canViewDashboard = isFirstUser || !requireApproval;
 
@@ -2633,8 +2633,8 @@ app.get('/api/users', requireAdmin, (req, res) => {
     count: safeUsers.length,
     pending_count: pendingCount,
     require_login: data.settings?.requireLogin !== false,
-    require_admin_approval: data.settings?.requireAdminApproval !== false,
-    require_email_verification: data.settings?.requireEmailVerification !== false,
+    require_admin_approval: data.settings?.requireAdminApproval === true,
+    require_email_verification: data.settings?.requireEmailVerification === true,
     allow_registration: data.settings?.allowRegistration !== false,
     auth_notice: data.settings?.authNotice || '',
     auth_notice_enabled: data.settings?.authNoticeEnabled !== false,
@@ -2943,12 +2943,12 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   res.json({
     success: true,
     require_login: data.settings?.requireLogin !== false,
-    require_admin_approval: data.settings?.requireAdminApproval !== false,
-    require_email_verification: data.settings.requireEmailVerification !== false,
-    allow_registration: data.settings.allowRegistration !== false,
-    auth_notice: data.settings.authNotice || '',
-    auth_notice_enabled: data.settings.authNoticeEnabled !== false,
-    message: `Settings updated: Allow Registration = ${data.settings.allowRegistration !== false ? 'ON' : 'OFF'}, Notice = ${data.settings.authNoticeEnabled !== false && data.settings.authNotice ? 'ACTIVE' : 'OFF'}.`
+    require_admin_approval: data.settings?.requireAdminApproval === true,
+    require_email_verification: data.settings?.requireEmailVerification === true,
+    allow_registration: data.settings?.allowRegistration !== false,
+    auth_notice: data.settings?.authNotice || '',
+    auth_notice_enabled: data.settings?.authNoticeEnabled !== false,
+    message: `Settings updated: Require Login = ${data.settings?.requireLogin !== false ? 'ON' : 'OFF'}, Admin Approval = ${data.settings?.requireAdminApproval === true ? 'ON' : 'OFF'}, Email Verification = ${data.settings?.requireEmailVerification === true ? 'ON' : 'OFF'}, Allow Registration = ${data.settings?.allowRegistration !== false ? 'ON' : 'OFF'}.`
   });
 });
 

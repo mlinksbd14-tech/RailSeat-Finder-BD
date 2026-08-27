@@ -331,7 +331,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const telemetryLastLogin = document.getElementById('telemetryLastLogin');
   const telemetryCreatedAt = document.getElementById('telemetryCreatedAt');
   const telemetryIpList = document.getElementById('telemetryIpList');
-  const telemetryActivityLog = document.getElementById('telemetryActivityLog');
+  const telemetryLocation = document.getElementById('telemetryLocation');
+  const telemetryIsp = document.getElementById('telemetryIsp');
+  const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+  const alternateRoutesContainer = document.getElementById('alternateRoutesContainer');
   const closeFirebaseConfigBtn = document.getElementById('closeFirebaseConfigBtn');
   const firebaseConfigForm = document.getElementById('firebaseConfigForm');
   const firebaseCfgApiKey = document.getElementById('firebaseCfgApiKey');
@@ -2237,6 +2240,80 @@ document.addEventListener('DOMContentLoaded', () => {
       trainsGrid.classList.add('hidden');
       trainsTableView.classList.remove('hidden');
     }
+
+    renderAlternateRoutes(data.alternate_routes);
+  }
+
+  // ----------------------------------------------------
+  // Render Smart Alternate Junction & Split-Journey Routes
+  // ----------------------------------------------------
+  function renderAlternateRoutes(alternateRoutes) {
+    if (!alternateRoutesContainer) return;
+
+    if (!alternateRoutes || alternateRoutes.length === 0) {
+      alternateRoutesContainer.classList.add('hidden');
+      alternateRoutesContainer.innerHTML = '';
+      return;
+    }
+
+    alternateRoutesContainer.classList.remove('hidden');
+    alternateRoutesContainer.innerHTML = `
+      <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-slate-900/60 border border-indigo-500/30 backdrop-blur-sm space-y-3.5 shadow-lg animate-fade-in">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm">
+              <i class="fa-solid fa-shuffle"></i>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-sm text-white flex items-center space-x-2">
+                <span>⚡ Smart Alternate Junction Routes Available</span>
+                <span class="px-2 py-0.2 rounded-full text-[10px] bg-indigo-500 text-white font-black">${alternateRoutes.length} Found</span>
+              </h4>
+              <p class="text-[11px] text-indigo-200/80">Direct trains are sold out. You can split your journey at a major junction hub with available seats!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          ${alternateRoutes.map((alt, idx) => {
+            const leg1Book = buildShohozBookingUrl(alt.leg1.from, alt.leg1.to, state.selectedDate, 'ALL');
+            const leg2Book = buildShohozBookingUrl(alt.leg2.from, alt.leg2.to, state.selectedDate, 'ALL');
+            return `
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/20 space-y-2.5 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span class="font-bold text-indigo-400 font-mono text-[11px]">Option ${idx + 1}: Via ${alt.via_hub} Junction</span>
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 font-bold text-[10px] border border-emerald-800/40">🟢 Seats Available</span>
+                </div>
+                
+                <!-- Leg 1 -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold text-white">1. ${alt.leg1.train_name}</span>
+                    <span class="text-slate-400 text-[10px]">${alt.leg1.departure_time || ''} ➔ ${alt.leg1.arrival_time || ''}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400">
+                    <span>${alt.leg1.from} ➔ ${alt.leg1.to} (${alt.leg1.seats} seats)</span>
+                    <a href="${leg1Book}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 font-bold">Book Leg 1 &rarr;</a>
+                  </div>
+                </div>
+
+                <!-- Leg 2 -->
+                <div class="space-y-1 pt-1 border-t border-slate-800/60">
+                  <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold text-white">2. ${alt.leg2.train_name}</span>
+                    <span class="text-slate-400 text-[10px]">${alt.leg2.departure_time || ''} ➔ ${alt.leg2.arrival_time || ''}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400">
+                    <span>${alt.leg2.from} ➔ ${alt.leg2.to} (${alt.leg2.seats} seats)</span>
+                    <a href="${leg2Book}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 font-bold">Book Leg 2 &rarr;</a>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
   }
 
   // ----------------------------------------------------
@@ -4789,12 +4866,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${u.emailVerified ? '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300"><i class="fa-solid fa-check text-[8px] mr-0.5"></i>Verified</span>' : ''}
               </div>
 
-              <!-- Badges Line 2: Public/Shared IP and Device Info -->
+              <!-- Badges Line 2: Public/Shared IP, Geo Location, and Device Info -->
               <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono flex-wrap gap-y-1 pt-0.5">
                 <span class="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60">
                   <i class="fa-solid fa-globe text-blue-500 text-[9px]"></i>
                   <span class="font-bold text-slate-700 dark:text-slate-300">${u.lastIp || 'No IP recorded'}</span>
                 </span>
+                ${u.lastLocation ? `
+                  <span class="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60 font-bold text-slate-700 dark:text-slate-300" title="${u.lastLocation.isp || ''}">
+                    <span>${u.lastLocation.flag || '🌐'}</span>
+                    <span>${u.lastLocation.city || ''}${u.lastLocation.countryCode ? `, ${u.lastLocation.countryCode}` : ''}</span>
+                  </span>
+                ` : ''}
                 <span class="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60">
                   <i class="fa-solid fa-${u.lastDevice && u.lastDevice.device === 'Mobile' ? 'mobile-screen' : 'laptop'} text-purple-500 text-[9px]"></i>
                   <span class="truncate max-w-[150px]">${deviceLabel}</span>
@@ -5642,6 +5725,16 @@ document.addEventListener('DOMContentLoaded', () => {
           : (devType === 'Tablet' ? 'fa-solid fa-tablet-screen-button text-purple-500' : 'fa-solid fa-laptop text-purple-500');
       }
       if (telemetryBrowser) telemetryBrowser.textContent = browser;
+      if (telemetryLocation) {
+        if (u.lastLocation) {
+          telemetryLocation.innerHTML = `<span class="font-bold">${u.lastLocation.flag || '🌐'} ${u.lastLocation.city || 'Unknown'}, ${u.lastLocation.country || ''}</span>`;
+        } else {
+          telemetryLocation.textContent = '🌐 Location not resolved';
+        }
+      }
+      if (telemetryIsp) {
+        telemetryIsp.textContent = u.lastLocation?.isp || 'Standard Network';
+      }
       if (telemetryAuthProvider) telemetryAuthProvider.textContent = u.authProvider === 'firebase_google' ? 'Google Sign-In (Firebase)' : 'Username & Password';
       if (telemetryEmailVerified) telemetryEmailVerified.innerHTML = u.emailVerified ? '<span class="text-teal-600 dark:text-teal-400 font-bold">✅ Verified</span>' : '<span class="text-rose-500 font-bold">❌ Not Verified</span>';
       if (telemetryLoginCount) telemetryLoginCount.textContent = `${u.loginCount || 0} time${(u.loginCount || 0) === 1 ? '' : 's'}`;
@@ -5900,6 +5993,56 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
+  // Progressive Web App (PWA) & Web Push Engine
+  // ----------------------------------------------------
+  let deferredPwaPrompt = null;
+
+  function initPwaServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('[PWA] 🚀 Service Worker registered successfully, scope:', reg.scope);
+        }).catch(err => {
+          console.warn('[PWA] Service Worker registration failed:', err.message);
+        });
+      });
+    }
+
+    // Handle Before Install Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      if (pwaInstallBtn) {
+        pwaInstallBtn.classList.remove('hidden');
+        pwaInstallBtn.classList.add('flex');
+      }
+    });
+
+    if (pwaInstallBtn) {
+      pwaInstallBtn.addEventListener('click', async () => {
+        if (!deferredPwaPrompt) return;
+        deferredPwaPrompt.prompt();
+        const choiceResult = await deferredPwaPrompt.userChoice;
+        if (choiceResult && choiceResult.outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+          pwaInstallBtn.classList.add('hidden');
+          pwaInstallBtn.classList.remove('flex');
+        }
+        deferredPwaPrompt = null;
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] 📱 App installed successfully');
+      if (pwaInstallBtn) {
+        pwaInstallBtn.classList.add('hidden');
+        pwaInstallBtn.classList.remove('flex');
+      }
+      showToast('🎉 RailSeat BD installed as an App on your device!', 'success');
+    });
+  }
+
+  // ----------------------------------------------------
   // Setup Master Event Listeners
   // ----------------------------------------------------
   function setupEventListeners() {
@@ -5912,6 +6055,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initStationMatrixModule();
     initMultiDayMatrixControls();
     initUserManagement();
+    initPwaServiceWorker();
 
     // Delegate click for view route, watch, and station matrix buttons
     document.addEventListener('click', (e) => {

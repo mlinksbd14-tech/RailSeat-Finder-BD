@@ -1,0 +1,32 @@
+{
+  "name": "RailSeat Finder BD - Bangladesh Railway Gateway",
+  "short_name": "RailSeat BD",
+  "description": "Real-time Bangladesh Railway seat matrix, Shohoz gateway, and 24/7 background radar alerts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#9333ea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["travel", "utilities", "transportation"],
+  "shortcuts": [
+    {
+      "name": "Search Trains",
+      "short_name": "Search",
+      "description": "Find available Bangladesh Railway seats",
+      "url": "/#search"
+    },
+    {
+      "name": "Radar Watchlist",
+      "short_name": "Radar",
+      "description": "View active 24/7 seat radar watches",
+      "url": "/#radar"
+    }
+  ]
+}

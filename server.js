@@ -635,8 +635,8 @@ app.use((req, res, next) => {
     return res.status(400).json({ success: false, error: 'Malformed URI.' });
   }
 
-  // Allow only public static assets (.js, .css, .html, images inside /public)
-  const isAllowedPublicAsset = req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/images/') || req.path === '/favicon.ico' || req.path === '/';
+  // Allow only public static assets (.js, .css, .html, images inside /public, manifest.json, sw.js)
+  const isAllowedPublicAsset = req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/images/') || req.path === '/favicon.ico' || req.path === '/' || req.path === '/manifest.json' || req.path === '/sw.js';
 
   for (const pattern of FORBIDDEN_SECURITY_PATTERNS) {
     if (pattern.test(decodedPath) || pattern.test(originalUrl)) {
@@ -1444,9 +1444,75 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
   };
 }
 
+// Major Railway Junction Hubs in Bangladesh Railway Network
+const JUNCTION_HUBS = [
+  'Akhaura', 'Tongi', 'Ishwardi', 'Bhairab Bazar', 'Santahar', 'Parbatipur', 'Laksam', 'Abdulpur', 'Joydebpur', 'Kulaura'
+];
+
+async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session) {
+  const cleanFrom = (fromCity || '').trim().toLowerCase();
+  const cleanTo = (toCity || '').trim().toLowerCase();
+  const candidates = JUNCTION_HUBS.filter(h => {
+    const cleanHub = h.toLowerCase();
+    return cleanHub !== cleanFrom && cleanHub !== cleanTo;
+  });
+
+  const alternateRoutes = [];
+
+  // Evaluate candidate junctions (top 2 to stay fast and avoid rate limits)
+  for (const hub of candidates.slice(0, 2)) {
+    try {
+      // Query Leg 1: fromCity -> Hub
+      const leg1Res = await querySingleShohozTrip(fromCity, hub, dateStr, session);
+      const leg1AvailableTrains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg1AvailableTrains.length === 0) continue;
+
+      // Query Leg 2: Hub -> toCity
+      const leg2Res = await querySingleShohozTrip(hub, toCity, dateStr, session);
+      const leg2AvailableTrains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg2AvailableTrains.length === 0) continue;
+
+      for (const t1 of leg1AvailableTrains.slice(0, 2)) {
+        for (const t2 of leg2AvailableTrains.slice(0, 2)) {
+          alternateRoutes.push({
+            via_hub: hub,
+            leg1: {
+              train_name: t1.train_name,
+              train_model: t1.train_model,
+              from: fromCity,
+              to: hub,
+              departure_time: t1.departure_time,
+              arrival_time: t1.arrival_time,
+              seats: t1.total_combined_seats || 0,
+              online_seats: t1.total_online_seats || 0,
+              seat_types: t1.seat_types || []
+            },
+            leg2: {
+              train_name: t2.train_name,
+              train_model: t2.train_model,
+              from: hub,
+              to: toCity,
+              departure_time: t2.departure_time,
+              arrival_time: t2.arrival_time,
+              seats: t2.total_combined_seats || 0,
+              online_seats: t2.total_online_seats || 0,
+              seat_types: t2.seat_types || []
+            }
+          });
+          if (alternateRoutes.length >= 3) break;
+        }
+        if (alternateRoutes.length >= 3) break;
+      }
+    } catch (e) {}
+    if (alternateRoutes.length >= 3) break;
+  }
+
+  return alternateRoutes;
+}
+
 // 2. Search Available Trains & Seats for Single Date
 app.get('/api/search', async (req, res) => {
-  const { from_city, to_city, date_of_journey } = req.query;
+  const { from_city, to_city, date_of_journey, check_alternates } = req.query;
 
   if (!from_city || !to_city || !date_of_journey) {
     return res.status(400).json({
@@ -1457,6 +1523,17 @@ app.get('/api/search', async (req, res) => {
 
   const session = getUserShohozSession(req);
   const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
+
+  // If direct trains are completely sold out, check for alternate connecting routes
+  const totalDirectSeats = (result.trains || []).reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
+  if (result.success && totalDirectSeats === 0 && check_alternates !== 'false') {
+    try {
+      result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session);
+    } catch (altErr) {
+      result.alternate_routes = [];
+    }
+  }
+
   return res.json(result);
 });
 
@@ -1939,7 +2016,26 @@ function formatTelegramError(err) {
   return `Telegram Error: ${rawMsg}`;
 }
 
-// Background Telegram Poller for 1-Click Pairing & Commands
+// Station Fuzzy Name Matcher for Telegram Bot
+function findStationName(query = '') {
+  if (!query) return null;
+  const cleanQ = query.trim().toLowerCase();
+  const exact = officialStations.find(s => s.station_name.toLowerCase() === cleanQ || s.station_name.toLowerCase().startsWith(cleanQ));
+  if (exact) return exact.station_name;
+
+  const abbrevs = {
+    'dha': 'Dhaka', 'dhaka': 'Dhaka', 'kam': 'Kamalapur', 'ctg': 'Chittagong', 'chattogram': 'Chittagong',
+    'syl': 'Sylhet', 'raj': 'Rajshahi', 'cox': "Cox's Bazar", 'coxs': "Cox's Bazar", 'khu': 'Khulna',
+    'bar': 'Barisal', 'rang': 'Rangpur', 'din': 'Dinajpur', 'com': 'Comilla', 'feni': 'Feni',
+    'bra': 'Brahmanbaria', 'sre': 'Sreemangal', 'jai': 'Jaflong', 'mou': 'Moulvibazar'
+  };
+  if (abbrevs[cleanQ]) return abbrevs[cleanQ];
+
+  const partial = officialStations.find(s => s.station_name.toLowerCase().includes(cleanQ));
+  return partial ? partial.station_name : null;
+}
+
+// Background Telegram Poller for 1-Click Pairing & Interactive Bot Commands
 async function pollTelegramBotUpdates() {
   if (!FIXED_TELEGRAM_BOT_TOKEN) return;
 
@@ -1953,6 +2049,20 @@ async function pollTelegramBotUpdates() {
         lastTelegramUpdateOffset = update.update_id + 1;
       }
 
+      // Handle Inline Keyboard Button Callbacks
+      if (update.callback_query) {
+        const cq = update.callback_query;
+        const cqId = cq.id;
+        const cqData = cq.data || '';
+        try {
+          await axios.post(`https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+            callback_query_id: cqId,
+            text: '⚡ Action received! Opening RailSeat BD...'
+          }, { timeout: 4000 });
+        } catch (e) {}
+        continue;
+      }
+
       const msg = update.message;
       if (!msg || !msg.text) continue;
 
@@ -1961,9 +2071,10 @@ async function pollTelegramBotUpdates() {
       const fromUser = msg.from || {};
       const firstName = fromUser.first_name || 'Traveler';
       const username = fromUser.username ? `@${fromUser.username}` : '';
+      const replyUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
 
-      // Check for /start or /start pair_XXXXXX or /login
-      if (text.startsWith('/start') || text.startsWith('/login') || text.startsWith('/connect')) {
+      // 1. Command: /start or /login or /connect or /link
+      if (text.startsWith('/start') || text.startsWith('/login') || text.startsWith('/connect') || text.startsWith('/link')) {
         const parts = text.split(/\s+/);
         let pairCode = parts[1] || '';
         pairCode = pairCode.replace(/^pair_/i, '').trim().toUpperCase();
@@ -1977,7 +2088,6 @@ async function pollTelegramBotUpdates() {
 
         latestTelegramUser = userInfo;
 
-        // If specific pairing code matched
         if (pairCode && activePairings.has(pairCode)) {
           const session = activePairings.get(pairCode);
           session.status = 'paired';
@@ -1987,7 +2097,6 @@ async function pollTelegramBotUpdates() {
           activePairings.set(pairCode, session);
           console.log(`[Telegram] 🔗 Paired code ${pairCode} with chat ${chatId} (${username || firstName})`);
         } else {
-          // If user just sent /start with no code, also pair the most recent pending session if any
           for (const [code, session] of activePairings.entries()) {
             if (session.status === 'pending' && (Date.now() - session.createdAt < 5 * 60 * 1000)) {
               session.status = 'paired';
@@ -2001,17 +2110,165 @@ async function pollTelegramBotUpdates() {
           }
         }
 
-        // Send confirmation reply to Telegram
         try {
-          const replyUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
           await axios.post(replyUrl, {
             chat_id: chatId,
-            text: `👋 <b>Hello ${firstName}!</b>\n\n🎉 <b>Your Telegram is now connected to RailSeat BD!</b>\n\nYou will automatically receive real-time alerts here whenever a watched seat becomes available.\n\n🎯 <i>Return to your web dashboard to watch your preferred train routes!</i>`,
+            text: `👋 <b>Hello ${firstName}!</b>\n\n🎉 <b>Your Telegram is now connected to RailSeat BD!</b>\n\nYou will automatically receive real-time alerts here whenever a watched seat becomes available.\n\n💡 <b>Try commands:</b>\n• <code>/search Dhaka Chittagong</code> — Instant seat availability\n• <code>/radar</code> — View your background seat monitors\n• <code>/help</code> — Full commands list`,
             parse_mode: 'HTML'
           }, { timeout: 6000 });
-        } catch (e) {
-          console.warn('[Telegram] Could not send welcome reply:', e.message);
+        } catch (e) {}
+        continue;
+      }
+
+      // 2. Command: /help
+      if (text.startsWith('/help')) {
+        const helpText = `🚆 <b>RailSeat Finder BD — Telegram Commands</b>\n\n` +
+          `🔍 <b>/search &lt;From&gt; &lt;To&gt; [Date]</b>\n` +
+          `<i>Example:</i> <code>/search Dhaka Chittagong</code> or <code>/search DHA CTG 2026-08-30</code>\n` +
+          `Queries Bangladesh Railway live seat availability and provides direct 1-click booking buttons.\n\n` +
+          `🛰️ <b>/radar</b> or <b>/watchlist</b>\n` +
+          `Lists your active 24/7 background seat drop monitors.\n\n` +
+          `🔗 <b>/link &lt;pair_code&gt;</b>\n` +
+          `Link this Telegram chat to your RailSeat BD dashboard.\n\n` +
+          `❓ <b>/help</b>\n` +
+          `Show this command guide.`;
+
+        try {
+          await axios.post(replyUrl, { chat_id: chatId, text: helpText, parse_mode: 'HTML' }, { timeout: 6000 });
+        } catch (e) {}
+        continue;
+      }
+
+      // 3. Command: /radar or /watchlist
+      if (text.startsWith('/radar') || text.startsWith('/watchlist')) {
+        const radarData = loadRadarData();
+        const userWatchlist = (radarData.watchlist || []).filter(w => String(w.telegramChatId) === String(chatId));
+
+        let radarReply = `🛰️ <b>Your 24/7 Radar Watchlist (${userWatchlist.length} Active)</b>\n\n`;
+        if (userWatchlist.length === 0) {
+          radarReply += `<i>No active background watches found for this Telegram chat. Set up your watches on the Web Dashboard to receive instant alerts!</i>`;
+        } else {
+          userWatchlist.forEach((w, idx) => {
+            radarReply += `<b>${idx + 1}. ${w.trainName}</b> (${w.className || 'All'})\n` +
+              `📍 ${w.fromCity} ➔ ${w.toCity} | 📅 ${w.date}\n` +
+              `🔔 Status: ${w.status === 'active' ? '🟢 Monitoring' : '⏸️ Paused'}\n\n`;
+          });
         }
+
+        try {
+          await axios.post(replyUrl, { chat_id: chatId, text: radarReply, parse_mode: 'HTML' }, { timeout: 6000 });
+        } catch (e) {}
+        continue;
+      }
+
+      // 4. Command: /search <from> <to> [date]
+      if (text.startsWith('/search')) {
+        const parts = text.replace(/^\/search\s*/i, '').trim().split(/\s+/);
+        if (parts.length < 2) {
+          try {
+            await axios.post(replyUrl, {
+              chat_id: chatId,
+              text: `⚠️ <b>Usage:</b> <code>/search &lt;From Station&gt; &lt;To Station&gt; [Date]</code>\n<i>Example:</i> <code>/search Dhaka Chittagong</code> or <code>/search Dhaka Sylhet 2026-08-30</code>`,
+              parse_mode: 'HTML'
+            }, { timeout: 6000 });
+          } catch (e) {}
+          continue;
+        }
+
+        const rawFrom = parts[0];
+        const rawTo = parts[1];
+        let rawDate = parts[2] || '';
+
+        const fromStation = findStationName(rawFrom);
+        const toStation = findStationName(rawTo);
+
+        if (!fromStation || !toStation) {
+          try {
+            await axios.post(replyUrl, {
+              chat_id: chatId,
+              text: `❌ Could not find station name for <b>${!fromStation ? rawFrom : rawTo}</b>. Please check spelling (e.g. Dhaka, Chittagong, Sylhet, Rajshahi).`,
+              parse_mode: 'HTML'
+            }, { timeout: 6000 });
+          } catch (e) {}
+          continue;
+        }
+
+        // Format Date
+        let searchDate = new Date();
+        if (rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+          searchDate = new Date(rawDate);
+        } else {
+          // Default to tomorrow
+          searchDate.setDate(searchDate.getDate() + 1);
+        }
+        const dateIsoStr = searchDate.toISOString().split('T')[0];
+
+        try {
+          await axios.post(replyUrl, {
+            chat_id: chatId,
+            text: `🔍 <i>Querying Shohoz live gateway for <b>${fromStation} ➔ ${toStation}</b> on ${dateIsoStr}...</i>`,
+            parse_mode: 'HTML'
+          }, { timeout: 6000 });
+
+          const defaultSession = authCredentials.token ? authCredentials : { token: null };
+          const result = await querySingleShohozTrip(fromStation, toStation, dateIsoStr, defaultSession);
+
+          if (!result.success || !result.trains || result.trains.length === 0) {
+            await axios.post(replyUrl, {
+              chat_id: chatId,
+              text: `❌ <b>No trains found for ${fromStation} ➔ ${toStation} on ${dateIsoStr}.</b>\n${result.error || ''}`,
+              parse_mode: 'HTML'
+            }, { timeout: 6000 });
+            continue;
+          }
+
+          let replyMsg = `🚆 <b>${fromStation} ➔ ${toStation}</b>\n📅 <b>${dateIsoStr}</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+          let bookButtons = [];
+
+          result.trains.forEach((t, i) => {
+            const hasSeats = (t.total_combined_seats || 0) > 0;
+            const statusIcon = hasSeats ? '🟢' : '🔴';
+            replyMsg += `${statusIcon} <b>${t.train_name}</b> (#${t.train_model})\n`;
+            replyMsg += `⏰ Dep: ${t.departure_time || 'N/A'} | Arr: ${t.arrival_time || 'N/A'}\n`;
+
+            if (hasSeats) {
+              t.seat_types.forEach(st => {
+                const avail = (st.seats_available || 0) + (st.counter_seats_available || 0);
+                if (avail > 0) {
+                  replyMsg += `  • <b>${st.display_name || st.type}:</b> <b>${avail}</b> seats (৳${st.fare})\n`;
+                }
+              });
+            } else {
+              replyMsg += `  • <i>ALL SEATS SOLD OUT</i>\n`;
+            }
+            replyMsg += `\n`;
+
+            if (hasSeats && bookButtons.length < 3) {
+              const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromStation)}&tocity=${encodeURIComponent(toStation)}&doj=${encodeURIComponent(dateIsoStr)}&seatclass=ALL`;
+              bookButtons.push([{ text: `🎟️ Book ${t.train_name}`, url: bookUrl }]);
+            }
+          });
+
+          const directUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromStation)}&tocity=${encodeURIComponent(toStation)}&doj=${encodeURIComponent(dateIsoStr)}&seatclass=ALL`;
+          if (bookButtons.length === 0) {
+            bookButtons.push([{ text: `🎟️ View on Shohoz Railway`, url: directUrl }]);
+          }
+
+          await axios.post(replyUrl, {
+            chat_id: chatId,
+            text: replyMsg,
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: bookButtons }
+          }, { timeout: 8000 });
+
+        } catch (searchErr) {
+          await axios.post(replyUrl, {
+            chat_id: chatId,
+            text: `⚠️ Search error: ${searchErr.message}`,
+            parse_mode: 'HTML'
+          }, { timeout: 6000 });
+        }
+        continue;
       }
     }
   } catch (err) {
@@ -2163,6 +2420,74 @@ app.post('/api/telegram/test', async (req, res) => {
 // 7. User Management & Dashboard Access Control API
 // ====================================================
 
+// GeoIP & ISP Intelligence Cache & Resolver
+const geoIpCache = new Map();
+
+function getCountryFlag(countryCode = '') {
+  if (!countryCode || countryCode.length !== 2) return '🌐';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
+async function lookupIpLocation(ip = '') {
+  const cleanIp = (ip || '').replace(/^.*:/, '').trim();
+  if (!cleanIp || cleanIp === '127.0.0.1' || cleanIp === '1' || cleanIp === 'unknown' || cleanIp.startsWith('192.168.') || cleanIp.startsWith('10.') || cleanIp.startsWith('172.16.')) {
+    return {
+      city: 'Localhost',
+      region: 'Local Network',
+      country: 'Development',
+      countryCode: 'BD',
+      flag: '💻',
+      isp: 'Internal Loopback / Dev',
+      query: ip
+    };
+  }
+
+  if (geoIpCache.has(cleanIp)) {
+    return geoIpCache.get(cleanIp);
+  }
+
+  try {
+    const res = await axios.get(`http://ip-api.com/json/${cleanIp}?fields=status,country,countryCode,regionName,city,isp,org,query`, {
+      timeout: 3000
+    });
+    if (res.data && res.data.status === 'success') {
+      const loc = {
+        city: res.data.city || 'Unknown City',
+        region: res.data.regionName || '',
+        country: res.data.country || 'Unknown Country',
+        countryCode: res.data.countryCode || '',
+        flag: getCountryFlag(res.data.countryCode),
+        isp: res.data.isp || res.data.org || 'Internet Service Provider',
+        query: cleanIp
+      };
+      geoIpCache.set(cleanIp, loc);
+      if (geoIpCache.size > 500) {
+        const firstKey = geoIpCache.keys().next().value;
+        geoIpCache.delete(firstKey);
+      }
+      return loc;
+    }
+  } catch (e) {
+    // Silently fallback on timeout or network block
+  }
+
+  const fallback = {
+    city: 'Unknown City',
+    region: '',
+    country: 'Internet',
+    countryCode: '',
+    flag: '🌐',
+    isp: 'Standard Network',
+    query: cleanIp
+  };
+  geoIpCache.set(cleanIp, fallback);
+  return fallback;
+}
+
 // User Agent & Device Telemetry Helper for Admin Inspection
 function parseUserAgent(uaString = '') {
   const ua = uaString || '';
@@ -2236,16 +2561,25 @@ function recordUserTelemetry(user, req, action = 'login') {
     if (user.ips.length > 10) user.ips.pop();
   }
 
-  user.activityHistory = user.activityHistory || [];
-  user.activityHistory.unshift({
+  const historyItem = {
     action,
     timestamp: now,
     ip: clientIp,
     device: parsedUa.device,
     os: parsedUa.os,
-    browser: parsedUa.browser
-  });
+    browser: parsedUa.browser,
+    location: user.lastLocation || null
+  };
+
+  user.activityHistory = user.activityHistory || [];
+  user.activityHistory.unshift(historyItem);
   if (user.activityHistory.length > 25) user.activityHistory.pop();
+
+  // Asynchronously resolve GeoIP & ISP location without blocking the request
+  lookupIpLocation(clientIp).then(loc => {
+    user.lastLocation = loc;
+    historyItem.location = loc;
+  }).catch(() => {});
 }
 
 // 1. Dashboard User Auth Status Check
@@ -2711,6 +3045,7 @@ app.get('/api/users', requireAdmin, (req, res) => {
     lastDevice: u.lastDevice || null,
     lastUserAgent: u.lastUserAgent || null,
     loginCount: u.loginCount || 0,
+    lastLocation: u.lastLocation || null,
     activityHistory: u.activityHistory || [],
     createdAt: u.createdAt,
     lastLogin: u.lastLogin
@@ -3227,7 +3562,12 @@ async function runBackgroundRadarCycle() {
                         chat_id: chatId,
                         text: msgText,
                         parse_mode: 'HTML',
-                        disable_web_page_preview: false
+                        disable_web_page_preview: false,
+                        reply_markup: {
+                          inline_keyboard: [
+                            [{ text: '🎟️ 1-Click Book on Shohoz', url: bookUrl }]
+                          ]
+                        }
                       });
                     } catch (tgErr) {
                       console.warn('[Radar] ❌ Telegram send error:', tgErr.response?.data?.description || tgErr.message);

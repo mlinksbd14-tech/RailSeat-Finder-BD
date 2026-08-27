@@ -1858,9 +1858,8 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     }
 
-    updateStats(trains);
-
     if (filteredTrains.length === 0) {
+      updateStats([], state.selectedClass);
       trainsGrid.innerHTML = `
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200 dark:border-slate-800 space-y-3">
           <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto">
@@ -1891,6 +1890,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Update stats ribbon dynamically according to active filter
+    updateStats(filteredTrains, state.selectedClass);
+
     if (state.viewMode === 'grid') {
       renderGridView(filteredTrains);
       trainsGrid.classList.remove('hidden');
@@ -1903,17 +1905,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // Update Top Stats Ribbon (Online + Counter + Combined)
+  // Update Top Stats Ribbon (Dynamic per Selected Train & Class Filters)
   // ----------------------------------------------------
-  // ----------------------------------------------------
-  // Update Top Stats Ribbon (Total Running Trains & Total Available Seats)
-  // ----------------------------------------------------
-  function updateStats(trains) {
+  function updateStats(trains, filteredClass = 'ALL') {
     statsRibbon.classList.remove('hidden');
     let totalSeats = 0;
 
     trains.forEach(t => {
       (t.seat_types || []).forEach(s => {
+        if (filteredClass && filteredClass !== 'ALL' && s.type.toUpperCase() !== filteredClass.toUpperCase()) {
+          return;
+        }
         const onlineCount = Number(s.seats_available || 0);
         const counterCount = Number(s.counter_seats_available || 0);
         totalSeats += (onlineCount + counterCount);

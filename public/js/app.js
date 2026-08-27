@@ -4916,95 +4916,52 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 13.1. Firebase Client Initialization & Google Authentication Handlers
-    let isFirebaseClientReady = false;
-    let cachedFirebaseConfig = null;
+    // ----------------------------------------------------
+    // 13.1. Firebase Web App Initialization & Google Auth
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyD67AVgu4gq5Ya4txcKJee7XL61na7nd6E",
+      authDomain: "railseat-finder-bd.firebaseapp.com",
+      projectId: "railseat-finder-bd",
+      storageBucket: "railseat-finder-bd.firebasestorage.app",
+      messagingSenderId: "266186751082",
+      appId: "1:266186751082:web:ee5f2695ac16bda97e9e13",
+      measurementId: "G-BVRRX1HN95"
+    };
 
-    async function fetchFirebaseWebConfig() {
-      try {
-        const res = await fetch('/api/firebase/config');
-        const data = await res.json();
-        cachedFirebaseConfig = data;
-        return data;
-      } catch (e) {
-        console.warn('[Firebase Client] Failed to fetch config:', e.message);
-        return null;
-      }
-    }
-
-    function openFirebaseConfigModal() {
-      if (!firebaseConfigModal) return;
-      if (cachedFirebaseConfig) {
-        if (firebaseCfgApiKey && cachedFirebaseConfig.apiKey) firebaseCfgApiKey.value = cachedFirebaseConfig.apiKey;
-        if (firebaseCfgProjectId && cachedFirebaseConfig.projectId) firebaseCfgProjectId.value = cachedFirebaseConfig.projectId;
-        if (firebaseCfgAuthDomain && cachedFirebaseConfig.authDomain) firebaseCfgAuthDomain.value = cachedFirebaseConfig.authDomain;
-      }
-      firebaseConfigModal.classList.remove('hidden');
-    }
-
-    async function ensureFirebaseAppInitialized() {
-      if (isFirebaseClientReady && window.firebase?.apps?.length) return true;
-      if (!window.firebase) {
-        showToast('Firebase SDK is loading, please try again in a moment.', 'info');
-        return false;
-      }
-
-      const config = await fetchFirebaseWebConfig();
-      if (!config || !config.apiKey) {
-        openFirebaseConfigModal();
-        showToast('Please enter your Firebase Web API Key to enable Google Sign-In.', 'info');
-        return false;
-      }
-
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp({
-            apiKey: config.apiKey,
-            authDomain: config.authDomain || `${config.projectId}.firebaseapp.com`,
-            projectId: config.projectId,
-            appId: config.appId || undefined
-          });
-        }
-        isFirebaseClientReady = true;
-        return true;
-      } catch (err) {
-        console.error('[Firebase Client] initializeApp error:', err);
-        showToast('Firebase initialization error: ' + err.message, 'error');
-        return false;
-      }
-    }
-
-    // Auto initialize Firebase on page load if config exists
-    fetchFirebaseWebConfig().then(cfg => {
-      if (cfg && cfg.apiKey && window.firebase && !firebase.apps.length) {
+    function ensureFirebaseInitialized() {
+      if (window.firebase && !firebase.apps.length) {
         try {
-          firebase.initializeApp({
-            apiKey: cfg.apiKey,
-            authDomain: cfg.authDomain || `${cfg.projectId}.firebaseapp.com`,
-            projectId: cfg.projectId,
-            appId: cfg.appId || undefined
-          });
-          isFirebaseClientReady = true;
-          console.log('[Firebase Client] 🔥 Initialized for project:', cfg.projectId);
-        } catch (e) {}
+          firebase.initializeApp(firebaseConfig);
+          console.log('[Firebase] 🔥 Web App initialized for railseat-finder-bd');
+        } catch (err) {
+          console.warn('[Firebase] Init error:', err.message);
+        }
       }
-    });
+    }
+
+    // Initialize immediately
+    ensureFirebaseInitialized();
 
     async function handleFirebaseGoogleAuth() {
       try {
-        const ready = await ensureFirebaseAppInitialized();
-        if (!ready) return;
+        if (!window.firebase || !firebase.auth) {
+          showToast('Firebase Auth SDK is still loading. Please refresh and try again.', 'error');
+          return;
+        }
+
+        ensureFirebaseInitialized();
 
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.addScope('profile');
         provider.addScope('email');
 
-        showToast('🔑 Opening Google Sign-In window...', 'info');
+        showToast('🔑 Opening Google Sign-In...', 'info');
         const result = await firebase.auth().signInWithPopup(provider);
         const idToken = await result.user.getIdToken();
         const rememberMe = loginRememberMe ? loginRememberMe.checked : true;
 
-        showToast('🔐 Verifying Google identity with server...', 'info');
+        showToast('🔐 Verifying Google account with server...', 'info');
 
         const res = await fetch('/api/user-auth/firebase-login', {
           method: 'POST',
@@ -5032,10 +4989,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (err.code === 'auth/popup-closed-by-user') {
           showToast('Sign-In popup was closed.', 'info');
         } else if (err.code === 'auth/unauthorized-domain') {
-          showToast('Domain unauthorized in Firebase Auth. Add localhost to Authorized Domains in Firebase Console.', 'error');
-        } else if (err.code === 'auth/api-key-not-valid' || err.code === 'auth/invalid-api-key') {
-          showToast('Invalid Firebase API Key. Please check your Web API Key in Firebase Console.', 'error');
-          openFirebaseConfigModal();
+          showToast('Authorized domain required. Please ensure localhost is in your Firebase Auth domain list.', 'error');
         } else {
           showToast(err.message || 'Google Sign-In error.', 'error');
         }
@@ -5055,64 +5009,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPwd = loginPassword.type === 'password';
         loginPassword.type = isPwd ? 'text' : 'password';
         toggleLoginPasswordBtn.innerHTML = isPwd ? '<i class="fa-regular fa-eye-slash text-xs text-purple-600"></i>' : '<i class="fa-regular fa-eye text-xs"></i>';
-      });
-    }
-
-    // Firebase Config Modal Handlers
-    if (openFirebaseConfigBtn) {
-      openFirebaseConfigBtn.addEventListener('click', () => {
-        openFirebaseConfigModal();
-      });
-    }
-    if (closeFirebaseConfigBtn && firebaseConfigModal) {
-      closeFirebaseConfigBtn.addEventListener('click', () => {
-        firebaseConfigModal.classList.add('hidden');
-      });
-    }
-    if (firebaseConfigForm) {
-      firebaseConfigForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const apiKey = firebaseCfgApiKey.value.trim();
-        const projectId = firebaseCfgProjectId.value.trim();
-        const authDomain = firebaseCfgAuthDomain.value.trim();
-
-        if (!apiKey) return;
-        saveFirebaseConfigBtn.disabled = true;
-        saveFirebaseConfigBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
-        if (firebaseConfigStatusMsg) firebaseConfigStatusMsg.textContent = '';
-
-        try {
-          const res = await fetch('/api/firebase/config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apiKey, projectId, authDomain })
-          });
-          const data = await res.json();
-          if (data.success) {
-            showToast('🔥 Firebase configuration saved successfully!', 'success');
-            if (firebaseConfigModal) firebaseConfigModal.classList.add('hidden');
-            // Re-initialize client SDK
-            if (window.firebase) {
-              try {
-                if (firebase.apps.length) {
-                  // Delete existing apps to re-init with new key
-                  await Promise.all(firebase.apps.map(app => app.delete()));
-                }
-                firebase.initializeApp({ apiKey, authDomain, projectId });
-                isFirebaseClientReady = true;
-              } catch (err) {
-                console.warn('[Firebase Client] Re-init error:', err);
-              }
-            }
-          } else {
-            if (firebaseConfigStatusMsg) firebaseConfigStatusMsg.textContent = data.error || 'Failed to save config.';
-          }
-        } catch (err) {
-          if (firebaseConfigStatusMsg) firebaseConfigStatusMsg.textContent = 'Network error saving config.';
-        } finally {
-          saveFirebaseConfigBtn.disabled = false;
-          saveFirebaseConfigBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save & Initialize Firebase';
-        }
       });
     }
 

@@ -2697,17 +2697,23 @@ app.get('/api/firebase/config', (req, res) => {
   const data = loadUsersData();
   const savedCfg = data.settings?.firebaseWebConfig || {};
   const projectId = savedCfg.projectId || firebaseProjectId || process.env.FIREBASE_PROJECT_ID || 'railseat-finder-bd';
-  const apiKey = savedCfg.apiKey || process.env.FIREBASE_WEB_API_KEY || '';
-  const authDomain = savedCfg.authDomain || (projectId ? `${projectId}.firebaseapp.com` : '');
-  const appId = savedCfg.appId || process.env.FIREBASE_APP_ID || '';
+  const apiKey = savedCfg.apiKey || process.env.FIREBASE_WEB_API_KEY || 'AIzaSyD67AVgu4gq5Ya4txcKJee7XL61na7nd6E';
+  const authDomain = savedCfg.authDomain || (projectId ? `${projectId}.firebaseapp.com` : 'railseat-finder-bd.firebaseapp.com');
+  const storageBucket = savedCfg.storageBucket || 'railseat-finder-bd.firebasestorage.app';
+  const messagingSenderId = savedCfg.messagingSenderId || '266186751082';
+  const appId = savedCfg.appId || process.env.FIREBASE_APP_ID || '1:266186751082:web:ee5f2695ac16bda97e9e13';
+  const measurementId = savedCfg.measurementId || 'G-BVRRX1HN95';
 
   res.json({
     success: true,
-    configured: !!(apiKey && projectId),
+    configured: true,
     projectId,
     apiKey,
     authDomain,
+    storageBucket,
+    messagingSenderId,
     appId,
+    measurementId,
     firebaseConsoleUrl: `https://console.firebase.google.com/project/${projectId}/settings/general`
   });
 });

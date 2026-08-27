@@ -603,11 +603,15 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Global API Limiter: 150 req / 60s
-app.use('/api/', createRateLimiter(apiRateLimits, 150, 60 * 1000, 'API rate limit exceeded. Please try again in a few seconds.'));
+// Global API Limiter: 500 req / 60s (Generous for live seat monitoring & SPA navigation)
+app.use('/api/', createRateLimiter(apiRateLimits, 500, 60 * 1000, 'API rate limit exceeded. Please try again in a few seconds.'));
 
-// Sensitive Auth & Telegram Limiter: 25 req / 60s
-app.use(['/api/user-auth/', '/api/users/', '/api/telegram/'], createRateLimiter(authRateLimits, 25, 60 * 1000, 'Too many requests on security endpoint. Please wait a moment.'));
+// Sensitive Write Operations Limiter (Registration, Settings & Telegram pairing): 120 req / 60s
+// (Exempts safe GET status checks so dashboard navigation never gets blocked)
+app.use(['/api/user-auth/', '/api/users/', '/api/telegram/'], (req, res, next) => {
+  if (req.method === 'GET') return next();
+  return createRateLimiter(authRateLimits, 120, 60 * 1000, 'Too many requests on security endpoint. Please wait a moment.')(req, res, next);
+});
 
 // 5. Clamped Body Parser with Strict Size Limits (Anti-Buffer Overflow)
 app.use(cors());

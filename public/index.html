@@ -495,9 +495,11 @@
                       <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
                       <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="settingRequireLoginToggle" class="sr-only peer">
-                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-purple-600"></div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireLoginToggle">
+                      <input type="checkbox" id="settingRequireLoginToggle" class="sr-only">
+                      <div class="custom-toggle-track toggle-purple">
+                        <div class="custom-toggle-thumb"></div>
+                      </div>
                     </label>
                   </div>
 
@@ -507,9 +509,11 @@
                       <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
                       <span class="text-[10px] text-slate-400">Require admin approval for new users</span>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only peer" checked>
-                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireApprovalToggle">
+                      <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only" checked>
+                      <div class="custom-toggle-track toggle-emerald">
+                        <div class="custom-toggle-thumb"></div>
+                      </div>
                     </label>
                   </div>
 
@@ -519,9 +523,11 @@
                       <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
                       <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only peer" checked>
-                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireEmailVerificationToggle">
+                      <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only" checked>
+                      <div class="custom-toggle-track toggle-blue">
+                        <div class="custom-toggle-thumb"></div>
+                      </div>
                     </label>
                   </div>
 
@@ -1653,9 +1659,11 @@
                 <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Restrict dashboard</p>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
-              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireLoginToggle">
+              <input type="checkbox" id="modalRequireLoginToggle" class="sr-only">
+              <div class="custom-toggle-track toggle-purple">
+                <div class="custom-toggle-thumb"></div>
+              </div>
             </label>
           </div>
 
@@ -1673,9 +1681,11 @@
                 <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Manual review</p>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only peer" checked>
-              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireApprovalToggle">
+              <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only" checked>
+              <div class="custom-toggle-track toggle-emerald">
+                <div class="custom-toggle-thumb"></div>
+              </div>
             </label>
           </div>
 
@@ -1693,9 +1703,11 @@
                 <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Inbox email link</p>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" id="modalRequireEmailVerificationToggle" class="sr-only peer" checked>
-              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireEmailVerificationToggle">
+              <input type="checkbox" id="modalRequireEmailVerificationToggle" class="sr-only" checked>
+              <div class="custom-toggle-track toggle-blue">
+                <div class="custom-toggle-thumb"></div>
+              </div>
             </label>
           </div>
 

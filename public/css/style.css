@@ -121,3 +121,51 @@ body {
   }
 }
 
+/* Bulletproof Toggle Switch Components */
+.custom-toggle-track {
+  position: relative !important;
+  display: inline-block !important;
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  background-color: #cbd5e1 !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+
+.dark .custom-toggle-track {
+  background-color: #475569 !important;
+}
+
+.custom-toggle-thumb {
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none !important;
+}
+
+input:checked + .toggle-purple {
+  background-color: #9333ea !important;
+}
+
+input:checked + .toggle-emerald {
+  background-color: #059669 !important;
+}
+
+input:checked + .toggle-blue {
+  background-color: #2563eb !important;
+}
+
+input:checked + .custom-toggle-track .custom-toggle-thumb {
+  transform: translateX(20px) !important;
+}
+

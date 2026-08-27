@@ -4946,15 +4946,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 10. Require Login Toggle Handler
-    async function handleRequireLoginChange(isChecked) {
-      try {
-        const token = getAuthToken();
-        const res = await fetch('/api/users/update-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-          body: JSON.stringify({ requireLogin: isChecked })
-        });
     // Helper to update visual badges for access control
     function updateAccessControlBadges() {
       if (badgeRequireLoginStatus) {

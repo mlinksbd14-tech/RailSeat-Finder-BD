@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { exec } = require('child_process');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 // Global crash protection for network blips & unhandled rejections
@@ -29,7 +30,6 @@ const userSessions = new Map();
 function hashPassword(password) {
   if (!password || typeof password !== 'string') return '';
   const salt = crypto.randomBytes(16).toString('hex');
-  // Scrypt N: 16384, r: 8, p: 1, 64-byte key length
   const hash = crypto.scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 }).toString('hex');
   return `scrypt$16384$8$1$${salt}$${hash}`;
 }
@@ -37,7 +37,6 @@ function hashPassword(password) {
 function verifyPassword(inputPassword, storedPassword) {
   if (!inputPassword || !storedPassword) return false;
 
-  // Salted scrypt hash format
   if (storedPassword.startsWith('scrypt$')) {
     try {
       const parts = storedPassword.split('$');
@@ -61,7 +60,6 @@ function verifyPassword(inputPassword, storedPassword) {
     return false;
   }
 
-  // Legacy plain text check (with timing-safe comparison)
   try {
     const bufA = Buffer.from(String(inputPassword));
     const bufB = Buffer.from(String(storedPassword));
@@ -76,7 +74,7 @@ function verifyPassword(inputPassword, storedPassword) {
 // Failed login attempt tracker (Brute force protection)
 const loginAttempts = new Map();
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const LOGIN_COOLDOWN_MS = 5 * 60 * 1000;
 
 function checkLoginRateLimit(key) {
   const record = loginAttempts.get(key);
@@ -103,42 +101,110 @@ function resetLoginRateLimit(key) {
   loginAttempts.delete(key);
 }
 
-function loadUsersData() {
+// ====================================================
+// ☁️ FIREBASE CLOUD FIRESTORE INTEGRATION & REPOSITORY
+// ====================================================
+let firestoreDb = null;
+let isFirebaseConnected = false;
+let firebaseProjectId = null;
+
+function initFirebase() {
+  const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
+  let serviceAccount = null;
+
+  if (fs.existsSync(serviceAccountPath)) {
+    try {
+      const raw = fs.readFileSync(serviceAccountPath, 'utf8');
+      serviceAccount = JSON.parse(raw);
+    } catch (e) {
+      console.warn('[Firebase] ⚠️ Error reading serviceAccountKey.json:', e.message);
+    }
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (e) {
+      console.warn('[Firebase] ⚠️ Error parsing FIREBASE_SERVICE_ACCOUNT env:', e.message);
+    }
+  }
+
+  if (serviceAccount && serviceAccount.project_id) {
+    try {
+      if (!admin.apps.length) {
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+      }
+      firestoreDb = admin.firestore();
+      isFirebaseConnected = true;
+      firebaseProjectId = serviceAccount.project_id;
+      console.log(`[Firebase] ☁️ Connected to Cloud Firestore (Project: ${firebaseProjectId})`);
+      
+      // Perform initial database synchronization
+      syncFirestoreUsers();
+    } catch (err) {
+      console.error('[Firebase] ❌ Initialization error:', err.message);
+      isFirebaseConnected = false;
+      firestoreDb = null;
+    }
+  } else {
+    console.log('[Firebase] ℹ️ Operating in local database mode (data/users.json). Place serviceAccountKey.json in root to connect Firebase.');
+  }
+}
+
+async function syncFirestoreUsers() {
+  if (!firestoreDb) return;
+  try {
+    const snapshot = await firestoreDb.collection('system_users').get();
+    if (snapshot.empty) {
+      // Seed Firestore with local users
+      const localData = loadLocalUsersData();
+      if (localData.users && localData.users.length > 0) {
+        console.log(`[Firebase] 📤 Seeding ${localData.users.length} local user(s) to Cloud Firestore...`);
+        const batch = firestoreDb.batch();
+        for (const user of localData.users) {
+          const docRef = firestoreDb.collection('system_users').doc(user.id);
+          batch.set(docRef, user);
+        }
+        const settingsRef = firestoreDb.collection('system_settings').doc('access_control');
+        batch.set(settingsRef, localData.settings || { requireLogin: false });
+        await batch.commit();
+        console.log('[Firebase] ✅ Cloud Firestore seeded successfully.');
+      }
+    } else {
+      // Pull remote Firestore users into local database
+      const users = [];
+      snapshot.forEach(doc => {
+        users.push(doc.data());
+      });
+      let settings = { requireLogin: false };
+      try {
+        const settingsDoc = await firestoreDb.collection('system_settings').doc('access_control').get();
+        if (settingsDoc.exists) settings = settingsDoc.data();
+      } catch (e) {}
+      
+      saveLocalUsersData({ settings, users });
+      console.log(`[Firebase] 📥 Pulled ${users.length} user(s) from Cloud Firestore.`);
+    }
+  } catch (err) {
+    console.warn('[Firebase] ⚠️ Sync error with Firestore:', err.message);
+  }
+}
+
+function loadLocalUsersData() {
   try {
     if (fs.existsSync(USERS_FILE)) {
       const raw = fs.readFileSync(USERS_FILE, 'utf8');
       const data = JSON.parse(raw);
-      if (data && Array.isArray(data.users)) {
-        // Automatic Database Encryption Migration:
-        // Automatically encrypt any plain text passwords with salted Scrypt
-        let needsSave = false;
-        for (const user of data.users) {
-          if (user.password && !user.password.startsWith('scrypt$')) {
-            user.password = hashPassword(user.password);
-            needsSave = true;
-          }
-        }
-        if (needsSave) {
-          saveUsersData(data);
-          console.log('[Security] 🛡️ All user database passwords successfully encrypted with salted Scrypt!');
-        }
-        return data;
-      }
+      if (data && Array.isArray(data.users)) return data;
     }
-  } catch (err) {
-    console.warn('[Users] Error reading users.json:', err.message);
-  }
-
-  // Initial default admin with encrypted password
-  const defaultData = {
-    settings: {
-      requireLogin: false
-    },
+  } catch (e) {}
+  return {
+    settings: { requireLogin: false },
     users: [
       {
         id: 'usr_admin_001',
         username: 'admin',
-        password: hashPassword('admin123'),
+        password: hashPassword('44277999'),
         name: 'System Administrator',
         role: 'admin',
         status: 'active',
@@ -148,11 +214,9 @@ function loadUsersData() {
       }
     ]
   };
-  saveUsersData(defaultData);
-  return defaultData;
 }
 
-function saveUsersData(data) {
+function saveLocalUsersData(data) {
   try {
     const dir = path.dirname(USERS_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -161,6 +225,46 @@ function saveUsersData(data) {
     console.error('[Users] Failed to save users.json:', err.message);
   }
 }
+
+function loadUsersData() {
+  const data = loadLocalUsersData();
+  let needsSave = false;
+  for (const user of data.users) {
+    if (user.password && !user.password.startsWith('scrypt$')) {
+      user.password = hashPassword(user.password);
+      needsSave = true;
+    }
+  }
+  if (needsSave) {
+    saveUsersData(data);
+  }
+  return data;
+}
+
+function saveUsersData(data) {
+  saveLocalUsersData(data);
+
+  // Sync to Cloud Firestore if connected
+  if (firestoreDb && isFirebaseConnected) {
+    (async () => {
+      try {
+        const batch = firestoreDb.batch();
+        for (const user of data.users) {
+          const docRef = firestoreDb.collection('system_users').doc(user.id);
+          batch.set(docRef, user, { merge: true });
+        }
+        const settingsRef = firestoreDb.collection('system_settings').doc('access_control');
+        batch.set(settingsRef, data.settings || { requireLogin: false }, { merge: true });
+        await batch.commit();
+      } catch (err) {
+        console.warn('[Firebase] ⚠️ Async Firestore write error:', err.message);
+      }
+    })();
+  }
+}
+
+// Initialize Firebase upon startup
+initFirebase();
 
 // Helper to authenticate session token for dashboard user
 function getAuthenticatedUser(req) {
@@ -2451,6 +2555,16 @@ if (!process.env.VERCEL) {
   setInterval(runBackgroundRadarCycle, 25000);
   setTimeout(runBackgroundRadarCycle, 5000);
 }
+
+// --- Firebase Cloud Status Endpoint ---
+app.get('/api/firebase/status', (req, res) => {
+  res.json({
+    success: true,
+    connected: isFirebaseConnected,
+    project_id: firebaseProjectId || null,
+    mode: isFirebaseConnected ? 'Cloud Firestore' : 'Local JSON'
+  });
+});
 
 // --- Radar API Endpoints ---
 

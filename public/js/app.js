@@ -266,11 +266,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const userLoginModal = document.getElementById('userLoginModal');
   const closeLoginModalBtn = document.getElementById('closeLoginModalBtn');
+  const loginTabBtn = document.getElementById('loginTabBtn');
+  const registerTabBtn = document.getElementById('registerTabBtn');
+  const loginSection = document.getElementById('loginSection');
+  const registerSection = document.getElementById('registerSection');
   const userLoginForm = document.getElementById('userLoginForm');
   const loginUsername = document.getElementById('loginUsername');
   const loginPassword = document.getElementById('loginPassword');
   const loginRememberMe = document.getElementById('loginRememberMe');
   const loginErrorMsg = document.getElementById('loginErrorMsg');
+  const userRegisterForm = document.getElementById('userRegisterForm');
+  const registerName = document.getElementById('registerName');
+  const registerUsername = document.getElementById('registerUsername');
+  const registerPassword = document.getElementById('registerPassword');
+  const registerConfirmPassword = document.getElementById('registerConfirmPassword');
+  const submitRegisterBtn = document.getElementById('submitRegisterBtn');
+  const registerStatusMsg = document.getElementById('registerStatusMsg');
+  const userTabPendingBtn = document.getElementById('userTabPendingBtn');
+  const userPendingTabCount = document.getElementById('userPendingTabCount');
+  const headerPendingBadge = document.getElementById('headerPendingBadge');
+  const manageUsersPendingBadge = document.getElementById('manageUsersPendingBadge');
 
   const resetPasswordModal = document.getElementById('resetPasswordModal');
   const resetPasswordCloseBtn = document.getElementById('resetPasswordCloseBtn');
@@ -4147,13 +4162,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
       if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
 
+      const pendingCount = data.pending_count || 0;
+      if (userPendingTabCount) userPendingTabCount.textContent = pendingCount;
+      if (headerPendingBadge) headerPendingBadge.classList.toggle('hidden', pendingCount === 0);
+      if (manageUsersPendingBadge) {
+        manageUsersPendingBadge.classList.toggle('hidden', pendingCount === 0);
+        manageUsersPendingBadge.textContent = `${pendingCount} pending`;
+      }
+
       if (data.logged_in && data.user) {
         state.currentUser = data.user;
 
         // Update Top Navigation Bar
         if (headerSignInBtn) headerSignInBtn.classList.add('hidden');
         if (headerUserMenuContainer) headerUserMenuContainer.classList.remove('hidden');
-        if (headerUserAvatar) headerUserAvatar.textContent = (data.user.name || data.user.username || 'U')[0].toUpperCase();
+        if (headerUserAvatar) {
+          const letter = (data.user.name || data.user.username || 'U')[0].toUpperCase();
+          headerUserAvatar.firstElementChild.textContent = letter;
+        }
         if (userNavLabel) userNavLabel.textContent = data.user.name || data.user.username;
         if (userRoleBadge) {
           userRoleBadge.textContent = data.user.role === 'admin' ? 'Admin' : 'Viewer';
@@ -4210,6 +4236,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let currentUserFilter = 'all'; // 'all' | 'pending'
+
   async function loadUsersList() {
     try {
       const token = getAuthToken();
@@ -4221,12 +4249,21 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success && Array.isArray(data.users)) {
         cachedUsersList = data.users;
         
+        const pendingCount = data.pending_count || data.users.filter(u => u.status === 'pending').length;
+
         // Update stats
         if (statTotalUsers) statTotalUsers.textContent = data.users.length;
         if (statActiveUsers) statActiveUsers.textContent = data.users.filter(u => u.status === 'active').length;
         if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
         if (userListTabCount) userListTabCount.textContent = data.users.length;
+        if (userPendingTabCount) userPendingTabCount.textContent = pendingCount;
         if (settingUserCountBadge) settingUserCountBadge.textContent = `${data.users.length} User${data.users.length > 1 ? 's' : ''}`;
+
+        if (headerPendingBadge) headerPendingBadge.classList.toggle('hidden', pendingCount === 0);
+        if (manageUsersPendingBadge) {
+          manageUsersPendingBadge.classList.toggle('hidden', pendingCount === 0);
+          manageUsersPendingBadge.textContent = `${pendingCount} pending`;
+        }
 
         renderUsersList(data.users);
       }
@@ -4238,18 +4275,27 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderUsersList(users) {
     if (!usersCardsContainer) return;
 
+    let filtered = users;
+    if (currentUserFilter === 'pending') {
+      filtered = filtered.filter(u => u.status === 'pending');
+    }
+
     const searchTerm = (userSearchInput ? userSearchInput.value : '').toLowerCase().trim();
-    const filtered = users.filter(u => 
-      !searchTerm || 
-      (u.name && u.name.toLowerCase().includes(searchTerm)) ||
-      (u.username && u.username.toLowerCase().includes(searchTerm))
-    );
+    if (searchTerm) {
+      filtered = filtered.filter(u => 
+        (u.name && u.name.toLowerCase().includes(searchTerm)) ||
+        (u.username && u.username.toLowerCase().includes(searchTerm))
+      );
+    }
 
     if (filtered.length === 0) {
+      const emptyMsg = currentUserFilter === 'pending'
+        ? 'No pending approval requests. All registered users are approved!'
+        : `No users found matching "${searchTerm}".`;
       usersCardsContainer.innerHTML = `
         <div class="py-8 text-center text-slate-400 space-y-1">
-          <i class="fa-solid fa-user-slash text-2xl text-slate-300 dark:text-slate-600"></i>
-          <p class="text-xs font-semibold">No authorized users found matching "${searchTerm}"</p>
+          <i class="fa-solid fa-user-check text-2xl text-slate-300 dark:text-slate-600"></i>
+          <p class="text-xs font-semibold">${emptyMsg}</p>
         </div>
       `;
       return;
@@ -4259,15 +4305,18 @@ document.addEventListener('DOMContentLoaded', () => {
     filtered.forEach(u => {
       const isAdmin = (u.role === 'admin');
       const isActive = (u.status === 'active');
+      const isPending = (u.status === 'pending');
       const isCurrent = state.currentUser && state.currentUser.id === u.id;
       const initials = (u.name || u.username || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
       html += `
-        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
+        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${isPending ? 'bg-amber-50/40 dark:bg-amber-950/20 p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-800/40' : ''}">
           <!-- Left: User Identity -->
           <div class="flex items-center space-x-3 min-w-0">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-              isAdmin 
+              isPending
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                : isAdmin 
                 ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60' 
                 : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60'
             }">
@@ -4279,7 +4328,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${u.name}</span>
                 ${isCurrent ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">You</span>' : ''}
               </div>
-              <div class="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono flex-wrap">
                 <span>@${u.username}</span>
                 <span>&bull;</span>
                 <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
@@ -4288,9 +4337,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${isAdmin ? '👑 Admin' : '👁️ Viewer'}
                 </span>
                 <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
-                  isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                  isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
+                  isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 
+                  'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                 }">
-                  ${isActive ? 'Active' : 'Disabled'}
+                  ${isPending ? '⏳ Pending Approval' : isActive ? 'Active' : 'Disabled'}
                 </span>
               </div>
             </div>
@@ -4298,24 +4349,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Right: Actions -->
           <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-            <!-- Toggle Active / Disabled -->
-            <button type="button" class="user-toggle-status-btn px-2.5 py-1 rounded-lg font-bold text-[11px] border transition cursor-pointer ${
-              isActive 
-                ? 'border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300' 
-                : 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
-            }" data-id="${u.id}" data-username="${u.username}" title="${isActive ? 'Disable account' : 'Enable account'}">
-              ${isActive ? 'Disable' : 'Enable'}
-            </button>
+            ${isPending ? `
+              <!-- Quick 1-Click Approve Button -->
+              <button type="button" class="user-approve-btn px-2.5 py-1 rounded-lg font-extrabold text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1 cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Approve this user account">
+                <i class="fa-solid fa-check"></i>
+                <span>Approve</span>
+              </button>
 
-            <!-- Reset Password -->
-            <button type="button" class="user-reset-pwd-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Reset Password">
-              <i class="fa-solid fa-key text-[10px]"></i>
-            </button>
+              <!-- Quick Reject / Delete Button -->
+              <button type="button" class="user-delete-btn p-1.5 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Reject & Remove">
+                <i class="fa-solid fa-xmark text-[11px]"></i>
+              </button>
+            ` : `
+              <!-- Toggle Active / Disabled -->
+              <button type="button" class="user-toggle-status-btn px-2.5 py-1 rounded-lg font-bold text-[11px] border transition cursor-pointer ${
+                isActive 
+                  ? 'border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300' 
+                  : 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+              }" data-id="${u.id}" data-username="${u.username}" title="${isActive ? 'Disable account' : 'Enable account'}">
+                ${isActive ? 'Disable' : 'Enable'}
+              </button>
 
-            <!-- Delete User -->
-            <button type="button" class="user-delete-btn p-1.5 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Delete User">
-              <i class="fa-solid fa-trash-can text-[10px]"></i>
-            </button>
+              <!-- Reset Password -->
+              <button type="button" class="user-reset-pwd-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Reset Password">
+                <i class="fa-solid fa-key text-[10px]"></i>
+              </button>
+
+              <!-- Delete User -->
+              <button type="button" class="user-delete-btn p-1.5 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Delete User">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            `}
           </div>
         </div>
       `;
@@ -4432,33 +4496,69 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 7. User Modal Tab Switching
-    if (userTabListBtn && userTabAddBtn) {
-      userTabListBtn.addEventListener('click', () => {
-        userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer';
-        userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
-        userSectionList.classList.remove('hidden');
-        userSectionAdd.classList.add('hidden');
-        loadUsersList();
+    // 7. Login / Register Modal Tab Switching
+    if (loginTabBtn && registerTabBtn && loginSection && registerSection) {
+      loginTabBtn.addEventListener('click', () => {
+        loginTabBtn.className = 'py-2 rounded-lg font-extrabold text-xs bg-purple-600 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer';
+        registerTabBtn.className = 'py-2 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center space-x-1.5 cursor-pointer';
+        loginSection.classList.remove('hidden');
+        registerSection.classList.add('hidden');
+        if (loginErrorMsg) loginErrorMsg.textContent = '';
       });
 
+      registerTabBtn.addEventListener('click', () => {
+        registerTabBtn.className = 'py-2 rounded-lg font-extrabold text-xs bg-emerald-600 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer';
+        loginTabBtn.className = 'py-2 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center space-x-1.5 cursor-pointer';
+        registerSection.classList.remove('hidden');
+        loginSection.classList.add('hidden');
+        if (registerStatusMsg) registerStatusMsg.textContent = '';
+      });
+    }
+
+    // 8. User Management Modal Tab Switching (All Users / Pending / Add)
+    if (userTabListBtn) {
+      userTabListBtn.addEventListener('click', () => {
+        currentUserFilter = 'all';
+        userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer';
+        if (userTabPendingBtn) userTabPendingBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        if (userTabAddBtn) userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        userSectionList.classList.remove('hidden');
+        userSectionAdd.classList.add('hidden');
+        renderUsersList(cachedUsersList);
+      });
+    }
+
+    if (userTabPendingBtn) {
+      userTabPendingBtn.addEventListener('click', () => {
+        currentUserFilter = 'pending';
+        userTabPendingBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-amber-600 text-white shadow-2xs transition cursor-pointer';
+        if (userTabListBtn) userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        if (userTabAddBtn) userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        userSectionList.classList.remove('hidden');
+        userSectionAdd.classList.add('hidden');
+        renderUsersList(cachedUsersList);
+      });
+    }
+
+    if (userTabAddBtn) {
       userTabAddBtn.addEventListener('click', () => {
         userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer';
-        userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        if (userTabListBtn) userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        if (userTabPendingBtn) userTabPendingBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
         userSectionAdd.classList.remove('hidden');
         userSectionList.classList.add('hidden');
         if (addUserFormStatus) addUserFormStatus.textContent = '';
       });
     }
 
-    // 8. Search Filter
+    // 9. Search Filter
     if (userSearchInput) {
       userSearchInput.addEventListener('input', () => {
         renderUsersList(cachedUsersList);
       });
     }
 
-    // 9. Require Login Toggle Handler
+    // 10. Require Login Toggle Handler
     async function handleRequireLoginChange(isChecked) {
       try {
         const token = getAuthToken();
@@ -4491,7 +4591,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 10. Add User Form Submission
+    // 11. Add User Form Submission (Admin Panel)
     if (addUserForm) {
       addUserForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -4520,6 +4620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`✅ User @${username} added successfully!`, 'success');
             addUserForm.reset();
             if (userTabListBtn) userTabListBtn.click();
+            loadUsersList();
           } else {
             if (addUserFormStatus) {
               addUserFormStatus.textContent = `❌ ${data.error || 'Failed to create user.'}`;
@@ -4538,7 +4639,65 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 7. Login Form Submission (with Remember Me)
+    // 12. User Self-Registration Form Submission (Public Form)
+    if (userRegisterForm) {
+      userRegisterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = registerName.value.trim();
+        const username = registerUsername.value.trim().toLowerCase();
+        const password = registerPassword.value.trim();
+        const confirmPassword = registerConfirmPassword.value.trim();
+
+        if (password !== confirmPassword) {
+          if (registerStatusMsg) {
+            registerStatusMsg.textContent = '❌ Passwords do not match.';
+            registerStatusMsg.className = 'text-xs font-semibold text-center text-rose-600';
+          }
+          return;
+        }
+
+        submitRegisterBtn.disabled = true;
+        submitRegisterBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting Registration...';
+        if (registerStatusMsg) registerStatusMsg.textContent = '';
+
+        try {
+          const res = await fetch('/api/user-auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, username, password })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            if (registerStatusMsg) {
+              registerStatusMsg.textContent = '✅ ' + data.message;
+              registerStatusMsg.className = 'text-xs font-bold text-center text-emerald-600 dark:text-emerald-400 p-2 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-700';
+            }
+            showToast('✅ Registration submitted for Admin approval!', 'success');
+            userRegisterForm.reset();
+            setTimeout(() => {
+              if (loginTabBtn) loginTabBtn.click();
+              if (loginUsername) loginUsername.value = username;
+            }, 3000);
+          } else {
+            if (registerStatusMsg) {
+              registerStatusMsg.textContent = `❌ ${data.error || 'Registration failed.'}`;
+              registerStatusMsg.className = 'text-xs font-semibold text-center text-rose-600';
+            }
+          }
+        } catch (err) {
+          if (registerStatusMsg) {
+            registerStatusMsg.textContent = '❌ Network error during registration.';
+            registerStatusMsg.className = 'text-xs font-semibold text-center text-rose-600';
+          }
+        } finally {
+          submitRegisterBtn.disabled = false;
+          submitRegisterBtn.innerHTML = '<i class="fa-solid fa-user-plus mr-1"></i> Submit Registration';
+        }
+      });
+    }
+
+    // 13. Login Form Submission (with Remember Me)
     if (userLoginForm) {
       userLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -4586,7 +4745,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 8. Reset Password Form Submission
+    // 14. Reset Password Form Submission
     if (resetPasswordForm) {
       resetPasswordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -4616,9 +4775,41 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 9. Delegate Actions for User Cards (Toggle Status, Reset Pwd, Delete)
+    // 15. Delegate Actions for User Cards (Approve, Toggle Status, Reset Pwd, Delete)
     if (usersCardsContainer) {
       usersCardsContainer.addEventListener('click', async (e) => {
+        // Approve Pending User
+        const approveBtn = e.target.closest('.user-approve-btn');
+        if (approveBtn) {
+          const id = approveBtn.dataset.id;
+          const username = approveBtn.dataset.username;
+          approveBtn.disabled = true;
+          approveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Approving...';
+          try {
+            const token = getAuthToken();
+            const res = await fetch('/api/users/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+              body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (data.success) {
+              showToast(`🎉 User @${username} approved & activated!`, 'success');
+              loadUsersList();
+              checkDashboardUserAuth();
+            } else {
+              showToast(data.error || 'Approval failed.', 'error');
+              approveBtn.disabled = false;
+              approveBtn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Approve';
+            }
+          } catch (err) {
+            showToast('Network error approving user.', 'error');
+            approveBtn.disabled = false;
+            approveBtn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Approve';
+          }
+          return;
+        }
+
         // Toggle Status
         const toggleBtn = e.target.closest('.user-toggle-status-btn');
         if (toggleBtn) {
@@ -4656,7 +4847,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Delete User
+        // Delete / Reject User
         const deleteBtn = e.target.closest('.user-delete-btn');
         if (deleteBtn) {
           const id = deleteBtn.dataset.id;
@@ -4674,6 +4865,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
               showToast(`🗑️ User @${username} removed.`, 'info');
               loadUsersList();
+              checkDashboardUserAuth();
             } else {
               showToast(data.error || 'Failed to remove user.', 'error');
             }

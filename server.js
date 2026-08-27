@@ -1789,11 +1789,15 @@ app.post('/api/telegram/test', async (req, res) => {
 app.get('/api/user-auth/status', (req, res) => {
   const data = loadUsersData();
   const session = getAuthenticatedUser(req);
+  const pendingCount = (session && session.role === 'admin') 
+    ? data.users.filter(u => u.status === 'pending').length 
+    : 0;
 
   res.json({
     success: true,
     require_login: !!data.settings?.requireLogin,
     logged_in: !!session,
+    pending_count: pendingCount,
     user: session ? {
       id: session.userId,
       username: session.username,
@@ -1803,7 +1807,54 @@ app.get('/api/user-auth/status', (req, res) => {
   });
 });
 
-// 2. User Login (Protected with Brute-Force Rate Limiting & Salted Scrypt)
+// 2. User Registration (Public - Creates Account with 'pending' approval status)
+app.post('/api/user-auth/register', (req, res) => {
+  const { name, username, password } = req.body;
+  const cleanUsername = (username || '').trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
+  const cleanName = (name || '').trim() || cleanUsername;
+
+  if (!cleanUsername || cleanUsername.length < 3) {
+    return res.json({ success: false, error: 'Username must be at least 3 characters long.' });
+  }
+
+  if (!/^[a-zA-Z0-9_.-]+$/.test(cleanUsername)) {
+    return res.json({ success: false, error: 'Username can only contain letters, numbers, dots, hyphens, and underscores.' });
+  }
+
+  if (!cleanPassword || cleanPassword.length < 4) {
+    return res.json({ success: false, error: 'Password must be at least 4 characters long.' });
+  }
+
+  const data = loadUsersData();
+  const existing = data.users.find(u => u.username.toLowerCase() === cleanUsername);
+  if (existing) {
+    return res.json({ success: false, error: `Username "${cleanUsername}" is already registered.` });
+  }
+
+  const newUser = {
+    id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    username: cleanUsername,
+    password: hashPassword(cleanPassword),
+    name: cleanName,
+    role: 'viewer',
+    status: 'pending', // Requires Admin Approval
+    canViewDashboard: false,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+  };
+
+  data.users.push(newUser);
+  saveUsersData(data);
+  console.log(`[Users] 📝 New registration submitted: ${cleanUsername} (Status: pending approval)`);
+
+  res.json({
+    success: true,
+    message: 'Registration submitted successfully! Your account is pending administrator approval. Once approved, you will be able to sign in.'
+  });
+});
+
+// 3. User Login (Protected with Brute-Force Rate Limiting, Status Checking & Salted Scrypt)
 app.post('/api/user-auth/login', (req, res) => {
   const { username, password, rememberMe } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
@@ -1828,6 +1879,14 @@ app.post('/api/user-auth/login', (req, res) => {
   if (!user || !verifyPassword(cleanPassword, user.password)) {
     recordFailedLogin(cleanUsername);
     return res.json({ success: false, error: 'Invalid username or password.' });
+  }
+
+  // Check Approval Status
+  if (user.status === 'pending') {
+    return res.json({
+      success: false,
+      error: 'Your account is pending administrator approval. Please wait for an administrator to approve your account before signing in.'
+    });
   }
 
   if (user.status === 'disabled') {
@@ -1874,7 +1933,7 @@ app.post('/api/user-auth/login', (req, res) => {
   });
 });
 
-// 3. User Logout
+// 4. User Logout
 app.post('/api/user-auth/logout', (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -1895,7 +1954,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// 4. Get All Users (Admin-only)
+// 5. Get All Users (Admin-only)
 app.get('/api/users', requireAdmin, (req, res) => {
   const data = loadUsersData();
   
@@ -1912,9 +1971,12 @@ app.get('/api/users', requireAdmin, (req, res) => {
     lastLogin: u.lastLogin
   }));
 
+  const pendingCount = data.users.filter(u => u.status === 'pending').length;
+
   res.json({
     success: true,
     count: safeUsers.length,
+    pending_count: pendingCount,
     require_login: !!data.settings?.requireLogin,
     users: safeUsers
   });
@@ -2022,7 +2084,31 @@ app.post('/api/users/toggle-status', requireAdmin, (req, res) => {
   });
 });
 
-// 8. Reset / Update User Password (Admin-only, Encrypted with Salted Scrypt)
+// 8. Approve Pending User (Admin-only)
+app.post('/api/users/approve', requireAdmin, (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.json({ success: false, error: 'User ID is required.' });
+
+  const data = loadUsersData();
+  const user = data.users.find(u => u.id === id);
+
+  if (!user) {
+    return res.json({ success: false, error: 'User not found.' });
+  }
+
+  user.status = 'active';
+  user.canViewDashboard = true;
+  saveUsersData(data);
+  console.log(`[Users] ✅ Approved user: ${user.username} (${user.id})`);
+
+  res.json({
+    success: true,
+    status: user.status,
+    message: `User @${user.username} has been approved and activated.`
+  });
+});
+
+// 9. Reset / Update User Password (Admin-only, Encrypted with Salted Scrypt)
 app.post('/api/users/update-password', requireAdmin, (req, res) => {
   const { id, newPassword } = req.body;
   const cleanPassword = (newPassword || '').trim();

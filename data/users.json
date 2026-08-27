@@ -1,0 +1,51 @@
+{
+  "settings": {
+    "requireLogin": true
+  },
+  "users": [
+    {
+      "id": "usr_admin_001",
+      "username": "admin",
+      "password": "scrypt$16384$8$1$3c17f6d0a04ef5ae69f4d1e840a40374$67342c9cdab8c8ed963cdc8b24cd9984f263f74177dd339e83f5dadd572a28c944fbda51451177cb0c4c2d278dd6288d64b581baebf62474a18f4833a4d4ef27",
+      "name": "System Administrator",
+      "role": "admin",
+      "status": "active",
+      "canViewDashboard": true,
+      "createdAt": "2026-08-26T08:57:48.900Z",
+      "lastLogin": "2026-08-26T11:15:26.563Z",
+      "shohozSession": {
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc3NDE5MjMsImV4cCI6MTc4Nzc4NTEyMywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImMxMDIwZmQ5LWI0NDQtNDJlYi05MzZhLWY5NTNmMTFhY2RjZSIsImF1dGhfdGltZSI6MTc4Nzc0MTkyMywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTUxNTI3OTk1NyIsImVtYWlsIjoiaWh0YXNoYW11bGFiaXIwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6IjAxNTE1Mjc5OTU3IiwiZGlzcGxheV9uYW1lIjoiSUhUQVNIQU1VTCBIQVFVRSBBQklSIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiMzc0MzAyMjY1MyIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.jHQ03qzFm6kUXMjRe4kn_7Hgpa21J5PL8-Z2dvy7HT75VTXYsVBznxBKugWJPphxdrkAH4vtqOEx6Ibq3ZPBeHRFEN9bAJPw1Mg4N62GDpNjIzKJrtlc71j0vLEJ1NBVLntzTKMxrEQDalhA5W6P3ReqP8D8IvUgOPSX2rErJ47vxIqfzMnnbTO7CiWOOTyVINVu4q2QMfarHoyTYBkg9f6SdZ4kF9TGGigalV_GgXkXVOSsGPQeLSSTqTmf8XSiF_RhUHm_0VocB9LgbeAS2SS_0zpAl9xb8ktN8KZmDNbUBzCLPzfRrump8wznCiRVKnaND1Z3Ew_Fbs8ex62rbQ",
+        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "cookie": null,
+        "user": {
+          "name": "IHTASHAMUL HAQUE ABIR",
+          "phone": "01515279957",
+          "email": "ihtashamulabir01@gmail.com",
+          "nid": "3743022653",
+          "nidType": "NID",
+          "locale": "bn-BD",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "expiresAt": "2026-08-26T22:58:43.000Z",
+          "issuedAt": "2026-08-26T10:58:43.000Z",
+          "isExpired": false
+        },
+        "lastUpdated": "2026-08-26T10:59:18.438Z"
+      }
+    },
+    {
+      "id": "usr_1787738027302_ku3o",
+      "username": "test",
+      "password": "scrypt$16384$8$1$6e394ef859e9809663372cdc572ffd28$ff76d934f0f70d3fc0fbb085a4c6575538bca927c1ec4d5d90645eb5e4ac3c48f93d3403a063ff126007529f3e4836ea1eabf0718a796db935180685354b3bc4",
+      "name": "test",
+      "role": "viewer",
+      "status": "active",
+      "canViewDashboard": true,
+      "createdAt": "2026-08-26T09:53:47.334Z",
+      "lastLogin": "2026-08-26T12:01:11.075Z"
+    }
+  ]
+}

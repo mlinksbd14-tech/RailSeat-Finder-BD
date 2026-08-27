@@ -1,0 +1,123 @@
+/* Custom Styles for Bangladesh Railway Seat Matrix Dashboard */
+
+/* Responsive & Mobile Touch Optimizations */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars with Smooth Touch Inertia */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth Horizontal Scrolling for Tables & Matrices */
+.table-responsive-wrapper,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Sticky Column Drop Shadow for Mobile Matrix */
+.sticky-column-shadow {
+  box-shadow: 2px 0 6px -1px rgba(0, 0, 0, 0.08);
+}
+.dark .sticky-column-shadow {
+  box-shadow: 2px 0 8px -1px rgba(0, 0, 0, 0.35);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-spin-fast {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Seat Class Matrix Cards */
+.seat-pill {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.seat-pill:hover {
+  transform: translateY(-2px);
+}
+
+.seat-pill:active {
+  transform: scale(0.98);
+}
+
+/* Glassmorphism Accents */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Autocomplete highlight */
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background-color: #ecfdf5;
+}
+
+.dark .autocomplete-item:hover,
+.dark .autocomplete-item.active {
+  background-color: #064e3b33;
+}
+
+/* Modal Responsive Centering & Viewport Fit */
+@media (max-width: 640px) {
+  .modal-dialog-responsive {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0.5rem auto !important;
+    max-height: 94vh !important;
+  }
+}
+

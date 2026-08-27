@@ -1,0 +1,2118 @@
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const { exec } = require('child_process');
+require('dotenv').config();
+
+// Global crash protection for network blips & unhandled rejections
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception caught safely:', err.message);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.warn('[Process] Unhandled Rejection caught safely:', reason?.message || reason);
+});
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const SESSION_FILE = path.join(__dirname, 'data', 'session.json');
+const USERS_FILE = path.join(__dirname, 'data', 'users.json');
+
+// In-memory active dashboard user sessions (token -> { userId, username, role, name, expiresAt })
+const userSessions = new Map();
+
+// ----------------------------------------------------
+// Cryptographic Password Hashing & Security Utilities
+// ----------------------------------------------------
+function hashPassword(password) {
+  if (!password || typeof password !== 'string') return '';
+  const salt = crypto.randomBytes(16).toString('hex');
+  // Scrypt N: 16384, r: 8, p: 1, 64-byte key length
+  const hash = crypto.scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 }).toString('hex');
+  return `scrypt$16384$8$1$${salt}$${hash}`;
+}
+
+function verifyPassword(inputPassword, storedPassword) {
+  if (!inputPassword || !storedPassword) return false;
+
+  // Salted scrypt hash format
+  if (storedPassword.startsWith('scrypt$')) {
+    try {
+      const parts = storedPassword.split('$');
+      if (parts.length === 6) {
+        const N = parseInt(parts[1], 10);
+        const r = parseInt(parts[2], 10);
+        const p = parseInt(parts[3], 10);
+        const salt = parts[4];
+        const originalHash = parts[5];
+
+        const derived = crypto.scryptSync(inputPassword, salt, 64, { N, r, p }).toString('hex');
+        const bufA = Buffer.from(derived, 'hex');
+        const bufB = Buffer.from(originalHash, 'hex');
+        if (bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB)) {
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[Security] Error verifying password hash:', err.message);
+    }
+    return false;
+  }
+
+  // Legacy plain text check (with timing-safe comparison)
+  try {
+    const bufA = Buffer.from(String(inputPassword));
+    const bufB = Buffer.from(String(storedPassword));
+    if (bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB)) {
+      return true;
+    }
+  } catch (e) {}
+
+  return inputPassword === storedPassword;
+}
+
+// Failed login attempt tracker (Brute force protection)
+const loginAttempts = new Map();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+function checkLoginRateLimit(key) {
+  const record = loginAttempts.get(key);
+  if (!record) return { allowed: true };
+  if (Date.now() > record.resetAt) {
+    loginAttempts.delete(key);
+    return { allowed: true };
+  }
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    const remainingSeconds = Math.ceil((record.resetAt - Date.now()) / 1000);
+    return { allowed: false, remainingSeconds };
+  }
+  return { allowed: true };
+}
+
+function recordFailedLogin(key) {
+  const now = Date.now();
+  const record = loginAttempts.get(key) || { count: 0, resetAt: now + LOGIN_COOLDOWN_MS };
+  record.count += 1;
+  loginAttempts.set(key, record);
+}
+
+function resetLoginRateLimit(key) {
+  loginAttempts.delete(key);
+}
+
+function loadUsersData() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const raw = fs.readFileSync(USERS_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.users)) {
+        // Automatic Database Encryption Migration:
+        // Automatically encrypt any plain text passwords with salted Scrypt
+        let needsSave = false;
+        for (const user of data.users) {
+          if (user.password && !user.password.startsWith('scrypt$')) {
+            user.password = hashPassword(user.password);
+            needsSave = true;
+          }
+        }
+        if (needsSave) {
+          saveUsersData(data);
+          console.log('[Security] 🛡️ All user database passwords successfully encrypted with salted Scrypt!');
+        }
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('[Users] Error reading users.json:', err.message);
+  }
+
+  // Initial default admin with encrypted password
+  const defaultData = {
+    settings: {
+      requireLogin: false
+    },
+    users: [
+      {
+        id: 'usr_admin_001',
+        username: 'admin',
+        password: hashPassword('admin123'),
+        name: 'System Administrator',
+        role: 'admin',
+        status: 'active',
+        canViewDashboard: true,
+        createdAt: new Date().toISOString(),
+        lastLogin: null
+      }
+    ]
+  };
+  saveUsersData(defaultData);
+  return defaultData;
+}
+
+function saveUsersData(data) {
+  try {
+    const dir = path.dirname(USERS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Users] Failed to save users.json:', err.message);
+  }
+}
+
+// Helper to authenticate session token for dashboard user
+function getAuthenticatedUser(req) {
+  if (!req) return null;
+  const authHeader = req.headers?.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim() || req.query?.token || '';
+  if (!token) return null;
+
+  const session = userSessions.get(token);
+  if (session && session.expiresAt > Date.now()) {
+    return session;
+  }
+  return null;
+}
+
+// Dynamic Auth Credentials (Fallback Global Session)
+let authCredentials = {
+  token: process.env.SHOHOZ_AUTH_TOKEN || null,
+  deviceId: process.env.SHOHOZ_DEVICE_ID || null,
+  deviceKey: process.env.SHOHOZ_DEVICE_KEY || null,
+  cookie: process.env.SHOHOZ_COOKIE || null,
+  user: null,
+  lastUpdated: null
+};
+
+// Helper to decode rich official profile from Shohoz JWT Token
+function decodeShohozJwtProfile(token) {
+  if (!token || typeof token !== 'string') return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length >= 2) {
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+      return {
+        name: payload.display_name || payload.name || 'Railway Passenger',
+        phone: payload.phone_number || payload.username || null,
+        email: payload.email || null,
+        nid: payload.nidn || null,
+        nidType: payload.nidnt || 'NID',
+        locale: payload.locale || 'bn-BD',
+        roles: Array.isArray(payload.role) ? payload.role : [payload.role || 'user'],
+        expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+        issuedAt: payload.nbf ? new Date(payload.nbf * 1000).toISOString() : null,
+        isExpired: payload.exp ? (Math.floor(Date.now() / 1000) > payload.exp) : false
+      };
+    }
+  } catch (err) {
+    console.warn('[Profile] Error decoding Shohoz JWT:', err.message);
+  }
+  return null;
+}
+
+// Get user-specific Shohoz Railway Session (Strict User-Wise Isolation)
+function getUserShohozSession(req) {
+  const authUser = getAuthenticatedUser(req);
+  if (authUser && authUser.userId) {
+    const data = loadUsersData();
+    const user = data.users.find(u => u.id === authUser.userId);
+    if (user && user.shohozSession && user.shohozSession.token) {
+      return {
+        ...user.shohozSession,
+        userId: user.id,
+        username: user.username
+      };
+    }
+    // Authenticated user with NO Shohoz session connected:
+    // STRICT ISOLATION: Never fall back to another user's session!
+    return {
+      token: null,
+      deviceId: null,
+      deviceKey: null,
+      cookie: null,
+      user: null,
+      lastUpdated: null,
+      userId: user ? user.id : authUser.userId,
+      username: user ? user.username : authUser.username
+    };
+  }
+
+  // If unauthenticated (no system user logged in):
+  // Return empty session to ensure ZERO cross-user leakage
+  return {
+    token: null,
+    deviceId: null,
+    deviceKey: null,
+    cookie: null,
+    user: null,
+    lastUpdated: null
+  };
+}
+
+// Save user-specific Shohoz Railway Session (Strict User-Wise Isolation)
+function saveUserShohozSession(req, sessionData) {
+  const authUser = getAuthenticatedUser(req);
+  if (authUser && authUser.userId) {
+    const data = loadUsersData();
+    const user = data.users.find(u => u.id === authUser.userId);
+    if (user) {
+      user.shohozSession = sessionData;
+      saveUsersData(data);
+      console.log(`[Session] Saved user-specific Shohoz session strictly for: ${user.username} (${user.id})`);
+    }
+    return;
+  }
+
+  // If unauthenticated / guest (only when requireLogin is false)
+  authCredentials = sessionData;
+  persistSession(sessionData);
+}
+
+// Clear user-specific Shohoz Railway Session (Strict User-Wise Isolation)
+function clearUserShohozSession(req) {
+  const authUser = getAuthenticatedUser(req);
+  if (authUser && authUser.userId) {
+    const data = loadUsersData();
+    const user = data.users.find(u => u.id === authUser.userId);
+    if (user && user.shohozSession) {
+      delete user.shohozSession;
+      saveUsersData(data);
+      console.log(`[Session] Cleared Shohoz session strictly for user: ${user.username}`);
+    }
+    return;
+  }
+
+  // Only clear global fallback if guest/anonymous
+  authCredentials = {
+    token: null,
+    deviceId: null,
+    deviceKey: null,
+    cookie: null,
+    user: null,
+    lastUpdated: null
+  };
+  clearPersistedSession();
+}
+
+// Persistent Session Management Functions
+function loadSavedSession() {
+  try {
+    if (fs.existsSync(SESSION_FILE)) {
+      const raw = fs.readFileSync(SESSION_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      if (data && data.token) {
+        const decodedProfile = decodeShohozJwtProfile(data.token);
+        authCredentials = {
+          token: data.token,
+          deviceId: data.deviceId || data.device_id || crypto.randomUUID(),
+          deviceKey: data.deviceKey || data.device_key || 'web',
+          cookie: data.cookie || null,
+          user: decodedProfile || data.user || { name: 'Saved Live Session' },
+          lastUpdated: data.lastUpdated || new Date().toISOString()
+        };
+        console.log(`[Session] Restored saved session from data/session.json (User: ${authCredentials.user?.name || 'Passenger'})`);
+      }
+    }
+  } catch (err) {
+    console.warn('[Session] Could not read saved session:', err.message);
+  }
+}
+
+function persistSession(sessionData) {
+  try {
+    fs.writeFileSync(SESSION_FILE, JSON.stringify({
+      token: sessionData.token,
+      deviceId: sessionData.deviceId,
+      deviceKey: sessionData.deviceKey,
+      cookie: sessionData.cookie,
+      user: sessionData.user,
+      lastUpdated: new Date().toISOString()
+    }, null, 2), 'utf8');
+    console.log('[Session] Saved session to data/session.json');
+  } catch (err) {
+    console.warn('[Session] Failed to persist session:', err.message);
+  }
+}
+
+function clearPersistedSession() {
+  try {
+    if (fs.existsSync(SESSION_FILE)) {
+      fs.unlinkSync(SESSION_FILE);
+      console.log('[Session] Deleted data/session.json');
+    }
+  } catch (err) {
+    console.warn('[Session] Failed to remove session file:', err.message);
+  }
+}
+
+// Load session immediately on startup
+loadSavedSession();
+loadUsersData();
+
+// Enable CORS and JSON parsing
+app.use(cors());
+app.use(express.json());
+
+// Serve static assets from 'public' folder
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+
+// Explicit Root Route handler to guarantee index.html is served
+app.get('/', (req, res) => {
+  const indexPath = path.join(publicDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  return res.status(404).send('<h1>RailSeat Finder BD</h1><p>Error: public/index.html not found on this server. Please ensure the public directory was uploaded.</p>');
+});
+
+// Load stations list
+let stations = [];
+try {
+  const stationsData = fs.readFileSync(path.join(__dirname, 'data', 'stations.json'), 'utf8');
+  stations = JSON.parse(stationsData);
+} catch (err) {
+  console.error('Error loading stations.json:', err.message);
+}
+
+// ----------------------------------------------------
+// Anti-Bot & Rate-Limiting Protection Layer
+// ----------------------------------------------------
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.2420.81'
+];
+
+function getRandomUserAgent() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+// In-memory Response Cache (TTL 20 seconds) & Extended Grace Cache (TTL 5 minutes)
+const cache = new Map();
+const graceCache = new Map();
+const CACHE_TTL_MS = 20 * 1000;
+const GRACE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function getCacheKey(from, to, date, token) {
+  const authKey = token ? token.substring(0, 12) : 'noauth';
+  return `${from.toLowerCase().trim()}_${to.toLowerCase().trim()}_${date.trim()}_${authKey}`;
+}
+
+function getFromCache(key) {
+  const cached = cache.get(key);
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+}
+
+function getFromGraceCache(key) {
+  const cached = graceCache.get(key);
+  if (cached && (Date.now() - cached.timestamp < GRACE_CACHE_TTL_MS)) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setToCache(key, data) {
+  if (cache.size > 300) {
+    const oldestKey = cache.keys().next().value;
+    cache.delete(oldestKey);
+  }
+  cache.set(key, { timestamp: Date.now(), data });
+  graceCache.set(key, { timestamp: Date.now(), data });
+}
+
+// Strict Sequential Mutex Queue with Jitter to eliminate Shohoz "You are requesting too frequently"
+let requestQueue = Promise.resolve();
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL_MS = 450;
+
+async function safeShohozRequest(fn) {
+  const run = async () => {
+    const now = Date.now();
+    const elapsed = now - lastRequestTime;
+    if (elapsed < MIN_REQUEST_INTERVAL_MS) {
+      const delay = (MIN_REQUEST_INTERVAL_MS - elapsed) + Math.floor(Math.random() * 150);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    lastRequestTime = Date.now();
+    return fn();
+  };
+
+  const task = requestQueue.then(run, run);
+  requestQueue = task.catch(() => {});
+  return task;
+}
+
+// ----------------------------------------------------
+// Date Formatting Helper (Shohoz expects "DD-MMM-YYYY" e.g. "28-Aug-2026")
+// ----------------------------------------------------
+function formatShohozDate(inputDate) {
+  if (!inputDate) return '';
+  const dateObj = new Date(inputDate);
+  if (isNaN(dateObj.getTime())) return inputDate;
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
+// ----------------------------------------------------
+// Seat & Fare Extraction Helpers for Live Shohoz API
+// ----------------------------------------------------
+function extractOnlineSeats(st) {
+  if (st.seat_counts && typeof st.seat_counts === 'object') {
+    if (st.seat_counts.online !== undefined && st.seat_counts.online !== null) {
+      return Number(st.seat_counts.online);
+    }
+  }
+  const possible = [
+    st.online_available_seats,
+    st.seats_available,
+    st.available_seats,
+    st.online_seats,
+    st.online,
+    st.seat_available,
+    st.vacant_seats,
+    st.count
+  ];
+  for (const val of possible) {
+    if (val !== undefined && val !== null && !isNaN(Number(val))) {
+      return Number(val);
+    }
+  }
+  return 0;
+}
+
+function extractOfflineSeats(st) {
+  if (st.seat_counts && typeof st.seat_counts === 'object') {
+    if (st.seat_counts.offline !== undefined && st.seat_counts.offline !== null) {
+      return Number(st.seat_counts.offline);
+    }
+  }
+  const possible = [
+    st.counter_seats_available,
+    st.offline_available_seats,
+    st.counter_seats,
+    st.offline_seats,
+    st.offline
+  ];
+  for (const val of possible) {
+    if (val !== undefined && val !== null && !isNaN(Number(val))) {
+      return Number(val);
+    }
+  }
+  return 0;
+}
+
+function extractFareInfo(st) {
+  let baseFare = 0;
+  if (st.fare_details && typeof st.fare_details === 'object') {
+    if (st.fare_details.fare !== undefined && st.fare_details.fare !== null) {
+      baseFare = Number(st.fare_details.fare);
+    } else if (st.fare_details.total_fare !== undefined && st.fare_details.total_fare !== null) {
+      baseFare = Number(st.fare_details.total_fare);
+    }
+  }
+
+  if (!baseFare) {
+    const possible = [st.fare, st.ticket_fare, st.price, st.base_fare];
+    for (const val of possible) {
+      if (val !== undefined && val !== null && !isNaN(Number(val))) {
+        baseFare = Number(val);
+        break;
+      }
+    }
+  }
+
+  // Exact VAT calculation directly from Shohoz
+  let vatAmount = 0;
+  if (st.vat_amount !== undefined && st.vat_amount !== null && !isNaN(Number(st.vat_amount))) {
+    vatAmount = Number(st.vat_amount);
+  } else if (st.fare_details?.vat_amount !== undefined && !isNaN(Number(st.fare_details.vat_amount))) {
+    vatAmount = Number(st.fare_details.vat_amount);
+  } else if (st.vat_percent !== undefined && st.vat_percent !== null && !isNaN(Number(st.vat_percent))) {
+    vatAmount = Math.round(baseFare * (Number(st.vat_percent) / 100));
+  } else if (st.vat !== undefined && st.vat !== null && !isNaN(Number(st.vat))) {
+    vatAmount = Number(st.vat);
+  } else {
+    // Bangladesh Railway official tax rules:
+    // Only AC classes (AC_S, AC_B, SNIGDHA, AC_C, BERTH) have 15% VAT; Non-AC classes (S_CHAIR, SHOVAN, F_SEAT) have 0% VAT
+    const type = String(st.type || st.seat_class || '').toUpperCase();
+    const isAC = type.includes('AC') || type.includes('SNIGDHA') || type.includes('BERTH');
+    vatAmount = isAC ? Math.round(baseFare * 0.15) : 0;
+  }
+
+  const totalFare = baseFare > 0 ? (baseFare + vatAmount) : 0;
+
+  return {
+    fare: baseFare,
+    vat: vatAmount,
+    vat_percent: st.vat_percent !== undefined ? Number(st.vat_percent) : (baseFare > 0 ? Math.round((vatAmount / baseFare) * 100) : 0),
+    total_fare: totalFare
+  };
+}
+
+// ----------------------------------------------------
+// Normalizer for Live Shohoz Response
+// ----------------------------------------------------
+function normalizeShohozResponse(data, from_city, to_city, date_of_journey) {
+  let rawTrains = [];
+  if (Array.isArray(data?.data?.trains)) {
+    rawTrains = data.data.trains;
+  } else if (Array.isArray(data?.data?.trips)) {
+    rawTrains = data.data.trips;
+  } else if (Array.isArray(data?.data?.available_trips)) {
+    rawTrains = data.data.available_trips;
+  } else if (Array.isArray(data?.data)) {
+    rawTrains = data.data;
+  } else if (Array.isArray(data?.trains)) {
+    rawTrains = data.trains;
+  } else if (Array.isArray(data?.trips)) {
+    rawTrains = data.trips;
+  }
+
+  if (rawTrains.length > 0) {
+    console.log('[DEBUG Raw Train Sample Keys]:', Object.keys(rawTrains[0]));
+    console.log('[DEBUG Raw Train Sample]:', JSON.stringify({
+      trip_id: rawTrains[0].trip_id,
+      trip_route_id: rawTrains[0].trip_route_id,
+      route_id: rawTrains[0].route_id,
+      train_name: rawTrains[0].train_name,
+      train_model: rawTrains[0].train_model,
+      seat_types: rawTrains[0].seat_types || rawTrains[0].seat_classes
+    }, null, 2));
+  }
+
+  const trains = rawTrains.map((item) => {
+    const rawSeatTypes = item.seat_types || item.seat_classes || item.seats || item.seat_availability || item.classes || [];
+    
+    const seatClasses = rawSeatTypes.map((st) => {
+      const onlineSeats = extractOnlineSeats(st);
+      const offlineSeats = extractOfflineSeats(st);
+      const fareInfo = extractFareInfo(st);
+
+      const typeCode = (st.type || st.seat_class || st.class_name || 'UNKNOWN').toUpperCase();
+      const coaches = Array.isArray(st.coaches) ? st.coaches : (st.coach_names || []);
+
+      return {
+        type: typeCode,
+        trip_id: st.trip_id || item.trip_id || null,
+        trip_route_id: st.trip_route_id || item.trip_route_id || null,
+        route_id: st.route_id || item.route_id || null,
+        display_name: st.display_name || st.seat_class_name || st.type || typeCode,
+        fare: fareInfo.fare,
+        vat: fareInfo.vat,
+        vat_percent: fareInfo.vat_percent,
+        total_fare: fareInfo.total_fare,
+        seats_available: onlineSeats,
+        counter_seats_available: offlineSeats,
+        is_available: onlineSeats > 0,
+        coaches: coaches
+      };
+    });
+
+    const totalOnline = seatClasses.reduce((sum, s) => sum + s.seats_available, 0);
+    const totalOffline = seatClasses.reduce((sum, s) => sum + s.counter_seats_available, 0);
+
+    return {
+      trip_id: (seatClasses[0] && seatClasses[0].trip_id) || item.trip_id || item.id || `TRIP_${item.train_model || Math.random()}`,
+      trip_route_id: (seatClasses[0] && seatClasses[0].trip_route_id) || item.trip_route_id || item.route_id || null,
+      train_name: item.train_name || item.trip_number || 'Intercity Train',
+      train_model: item.train_model || item.train_number || 'N/A',
+      departure_station: item.departure_station || from_city,
+      departure_time: item.departure_time || item.departure_date_time || 'N/A',
+      arrival_station: item.arrival_station || to_city,
+      arrival_time: item.arrival_time || item.arrival_date_time || 'N/A',
+      travel_time: item.travel_time || item.duration || '',
+      off_day: item.off_day || item.offday || 'None',
+      seat_types: seatClasses,
+      total_available_seats: totalOnline,
+      total_online_seats: totalOnline,
+      total_offline_seats: totalOffline,
+      total_combined_seats: totalOnline + totalOffline
+    };
+  });
+
+  return {
+    success: true,
+    source: 'Bangladesh Railway (Shohoz 100% Live API)',
+    route: {
+      from: from_city,
+      to: to_city,
+      date: date_of_journey
+    },
+    total_trains: trains.length,
+    trains: trains
+  };
+}
+
+// ----------------------------------------------------
+// Authentication Endpoints
+// ----------------------------------------------------
+
+// 1. Get Auth Status (User-Specific or Fallback)
+app.get('/api/auth/status', (req, res) => {
+  const session = getUserShohozSession(req);
+  res.json({
+    authenticated: !!session.token,
+    user: session.user,
+    token_preview: session.token ? `${session.token.substring(0, 10)}...${session.token.slice(-6)}` : null,
+    device_id: session.deviceId,
+    device_key: session.deviceKey,
+    has_saved_session: !!session.token,
+    last_updated: session.lastUpdated,
+    user_id: session.userId || null,
+    username: session.username || null
+  });
+});
+
+// 2. Set Token (User-Specific or Fallback)
+app.post('/api/auth/set-token', (req, res) => {
+  let { token, device_id, device_key, raw_curl } = req.body;
+  let cookie = null;
+
+  if (raw_curl) {
+    const authMatch = raw_curl.match(/[-H\s]['"]?[Aa]uthorization:\s*(Bearer\s+)?([^'"\r\n]+)['"]?/i);
+    const deviceIdMatch = raw_curl.match(/[-H\s]['"]?x-device-id:\s*([^'"\r\n]+)['"]?/i);
+    const deviceKeyMatch = raw_curl.match(/[-H\s]['"]?x-device-key:\s*([^'"\r\n]+)['"]?/i);
+    const cookieMatch = raw_curl.match(/[-H\s]['"]?[Cc]ookie:\s*([^'"\r\n]+)['"]?/i);
+
+    if (authMatch) token = authMatch[2].trim();
+    if (deviceIdMatch) device_id = deviceIdMatch[1].trim();
+    if (deviceKeyMatch) device_key = deviceKeyMatch[1].trim();
+    if (cookieMatch) cookie = cookieMatch[1].trim();
+  }
+
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ success: false, error: 'Authorization token is required.' });
+  }
+
+  token = token.replace(/^Bearer\s+/i, '').trim();
+  const cleanDeviceId = (device_id && device_id !== 'null' && device_id !== 'undefined') ? device_id.trim() : crypto.randomUUID();
+  const cleanDeviceKey = (device_key && device_key !== 'null' && device_key !== 'undefined') ? device_key.trim() : 'web';
+  
+  const decodedProfile = decodeShohozJwtProfile(token);
+  const sessionData = {
+    token,
+    deviceId: cleanDeviceId,
+    deviceKey: cleanDeviceKey,
+    cookie: cookie || authCredentials.cookie || null,
+    user: decodedProfile || { name: 'Live Railway Session', custom_token: true },
+    lastUpdated: new Date().toISOString()
+  };
+  
+  // Persist session to specific user (or global)
+  saveUserShohozSession(req, sessionData);
+  cache.clear();
+
+  console.log(`[Auth Set] Token: ${token.substring(0, 8)}..., User: ${sessionData.user.name || 'Passenger'}, DeviceID: ${cleanDeviceId}, DeviceKey: ${cleanDeviceKey}`);
+
+  res.json({
+    success: true,
+    message: 'Live Railway session credentials saved and activated successfully!',
+    user: sessionData.user,
+    token_preview: `${token.substring(0, 10)}...${token.slice(-6)}`,
+    device_id: cleanDeviceId,
+    device_key: cleanDeviceKey
+  });
+});
+
+// 3. Get Railway Live Session Profile Data (User-Specific)
+app.get('/api/railway-profile', (req, res) => {
+  const session = getUserShohozSession(req);
+  if (!session.token) {
+    return res.json({
+      connected: false,
+      profile: null,
+      message: 'No active Bangladesh Railway session connected.'
+    });
+  }
+
+  const profile = decodeShohozJwtProfile(session.token) || session.user;
+
+  res.json({
+    connected: true,
+    profile: profile,
+    device_id: session.deviceId,
+    device_key: session.deviceKey,
+    last_updated: session.lastUpdated,
+    user_id: session.userId || null,
+    username: session.username || null
+  });
+});
+
+// 4. Shohoz Sign-in with Mobile & Password
+app.post('/api/auth/sign-in', async (req, res) => {
+  const { mobile_number, password } = req.body;
+
+  if (!mobile_number || !password) {
+    return res.status(400).json({
+      success: false,
+      error: 'Mobile number and password are required.'
+    });
+  }
+
+  const generatedDeviceId = crypto.randomUUID();
+  const generatedDeviceKey = 'web';
+
+  const signinEndpoints = [
+    'https://railspaapi.shohoz.com/v1.0/web/auth/sign-in',
+    'https://railspaapi.shohoz.com/v1.0/app/auth/sign-in'
+  ];
+
+  const headers = {
+    'User-Agent': getRandomUserAgent(),
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8',
+    'Origin': 'https://eticket.railway.gov.bd',
+    'Referer': 'https://eticket.railway.gov.bd/',
+    'x-device-id': generatedDeviceId,
+    'x-device-key': generatedDeviceKey,
+    'Content-Type': 'application/json'
+  };
+
+  for (const endpoint of signinEndpoints) {
+    try {
+      console.log(`[Auth] Attempting login to ${endpoint} with mobile ${mobile_number}...`);
+      const response = await axios.post(endpoint, {
+        mobile_number: mobile_number.trim(),
+        password: password
+      }, { headers, timeout: 9000 });
+
+      if (response.status === 200 && response.data) {
+        const token = response.data.data?.token || response.data.token || response.data.data?.access_token;
+        const user = response.data.data?.user || response.data.user || { mobile_number };
+        const setCookie = response.headers['set-cookie'];
+
+        if (token) {
+          const sessionData = {
+            token,
+            deviceId: generatedDeviceId,
+            deviceKey: generatedDeviceKey,
+            cookie: setCookie ? (Array.isArray(setCookie) ? setCookie.join('; ') : setCookie) : null,
+            user: user,
+            lastUpdated: new Date().toISOString()
+          };
+
+          // Persist session to specific user (or global)
+          saveUserShohozSession(req, sessionData);
+          cache.clear();
+
+          console.log(`[Auth] Login SUCCESS! User:`, user.name || user.mobile_number);
+          return res.json({
+            success: true,
+            message: 'Signed in successfully to Bangladesh Railway (Shohoz)!',
+            user: user,
+            token_preview: `${token.substring(0, 10)}...${token.slice(-6)}`,
+            device_id: generatedDeviceId,
+            device_key: generatedDeviceKey
+          });
+        }
+      }
+    } catch (err) {
+      console.warn(`Sign-in failed at ${endpoint}:`, err.response?.data || err.message);
+      if (err.response?.data?.error?.messages) {
+        return res.status(401).json({
+          success: false,
+          error: err.response.data.error.messages.join(', ')
+        });
+      }
+    }
+  }
+
+  res.status(401).json({
+    success: false,
+    error: 'Authentication rejected by Shohoz. Please verify credentials or use the 1-Click Console script in "Connect Live API".'
+  });
+});
+
+// 5. Logout / Clear Token
+app.post('/api/auth/logout', (req, res) => {
+  clearUserShohozSession(req);
+  cache.clear();
+  res.json({ success: true, message: 'Shohoz session disconnected.' });
+});
+
+// ----------------------------------------------------
+// Public API Endpoints
+// ----------------------------------------------------
+
+// 1. Get Stations (256 Shohoz Stations)
+app.get('/api/stations', (req, res) => {
+  res.json({
+    success: true,
+    count: stations.length,
+    stations: stations
+  });
+});
+
+// Station alias mapping and spelling correction dictionary
+const STATION_ALIASES = {
+  'airport': 'Biman_Bandar',
+  'dhaka airport': 'Biman_Bandar',
+  'biman bandar': 'Biman_Bandar',
+  'bimanbandar': 'Biman_Bandar',
+  'biman_bandor': 'Biman_Bandar',
+  'chittagong': 'Chattogram',
+  'ctg': 'Chattogram',
+  'chottogram': 'Chattogram',
+  'comilla': 'Cumilla',
+  'cumilla junction': 'Cumilla',
+  'bogra': 'Bogura',
+  'jessore': 'Jashore',
+  'barisal': 'Barishal',
+  'coxs bazar': "Cox's Bazar",
+  'coxsbazar': "Cox's Bazar",
+  "cox's_bazar": "Cox's Bazar",
+  'coxs_bazar': "Cox's Bazar",
+  'cox bazaar': "Cox's Bazar",
+  'jamalpur': 'Jamalpur_Town',
+  'jamalpur town': 'Jamalpur_Town',
+  'cantonment': 'Dhaka_Cantonment',
+  'dhaka cantonment': 'Dhaka_Cantonment',
+  'bhairab': 'Bhairab_Bazar',
+  'bhairab bazar': 'Bhairab_Bazar',
+  'b.baria': 'Brahmanbaria',
+  'b-baria': 'Brahmanbaria',
+  'brahman baria': 'Brahmanbaria',
+  'dewanganj': 'Dewanganj_Bazar',
+  'dewangonj': 'Dewanganj_Bazar',
+  'melandah': 'Melandah_Bazar',
+  'islampur': 'Islampur_Bazar',
+  'sirajganj': 'Sirajganj_Bazar',
+  'thakurgaon': 'Thakurgaon_Road',
+  'sayedpur': 'Saidpur',
+  'bhanga': 'Bhanga_Junction',
+  'chandpur': 'Chandpur_Court',
+  'kushtia': 'Kushtia_Court',
+  'boalmari': 'Boalmari_Bazar',
+  'bonarpara': 'Bonar_Para',
+  'bonar para': 'Bonar_Para'
+};
+
+function getCanonicalStationName(raw) {
+  if (!raw) return '';
+  const clean = String(raw).trim();
+  const lower = clean.toLowerCase();
+  
+  if (STATION_ALIASES[lower]) {
+    return STATION_ALIASES[lower];
+  }
+
+  // Exact match on station.name
+  const exactName = stations.find(s => s.name && s.name.toLowerCase() === lower);
+  if (exactName) return exactName.name;
+
+  // Match on station.display_name
+  const exactDisplay = stations.find(s => s.display_name && s.display_name.toLowerCase() === lower);
+  if (exactDisplay) return exactDisplay.name;
+
+  // Space vs underscore replacement match
+  const underscore = lower.replace(/\s+/g, '_');
+  const matchUnderscore = stations.find(s => s.name && s.name.toLowerCase() === underscore);
+  if (matchUnderscore) return matchUnderscore.name;
+
+  return clean;
+}
+
+// Core function to query a single journey date from live Shohoz Gateway
+async function querySingleShohozTrip(from_city, to_city, date_of_journey, customSession = null) {
+  const activeSession = (customSession && customSession.token) ? customSession : authCredentials;
+  if (!activeSession.token) {
+    return {
+      success: false,
+      auth_required: true,
+      error: 'Live Shohoz session is required. Please click "Connect Live API" to pair your session.',
+      trains: []
+    };
+  }
+
+  const canonicalFrom = getCanonicalStationName(from_city);
+  const canonicalTo = getCanonicalStationName(to_city);
+
+  // Check In-Memory Cache first (avoid unnecessary requests)
+  const cacheKey = getCacheKey(canonicalFrom, canonicalTo, date_of_journey, activeSession.token);
+  const cachedData = getFromCache(cacheKey);
+  if (cachedData) {
+    return {
+      ...cachedData,
+      from_cache: true,
+      cache_ttl_remaining: Math.round((CACHE_TTL_MS - (Date.now() - cache.get(cacheKey).timestamp)) / 1000)
+    };
+  }
+
+  const formattedDate = formatShohozDate(date_of_journey);
+  const targetUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/search-trips-v2?from_city=${encodeURIComponent(canonicalFrom)}&to_city=${encodeURIComponent(canonicalTo)}&date_of_journey=${encodeURIComponent(formattedDate)}&seat_class=S_CHAIR`;
+
+  const baseHeaders = {
+    'User-Agent': getRandomUserAgent(),
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8',
+    'Origin': 'https://eticket.railway.gov.bd',
+    'Referer': 'https://eticket.railway.gov.bd/',
+    'Authorization': `Bearer ${activeSession.token}`,
+    'Priority': 'u=1, i'
+  };
+
+  if (activeSession.deviceId) baseHeaders['x-device-id'] = activeSession.deviceId;
+  if (activeSession.deviceKey) baseHeaders['x-device-key'] = activeSession.deviceKey;
+  if (activeSession.cookie) baseHeaders['Cookie'] = activeSession.cookie;
+
+  let lastErrorStatus = null;
+  let lastErrorMessage = '';
+  let isRateLimited = false;
+
+  try {
+    const response = await safeShohozRequest(async () => {
+      return axios.get(targetUrl, {
+        headers: baseHeaders,
+        timeout: 9000,
+        validateStatus: (status) => status < 500
+      });
+    });
+
+    if (response.status === 200 && response.data) {
+      if (response.data.error && response.data.error.code) {
+        const msg = response.data.error.messages?.join(', ') || '';
+        if (msg.toLowerCase().includes('frequently') || msg.toLowerCase().includes('wait') || msg.toLowerCase().includes('too many')) {
+          isRateLimited = true;
+          lastErrorMessage = msg;
+        } else {
+          lastErrorMessage = msg || 'Shohoz internal error';
+        }
+      } else {
+        const normalized = normalizeShohozResponse(response.data, from_city, to_city, date_of_journey);
+        if (normalized) {
+          // Enrich trains with off-days
+          for (const t of (normalized.trains || [])) {
+            if (t.train_model && t.train_model !== 'N/A') {
+              t.off_day = await getOrFetchTrainOffDay(t.train_model, activeSession);
+            }
+          }
+
+          setToCache(cacheKey, normalized);
+          return normalized;
+        }
+      }
+    }
+
+    if (response.status === 429) {
+      isRateLimited = true;
+      lastErrorStatus = 429;
+      lastErrorMessage = response.data?.error?.messages?.join(', ') || 'You are requesting too frequently. Please wait and try after some time.';
+    } else if (response.status === 401) {
+      lastErrorStatus = 401;
+      const msg = response.data?.error?.messages?.join(', ') || 'Your Bangladesh Railway session token has expired or is invalid.';
+      lastErrorMessage = msg;
+    } else if (response.status === 403) {
+      lastErrorStatus = 403;
+      lastErrorMessage = 'Shohoz Cloudflare verification required';
+    }
+
+  } catch (err) {
+    if (err.response?.status === 429 || (err.message && err.message.includes('429'))) {
+      isRateLimited = true;
+      lastErrorStatus = 429;
+      lastErrorMessage = 'You are requesting too frequently. Please wait and try after some time.';
+    } else {
+      lastErrorMessage = err.message;
+    }
+  }
+
+  // Grace Cache fallback if rate limited by Shohoz
+  if (isRateLimited) {
+    const graceData = getFromGraceCache(cacheKey);
+    if (graceData) {
+      return {
+        ...graceData,
+        from_cache: true,
+        is_stale_cache: true,
+        cooldown_notice: 'Shohoz traffic cooldown active. Showing recent live results.'
+      };
+    }
+
+    return {
+      success: false,
+      rate_limited: true,
+      error: 'You are requesting too frequently. Shohoz traffic cooldown active (3-5s). Please wait a moment.',
+      trains: []
+    };
+  }
+
+  if (lastErrorStatus === 401) {
+    return {
+      success: false,
+      auth_error: true,
+      session_expired: true,
+      error: `Your Shohoz session has expired (${lastErrorMessage}). Please click "Connect Live API" to copy a fresh token from eticket.railway.gov.bd.`,
+      trains: []
+    };
+  }
+
+  return {
+    success: false,
+    error: `Failed to fetch live data from Bangladesh Railway (${lastErrorMessage || 'No response'}). Please try again shortly.`,
+    trains: []
+  };
+}
+
+// 2. Search Available Trains & Seats for Single Date
+app.get('/api/search', async (req, res) => {
+  const { from_city, to_city, date_of_journey } = req.query;
+
+  if (!from_city || !to_city || !date_of_journey) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters: from_city, to_city, date_of_journey are required.'
+    });
+  }
+
+  const session = getUserShohozSession(req);
+  const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
+  return res.json(result);
+});
+
+// 3. Dynamic Next 10-Days Matrix Search (Multi-Date Batch Engine)
+app.get('/api/multi-date-search', async (req, res) => {
+  const { from_city, to_city, start_date, days = 10 } = req.query;
+
+  if (!from_city || !to_city) {
+    return res.status(400).json({
+      success: false,
+      error: 'from_city and to_city are required.'
+    });
+  }
+
+  const session = getUserShohozSession(req);
+  if (!session.token) {
+    return res.json({
+      success: false,
+      auth_required: true,
+      error: 'Live Shohoz session is required. Please click "Connect Live API" to pair your session.',
+      matrix: []
+    });
+  }
+
+  const numDays = Math.min(14, Math.max(1, parseInt(days, 10) || 7));
+  const baseDate = start_date ? new Date(start_date) : new Date();
+
+  // Generate consecutive date ISO strings
+  const dateList = [];
+  for (let i = 0; i < numDays; i++) {
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate() + i);
+    dateList.push(d.toISOString().split('T')[0]);
+  }
+
+  // Execute in smooth batches of 2 requests with queue spacing
+  const matrixResults = [];
+  const batchSize = 2;
+  for (let i = 0; i < dateList.length; i += batchSize) {
+    const batch = dateList.slice(i, i + batchSize);
+    const batchPromises = batch.map(async (dStr) => {
+      const result = await querySingleShohozTrip(from_city, to_city, dStr, session);
+      const trains = result.trains || [];
+      const totalSeats = trains.reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
+      const onlineSeats = trains.reduce((sum, t) => sum + (t.total_online_seats || 0), 0);
+
+      return {
+        date: dStr,
+        formatted_date: formatShohozDate(dStr),
+        day_name: new Date(dStr).toLocaleDateString('en-US', { weekday: 'short' }),
+        display_date: new Date(dStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        success: result.success,
+        total_trains: trains.length,
+        total_available_seats: totalSeats,
+        total_online_seats: onlineSeats,
+        trains: trains.map(t => ({
+          train_name: t.train_name,
+          train_model: t.train_model,
+          departure_time: t.departure_time,
+          arrival_time: t.arrival_time,
+          off_day: t.off_day,
+          total_seats: t.total_combined_seats || 0,
+          seat_types: (t.seat_types || []).map(st => ({
+            type: st.type,
+            display_name: st.display_name,
+            total_seats: (st.seats_available || 0) + (st.counter_seats_available || 0),
+            online_seats: st.seats_available || 0,
+            fare: st.fare,
+            vat: st.vat,
+            total_fare: st.total_fare
+          }))
+        }))
+      };
+    });
+    const batchResults = await Promise.all(batchPromises);
+    matrixResults.push(...batchResults);
+  }
+
+  return res.json({
+    success: true,
+    route: {
+      from: from_city,
+      to: to_city,
+      start_date: dateList[0],
+      end_date: dateList[dateList.length - 1],
+      total_days: dateList.length
+    },
+    matrix: matrixResults
+  });
+});
+
+// ----------------------------------------------------
+// Official Bangladesh Railway Days & Off-Day Resolution
+// ----------------------------------------------------
+const ALL_DAYS_MAP = {
+  'Sun': 'Sunday',
+  'Mon': 'Monday',
+  'Tue': 'Tuesday',
+  'Wed': 'Wednesday',
+  'Thu': 'Thursday',
+  'Fri': 'Friday',
+  'Sat': 'Saturday'
+};
+const ALL_DAYS_KEYS = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+
+function computeOffDayFromDays(days) {
+  if (!Array.isArray(days) || days.length === 0) return 'None';
+  if (days.length >= 7) return 'None';
+  const missing = ALL_DAYS_KEYS.filter(d => !days.includes(d));
+  if (missing.length === 0) return 'None';
+  return missing.map(d => ALL_DAYS_MAP[d] || d).join(', ');
+}
+
+// In-Memory Cache for Train Routes and Off-Days
+const routeCache = new Map();
+const trainOffDaysCache = new Map();
+
+async function getOrFetchTrainOffDay(trainModel, customSession = null) {
+  if (!trainModel || trainModel === 'N/A') return 'None';
+  const cleanModel = String(trainModel).replace(/\D/g, '').trim() || String(trainModel).trim();
+  return await fetchTrainOffDay(cleanModel, customSession);
+}
+
+// 2. Fetch Train Route and Compute Off-Day
+async function fetchTrainOffDay(cleanModel, customSession = null) {
+  const cacheKey = `route_${cleanModel}`;
+  if (routeCache.has(cacheKey)) {
+    const data = routeCache.get(cacheKey);
+    const offDay = computeOffDayFromDays(data.days);
+    trainOffDaysCache.set(cleanModel, offDay);
+    return offDay;
+  }
+
+  const activeSession = (customSession && customSession.token) ? customSession : authCredentials;
+
+  const headers = {
+    'User-Agent': getRandomUserAgent(),
+    'Accept': 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    'Origin': 'https://eticket.railway.gov.bd',
+    'Referer': 'https://eticket.railway.gov.bd/train-information'
+  };
+
+  if (activeSession && activeSession.token) headers['Authorization'] = `Bearer ${activeSession.token}`;
+  if (activeSession && activeSession.deviceId) headers['x-device-id'] = activeSession.deviceId;
+  if (activeSession && activeSession.deviceKey) headers['x-device-key'] = activeSession.deviceKey;
+
+  try {
+    const url = 'https://railspaapi.shohoz.com/v1.0/web/train-routes';
+    const response = await safeShohozRequest(async () => {
+      return axios.post(url, { model: cleanModel }, { headers, timeout: 5000 });
+    });
+
+    if (response && response.status === 200 && response.data?.data) {
+      const data = response.data.data;
+      data.off_day = computeOffDayFromDays(data.days);
+      routeCache.set(cacheKey, data);
+      trainOffDaysCache.set(cleanModel, data.off_day);
+      return data.off_day;
+    }
+  } catch (err) {
+    // Return None on network timeout
+  }
+
+  return 'None';
+}
+
+// 3. Get Official Train Route & Stoppage Schedule (Live Shohoz Train Information API)
+async function getTrainRouteData(cleanModel, customSession = null) {
+  const cacheKey = `route_${cleanModel}`;
+  if (routeCache.has(cacheKey)) {
+    const data = routeCache.get(cacheKey);
+    data.off_day = computeOffDayFromDays(data.days);
+    return data;
+  }
+
+  const activeSession = (customSession && customSession.token) ? customSession : authCredentials;
+
+  const headers = {
+    'User-Agent': getRandomUserAgent(),
+    'Accept': 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    'Origin': 'https://eticket.railway.gov.bd',
+    'Referer': 'https://eticket.railway.gov.bd/train-information'
+  };
+
+  if (activeSession && activeSession.token) headers['Authorization'] = `Bearer ${activeSession.token}`;
+  if (activeSession && activeSession.deviceId) headers['x-device-id'] = activeSession.deviceId;
+  if (activeSession && activeSession.deviceKey) headers['x-device-key'] = activeSession.deviceKey;
+
+  try {
+    const url = 'https://railspaapi.shohoz.com/v1.0/web/train-routes';
+    const response = await safeShohozRequest(async () => {
+      return axios.post(url, { model: cleanModel }, { headers, timeout: 8000 });
+    });
+
+    if (response && response.status === 200 && response.data?.data) {
+      const data = response.data.data;
+      data.off_day = computeOffDayFromDays(data.days);
+      routeCache.set(cacheKey, data);
+      trainOffDaysCache.set(cleanModel, data.off_day);
+      return data.off_day ? data : { ...data, off_day: 'None' };
+    }
+  } catch (err) {
+    console.warn(`[Train Route Error for ${cleanModel}]:`, err.response?.data || err.message);
+  }
+  return null;
+}
+
+app.get('/api/train-route', async (req, res) => {
+  const { model } = req.query;
+
+  if (!model) {
+    return res.status(400).json({ success: false, error: 'model (train number) parameter is required.' });
+  }
+
+  const session = getUserShohozSession(req);
+  const cleanModel = String(model).replace(/\D/g, '').trim() || String(model).trim();
+  const data = await getTrainRouteData(cleanModel, session);
+
+  if (data) {
+    return res.json({
+      success: true,
+      data: data
+    });
+  }
+
+  return res.json({
+    success: false,
+    error: 'No route data returned by Bangladesh Railway for this train model.'
+  });
+});
+
+// 4. Single-Day All-Station Seat Matrix (Station-to-Station Intermediate Vacancy Grid)
+app.get('/api/train-station-matrix', async (req, res) => {
+  const { model, date_of_journey, from_station, to_station } = req.query;
+
+  if (!model || !date_of_journey) {
+    return res.status(400).json({
+      success: false,
+      error: 'model (train number) and date_of_journey are required.'
+    });
+  }
+
+  const session = getUserShohozSession(req);
+  if (!session.token) {
+    return res.json({
+      success: false,
+      auth_required: true,
+      error: 'Live Shohoz session is required. Please click "Connect Live API" to pair your session.',
+      segments: []
+    });
+  }
+
+  const cleanModel = String(model).replace(/\D/g, '').trim() || String(model).trim();
+  const routeData = await getTrainRouteData(cleanModel, session);
+
+  if (!routeData || !routeData.routes || routeData.routes.length === 0) {
+    return res.json({
+      success: false,
+      error: `Could not retrieve stoppage stations for train #${cleanModel}.`
+    });
+  }
+
+  const rawStops = routeData.routes;
+  const stops = rawStops.map(s => ({
+    city: s.city,
+    cleanCity: (s.city || '').replace(/_/g, ' ').trim(),
+    queryCity: s.city,
+    arrival_time: s.arrival_time || '--',
+    departure_time: s.departure_time || '--',
+    halt: s.halt ? `${s.halt} min` : ''
+  }));
+
+  // Build target pairs to query (supports single, comma-separated, or multi-select array)
+  const parseStationList = (param) => {
+    if (!param || param === 'ALL') return null;
+    let list = [];
+    if (Array.isArray(param)) {
+      list = param;
+    } else if (typeof param === 'string') {
+      list = param.split(',');
+    }
+    const cleanList = list.map(s => String(s).replace(/_/g, ' ').trim().toLowerCase()).filter(Boolean);
+    return cleanList.length > 0 ? cleanList : null;
+  };
+
+  const selectedFromList = parseStationList(from_station);
+  const selectedToList = parseStationList(to_station);
+
+  const targetPairs = [];
+
+  for (let i = 0; i < stops.length - 1; i++) {
+    const originStop = stops[i];
+    if (selectedFromList && !selectedFromList.includes(originStop.cleanCity.toLowerCase()) && !selectedFromList.includes(originStop.city.toLowerCase())) {
+      continue;
+    }
+
+    for (let j = i + 1; j < stops.length; j++) {
+      const destStop = stops[j];
+      if (selectedToList && !selectedToList.includes(destStop.cleanCity.toLowerCase()) && !selectedToList.includes(destStop.city.toLowerCase())) {
+        continue;
+      }
+      targetPairs.push({
+        from: originStop.queryCity,
+        fromClean: originStop.cleanCity,
+        fromDep: originStop.departure_time,
+        to: destStop.queryCity,
+        toClean: destStop.cleanCity,
+        toArr: destStop.arrival_time
+      });
+    }
+  }
+
+  if (targetPairs.length === 0) {
+    return res.json({
+      success: true,
+      train_name: routeData.train_name || `Train #${cleanModel}`,
+      train_model: cleanModel,
+      date: date_of_journey,
+      display_date: formatShohozDate(date_of_journey),
+      off_day: routeData.off_day || 'None',
+      stoppages: stops,
+      segments: []
+    });
+  }
+
+  // Format date of journey for Shohoz
+  let dojStr = date_of_journey;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date_of_journey)) {
+    const d = new Date(date_of_journey);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    dojStr = `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+  }
+
+  // Execute in smooth batches of 2 requests with queue spacing
+  const segments = [];
+  const batchSize = 2;
+
+  for (let i = 0; i < targetPairs.length; i += batchSize) {
+    const batch = targetPairs.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(async (pair) => {
+      try {
+        const queryRes = await querySingleShohozTrip(pair.from, pair.to, dojStr);
+        const trains = queryRes.trains || [];
+        const matchingTrain = trains.find(t => 
+          String(t.train_model) === cleanModel || 
+          (t.train_name && routeData.train_name && t.train_name.toLowerCase().trim() === routeData.train_name.toLowerCase().trim())
+        );
+
+        const canonicalFrom = getCanonicalStationName(pair.from);
+        const canonicalTo = getCanonicalStationName(pair.to);
+
+        if (matchingTrain) {
+          const totalSeats = matchingTrain.total_combined_seats !== undefined 
+            ? matchingTrain.total_combined_seats 
+            : (matchingTrain.seat_types || []).reduce((sum, st) => sum + Number(st.seats_available || 0) + Number(st.counter_seats_available || 0), 0);
+
+          const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=${encodeURIComponent(matchingTrain.seat_types?.[0]?.type || 'S_CHAIR')}`;
+
+          return {
+            from: pair.fromClean,
+            to: pair.toClean,
+            departure_time: matchingTrain.departure_time || pair.fromDep,
+            arrival_time: matchingTrain.arrival_time || pair.toArr,
+            travel_time: matchingTrain.travel_time || '',
+            total_seats: totalSeats,
+            has_seats: totalSeats > 0,
+            seat_types: matchingTrain.seat_types || [],
+            book_url: bookUrl
+          };
+        } else {
+          return {
+            from: pair.fromClean,
+            to: pair.toClean,
+            departure_time: pair.fromDep || '--',
+            arrival_time: pair.toArr || '--',
+            travel_time: '',
+            total_seats: 0,
+            has_seats: false,
+            seat_types: [],
+            book_url: `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=S_CHAIR`
+          };
+        }
+      } catch (err) {
+        const canonicalFrom = getCanonicalStationName(pair.from);
+        const canonicalTo = getCanonicalStationName(pair.to);
+        return {
+          from: pair.fromClean,
+          to: pair.toClean,
+          departure_time: pair.fromDep || '--',
+          arrival_time: pair.toArr || '--',
+          travel_time: '',
+          total_seats: 0,
+          has_seats: false,
+          seat_types: [],
+          book_url: `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=S_CHAIR`
+        };
+      }
+    }));
+
+    segments.push(...batchResults);
+  }
+
+  return res.json({
+    success: true,
+    train_name: routeData.train_name || `Train #${cleanModel}`,
+    train_model: cleanModel,
+    date: date_of_journey,
+    display_date: dojStr,
+    off_day: routeData.off_day || 'None',
+    stoppages: stops,
+    segments: segments
+  });
+});
+
+
+// 4. Get Intercity Trains Catalogue (For searching by Train Name / Model Code / Route)
+const trainsCatalogPath = path.join(__dirname, 'data', 'trains.json');
+let trainsCatalog = [];
+try {
+  if (fs.existsSync(trainsCatalogPath)) {
+    trainsCatalog = JSON.parse(fs.readFileSync(trainsCatalogPath, 'utf8'));
+  }
+} catch (e) {
+  trainsCatalog = [];
+}
+
+app.get('/api/trains-list', (req, res) => {
+  res.json({
+    success: true,
+    count: trainsCatalog.length,
+    trains: trainsCatalog
+  });
+});
+
+// 5. Health check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    stations_loaded: stations.length,
+    cache_entries: cache.size,
+    authenticated: !!authCredentials.token,
+    has_device_id: !!authCredentials.deviceId,
+    has_device_key: !!authCredentials.deviceKey,
+    has_saved_session: fs.existsSync(SESSION_FILE),
+    last_updated: authCredentials.lastUpdated
+  });
+});
+
+// ====================================================
+// 6. Fixed Telegram Bot & Automated Deep-Link Pairing
+// ====================================================
+
+const FIXED_TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8600942866:AAEH3-rsOq24r55Y4iNb7tJqklmhn0ni3a0';
+const FIXED_TELEGRAM_BOT_USERNAME = 'railseatfinderbdbot';
+
+// In-memory pairing sessions (code -> { code, createdAt, status: 'pending'|'paired', chatId, username, firstName })
+const activePairings = new Map();
+let latestTelegramUser = null;
+let lastTelegramUpdateOffset = 0;
+
+function formatTelegramError(err) {
+  const rawMsg = err.response?.data?.description || err.message || 'Telegram connection error';
+  const lower = rawMsg.toLowerCase();
+  
+  if (lower.includes('chat not found')) {
+    return 'Chat not found! Please click "Login with Telegram" and press START in Telegram first.';
+  }
+  if (lower.includes('unauthorized') || lower.includes('invalid token') || lower.includes('bot token')) {
+    return 'Invalid Bot Token. Please check bot credentials.';
+  }
+  if (lower.includes('bot was blocked by the user')) {
+    return 'Bot was blocked! Please unblock @railseatfinderbdbot in Telegram and send /start.';
+  }
+  if (lower.includes('chat_id is empty')) {
+    return 'Chat ID cannot be empty.';
+  }
+  return `Telegram Error: ${rawMsg}`;
+}
+
+// Background Telegram Poller for 1-Click Pairing & Commands
+async function pollTelegramBotUpdates() {
+  if (!FIXED_TELEGRAM_BOT_TOKEN) return;
+
+  try {
+    const url = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateOffset}&timeout=3`;
+    const res = await axios.get(url, { timeout: 10000 });
+    const updates = res.data?.result || [];
+
+    for (const update of updates) {
+      if (update.update_id >= lastTelegramUpdateOffset) {
+        lastTelegramUpdateOffset = update.update_id + 1;
+      }
+
+      const msg = update.message;
+      if (!msg || !msg.text) continue;
+
+      const chatId = msg.chat?.id || msg.from?.id;
+      const text = (msg.text || '').trim();
+      const fromUser = msg.from || {};
+      const firstName = fromUser.first_name || 'Traveler';
+      const username = fromUser.username ? `@${fromUser.username}` : '';
+
+      // Check for /start or /start pair_XXXXXX or /login
+      if (text.startsWith('/start') || text.startsWith('/login') || text.startsWith('/connect')) {
+        const parts = text.split(/\s+/);
+        let pairCode = parts[1] || '';
+        pairCode = pairCode.replace(/^pair_/i, '').trim().toUpperCase();
+
+        const userInfo = {
+          chatId: String(chatId),
+          username: username,
+          firstName: firstName,
+          linkedAt: Date.now()
+        };
+
+        latestTelegramUser = userInfo;
+
+        // If specific pairing code matched
+        if (pairCode && activePairings.has(pairCode)) {
+          const session = activePairings.get(pairCode);
+          session.status = 'paired';
+          session.chatId = String(chatId);
+          session.username = username;
+          session.firstName = firstName;
+          activePairings.set(pairCode, session);
+          console.log(`[Telegram] 🔗 Paired code ${pairCode} with chat ${chatId} (${username || firstName})`);
+        } else {
+          // If user just sent /start with no code, also pair the most recent pending session if any
+          for (const [code, session] of activePairings.entries()) {
+            if (session.status === 'pending' && (Date.now() - session.createdAt < 5 * 60 * 1000)) {
+              session.status = 'paired';
+              session.chatId = String(chatId);
+              session.username = username;
+              session.firstName = firstName;
+              activePairings.set(code, session);
+              console.log(`[Telegram] 🔗 Auto-paired active session ${code} with chat ${chatId} (${username || firstName})`);
+              break;
+            }
+          }
+        }
+
+        // Send confirmation reply to Telegram
+        try {
+          const replyUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
+          await axios.post(replyUrl, {
+            chat_id: chatId,
+            text: `👋 <b>Hello ${firstName}!</b>\n\n🎉 <b>Your Telegram is now connected to RailSeat BD!</b>\n\nYou will automatically receive real-time alerts here whenever a watched seat becomes available.\n\n🎯 <i>Return to your web dashboard to watch your preferred train routes!</i>`,
+            parse_mode: 'HTML'
+          }, { timeout: 6000 });
+        } catch (e) {
+          console.warn('[Telegram] Could not send welcome reply:', e.message);
+        }
+      }
+    }
+  } catch (err) {
+    // Silently ignore transient network poll errors
+  }
+}
+
+// Start continuous background poller every 2.5s
+setInterval(pollTelegramBotUpdates, 2500);
+setTimeout(pollTelegramBotUpdates, 1000);
+
+// 1. Get Bot Info
+app.get('/api/telegram/info', (req, res) => {
+  res.json({
+    success: true,
+    bot_username: FIXED_TELEGRAM_BOT_USERNAME,
+    bot_name: 'RailSeat Finder BD',
+    has_fixed_token: true
+  });
+});
+
+// 2. Generate 1-Click Login / Pairing Deep Link
+app.post('/api/telegram/generate-pair-code', (req, res) => {
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code e.g. 489201
+  activePairings.set(code, {
+    code,
+    createdAt: Date.now(),
+    status: 'pending',
+    chatId: null,
+    username: null,
+    firstName: null
+  });
+
+  // Clean old pairing sessions (>15 min)
+  for (const [c, sess] of activePairings.entries()) {
+    if (Date.now() - sess.createdAt > 15 * 60 * 1000) {
+      activePairings.delete(c);
+    }
+  }
+
+  const directUrl = `https://t.me/${FIXED_TELEGRAM_BOT_USERNAME}?start=pair_${code}`;
+
+  res.json({
+    success: true,
+    pair_code: code,
+    bot_username: FIXED_TELEGRAM_BOT_USERNAME,
+    direct_url: directUrl
+  });
+});
+
+// 3. Check Pairing Status
+app.get('/api/telegram/pair-status', (req, res) => {
+  const { code } = req.query;
+  const cleanCode = (code || '').trim().toUpperCase();
+
+  if (cleanCode && activePairings.has(cleanCode)) {
+    const session = activePairings.get(cleanCode);
+    if (session.status === 'paired') {
+      return res.json({
+        success: true,
+        paired: true,
+        chat_id: session.chatId,
+        username: session.username,
+        first_name: session.firstName
+      });
+    }
+  }
+
+  // Also check if user recently pressed /start within last 30 seconds
+  if (latestTelegramUser && (Date.now() - latestTelegramUser.linkedAt < 30 * 1000)) {
+    return res.json({
+      success: true,
+      paired: true,
+      chat_id: latestTelegramUser.chatId,
+      username: latestTelegramUser.username,
+      first_name: latestTelegramUser.firstName
+    });
+  }
+
+  return res.json({
+    success: true,
+    paired: false
+  });
+});
+
+// 4. Send Telegram Alert (Uses Fixed Bot Token)
+app.post('/api/telegram/send-alert', async (req, res) => {
+  const { chat_id, message } = req.body;
+  const cleanChatId = (chat_id || '').trim();
+
+  if (!cleanChatId || !message) {
+    return res.json({ success: false, error: 'chat_id and message are required.' });
+  }
+
+  try {
+    const telegramUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const response = await axios.post(telegramUrl, {
+      chat_id: cleanChatId,
+      text: message,
+      parse_mode: 'HTML',
+      disable_web_page_preview: false
+    }, { timeout: 8000 });
+
+    if (response.data && response.data.ok) {
+      console.log(`[Telegram] ✅ Alert sent to chat ${cleanChatId}`);
+      return res.json({ success: true, message_id: response.data.result?.message_id });
+    } else {
+      const errMsg = formatTelegramError({ response });
+      console.warn('[Telegram] ❌ API returned not-ok:', errMsg);
+      return res.json({ success: false, error: errMsg });
+    }
+  } catch (err) {
+    const errMsg = formatTelegramError(err);
+    console.error('[Telegram] ❌ Failed to send alert:', errMsg);
+    return res.json({ success: false, error: errMsg });
+  }
+});
+
+// 5. Test Telegram Connection (Uses Fixed Bot Token)
+app.post('/api/telegram/test', async (req, res) => {
+  const { chat_id } = req.body;
+  const cleanChatId = (chat_id || '').trim();
+
+  if (!cleanChatId) {
+    return res.json({ success: false, error: 'Chat ID is required. Please click "Login with Telegram".' });
+  }
+
+  try {
+    const telegramUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const response = await axios.post(telegramUrl, {
+      chat_id: cleanChatId,
+      text: '🚆 <b>RailSeat BD — Telegram Connected!</b>\n\n🎉 Your Telegram account is successfully connected to <b>@railseatfinderbdbot</b>!\n\nYou will receive instant notifications here whenever a watched seat becomes available.',
+      parse_mode: 'HTML'
+    }, { timeout: 8000 });
+
+    if (response.data && response.data.ok) {
+      return res.json({ success: true });
+    } else {
+      const errMsg = formatTelegramError({ response });
+      return res.json({ success: false, error: errMsg });
+    }
+  } catch (err) {
+    const errMsg = formatTelegramError(err);
+    return res.json({ success: false, error: errMsg });
+  }
+});
+
+// ====================================================
+// 7. User Management & Dashboard Access Control API
+// ====================================================
+
+// 1. Dashboard User Auth Status Check
+app.get('/api/user-auth/status', (req, res) => {
+  const data = loadUsersData();
+  const session = getAuthenticatedUser(req);
+
+  res.json({
+    success: true,
+    require_login: !!data.settings?.requireLogin,
+    logged_in: !!session,
+    user: session ? {
+      id: session.userId,
+      username: session.username,
+      name: session.name,
+      role: session.role
+    } : null
+  });
+});
+
+// 2. User Login (Protected with Brute-Force Rate Limiting & Salted Scrypt)
+app.post('/api/user-auth/login', (req, res) => {
+  const { username, password, rememberMe } = req.body;
+  const cleanUsername = (username || '').trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
+
+  if (!cleanUsername || !cleanPassword) {
+    return res.json({ success: false, error: 'Username and password are required.' });
+  }
+
+  // Brute-force rate limit check
+  const rateLimit = checkLoginRateLimit(cleanUsername);
+  if (!rateLimit.allowed) {
+    return res.json({
+      success: false,
+      error: `Too many failed login attempts. Please wait ${rateLimit.remainingSeconds} seconds before trying again.`
+    });
+  }
+
+  const data = loadUsersData();
+  const user = data.users.find(u => u.username.toLowerCase() === cleanUsername);
+
+  if (!user || !verifyPassword(cleanPassword, user.password)) {
+    recordFailedLogin(cleanUsername);
+    return res.json({ success: false, error: 'Invalid username or password.' });
+  }
+
+  if (user.status === 'disabled') {
+    return res.json({ success: false, error: 'This user account has been disabled by Admin.' });
+  }
+
+  // Reset rate limit on successful login
+  resetLoginRateLimit(cleanUsername);
+
+  // Transparently re-hash legacy passwords to salted scrypt if needed
+  if (!user.password.startsWith('scrypt$')) {
+    user.password = hashPassword(cleanPassword);
+  }
+
+  // Update last login
+  user.lastLogin = new Date().toISOString();
+  saveUsersData(data);
+
+  // Generate session token (30 days if rememberMe, 1 day otherwise)
+  const token = 'sess_' + crypto.randomBytes(24).toString('hex');
+  const durationMs = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (24 * 60 * 60 * 1000);
+  const sessionData = {
+    token,
+    userId: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role || 'viewer',
+    expiresAt: Date.now() + durationMs
+  };
+
+  userSessions.set(token, sessionData);
+
+  res.json({
+    success: true,
+    token,
+    rememberMe: !!rememberMe,
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role || 'viewer',
+      status: user.status
+    }
+  });
+});
+
+// 3. User Logout
+app.post('/api/user-auth/logout', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (token) userSessions.delete(token);
+
+  res.json({ success: true, message: 'Logged out successfully.' });
+});
+
+// Middleware to enforce Admin-only role for User Management
+function requireAdmin(req, res, next) {
+  const session = getAuthenticatedUser(req);
+  if (!session || session.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden: Access restricted to Administrators only.'
+    });
+  }
+  next();
+}
+
+// 4. Get All Users (Admin-only)
+app.get('/api/users', requireAdmin, (req, res) => {
+  const data = loadUsersData();
+  
+  // Return list with sanitized fields (NEVER expose password hashes)
+  const safeUsers = data.users.map(u => ({
+    id: u.id,
+    username: u.username,
+    name: u.name,
+    role: u.role || 'viewer',
+    status: u.status || 'active',
+    canViewDashboard: u.canViewDashboard !== false,
+    has_shohoz_session: !!(u.shohozSession && u.shohozSession.token),
+    createdAt: u.createdAt,
+    lastLogin: u.lastLogin
+  }));
+
+  res.json({
+    success: true,
+    count: safeUsers.length,
+    require_login: !!data.settings?.requireLogin,
+    users: safeUsers
+  });
+});
+
+// 5. Add New User (Admin-only, Encrypted with Salted Scrypt)
+app.post('/api/users/add', requireAdmin, (req, res) => {
+  const { username, password, name, role, status } = req.body;
+  const cleanUsername = (username || '').trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
+  const cleanName = (name || '').trim() || cleanUsername;
+  const cleanRole = (role || 'viewer').toLowerCase() === 'admin' ? 'admin' : 'viewer';
+  const cleanStatus = (status || 'active').toLowerCase() === 'disabled' ? 'disabled' : 'active';
+
+  if (!cleanUsername || cleanUsername.length < 3) {
+    return res.json({ success: false, error: 'Username must be at least 3 characters long.' });
+  }
+
+  if (!cleanPassword || cleanPassword.length < 4) {
+    return res.json({ success: false, error: 'Password must be at least 4 characters long.' });
+  }
+
+  const data = loadUsersData();
+  const existing = data.users.find(u => u.username.toLowerCase() === cleanUsername);
+  if (existing) {
+    return res.json({ success: false, error: `Username "${cleanUsername}" is already taken.` });
+  }
+
+  const newUser = {
+    id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    username: cleanUsername,
+    password: hashPassword(cleanPassword),
+    name: cleanName,
+    role: cleanRole,
+    status: cleanStatus,
+    canViewDashboard: true,
+    createdAt: new Date().toISOString(),
+    lastLogin: null
+  };
+
+  data.users.push(newUser);
+  saveUsersData(data);
+  console.log(`[Users] 👤 Added new encrypted user: ${cleanUsername} (${cleanRole})`);
+
+  res.json({
+    success: true,
+    message: `User ${cleanUsername} created successfully.`,
+    user: {
+      id: newUser.id,
+      username: newUser.username,
+      name: newUser.name,
+      role: newUser.role,
+      status: newUser.status,
+      createdAt: newUser.createdAt
+    }
+  });
+});
+
+// 6. Delete / Remove User (Admin-only)
+app.post('/api/users/delete', requireAdmin, (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.json({ success: false, error: 'User ID is required.' });
+
+  const data = loadUsersData();
+  const userIdx = data.users.findIndex(u => u.id === id);
+
+  if (userIdx === -1) {
+    return res.json({ success: false, error: 'User not found.' });
+  }
+
+  const userToDelete = data.users[userIdx];
+
+  // Prevent deleting the only remaining admin
+  const totalAdmins = data.users.filter(u => u.role === 'admin').length;
+  if (userToDelete.role === 'admin' && totalAdmins <= 1) {
+    return res.json({ success: false, error: 'Cannot delete the only remaining Administrator account.' });
+  }
+
+  data.users.splice(userIdx, 1);
+  saveUsersData(data);
+  console.log(`[Users] 🗑️ Deleted user: ${userToDelete.username}`);
+
+  res.json({ success: true, message: `User "${userToDelete.username}" removed.` });
+});
+
+// 7. Toggle User Status (Admin-only)
+app.post('/api/users/toggle-status', requireAdmin, (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.json({ success: false, error: 'User ID is required.' });
+
+  const data = loadUsersData();
+  const user = data.users.find(u => u.id === id);
+
+  if (!user) {
+    return res.json({ success: false, error: 'User not found.' });
+  }
+
+  user.status = (user.status === 'active') ? 'disabled' : 'active';
+  saveUsersData(data);
+
+  res.json({
+    success: true,
+    status: user.status,
+    message: `User ${user.username} is now ${user.status}.`
+  });
+});
+
+// 8. Reset / Update User Password (Admin-only, Encrypted with Salted Scrypt)
+app.post('/api/users/update-password', requireAdmin, (req, res) => {
+  const { id, newPassword } = req.body;
+  const cleanPassword = (newPassword || '').trim();
+
+  if (!id || !cleanPassword || cleanPassword.length < 4) {
+    return res.json({ success: false, error: 'Password must be at least 4 characters.' });
+  }
+
+  const data = loadUsersData();
+  const user = data.users.find(u => u.id === id);
+
+  if (!user) {
+    return res.json({ success: false, error: 'User not found.' });
+  }
+
+  user.password = hashPassword(cleanPassword);
+  saveUsersData(data);
+
+  res.json({ success: true, message: `Password for ${user.username} updated and encrypted.` });
+});
+
+// 9. Update Access Control Settings (Admin-only)
+app.post('/api/users/update-settings', requireAdmin, (req, res) => {
+  const { requireLogin } = req.body;
+  const data = loadUsersData();
+
+  data.settings = data.settings || {};
+  data.settings.requireLogin = !!requireLogin;
+  saveUsersData(data);
+
+  console.log(`[Access Control] 🔒 Dashboard login requirement set to: ${data.settings.requireLogin}`);
+  res.json({
+    success: true,
+    require_login: data.settings.requireLogin,
+    message: data.settings.requireLogin ? 'Dashboard now requires authorized user login.' : 'Dashboard is now publicly accessible.'
+  });
+});
+
+// Fallback for SPA routing & API 404 handler
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, error: `API endpoint '${req.path}' not found.` });
+  }
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.status(404).send('Cannot GET ' + req.path);
+});
+
+let browserOpened = false;
+function openBrowser(url) {
+  if (browserOpened) return;
+  browserOpened = true;
+  const startCmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start ""' : 'xdg-open';
+  exec(`${startCmd} "${url}"`, (err) => {
+    if (err && process.platform === 'win32') {
+      exec(`explorer "${url}"`);
+    }
+  });
+}
+
+// Start Server with dynamic port fallback
+function startServer(portToTry) {
+  const server = app.listen(portToTry, () => {
+    const serverUrl = `http://localhost:${portToTry}`;
+    console.log(`====================================================`);
+    console.log(` 🚆 RailSeat Finder BD - Bangladesh Railway Seat Availability`);
+    console.log(` 🌐 Server running at: ${serverUrl}`);
+    console.log(` 🛡️ Anti-Bot Protection & Request Throttling: Active`);
+    console.log(` 💾 Persistent Session Storage: ${fs.existsSync(SESSION_FILE) ? 'LOADED (Active)' : 'EMPTY (Waiting for connection)'}`);
+    console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
+    console.log(` 🚀 Dashboard auto-launching in browser...`);
+    console.log(`====================================================`);
+
+    // Auto open dashboard in default browser
+    setTimeout(() => {
+      openBrowser(serverUrl);
+    }, 500);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[Port Conflict] Port ${portToTry} is busy. Trying port ${portToTry + 1}...`);
+      startServer(portToTry + 1);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+}
+
+startServer(PORT);
+

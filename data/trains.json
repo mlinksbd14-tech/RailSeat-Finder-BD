@@ -1,0 +1,674 @@
+[
+  {
+    "model": "701",
+    "name": "Suborno Express",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "702",
+    "name": "Suborno Express",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "703",
+    "name": "Mahanagar Godhuli",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "704",
+    "name": "Mahanagar Provati",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "705",
+    "name": "Ekota Express",
+    "from": "Dhaka",
+    "to": "Panchagarh",
+    "route": "Dhaka ➔ Panchagarh"
+  },
+  {
+    "model": "706",
+    "name": "Ekota Express",
+    "from": "Panchagarh",
+    "to": "Dhaka",
+    "route": "Panchagarh ➔ Dhaka"
+  },
+  {
+    "model": "707",
+    "name": "Tista Express",
+    "from": "Dhaka",
+    "to": "Dewanganj (Jamalpur)",
+    "route": "Dhaka ➔ Jamalpur (Dewanganj)"
+  },
+  {
+    "model": "708",
+    "name": "Tista Express",
+    "from": "Dewanganj (Jamalpur)",
+    "to": "Dhaka",
+    "route": "Jamalpur (Dewanganj) ➔ Dhaka"
+  },
+  {
+    "model": "709",
+    "name": "Parabat Express",
+    "from": "Dhaka",
+    "to": "Sylhet",
+    "route": "Dhaka ➔ Sylhet"
+  },
+  {
+    "model": "710",
+    "name": "Parabat Express",
+    "from": "Sylhet",
+    "to": "Dhaka",
+    "route": "Sylhet ➔ Dhaka"
+  },
+  {
+    "model": "711",
+    "name": "Karatoya Express",
+    "from": "Santahar",
+    "to": "Burimari",
+    "route": "Santahar ➔ Burimari"
+  },
+  {
+    "model": "712",
+    "name": "Karatoya Express",
+    "from": "Burimari",
+    "to": "Santahar",
+    "route": "Burimari ➔ Santahar"
+  },
+  {
+    "model": "715",
+    "name": "Kapotaksha Express",
+    "from": "Khulna",
+    "to": "Rajshahi",
+    "route": "Khulna ➔ Rajshahi"
+  },
+  {
+    "model": "716",
+    "name": "Kapotaksha Express",
+    "from": "Rajshahi",
+    "to": "Khulna",
+    "route": "Rajshahi ➔ Khulna"
+  },
+  {
+    "model": "717",
+    "name": "Joyontika Express",
+    "from": "Dhaka",
+    "to": "Sylhet",
+    "route": "Dhaka ➔ Sylhet"
+  },
+  {
+    "model": "718",
+    "name": "Joyontika Express",
+    "from": "Sylhet",
+    "to": "Dhaka",
+    "route": "Sylhet ➔ Dhaka"
+  },
+  {
+    "model": "719",
+    "name": "Paharika Express",
+    "from": "Chattogram",
+    "to": "Sylhet",
+    "route": "Chattogram ➔ Sylhet"
+  },
+  {
+    "model": "720",
+    "name": "Paharika Express",
+    "from": "Sylhet",
+    "to": "Chattogram",
+    "route": "Sylhet ➔ Chattogram"
+  },
+  {
+    "model": "721",
+    "name": "Mohanagar Express",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "722",
+    "name": "Mohanagar Express",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "723",
+    "name": "Udayan Express",
+    "from": "Chattogram",
+    "to": "Sylhet",
+    "route": "Chattogram ➔ Sylhet"
+  },
+  {
+    "model": "724",
+    "name": "Udayan Express",
+    "from": "Sylhet",
+    "to": "Chattogram",
+    "route": "Sylhet ➔ Chattogram"
+  },
+  {
+    "model": "725",
+    "name": "Sundarban Express",
+    "from": "Khulna",
+    "to": "Dhaka",
+    "route": "Khulna ➔ Dhaka"
+  },
+  {
+    "model": "726",
+    "name": "Sundarban Express",
+    "from": "Dhaka",
+    "to": "Khulna",
+    "route": "Dhaka ➔ Khulna"
+  },
+  {
+    "model": "727",
+    "name": "Rupsha Express",
+    "from": "Khulna",
+    "to": "Chilahati",
+    "route": "Khulna ➔ Chilahati"
+  },
+  {
+    "model": "728",
+    "name": "Rupsha Express",
+    "from": "Chilahati",
+    "to": "Khulna",
+    "route": "Chilahati ➔ Khulna"
+  },
+  {
+    "model": "729",
+    "name": "Meghna Express",
+    "from": "Chattogram",
+    "to": "Chandpur",
+    "route": "Chattogram ➔ Chandpur"
+  },
+  {
+    "model": "730",
+    "name": "Meghna Express",
+    "from": "Chandpur",
+    "to": "Chattogram",
+    "route": "Chandpur ➔ Chattogram"
+  },
+  {
+    "model": "735",
+    "name": "Agnibina Express",
+    "from": "Dhaka",
+    "to": "Tarakandi (Jamalpur)",
+    "route": "Dhaka ➔ Tarakandi (Jamalpur)"
+  },
+  {
+    "model": "736",
+    "name": "Agnibina Express",
+    "from": "Tarakandi (Jamalpur)",
+    "to": "Dhaka",
+    "route": "Tarakandi (Jamalpur) ➔ Dhaka"
+  },
+  {
+    "model": "737",
+    "name": "Egarosindhur Provati",
+    "from": "Dhaka",
+    "to": "Kishoreganj",
+    "route": "Dhaka ➔ Kishoreganj"
+  },
+  {
+    "model": "738",
+    "name": "Egarosindhur Provati",
+    "from": "Kishoreganj",
+    "to": "Dhaka",
+    "route": "Kishoreganj ➔ Dhaka"
+  },
+  {
+    "model": "739",
+    "name": "Upaban Express",
+    "from": "Dhaka",
+    "to": "Sylhet",
+    "route": "Dhaka ➔ Sylhet"
+  },
+  {
+    "model": "740",
+    "name": "Upaban Express",
+    "from": "Sylhet",
+    "to": "Dhaka",
+    "route": "Sylhet ➔ Dhaka"
+  },
+  {
+    "model": "741",
+    "name": "Turna Express",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "742",
+    "name": "Turna Express",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "743",
+    "name": "Brahmaputra Express",
+    "from": "Dhaka",
+    "to": "Dewanganj (Jamalpur)",
+    "route": "Dhaka ➔ Dewanganj (Jamalpur)"
+  },
+  {
+    "model": "744",
+    "name": "Brahmaputra Express",
+    "from": "Dewanganj (Jamalpur)",
+    "to": "Dhaka",
+    "route": "Dewanganj (Jamalpur) ➔ Dhaka"
+  },
+  {
+    "model": "745",
+    "name": "Jamuna Express",
+    "from": "Dhaka",
+    "to": "Tarakandi (Jamalpur)",
+    "route": "Dhaka ➔ Tarakandi (Jamalpur)"
+  },
+  {
+    "model": "746",
+    "name": "Jamuna Express",
+    "from": "Tarakandi (Jamalpur)",
+    "to": "Dhaka",
+    "route": "Tarakandi (Jamalpur) ➔ Dhaka"
+  },
+  {
+    "model": "747",
+    "name": "Simanta Express",
+    "from": "Khulna",
+    "to": "Chilahati",
+    "route": "Khulna ➔ Chilahati"
+  },
+  {
+    "model": "748",
+    "name": "Simanta Express",
+    "from": "Chilahati",
+    "to": "Khulna",
+    "route": "Chilahati ➔ Khulna"
+  },
+  {
+    "model": "749",
+    "name": "Egarosindhur Godhuli",
+    "from": "Dhaka",
+    "to": "Kishoreganj",
+    "route": "Dhaka ➔ Kishoreganj"
+  },
+  {
+    "model": "750",
+    "name": "Egarosindhur Godhuli",
+    "from": "Kishoreganj",
+    "to": "Dhaka",
+    "route": "Kishoreganj ➔ Dhaka"
+  },
+  {
+    "model": "751",
+    "name": "Lalmoni Express",
+    "from": "Dhaka",
+    "to": "Lalmonirhat",
+    "route": "Dhaka ➔ Lalmonirhat"
+  },
+  {
+    "model": "752",
+    "name": "Lalmoni Express",
+    "from": "Lalmonirhat",
+    "to": "Dhaka",
+    "route": "Lalmonirhat ➔ Dhaka"
+  },
+  {
+    "model": "753",
+    "name": "Silk City Express",
+    "from": "Dhaka",
+    "to": "Rajshahi",
+    "route": "Dhaka ➔ Rajshahi"
+  },
+  {
+    "model": "754",
+    "name": "Silk City Express",
+    "from": "Rajshahi",
+    "to": "Dhaka",
+    "route": "Rajshahi ➔ Dhaka"
+  },
+  {
+    "model": "755",
+    "name": "Madhumati Express",
+    "from": "Dhaka",
+    "to": "Rajshahi",
+    "route": "Dhaka ➔ Rajshahi (Padma Bridge)"
+  },
+  {
+    "model": "756",
+    "name": "Madhumati Express",
+    "from": "Rajshahi",
+    "to": "Dhaka",
+    "route": "Rajshahi ➔ Dhaka (Padma Bridge)"
+  },
+  {
+    "model": "757",
+    "name": "Drutojan Express",
+    "from": "Dhaka",
+    "to": "Panchagarh",
+    "route": "Dhaka ➔ Panchagarh"
+  },
+  {
+    "model": "758",
+    "name": "Drutojan Express",
+    "from": "Panchagarh",
+    "to": "Dhaka",
+    "route": "Panchagarh ➔ Dhaka"
+  },
+  {
+    "model": "759",
+    "name": "Padma Express",
+    "from": "Dhaka",
+    "to": "Rajshahi",
+    "route": "Dhaka ➔ Rajshahi"
+  },
+  {
+    "model": "760",
+    "name": "Padma Express",
+    "from": "Rajshahi",
+    "to": "Dhaka",
+    "route": "Rajshahi ➔ Dhaka"
+  },
+  {
+    "model": "761",
+    "name": "Sagardari Express",
+    "from": "Khulna",
+    "to": "Rajshahi",
+    "route": "Khulna ➔ Rajshahi"
+  },
+  {
+    "model": "762",
+    "name": "Sagardari Express",
+    "from": "Rajshahi",
+    "to": "Khulna",
+    "route": "Rajshahi ➔ Khulna"
+  },
+  {
+    "model": "763",
+    "name": "Chitra Express",
+    "from": "Khulna",
+    "to": "Dhaka",
+    "route": "Khulna ➔ Dhaka"
+  },
+  {
+    "model": "764",
+    "name": "Chitra Express",
+    "from": "Dhaka",
+    "to": "Khulna",
+    "route": "Dhaka ➔ Khulna"
+  },
+  {
+    "model": "765",
+    "name": "Nilsagor Express",
+    "from": "Dhaka",
+    "to": "Chilahati",
+    "route": "Dhaka ➔ Chilahati"
+  },
+  {
+    "model": "766",
+    "name": "Nilsagor Express",
+    "from": "Chilahati",
+    "to": "Dhaka",
+    "route": "Chilahati ➔ Dhaka"
+  },
+  {
+    "model": "769",
+    "name": "Dhumketu Express",
+    "from": "Dhaka",
+    "to": "Rajshahi",
+    "route": "Dhaka ➔ Rajshahi"
+  },
+  {
+    "model": "770",
+    "name": "Dhumketu Express",
+    "from": "Rajshahi",
+    "to": "Dhaka",
+    "route": "Rajshahi ➔ Dhaka"
+  },
+  {
+    "model": "771",
+    "name": "Rangpur Express",
+    "from": "Dhaka",
+    "to": "Rangpur",
+    "route": "Dhaka ➔ Rangpur"
+  },
+  {
+    "model": "772",
+    "name": "Rangpur Express",
+    "from": "Rangpur",
+    "to": "Dhaka",
+    "route": "Rangpur ➔ Dhaka"
+  },
+  {
+    "model": "773",
+    "name": "Kalni Express",
+    "from": "Dhaka",
+    "to": "Sylhet",
+    "route": "Dhaka ➔ Sylhet"
+  },
+  {
+    "model": "774",
+    "name": "Kalni Express",
+    "from": "Sylhet",
+    "to": "Dhaka",
+    "route": "Sylhet ➔ Dhaka"
+  },
+  {
+    "model": "775",
+    "name": "Sirajganj Express",
+    "from": "Dhaka",
+    "to": "Sirajganj",
+    "route": "Dhaka ➔ Sirajganj"
+  },
+  {
+    "model": "776",
+    "name": "Sirajganj Express",
+    "from": "Sirajganj",
+    "to": "Dhaka",
+    "route": "Sirajganj ➔ Dhaka"
+  },
+  {
+    "model": "781",
+    "name": "Kishoreganj Express",
+    "from": "Dhaka",
+    "to": "Kishoreganj",
+    "route": "Dhaka ➔ Kishoreganj"
+  },
+  {
+    "model": "782",
+    "name": "Kishoreganj Express",
+    "from": "Kishoreganj",
+    "to": "Dhaka",
+    "route": "Kishoreganj ➔ Dhaka"
+  },
+  {
+    "model": "783",
+    "name": "Tungipara Express",
+    "from": "Gopalganj",
+    "to": "Rajshahi",
+    "route": "Gopalganj ➔ Rajshahi"
+  },
+  {
+    "model": "784",
+    "name": "Tungipara Express",
+    "from": "Rajshahi",
+    "to": "Gopalganj",
+    "route": "Rajshahi ➔ Gopalganj"
+  },
+  {
+    "model": "785",
+    "name": "Bijoy Express",
+    "from": "Chattogram",
+    "to": "Mymensingh",
+    "route": "Chattogram ➔ Mymensingh"
+  },
+  {
+    "model": "786",
+    "name": "Bijoy Express",
+    "from": "Mymensingh",
+    "to": "Chattogram",
+    "route": "Mymensingh ➔ Chattogram"
+  },
+  {
+    "model": "787",
+    "name": "Sonar Bangla Express",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "788",
+    "name": "Sonar Bangla Express",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "791",
+    "name": "Banalata Express",
+    "from": "Dhaka",
+    "to": "Chapainawabganj",
+    "route": "Dhaka ➔ Rajshahi/Chapainawabganj"
+  },
+  {
+    "model": "792",
+    "name": "Banalata Express",
+    "from": "Chapainawabganj",
+    "to": "Dhaka",
+    "route": "Chapainawabganj/Rajshahi ➔ Dhaka"
+  },
+  {
+    "model": "793",
+    "name": "Panchagarh Express",
+    "from": "Dhaka",
+    "to": "Panchagarh",
+    "route": "Dhaka ➔ Panchagarh"
+  },
+  {
+    "model": "794",
+    "name": "Panchagarh Express",
+    "from": "Panchagarh",
+    "to": "Dhaka",
+    "route": "Panchagarh ➔ Dhaka"
+  },
+  {
+    "model": "795",
+    "name": "Benapole Express",
+    "from": "Dhaka",
+    "to": "Benapole",
+    "route": "Dhaka ➔ Benapole"
+  },
+  {
+    "model": "796",
+    "name": "Benapole Express",
+    "from": "Benapole",
+    "to": "Dhaka",
+    "route": "Benapole ➔ Dhaka"
+  },
+  {
+    "model": "797",
+    "name": "Kurigram Express",
+    "from": "Dhaka",
+    "to": "Kurigram",
+    "route": "Dhaka ➔ Kurigram"
+  },
+  {
+    "model": "798",
+    "name": "Kurigram Express",
+    "from": "Kurigram",
+    "to": "Dhaka",
+    "route": "Kurigram ➔ Dhaka"
+  },
+  {
+    "model": "799",
+    "name": "Jamalpur Express",
+    "from": "Dhaka",
+    "to": "Bhuapur (Jamalpur)",
+    "route": "Dhaka ➔ Jamalpur (Bhuapur)"
+  },
+  {
+    "model": "800",
+    "name": "Jamalpur Express",
+    "from": "Bhuapur (Jamalpur)",
+    "to": "Dhaka",
+    "route": "Jamalpur (Bhuapur) ➔ Dhaka"
+  },
+  {
+    "model": "801",
+    "name": "Chattala Express",
+    "from": "Chattogram",
+    "to": "Dhaka",
+    "route": "Chattogram ➔ Dhaka"
+  },
+  {
+    "model": "802",
+    "name": "Chattala Express",
+    "from": "Dhaka",
+    "to": "Chattogram",
+    "route": "Dhaka ➔ Chattogram"
+  },
+  {
+    "model": "803",
+    "name": "Dholeshwari Express",
+    "from": "Dhaka",
+    "to": "Mymensingh",
+    "route": "Dhaka ➔ Mymensingh"
+  },
+  {
+    "model": "804",
+    "name": "Dholeshwari Express",
+    "from": "Mymensingh",
+    "to": "Dhaka",
+    "route": "Mymensingh ➔ Dhaka"
+  },
+  {
+    "model": "813",
+    "name": "Cox's Bazar Express",
+    "from": "Chattogram/Cox's Bazar",
+    "to": "Dhaka",
+    "route": "Cox's Bazar ➔ Dhaka"
+  },
+  {
+    "model": "814",
+    "name": "Cox's Bazar Express",
+    "from": "Dhaka",
+    "to": "Cox's Bazar",
+    "route": "Dhaka ➔ Cox's Bazar"
+  },
+  {
+    "model": "815",
+    "name": "Parjotak Express",
+    "from": "Chattogram/Cox's Bazar",
+    "to": "Dhaka",
+    "route": "Cox's Bazar ➔ Dhaka"
+  },
+  {
+    "model": "816",
+    "name": "Parjotak Express",
+    "from": "Dhaka",
+    "to": "Cox's Bazar",
+    "route": "Dhaka ➔ Cox's Bazar"
+  },
+  {
+    "model": "817",
+    "name": "Burimari Express",
+    "from": "Dhaka",
+    "to": "Burimari",
+    "route": "Dhaka ➔ Burimari"
+  },
+  {
+    "model": "818",
+    "name": "Burimari Express",
+    "from": "Burimari",
+    "to": "Dhaka",
+    "route": "Burimari ➔ Dhaka"
+  }
+]

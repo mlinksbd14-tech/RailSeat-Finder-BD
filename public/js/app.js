@@ -1,0 +1,4724 @@
+/**
+ * Bangladesh Railway (Shohoz) Real-Time Seat Availability Dashboard
+ * 100% Live API Gateway with Persistent Session Storage & Auto-Expiry Detection
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  // ----------------------------------------------------
+  // Application State
+  // ----------------------------------------------------
+  const state = {
+    stations: [],
+    selectedFrom: '',
+    selectedTo: '',
+    selectedDate: '',
+    selectedTrain: 'ALL',
+    selectedClass: 'ALL',
+    viewMode: 'grid', // 'grid' | 'table' | 'matrix'
+    pollingInterval: localStorage.getItem('rail_polling_interval') !== null ? parseInt(localStorage.getItem('rail_polling_interval'), 10) : 30, // seconds (0 = off)
+    pollingTimer: null,
+    isSoundEnabled: localStorage.getItem('rail_sound') !== 'false',
+    lastSearchData: null,
+    multiDateData: null,
+    matrixDays: 7,
+    matrixStartDate: '',
+    isMatrixLoading: false,
+    isMonitorPaused: false,
+    monitorCountdown: 30,
+    countdownTimer: null,
+    watchlist: [],
+    pendingWatchTarget: null,
+    previousSeatCounts: new Map(),
+    notifications: [],
+    trainsCatalog: [],
+    isLoading: false,
+    isAuthenticated: false,
+    authUserData: null
+  };
+
+  // Load stored alert notifications from localStorage
+  try {
+    const savedNotifs = localStorage.getItem('railway_stored_alerts');
+    if (savedNotifs) state.notifications = JSON.parse(savedNotifs);
+  } catch (e) {
+    state.notifications = [];
+  }
+
+  // Load stored watchlist from localStorage
+  try {
+    const savedWatchlist = localStorage.getItem('railway_watchlist');
+    if (savedWatchlist) state.watchlist = JSON.parse(savedWatchlist);
+  } catch (e) {
+    state.watchlist = [];
+  }
+
+  // ----------------------------------------------------
+  // DOM Elements
+  // ----------------------------------------------------
+  const searchForm = document.getElementById('searchForm');
+  const fromStationInput = document.getElementById('fromStationInput');
+  const toStationInput = document.getElementById('toStationInput');
+  const fromDropdown = document.getElementById('fromDropdown');
+  const toDropdown = document.getElementById('toDropdown');
+  const clearFromBtn = document.getElementById('clearFromBtn');
+  const clearToBtn = document.getElementById('clearToBtn');
+  const swapStationsBtn = document.getElementById('swapStationsBtn');
+  const swapIcon = document.getElementById('swapIcon');
+  const journeyDateInput = document.getElementById('journeyDateInput');
+  const dateChipsContainer = document.getElementById('dateChipsContainer');
+  const trainFilterSelect = document.getElementById('trainFilterSelect');
+  const classFilterSelect = document.getElementById('classFilterSelect');
+  const searchSubmitBtn = document.getElementById('searchSubmitBtn');
+  
+  const trackerBar = document.getElementById('trackerBar');
+  const activeFromBadge = document.getElementById('activeFromBadge');
+  const activeToBadge = document.getElementById('activeToBadge');
+  const activeDateBadge = document.getElementById('activeDateBadge');
+  const lastUpdatedTime = document.getElementById('lastUpdatedTime');
+  const pollingIntervalSelect = document.getElementById('pollingIntervalSelect');
+  const pollingIndicator = document.getElementById('pollingIndicator');
+  const manualRefreshBtn = document.getElementById('manualRefreshBtn');
+  const refreshIcon = document.getElementById('refreshIcon');
+  
+  const viewGridBtn = document.getElementById('viewGridBtn');
+  const viewTableBtn = document.getElementById('viewTableBtn');
+  const viewMatrixBtn = document.getElementById('viewMatrixBtn');
+  const trainsGrid = document.getElementById('trainsGrid');
+  const trainsTableView = document.getElementById('trainsTableView');
+  const trainsMatrixView = document.getElementById('trainsMatrixView');
+  const matrixContentContainer = document.getElementById('matrixContentContainer');
+  const matrixStartDateInput = document.getElementById('matrixStartDateInput');
+  const matrixDaysPresetGroup = document.getElementById('matrixDaysPresetGroup');
+  const matrixCustomDaysInput = document.getElementById('matrixCustomDaysInput');
+  const matrixRefreshBtn = document.getElementById('matrixRefreshBtn');
+  const calendarMatrixTitle = document.getElementById('calendarMatrixTitle');
+  const tableBody = document.getElementById('tableBody');
+  
+  const statsRibbon = document.getElementById('statsRibbon');
+  const statTotalTrains = document.getElementById('statTotalTrains');
+  const statOnlineSeats = document.getElementById('statOnlineSeats');
+  const statCounterSeats = document.getElementById('statCounterSeats');
+  const statCombinedSeats = document.getElementById('statCombinedSeats');
+  
+  const initialStateCard = document.getElementById('initialStateCard');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  const noticeBanner = document.getElementById('noticeBanner');
+  const noticeText = document.getElementById('noticeText');
+  const bannerConnectBtn = document.getElementById('bannerConnectBtn');
+  const searchModeBadge = document.getElementById('searchModeBadge');
+  const toastContainer = document.getElementById('toastContainer');
+  const liveBadge = document.getElementById('liveBadge');
+
+  // Auto-Monitor Countdown & Pause/Resume Elements
+  const monitorTickerContainer = document.getElementById('monitorTickerContainer');
+  const monitorCountdownLabel = document.getElementById('monitorCountdownLabel');
+  const monitorProgressBar = document.getElementById('monitorProgressBar');
+  const monitorPauseResumeBtn = document.getElementById('monitorPauseResumeBtn');
+  const monitorPauseIcon = document.getElementById('monitorPauseIcon');
+
+  // Share Modal Elements
+  const shareResultsBtn = document.getElementById('shareResultsBtn');
+  const shareModal = document.getElementById('shareModal');
+  const shareCloseBtn = document.getElementById('shareCloseBtn');
+  const sharePreviewTextarea = document.getElementById('sharePreviewTextarea');
+  const copyShareSummaryBtn = document.getElementById('copyShareSummaryBtn');
+  const whatsappShareBtn = document.getElementById('whatsappShareBtn');
+
+  // Watchlist Elements
+  const openWatchlistBtn = document.getElementById('openWatchlistBtn');
+  const watchlistBadge = document.getElementById('watchlistBadge');
+  const watchlistModal = document.getElementById('watchlistModal');
+  const watchlistCloseBtn = document.getElementById('watchlistCloseBtn');
+  const watchlistItemsContainer = document.getElementById('watchlistItemsContainer');
+  const clearWatchlistBtn = document.getElementById('clearWatchlistBtn');
+
+  // Telegram 1-Click Login & Alert Elements
+  const telegramStatusBadge = document.getElementById('telegramStatusBadge');
+  const telegramDisconnectedCard = document.getElementById('telegramDisconnectedCard');
+  const telegramConnectedCard = document.getElementById('telegramConnectedCard');
+  const telegramLoginBtn = document.getElementById('telegramLoginBtn');
+  const telegramPairCodeDisplay = document.getElementById('telegramPairCodeDisplay');
+  const telegramPairingSpinner = document.getElementById('telegramPairingSpinner');
+  const telegramQuickCheckBtn = document.getElementById('telegramQuickCheckBtn');
+  const telegramManualChatId = document.getElementById('telegramManualChatId');
+  const telegramManualSaveBtn = document.getElementById('telegramManualSaveBtn');
+  const telegramConnectedUserLabel = document.getElementById('telegramConnectedUserLabel');
+  const telegramConnectedChatIdBadge = document.getElementById('telegramConnectedChatIdBadge');
+  const telegramSendTestAlertBtn = document.getElementById('telegramSendTestAlertBtn');
+  const telegramDisconnectBtn = document.getElementById('telegramDisconnectBtn');
+  const telegramSetupStatus = document.getElementById('telegramSetupStatus');
+
+  // Set Watch Target Modal Elements
+  const setWatchTargetModal = document.getElementById('setWatchTargetModal');
+  const setWatchCloseBtn = document.getElementById('setWatchCloseBtn');
+  const watchTargetTrainName = document.getElementById('watchTargetTrainName');
+  const watchTargetRouteDate = document.getElementById('watchTargetRouteDate');
+  const watchTargetClassSelect = document.getElementById('watchTargetClassSelect');
+  const saveWatchTargetBtn = document.getElementById('saveWatchTargetBtn');
+
+  // Intermediate Stoppage Calculator Elements
+  const routeCalcFromSelect = document.getElementById('routeCalcFromSelect');
+  const routeCalcToSelect = document.getElementById('routeCalcToSelect');
+  const routeCalcResultRibbon = document.getElementById('routeCalcResultRibbon');
+  const routeCalcDuration = document.getElementById('routeCalcDuration');
+  const routeCalcStopsCount = document.getElementById('routeCalcStopsCount');
+  const routeCalcHaltTime = document.getElementById('routeCalcHaltTime');
+  const routeModalLaunchMatrixBtn = document.getElementById('routeModalLaunchMatrixBtn');
+
+  // Single-Day All-Station Blank Seat Matrix Elements
+  const stationMatrixModal = document.getElementById('stationMatrixModal');
+  const stationMatrixCloseBtn = document.getElementById('stationMatrixCloseBtn');
+  const stationMatrixTrainName = document.getElementById('stationMatrixTrainName');
+  const stationMatrixTrainModel = document.getElementById('stationMatrixTrainModel');
+  const stationMatrixSubtitle = document.getElementById('stationMatrixSubtitle');
+  const matrixJourneyDateInput = document.getElementById('matrixJourneyDateInput');
+  const matrixSelectAllPairsBtn = document.getElementById('matrixSelectAllPairsBtn');
+  const matrixResetPairsBtn = document.getElementById('matrixResetPairsBtn');
+  const matrixFromCountBadge = document.getElementById('matrixFromCountBadge');
+  const matrixToCountBadge = document.getElementById('matrixToCountBadge');
+  const matrixFromDropdownBtn = document.getElementById('matrixFromDropdownBtn');
+  const matrixFromDropdownLabel = document.getElementById('matrixFromDropdownLabel');
+  const matrixFromDropdownArrow = document.getElementById('matrixFromDropdownArrow');
+  const matrixFromDropdownMenu = document.getElementById('matrixFromDropdownMenu');
+  const matrixFromOptionsContainer = document.getElementById('matrixFromOptionsContainer');
+  const matrixFromSelectAllBtn = document.getElementById('matrixFromSelectAllBtn');
+  const matrixFromClearBtn = document.getElementById('matrixFromClearBtn');
+  const matrixToDropdownBtn = document.getElementById('matrixToDropdownBtn');
+  const matrixToDropdownLabel = document.getElementById('matrixToDropdownLabel');
+  const matrixToDropdownArrow = document.getElementById('matrixToDropdownArrow');
+  const matrixToDropdownMenu = document.getElementById('matrixToDropdownMenu');
+  const matrixToOptionsContainer = document.getElementById('matrixToOptionsContainer');
+  const matrixToSelectAllBtn = document.getElementById('matrixToSelectAllBtn');
+  const matrixToClearBtn = document.getElementById('matrixToClearBtn');
+  const matrixExecuteQueryBtn = document.getElementById('matrixExecuteQueryBtn');
+  const matrixExecuteQueryBtnText = document.getElementById('matrixExecuteQueryBtnText');
+  const matrixPairsSummaryText = document.getElementById('matrixPairsSummaryText');
+  const stationMatrixContent = document.getElementById('stationMatrixContent');
+
+  // Top Menu Notification Center Elements
+  const notifCenterContainer = document.getElementById('notifCenterContainer');
+  const notifBellBtn = document.getElementById('notifBellBtn');
+  const notifBadge = document.getElementById('notifBadge');
+  const notifDropdown = document.getElementById('notifDropdown');
+  const notifCountPill = document.getElementById('notifCountPill');
+  const notifListContainer = document.getElementById('notifListContainer');
+  const markAllReadBtn = document.getElementById('markAllReadBtn');
+  const clearAllNotifsBtn = document.getElementById('clearAllNotifsBtn');
+  const testNotifBtn = document.getElementById('testNotifBtn');
+
+  // Settings Menu Elements
+  const settingsDropdownContainer = document.getElementById('settingsDropdownContainer');
+  const settingsMenuBtn = document.getElementById('settingsMenuBtn');
+  const settingsDropdown = document.getElementById('settingsDropdown');
+  const settingSoundToggle = document.getElementById('settingSoundToggle');
+  const settingSoundIcon = document.getElementById('settingSoundIcon');
+  const settingTestSoundBtn = document.getElementById('settingTestSoundBtn');
+  const settingDesktopNotifToggle = document.getElementById('settingDesktopNotifToggle');
+  const settingDarkThemeToggle = document.getElementById('settingDarkThemeToggle');
+  const settingMonitorActiveBadge = document.getElementById('settingMonitorActiveBadge');
+  const customMonitorSecondsInput = document.getElementById('customMonitorSecondsInput');
+  const applyCustomMonitorBtn = document.getElementById('applyCustomMonitorBtn');
+  const settingUserCountBadge = document.getElementById('settingUserCountBadge');
+  const settingRequireLoginToggle = document.getElementById('settingRequireLoginToggle');
+  const settingOpenUserMgmtBtn = document.getElementById('settingOpenUserMgmtBtn');
+  const settingAccountStatusLabel = document.getElementById('settingAccountStatusLabel');
+  const settingAccountUserLabel = document.getElementById('settingAccountUserLabel');
+  const settingAuthActionBtn = document.getElementById('settingAuthActionBtn');
+
+  // User Management, Auth & Account Elements
+  const headerSignInBtn = document.getElementById('headerSignInBtn');
+  const headerUserMenuContainer = document.getElementById('headerUserMenuContainer');
+  const headerUserDropdownBtn = document.getElementById('headerUserDropdownBtn');
+  const headerUserDropdown = document.getElementById('headerUserDropdown');
+  const headerUserAvatar = document.getElementById('headerUserAvatar');
+  const userNavLabel = document.getElementById('userNavLabel');
+  const userRoleBadge = document.getElementById('userRoleBadge');
+  const dropdownUserFullName = document.getElementById('dropdownUserFullName');
+  const dropdownUserUsername = document.getElementById('dropdownUserUsername');
+  const dropdownManageUsersBtn = document.getElementById('dropdownManageUsersBtn');
+  const dropdownChangePasswordBtn = document.getElementById('dropdownChangePasswordBtn');
+  const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+  const modalLogoutBtn = document.getElementById('modalLogoutBtn');
+
+  const userManagementModal = document.getElementById('userManagementModal');
+  const userManagementCloseBtn = document.getElementById('userManagementCloseBtn');
+  const userManagementDoneBtn = document.getElementById('userManagementDoneBtn');
+  const statTotalUsers = document.getElementById('statTotalUsers');
+  const statActiveUsers = document.getElementById('statActiveUsers');
+  const statAccessMode = document.getElementById('statAccessMode');
+  const userTabListBtn = document.getElementById('userTabListBtn');
+  const userTabAddBtn = document.getElementById('userTabAddBtn');
+  const userListTabCount = document.getElementById('userListTabCount');
+  const modalRequireLoginToggle = document.getElementById('modalRequireLoginToggle');
+  const userSectionList = document.getElementById('userSectionList');
+  const userSectionAdd = document.getElementById('userSectionAdd');
+  const userSearchInput = document.getElementById('userSearchInput');
+  const usersCardsContainer = document.getElementById('usersCardsContainer');
+
+  const addUserForm = document.getElementById('addUserForm');
+  const addUserName = document.getElementById('addUserName');
+  const addUserUsername = document.getElementById('addUserUsername');
+  const addUserPassword = document.getElementById('addUserPassword');
+  const addUserRole = document.getElementById('addUserRole');
+  const addUserStatus = document.getElementById('addUserStatus');
+  const submitAddUserBtn = document.getElementById('submitAddUserBtn');
+  const addUserFormStatus = document.getElementById('addUserFormStatus');
+
+  const userLoginModal = document.getElementById('userLoginModal');
+  const closeLoginModalBtn = document.getElementById('closeLoginModalBtn');
+  const userLoginForm = document.getElementById('userLoginForm');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginRememberMe = document.getElementById('loginRememberMe');
+  const loginErrorMsg = document.getElementById('loginErrorMsg');
+
+  const resetPasswordModal = document.getElementById('resetPasswordModal');
+  const resetPasswordCloseBtn = document.getElementById('resetPasswordCloseBtn');
+  const resetPasswordForm = document.getElementById('resetPasswordForm');
+  const resetPasswordTargetId = document.getElementById('resetPasswordTargetId');
+  const resetPasswordTargetUsername = document.getElementById('resetPasswordTargetUsername');
+  const resetPasswordNewInput = document.getElementById('resetPasswordNewInput');
+
+  // Released Seat Alert Banner Elements
+  const releasedSeatAlertBanner = document.getElementById('releasedSeatAlertBanner');
+  const releasedSeatText = document.getElementById('releasedSeatText');
+  const releasedSeatBookBtn = document.getElementById('releasedSeatBookBtn');
+  const closeReleasedBannerBtn = document.getElementById('closeReleasedBannerBtn');
+
+  if (closeReleasedBannerBtn) {
+    closeReleasedBannerBtn.addEventListener('click', () => {
+      releasedSeatAlertBanner.classList.add('hidden');
+    });
+  }
+
+  // Auth Modal Elements
+  const authModal = document.getElementById('authModal');
+  const authModalOpenBtn = document.getElementById('authModalOpenBtn');
+  const authModalCloseBtn = document.getElementById('authModalCloseBtn');
+  const authBtnIcon = document.getElementById('authBtnIcon');
+  const authBtnText = document.getElementById('authBtnText');
+  const statusDot = document.getElementById('statusDot');
+  const disconnectTokenBtn = document.getElementById('disconnectTokenBtn');
+  const modalAuthStatusCard = document.getElementById('modalAuthStatusCard');
+  const modalRailwayProfileCard = document.getElementById('modalRailwayProfileCard');
+  const railProfileName = document.getElementById('railProfileName');
+  const railProfilePhone = document.getElementById('railProfilePhone');
+  const railProfileEmail = document.getElementById('railProfileEmail');
+  const railProfileNid = document.getElementById('railProfileNid');
+  const railProfileExpires = document.getElementById('railProfileExpires');
+  
+  const tabScriptBtn = document.getElementById('tabScriptBtn');
+  const tabMobileBtn = document.getElementById('tabMobileBtn');
+  const tabTokenBtn = document.getElementById('tabTokenBtn');
+  
+  const scriptCopyTab = document.getElementById('scriptCopyTab');
+  const mobileLoginTab = document.getElementById('mobileLoginTab');
+  const pasteTokenForm = document.getElementById('pasteTokenForm');
+  
+  const consoleSnippet = document.getElementById('consoleSnippet');
+  const copySnippetBtn = document.getElementById('copySnippetBtn');
+  const scriptPasteForm = document.getElementById('scriptPasteForm');
+  const scriptPasteInput = document.getElementById('scriptPasteInput');
+
+  const mobileBookmarkletSnippet = document.getElementById('mobileBookmarkletSnippet');
+  const copyMobileSnippetBtn = document.getElementById('copyMobileSnippetBtn');
+  const mobilePasteForm = document.getElementById('mobilePasteForm');
+  const mobilePasteInput = document.getElementById('mobilePasteInput');
+  
+  const tokenPasteInput = document.getElementById('tokenPasteInput');
+  const deviceIdInput = document.getElementById('deviceIdInput');
+  const deviceKeyInput = document.getElementById('deviceKeyInput');
+
+  // ----------------------------------------------------
+  // Date & Station Canonical Helpers
+  // ----------------------------------------------------
+  function formatShohozDoj(dateStr) {
+    if (!dateStr) return '';
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj.getTime())) return dateStr;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = months[dateObj.getMonth()];
+    const year = dateObj.getFullYear();
+    return `${day}-${month}-${year}`; // e.g. "28-Aug-2026"
+  }
+
+  // Official Bangladesh Railway / Shohoz station aliases & spelling correction map
+  const STATION_ALIASES = {
+    'airport': 'Biman_Bandar',
+    'dhaka airport': 'Biman_Bandar',
+    'biman bandar': 'Biman_Bandar',
+    'bimanbandar': 'Biman_Bandar',
+    'biman_bandor': 'Biman_Bandar',
+    'chittagong': 'Chattogram',
+    'ctg': 'Chattogram',
+    'chottogram': 'Chattogram',
+    'comilla': 'Cumilla',
+    'cumilla junction': 'Cumilla',
+    'bogra': 'Bogura',
+    'jessore': 'Jashore',
+    'barisal': 'Barishal',
+    'coxs bazar': "Cox's Bazar",
+    'coxsbazar': "Cox's Bazar",
+    "cox's_bazar": "Cox's Bazar",
+    'coxs_bazar': "Cox's Bazar",
+    'cox bazaar': "Cox's Bazar",
+    'jamalpur': 'Jamalpur_Town',
+    'jamalpur town': 'Jamalpur_Town',
+    'cantonment': 'Dhaka_Cantonment',
+    'dhaka cantonment': 'Dhaka_Cantonment',
+    'bhairab': 'Bhairab_Bazar',
+    'bhairab bazar': 'Bhairab_Bazar',
+    'b.baria': 'Brahmanbaria',
+    'b-baria': 'Brahmanbaria',
+    'brahman baria': 'Brahmanbaria',
+    'dewanganj': 'Dewanganj_Bazar',
+    'dewangonj': 'Dewanganj_Bazar',
+    'melandah': 'Melandah_Bazar',
+    'islampur': 'Islampur_Bazar',
+    'sirajganj': 'Sirajganj_Bazar',
+    'thakurgaon': 'Thakurgaon_Road',
+    'sayedpur': 'Saidpur',
+    'bhanga': 'Bhanga_Junction',
+    'chandpur': 'Chandpur_Court',
+    'kushtia': 'Kushtia_Court',
+    'boalmari': 'Boalmari_Bazar',
+    'bonarpara': 'Bonar_Para',
+    'bonar para': 'Bonar_Para'
+  };
+
+  function getCanonicalStationName(raw) {
+    if (!raw) return '';
+    const clean = String(raw).trim();
+    const lower = clean.toLowerCase();
+    
+    if (STATION_ALIASES[lower]) {
+      return STATION_ALIASES[lower];
+    }
+
+    if (state.stations && state.stations.length > 0) {
+      const exactName = state.stations.find(s => s.name && s.name.toLowerCase() === lower);
+      if (exactName) return exactName.name;
+
+      const exactDisplay = state.stations.find(s => s.display_name && s.display_name.toLowerCase() === lower);
+      if (exactDisplay) return exactDisplay.name;
+
+      const underscore = lower.replace(/\s+/g, '_');
+      const matchUnderscore = state.stations.find(s => s.name && s.name.toLowerCase() === underscore);
+      if (matchUnderscore) return matchUnderscore.name;
+    }
+
+    return clean;
+  }
+
+  function buildShohozBookingUrl(fromCity, toCity, journeyDate, preferredClass = 'S_CHAIR') {
+    const canonicalFrom = getCanonicalStationName(fromCity || state.selectedFrom || 'Dhaka');
+    const canonicalTo = getCanonicalStationName(toCity || state.selectedTo || 'Chattogram');
+    const canonicalDoj = formatShohozDoj(journeyDate || state.selectedDate || new Date().toISOString().split('T')[0]);
+    const chosenClass = preferredClass && preferredClass !== 'ALL' ? preferredClass : 'S_CHAIR';
+
+    return `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(canonicalDoj)}&class=${encodeURIComponent(chosenClass)}`;
+  }
+
+  // ----------------------------------------------------
+  // Initialization
+  // ----------------------------------------------------
+  initTheme();
+  setupDateLimits();
+  generateQuickDateChips();
+  fetchStations();
+  fetchTrainsCatalog();
+  checkRailwaySessionStatus();
+  setupEventListeners();
+
+  // ----------------------------------------------------
+  // Theme & Preferences Management
+  // ----------------------------------------------------
+  function initTheme() {
+    const savedTheme = localStorage.getItem('rail_theme') || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
+  // ----------------------------------------------------
+  // Settings & Preferences Menu (Sound, Desktop Alerts, Theme)
+  // ----------------------------------------------------
+  function initSettingsMenu() {
+    // 1. Sound toggle in settings
+    if (settingSoundToggle) {
+      settingSoundToggle.checked = state.isSoundEnabled;
+      updateSoundUI();
+
+      settingSoundToggle.addEventListener('change', () => {
+        state.isSoundEnabled = settingSoundToggle.checked;
+        try {
+          localStorage.setItem('rail_sound', state.isSoundEnabled ? 'true' : 'false');
+        } catch (e) {}
+        updateSoundUI();
+        showToast(state.isSoundEnabled ? '🔊 Seat alert sound turned ON' : '🔇 Seat alert sound turned OFF', 'info');
+      });
+    }
+
+    if (settingTestSoundBtn) {
+      settingTestSoundBtn.addEventListener('click', () => {
+        if (!state.isSoundEnabled) {
+          state.isSoundEnabled = true;
+          if (settingSoundToggle) settingSoundToggle.checked = true;
+          updateSoundUI();
+        }
+        playUrgentAlertChime();
+        showToast('Playing sample seat alert chime...', 'info');
+      });
+    }
+
+    // 2. Desktop notification setting in settings
+    if (settingDesktopNotifToggle) {
+      settingDesktopNotifToggle.checked = ('Notification' in window && Notification.permission === 'granted');
+      
+      settingDesktopNotifToggle.addEventListener('change', async () => {
+        if (settingDesktopNotifToggle.checked) {
+          if (!('Notification' in window)) {
+            showToast('Desktop notifications are not supported by your browser.', 'error');
+            settingDesktopNotifToggle.checked = false;
+            return;
+          }
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            showToast('🎉 Desktop notifications enabled!', 'success');
+            sendDesktopNotification('🔔 Bangladesh Railway Alert Active', 'You will receive instant alerts here when seats are available to buy.', null);
+          } else {
+            settingDesktopNotifToggle.checked = false;
+            showToast('Desktop notifications were not allowed. Check browser site permissions.', 'info');
+          }
+        } else {
+          showToast('Desktop notifications disabled. You can still view alerts in the top bell menu.', 'info');
+        }
+      });
+    }
+
+    // 3. Dark Theme setting in settings
+    if (settingDarkThemeToggle) {
+      settingDarkThemeToggle.checked = document.documentElement.classList.contains('dark');
+      settingDarkThemeToggle.addEventListener('change', () => {
+        const isDark = settingDarkThemeToggle.checked;
+        document.documentElement.classList.toggle('dark', isDark);
+        try {
+          localStorage.setItem('rail_theme', isDark ? 'dark' : 'light');
+        } catch (e) {}
+      });
+    }
+
+    // 4. Auto-Monitor / Polling Interval Presets
+    document.querySelectorAll('.monitor-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sec = parseInt(btn.dataset.sec, 10);
+        setPollingInterval(sec, true);
+      });
+    });
+
+    // 5. Custom Monitor Seconds Input
+    if (applyCustomMonitorBtn && customMonitorSecondsInput) {
+      applyCustomMonitorBtn.addEventListener('click', () => {
+        applyCustomMonitorSeconds();
+      });
+
+      customMonitorSecondsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyCustomMonitorSeconds();
+        }
+      });
+    }
+
+    function applyCustomMonitorSeconds() {
+      const val = parseInt(customMonitorSecondsInput.value, 10);
+      if (isNaN(val) || val < 5 || val > 600) {
+        showToast('Please enter a valid monitor interval between 5 and 600 seconds.', 'error');
+        return;
+      }
+      setPollingInterval(val, true);
+    }
+
+    // 6. Category Tabs Filter
+    const catTabs = document.querySelectorAll('.setting-cat-tab');
+    const catSections = document.querySelectorAll('.setting-cat-section');
+
+    catTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const selectedCat = tab.dataset.cat;
+        
+        // Update active tab styles
+        catTabs.forEach(t => {
+          if (t === tab) {
+            t.className = 'setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer shrink-0';
+          } else {
+            t.className = 'setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0';
+          }
+        });
+
+        // Show/hide sections
+        catSections.forEach(section => {
+          if (selectedCat === 'all' || section.dataset.cat === selectedCat) {
+            section.classList.remove('hidden');
+          } else {
+            section.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // 7. Dropdown Toggle Handler
+    if (settingsMenuBtn) {
+      settingsMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = settingsDropdown.classList.contains('hidden');
+        if (notifDropdown) notifDropdown.classList.add('hidden');
+        if (isHidden) {
+          settingsDropdown.classList.remove('hidden');
+          if (settingSoundToggle) settingSoundToggle.checked = state.isSoundEnabled;
+          if (settingDarkThemeToggle) settingDarkThemeToggle.checked = document.documentElement.classList.contains('dark');
+          if (settingDesktopNotifToggle) settingDesktopNotifToggle.checked = ('Notification' in window && Notification.permission === 'granted');
+          updateMonitorUI(state.pollingInterval);
+
+          // Update Telegram UI State
+          updateTelegramUI();
+        } else {
+          settingsDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    if (settingsDropdown) {
+      settingsDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (settingsDropdownContainer && !settingsDropdownContainer.contains(e.target)) {
+        if (settingsDropdown) settingsDropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  function updateSoundUI() {
+    if (settingSoundIcon) {
+      if (state.isSoundEnabled) {
+        settingSoundIcon.className = 'fa-solid fa-volume-high text-emerald-600 dark:text-emerald-400 text-xs';
+      } else {
+        settingSoundIcon.className = 'fa-solid fa-volume-xmark text-slate-400 text-xs';
+      }
+    }
+  }
+
+  function setPollingInterval(sec, showUserToast = true) {
+    sec = isNaN(sec) ? 0 : Math.max(0, Math.min(600, sec));
+    state.pollingInterval = sec;
+    try {
+      localStorage.setItem('rail_polling_interval', String(sec));
+    } catch (e) {}
+
+    updateMonitorUI(sec);
+    restartPollingTimer();
+
+    if (showUserToast) {
+      if (sec > 0) {
+        showToast(`⏱️ Auto-monitor set to every ${sec}s`, 'info');
+      } else {
+        showToast('⏸️ Auto-monitor turned OFF', 'info');
+      }
+    }
+  }
+
+  function updateMonitorUI(sec) {
+    // 1. Update active badge in settings
+    if (settingMonitorActiveBadge) {
+      if (sec === 0) {
+        settingMonitorActiveBadge.textContent = 'Off';
+        settingMonitorActiveBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
+      } else {
+        settingMonitorActiveBadge.textContent = sec < 60 ? `${sec}s` : (sec % 60 === 0 ? `${sec/60}m` : `${sec}s`);
+        settingMonitorActiveBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60';
+      }
+    }
+
+    // 2. Update preset buttons
+    document.querySelectorAll('.monitor-preset-btn').forEach(btn => {
+      const bSec = parseInt(btn.dataset.sec, 10);
+      if (bSec === sec) {
+        btn.className = 'monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-500 bg-emerald-600 text-white shadow-xs transition';
+      } else {
+        btn.className = 'monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition';
+      }
+    });
+
+    // 3. Update custom input
+    if (customMonitorSecondsInput) {
+      const isPreset = [0, 15, 30, 60, 120].includes(sec);
+      customMonitorSecondsInput.value = isPreset ? '' : sec;
+    }
+
+    // 4. Update toolbar select dropdown
+    if (pollingIntervalSelect) {
+      let matchOption = Array.from(pollingIntervalSelect.options).find(o => parseInt(o.value, 10) === sec);
+      if (!matchOption && sec > 0) {
+        const opt = document.createElement('option');
+        opt.value = sec;
+        opt.textContent = `Custom (${sec}s)`;
+        pollingIntervalSelect.appendChild(opt);
+        pollingIntervalSelect.value = String(sec);
+      } else if (matchOption) {
+        pollingIntervalSelect.value = String(sec);
+      }
+    }
+
+    // 5. Update polling indicator
+    if (pollingIndicator) {
+      pollingIndicator.classList.toggle('hidden', sec === 0);
+    }
+  }
+
+  // ----------------------------------------------------
+  // Authentication & Persistent Shohoz Session Management
+  // ----------------------------------------------------
+  async function checkRailwaySessionStatus() {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/auth/status', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      updateAuthUI(data.authenticated, data.user, data.token_preview, data.device_id, data.device_key, data.has_saved_session);
+    } catch (err) {
+      console.warn('Could not check auth status:', err);
+    }
+  }
+
+  function updateAuthUI(isAuth, user, tokenPreview, deviceId, deviceKey, isSaved = false) {
+    state.isAuthenticated = isAuth;
+    state.authUserData = user;
+
+    if (deviceId && deviceIdInput) deviceIdInput.value = deviceId;
+    if (deviceKey && deviceKeyInput) deviceKeyInput.value = deviceKey;
+
+    if (isAuth) {
+      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white';
+      authBtnIcon.className = 'fa-solid fa-circle-check text-[11px]';
+      const displayName = user?.name ? user.name.split(' ')[0] : 'Live';
+      authBtnText.textContent = `🚆 ${displayName}`;
+      
+      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800';
+      liveBadge.textContent = '🟢 100% Live API';
+      searchModeBadge.textContent = 'Shohoz Live API';
+
+      if (modalAuthStatusCard) modalAuthStatusCard.classList.add('hidden');
+      if (modalRailwayProfileCard) {
+        modalRailwayProfileCard.classList.remove('hidden');
+        if (railProfileName) railProfileName.textContent = user?.name || 'Railway Passenger';
+        if (railProfilePhone) railProfilePhone.textContent = user?.phone || user?.mobile_number || '---';
+        if (railProfileEmail) railProfileEmail.textContent = user?.email || '---';
+        if (railProfileNid) railProfileNid.textContent = user?.nid ? `${user.nid} (${user.nidType || 'NID'})` : '---';
+        if (railProfileExpires) {
+          railProfileExpires.textContent = user?.expiresAt 
+            ? 'Session valid until ' + new Date(user.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : 'Active Live Session';
+        }
+      }
+
+      noticeBanner.classList.add('hidden');
+    } else {
+      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white';
+      authBtnIcon.className = 'fa-solid fa-key text-[11px]';
+      authBtnText.textContent = 'Connect Live API';
+      
+      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800';
+      liveBadge.textContent = '⚡ Connect Session';
+      searchModeBadge.textContent = 'Session Required';
+
+      if (modalRailwayProfileCard) modalRailwayProfileCard.classList.add('hidden');
+      if (modalAuthStatusCard) modalAuthStatusCard.classList.remove('hidden');
+
+      noticeBanner.className = 'p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60 animate-fade-in';
+      noticeText.textContent = 'Click "Connect Live API" to sync your Bangladesh Railway session. Your session will be automatically saved for future visits.';
+      bannerConnectBtn.classList.remove('hidden');
+      noticeBanner.classList.remove('hidden');
+    }
+  }
+
+  // Modal Open / Close
+  authModalOpenBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+  bannerConnectBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+  authModalCloseBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+  authModal.addEventListener('click', (e) => {
+    if (e.target === authModal) authModal.classList.add('hidden');
+  });
+
+  // Tab Switching in Modal (PC Console vs Manual Paste vs Mobile Login)
+  const activeTabClass = 'py-2 px-1 text-center rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer transition flex items-center justify-center space-x-1.5';
+  const inactiveTabClass = 'py-2 px-1 text-center rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition flex items-center justify-center space-x-1.5';
+
+  function resetTabs() {
+    if (tabScriptBtn) tabScriptBtn.className = inactiveTabClass;
+    if (tabTokenBtn) tabTokenBtn.className = inactiveTabClass;
+    if (tabMobileBtn) tabMobileBtn.className = inactiveTabClass;
+
+    if (scriptCopyTab) scriptCopyTab.classList.add('hidden');
+    if (pasteTokenForm) pasteTokenForm.classList.add('hidden');
+    if (mobileLoginTab) mobileLoginTab.classList.add('hidden');
+  }
+
+  if (tabScriptBtn) {
+    tabScriptBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetTabs();
+      tabScriptBtn.className = activeTabClass;
+      if (scriptCopyTab) scriptCopyTab.classList.remove('hidden');
+    });
+  }
+
+  if (tabTokenBtn) {
+    tabTokenBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetTabs();
+      tabTokenBtn.className = activeTabClass;
+      if (pasteTokenForm) pasteTokenForm.classList.remove('hidden');
+    });
+  }
+
+  if (tabMobileBtn) {
+    tabMobileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetTabs();
+      tabMobileBtn.className = activeTabClass;
+      if (mobileLoginTab) mobileLoginTab.classList.remove('hidden');
+    });
+  }
+
+  // Copy Snippet Button (PC)
+  if (copySnippetBtn && consoleSnippet) {
+    copySnippetBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(consoleSnippet.value);
+      copySnippetBtn.textContent = 'Copied!';
+      setTimeout(() => copySnippetBtn.textContent = 'Copy', 2000);
+      showToast('Script copied! Paste into eticket.railway.gov.bd Console.', 'info');
+    });
+  }
+
+  // Copy Mobile Bookmarklet Snippet Button
+  if (copyMobileSnippetBtn && mobileBookmarkletSnippet) {
+    copyMobileSnippetBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(mobileBookmarkletSnippet.value);
+      copyMobileSnippetBtn.textContent = 'Copied!';
+      setTimeout(() => copyMobileSnippetBtn.textContent = 'Copy', 2000);
+      showToast('Mobile bookmark script copied! Paste as bookmark URL.', 'info');
+    });
+  }
+
+  // Helper to Parse & Activate JSON / Token
+  async function handleTokenActivation(rawString) {
+    const raw = (rawString || '').trim();
+    if (!raw) return;
+
+    let token = '';
+    let deviceId = '';
+    let deviceKey = '';
+
+    if (raw.startsWith('{') && raw.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(raw);
+        token = parsed.token || parsed.authToken || parsed.access_token || parsed.accessToken || '';
+        deviceId = parsed['x-device-id'] || parsed.deviceId || parsed.device_id || parsed.device_uuid || '';
+        deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || '';
+      } catch (err) {
+        token = raw;
+      }
+    } else {
+      token = raw;
+    }
+
+    if (!deviceId || deviceId === 'null' || deviceId === 'undefined') {
+      deviceId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : '34a817c4-8b87-5716-32d2-a7a1d50575a4';
+    }
+    if (!deviceKey || deviceKey === 'null' || deviceKey === 'undefined') {
+      deviceKey = 'web';
+    }
+
+    await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });
+  }
+
+  // Tab 1: PC Script Paste Form Handler
+  if (scriptPasteForm) {
+    scriptPasteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleTokenActivation(scriptPasteInput.value);
+    });
+  }
+
+  // Tab 2: Mobile Paste Form Handler
+  if (mobilePasteForm) {
+    mobilePasteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleTokenActivation(mobilePasteInput.value);
+    });
+  }
+
+  // Tab 3: Manual Paste Form Handler
+  if (pasteTokenForm) {
+    pasteTokenForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = tokenPasteInput.value.trim();
+      const deviceId = deviceIdInput.value.trim();
+      const deviceKey = deviceKeyInput.value.trim();
+
+      if (!token) {
+        showToast('Please enter your Bearer token.', 'error');
+        return;
+      }
+
+      await saveCredentials({ token, device_id: deviceId, device_key: deviceKey });
+    });
+  }
+
+  // Save Credentials Helper
+  async function saveCredentials(payload) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/auth/set-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast('Live Railway session saved permanently and activated!', 'success');
+        updateAuthUI(true, data.user, data.token_preview, data.device_id, data.device_key, true);
+        authModal.classList.add('hidden');
+        scriptPasteInput.value = '';
+        if (state.selectedFrom && state.selectedTo) {
+          executeSearch();
+        }
+      } else {
+        showToast(data.error || 'Failed to save credentials.', 'error');
+      }
+    } catch (err) {
+      showToast('Error saving credentials.', 'error');
+    }
+  }
+
+  // Disconnect Token Handler
+  disconnectTokenBtn.addEventListener('click', async () => {
+    try {
+      const token = getAuthToken();
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      updateAuthUI(false, null, null, null, null, false);
+      showToast('Disconnected. Saved session deleted.', 'info');
+      trainsGrid.innerHTML = '';
+      trainsTableView.classList.add('hidden');
+      initialStateCard.classList.remove('hidden');
+      statsRibbon.classList.add('hidden');
+      trackerBar.classList.add('hidden');
+    } catch (err) {
+      console.warn('Logout error:', err);
+    }
+  });
+
+  // ----------------------------------------------------
+  // Dynamic Route Train Options Manager
+  // ----------------------------------------------------
+  function populateTrainFilterOptions(trainList) {
+    const currentVal = trainFilterSelect.value;
+    trainFilterSelect.innerHTML = '<option value="ALL">All Trains (Default)</option>';
+
+    const uniqueTrains = new Map();
+    trainList.forEach(t => {
+      const name = t.train_name || t.name;
+      const code = t.train_model || t.code || '';
+      if (name && !uniqueTrains.has(name)) {
+        uniqueTrains.set(name, code);
+      }
+    });
+
+    uniqueTrains.forEach((code, name) => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = code ? `${name} (#${code})` : name;
+      trainFilterSelect.appendChild(opt);
+    });
+
+    if (uniqueTrains.has(currentVal)) {
+      trainFilterSelect.value = currentVal;
+      state.selectedTrain = currentVal;
+    } else {
+      trainFilterSelect.value = 'ALL';
+      state.selectedTrain = 'ALL';
+    }
+  }
+
+  trainFilterSelect.addEventListener('change', (e) => {
+    state.selectedTrain = e.target.value;
+    if (state.lastSearchData) {
+      renderResults(state.lastSearchData);
+    }
+  });
+
+  classFilterSelect.addEventListener('change', (e) => {
+    state.selectedClass = e.target.value;
+    if (state.lastSearchData) {
+      renderResults(state.lastSearchData);
+    }
+  });
+
+  // ----------------------------------------------------
+  // Desktop Notifications & Audio Alert System
+  // ----------------------------------------------------
+
+  function sendDesktopNotification(title, message, url) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        const notif = new Notification(title, {
+          body: message,
+          icon: 'https://eticket.railway.gov.bd/favicon.ico',
+          requireInteraction: true
+        });
+        notif.onclick = () => {
+          window.focus();
+          if (url) window.open(url, '_blank');
+        };
+      } catch (err) {
+        console.warn('Desktop notification error:', err);
+      }
+    }
+  }
+
+  function showSeatReleaseBanner(info) {
+    const { trainName, trainModel, className, seats, bookUrl } = info;
+    if (releasedSeatAlertBanner && releasedSeatText && releasedSeatBookBtn) {
+      releasedSeatText.innerHTML = `
+        <div class="flex items-center flex-wrap gap-2 text-xs text-white">
+          <span class="font-black bg-slate-900/80 text-white px-2.5 py-1 rounded-lg border border-white/20 shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-train text-emerald-400 text-[10px]"></i>
+            <span>${trainName}</span>
+            <span class="text-slate-300 font-mono text-[10px]">#${trainModel}</span>
+          </span>
+          <span class="font-black bg-amber-300 text-amber-950 px-2 py-0.5 rounded-lg shadow-sm border border-amber-400 inline-flex items-center gap-1 whitespace-nowrap">
+            <i class="fa-solid fa-couch text-[9px] text-amber-800"></i>
+            <span>${className}</span>
+          </span>
+          <span class="font-black text-amber-200 text-xs whitespace-nowrap">
+            ${seats} Seat(s) Available to Buy!
+          </span>
+        </div>
+      `;
+      releasedSeatBookBtn.href = bookUrl;
+      releasedSeatAlertBanner.classList.remove('hidden');
+    }
+  }
+
+  // ----------------------------------------------------
+  // Top Menu Notification Center (Historical Alert Storage)
+  // ----------------------------------------------------
+  function initNotificationCenter() {
+    updateNotificationUI();
+
+    if (notifBellBtn) {
+      notifBellBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = notifDropdown.classList.contains('hidden');
+        if (isHidden) {
+          notifDropdown.classList.remove('hidden');
+          // Mark all notifications as read when opening
+          state.notifications.forEach(n => n.isRead = true);
+          saveStoredNotifications();
+          updateNotificationUI();
+        } else {
+          notifDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (notifCenterContainer && !notifCenterContainer.contains(e.target)) {
+        if (notifDropdown) notifDropdown.classList.add('hidden');
+      }
+    });
+
+    if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', () => {
+        state.notifications.forEach(n => n.isRead = true);
+        saveStoredNotifications();
+        updateNotificationUI();
+        showToast('All notifications marked as read', 'info');
+      });
+    }
+
+    if (clearAllNotifsBtn) {
+      clearAllNotifsBtn.addEventListener('click', () => {
+        state.notifications = [];
+        saveStoredNotifications();
+        updateNotificationUI();
+        showToast('Notification history cleared', 'info');
+      });
+    }
+
+    if (testNotifBtn) {
+      testNotifBtn.addEventListener('click', () => {
+        const sampleTrain = state.lastSearchData?.trains?.[0] || {
+          train_name: 'Suborno Express',
+          train_model: '702'
+        };
+        const dojParam = formatShohozDoj(state.selectedDate || new Date().toISOString().split('T')[0]);
+        const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, 'SNIGDHA');
+
+        addStoredNotification({
+          title: `🎉 Seat Alert (${sampleTrain.train_name})`,
+          message: `49 new seat(s) released on ${sampleTrain.train_name} (#${sampleTrain.train_model}) for SNIGDHA!`,
+          trainName: sampleTrain.train_name,
+          trainModel: sampleTrain.train_model,
+          className: 'SNIGDHA',
+          seats: 49,
+          fromCity: state.selectedFrom || 'Dhaka',
+          toCity: state.selectedTo || 'Chattogram',
+          date: dojParam,
+          bookUrl: bookUrl,
+          type: 'SEAT_RELEASED'
+        });
+        playUrgentAlertChime();
+        showToast('Test notification stored in top menu!', 'success');
+      });
+    }
+  }
+
+  function saveStoredNotifications() {
+    try {
+      localStorage.setItem('railway_stored_alerts', JSON.stringify(state.notifications));
+    } catch (e) {}
+  }
+
+  function addStoredNotification(notif) {
+    const item = {
+      id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      title: notif.title || 'Seat Alert',
+      message: notif.message || '',
+      trainName: notif.trainName || '',
+      trainModel: notif.trainModel || '',
+      className: notif.className || '',
+      seats: notif.seats || 0,
+      fromCity: notif.fromCity || state.selectedFrom || '',
+      toCity: notif.toCity || state.selectedTo || '',
+      date: notif.date || formatShohozDoj(state.selectedDate),
+      bookUrl: notif.bookUrl || '#',
+      timestamp: Date.now(),
+      isRead: false,
+      type: notif.type || 'SEAT_RELEASED'
+    };
+
+    state.notifications.unshift(item);
+    if (state.notifications.length > 50) {
+      state.notifications = state.notifications.slice(0, 50);
+    }
+    saveStoredNotifications();
+    updateNotificationUI();
+  }
+
+  function updateNotificationUI() {
+    const unreadCount = state.notifications.filter(n => !n.isRead).length;
+    const totalCount = state.notifications.length;
+
+    if (notifCountPill) notifCountPill.textContent = totalCount;
+    if (notifBadge) {
+      if (unreadCount > 0) {
+        notifBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        notifBadge.classList.remove('hidden');
+      } else {
+        notifBadge.classList.add('hidden');
+      }
+    }
+
+    renderNotificationsList();
+  }
+
+  function renderNotificationsList() {
+    if (!notifListContainer) return;
+
+    if (!state.notifications || state.notifications.length === 0) {
+      notifListContainer.innerHTML = `
+        <div class="py-8 px-4 text-center text-slate-400 space-y-2">
+          <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+            <i class="fa-regular fa-bell-slash text-base"></i>
+          </div>
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">No Alert Notifications</p>
+          <p class="text-[11px] text-slate-400 max-w-[220px] mx-auto">
+            You will receive instant alerts here whenever booked seats become available to buy.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    notifListContainer.innerHTML = state.notifications.map(item => {
+      const timeStr = formatRelativeTime(item.timestamp);
+      return `
+        <div class="p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-start space-x-2.5 ${item.isRead ? 'opacity-90' : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-2 border-emerald-500'}">
+          <div class="w-8 h-8 rounded-xl ${item.type === 'SEAT_RELEASED' ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white' : 'bg-blue-600 text-white'} flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">
+            <i class="fa-solid ${item.type === 'SEAT_RELEASED' ? 'fa-chair' : 'fa-bell'} text-xs"></i>
+          </div>
+
+          <div class="flex-1 min-w-0 space-y-1.5">
+            <!-- Header with Title, Seats & Time -->
+            <div class="flex items-center justify-between gap-1">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Seat Alert</span>
+                <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
+              </div>
+              ${item.seats ? `<span class="text-[11px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shadow-2xs">${item.seats} Available</span>` : ''}
+            </div>
+
+            <!-- Focused Highlights: Train Name & Seat Class -->
+            <div class="flex items-center flex-wrap gap-1.5 py-0.5">
+              <!-- Train Name Highlight Badge -->
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-black shadow-xs">
+                <i class="fa-solid fa-train text-[10px] text-emerald-400"></i>
+                <span>${item.trainName || 'Intercity Train'}</span>
+                ${item.trainModel ? `<span class="text-slate-400 font-mono text-[10px]">#${item.trainModel}</span>` : ''}
+              </span>
+
+              <!-- Seat Class Highlight Badge -->
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-black text-xs border border-amber-300 dark:border-amber-700/80 shadow-2xs">
+                <i class="fa-solid fa-couch text-[9px] text-amber-600 dark:text-amber-400"></i>
+                <span>${item.className || 'Seat Class'}</span>
+              </span>
+            </div>
+
+            <!-- Route Info & Book Button -->
+            <div class="flex items-center justify-between pt-0.5">
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                ${item.fromCity && item.toCity ? `${item.fromCity} ➔ ${item.toCity} &bull; ${item.date}` : item.date}
+              </span>
+              ${item.bookUrl && item.bookUrl !== '#' ? `
+                <a href="${item.bookUrl}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] shadow-xs inline-flex items-center space-x-1 transition hover:scale-105">
+                  <span>Book</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function formatRelativeTime(ts) {
+    if (!ts) return '';
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
+  // ----------------------------------------------------
+  // Sound Alerts via Web Audio API (Synthesized chime)
+  // ----------------------------------------------------
+  function playNotificationChime() {
+    if (!state.isSoundEnabled) return;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+
+      // Note 1 (E5)
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.15, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+
+      // Note 2 (B5)
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(987.77, now + 0.12);
+      gain2.gain.setValueAtTime(0.2, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.6);
+    } catch (e) {
+      console.warn('Audio Context error:', e);
+    }
+  }
+
+  function playUrgentAlertChime() {
+    if (!state.isSoundEnabled) return;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + i * 0.09);
+        gain.gain.setValueAtTime(0.25, now + i * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.09);
+        osc.stop(now + i * 0.09 + 0.35);
+      });
+    } catch (e) {
+      console.warn('Urgent audio alert error:', e);
+    }
+  }
+
+
+  // ----------------------------------------------------
+  // Toast Notifications
+  // ----------------------------------------------------
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const bgColors = {
+      success: 'bg-emerald-600 text-white',
+      error: 'bg-rose-600 text-white',
+      info: 'bg-slate-800 text-white dark:bg-slate-700'
+    };
+    const icons = {
+      success: 'fa-circle-check',
+      error: 'fa-triangle-exclamation',
+      info: 'fa-circle-info'
+    };
+
+    toast.className = `flex items-center space-x-2.5 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold ${bgColors[type] || bgColors.info} animate-fade-in pointer-events-auto`;
+    toast.innerHTML = `
+      <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
+      <span>${message}</span>
+    `;
+
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 5500);
+  }
+
+  // ----------------------------------------------------
+  // Date Picker & Quick Day Shortcuts
+  // ----------------------------------------------------
+  function setupDateLimits() {
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(today.getDate() + 10);
+
+    const todayFormatted = today.toISOString().split('T')[0];
+    const maxDateFormatted = maxDate.toISOString().split('T')[0];
+
+    journeyDateInput.min = todayFormatted;
+    journeyDateInput.max = maxDateFormatted;
+    journeyDateInput.value = todayFormatted;
+    state.selectedDate = todayFormatted;
+  }
+
+  function generateQuickDateChips() {
+    dateChipsContainer.querySelectorAll('.date-chip').forEach(c => c.remove());
+    const today = new Date();
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    for (let i = 0; i < 5; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      const iso = d.toISOString().split('T')[0];
+      const label = i === 0 ? 'Today' : (i === 1 ? 'Tomorrow' : `${days[d.getDay()]} (${d.getDate()} ${months[d.getMonth()]})`);
+
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = `date-chip px-2 py-0.5 rounded text-xs font-medium transition ${
+        i === 0 
+          ? 'bg-emerald-600 text-white' 
+          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+      }`;
+      chip.textContent = label;
+      chip.dataset.date = iso;
+
+      chip.addEventListener('click', () => {
+        journeyDateInput.value = iso;
+        state.selectedDate = iso;
+        updateActiveDateChips(iso);
+        if (state.selectedFrom && state.selectedTo) {
+          executeSearch();
+        }
+      });
+
+      dateChipsContainer.appendChild(chip);
+    }
+  }
+
+  function updateActiveDateChips(selectedIso) {
+    dateChipsContainer.querySelectorAll('.date-chip').forEach(chip => {
+      if (chip.dataset.date === selectedIso) {
+        chip.className = 'date-chip px-2 py-0.5 rounded text-xs font-medium bg-emerald-600 text-white transition';
+      } else {
+        chip.className = 'date-chip px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
+      }
+    });
+  }
+
+  journeyDateInput.addEventListener('change', (e) => {
+    state.selectedDate = e.target.value;
+    updateActiveDateChips(e.target.value);
+  });
+
+  // ----------------------------------------------------
+  // Station Autocomplete & Management (256 Shohoz Stations)
+  // ----------------------------------------------------
+  async function fetchStations() {
+    try {
+      const res = await fetch('/api/stations');
+      const data = await res.json();
+      if (data && data.stations) {
+        state.stations = data.stations;
+      }
+    } catch (err) {
+      console.error('Failed to load stations:', err);
+    }
+  }
+
+  async function fetchTrainsCatalog() {
+    try {
+      const res = await fetch('/api/trains-list');
+      const data = await res.json();
+      if (data && data.trains) {
+        state.trainsCatalog = data.trains;
+      }
+    } catch (err) {
+      console.error('Failed to load trains catalog:', err);
+    }
+  }
+
+  function setupAutocomplete(inputEl, dropdownEl, clearBtn, onSelect) {
+    inputEl.addEventListener('input', () => {
+      const query = inputEl.value.trim().toLowerCase();
+      clearBtn.classList.toggle('hidden', !query);
+
+      if (!query) {
+        dropdownEl.classList.add('hidden');
+        dropdownEl.innerHTML = '';
+        return;
+      }
+
+      // Check for alias match first (e.g. airport -> Biman_Bandar, ctg -> Chattogram)
+      let aliasMatches = [];
+      if (STATION_ALIASES[query]) {
+        const canonical = STATION_ALIASES[query];
+        const sObj = state.stations.find(s => s.name.toLowerCase() === canonical.toLowerCase());
+        if (sObj) aliasMatches.push(sObj);
+      }
+
+      const otherMatches = state.stations.filter(s => 
+        s.name.toLowerCase().includes(query) ||
+        (s.display_name && s.display_name.toLowerCase().includes(query)) ||
+        (s.bn_name && s.bn_name.includes(query)) ||
+        (s.alias && s.alias.toLowerCase().includes(query))
+      );
+
+      const matches = Array.from(new Set([...aliasMatches, ...otherMatches])).slice(0, 15);
+
+      renderDropdownItems(matches, dropdownEl, inputEl, onSelect);
+    });
+
+    inputEl.addEventListener('focus', () => {
+      if (inputEl.value.trim()) {
+        inputEl.dispatchEvent(new Event('input'));
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      inputEl.value = '';
+      clearBtn.classList.add('hidden');
+      dropdownEl.classList.add('hidden');
+      onSelect('');
+      inputEl.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+        dropdownEl.classList.add('hidden');
+      }
+    });
+  }
+
+  function renderDropdownItems(items, dropdownEl, inputEl, onSelect) {
+    if (items.length === 0) {
+      dropdownEl.innerHTML = `
+        <div class="px-4 py-3 text-xs text-slate-400 text-center">
+          No matching Shohoz station found
+        </div>
+      `;
+      dropdownEl.classList.remove('hidden');
+      return;
+    }
+
+    dropdownEl.innerHTML = items.map(s => `
+      <div class="autocomplete-item px-3.5 py-2.5 cursor-pointer flex items-center justify-between text-xs transition" data-name="${s.name}">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-train text-emerald-500 text-[10px]"></i>
+          <span class="font-semibold text-slate-800 dark:text-slate-100">${s.display_name || s.name}</span>
+          ${s.bn_name ? `<span class="text-slate-400 font-bengali">(${s.bn_name})</span>` : ''}
+        </div>
+        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-semibold">${s.name}</span>
+      </div>
+    `).join('');
+
+    dropdownEl.querySelectorAll('.autocomplete-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const name = item.dataset.name;
+        inputEl.value = name;
+        dropdownEl.classList.add('hidden');
+        onSelect(name);
+      });
+    });
+
+    dropdownEl.classList.remove('hidden');
+  }
+
+  setupAutocomplete(fromStationInput, fromDropdown, clearFromBtn, (name) => {
+    state.selectedFrom = name;
+  });
+
+  setupAutocomplete(toStationInput, toDropdown, clearToBtn, (name) => {
+    state.selectedTo = name;
+  });
+
+  swapStationsBtn.addEventListener('click', () => {
+    const tempVal = fromStationInput.value;
+    fromStationInput.value = toStationInput.value;
+    toStationInput.value = tempVal;
+
+    state.selectedFrom = fromStationInput.value;
+    state.selectedTo = toStationInput.value;
+
+    clearFromBtn.classList.toggle('hidden', !fromStationInput.value);
+    clearToBtn.classList.toggle('hidden', !toStationInput.value);
+    swapIcon.classList.toggle('rotate-180');
+
+    if (state.selectedFrom && state.selectedTo) {
+      executeSearch();
+    }
+  });
+
+  document.querySelectorAll('.quick-route-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const from = chip.dataset.from;
+      const to = chip.dataset.to;
+      fromStationInput.value = from;
+      toStationInput.value = to;
+      state.selectedFrom = from;
+      state.selectedTo = to;
+      clearFromBtn.classList.remove('hidden');
+      clearToBtn.classList.remove('hidden');
+
+      // Highlight active selected chip
+      document.querySelectorAll('.quick-route-chip').forEach(c => {
+        c.className = 'quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs';
+      });
+      chip.className = 'quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white border border-emerald-500 shadow-xs transition';
+
+      executeSearch();
+    });
+  });
+
+  // ----------------------------------------------------
+  // Search & API Execution (Strictly Live Shohoz)
+  // ----------------------------------------------------
+  searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const rawFrom = fromStationInput.value.trim();
+    const rawTo = toStationInput.value.trim();
+    state.selectedFrom = getCanonicalStationName(rawFrom);
+    state.selectedTo = getCanonicalStationName(rawTo);
+    fromStationInput.value = state.selectedFrom;
+    toStationInput.value = state.selectedTo;
+    state.selectedDate = journeyDateInput.value;
+
+    if (!state.selectedFrom || !state.selectedTo) {
+      showToast('Please select both departure and destination stations.', 'error');
+      return;
+    }
+
+    if (state.selectedFrom.toLowerCase() === state.selectedTo.toLowerCase()) {
+      showToast('Departure and Destination stations cannot be the same.', 'error');
+      return;
+    }
+
+    executeSearch();
+  });
+
+  manualRefreshBtn.addEventListener('click', () => {
+    if (!state.selectedFrom || !state.selectedTo) return;
+    refreshIcon.classList.add('animate-spin-fast');
+    executeSearch().finally(() => {
+      setTimeout(() => refreshIcon.classList.remove('animate-spin-fast'), 600);
+    });
+  });
+
+  async function executeSearch(isSilent = false) {
+    if (state.isLoading) return;
+
+    if (!state.isAuthenticated) {
+      showToast('Please connect your Live API session to search real-time seats.', 'info');
+      authModal.classList.remove('hidden');
+      return;
+    }
+
+    state.isLoading = true;
+
+    if (!isSilent) {
+      initialStateCard.classList.add('hidden');
+      loadingIndicator.classList.remove('hidden');
+      trainsGrid.innerHTML = '';
+      trainsTableView.classList.add('hidden');
+      searchSubmitBtn.disabled = true;
+      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>Finding Train...</span>';
+    }
+
+    try {
+      const token = getAuthToken();
+      const url = `/api/search?from_city=${encodeURIComponent(state.selectedFrom)}&to_city=${encodeURIComponent(state.selectedTo)}&date_of_journey=${encodeURIComponent(state.selectedDate)}`;
+      const res = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+
+      loadingIndicator.classList.add('hidden');
+      searchSubmitBtn.disabled = false;
+      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Find Trains</span>';
+      state.isLoading = false;
+
+      // Handle Session Expiration / Authentication Failure
+      if (data.session_expired || data.auth_error || data.auth_required) {
+        updateAuthUI(false, null, null, null, null, false);
+        showToast(data.error || '⚠️ Your Shohoz session has expired. Please refresh your credentials.', 'error');
+        
+        if (resultsContainer) {
+          resultsContainer.innerHTML = `
+            <div class="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center space-y-3 animate-fade-in my-4">
+              <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <div class="space-y-1">
+                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">Live Shohoz Session Expired</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                  Your Bangladesh Railway session token has expired or requires renewal. Connect a fresh live token to scan real-time seats.
+                </p>
+              </div>
+              <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <button type="button" id="reconnectLiveApiBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-md transition flex items-center space-x-1.5 cursor-pointer">
+                  <i class="fa-solid fa-bolt text-xs"></i>
+                  <span>Connect Live API (1-Click)</span>
+                </button>
+                <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-50 transition inline-flex items-center space-x-1">
+                  <span>Open eticket.railway.gov.bd</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                </a>
+              </div>
+            </div>
+          `;
+
+          const reconnectBtn = document.getElementById('reconnectLiveApiBtn');
+          if (reconnectBtn) {
+            reconnectBtn.addEventListener('click', () => {
+              authModal.classList.remove('hidden');
+              resetTabs();
+              tabScriptBtn.className = 'py-2 px-3 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold';
+              scriptCopyTab.classList.remove('hidden');
+            });
+          }
+        }
+
+        authModal.classList.remove('hidden');
+        resetTabs();
+        tabScriptBtn.className = 'py-2 px-3 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold';
+        scriptCopyTab.classList.remove('hidden');
+        return;
+      }
+
+      if (data.rate_limited) {
+        showToast('⏳ ' + (data.error || 'Shohoz rate-limit cooldown active. Please wait 3-5 seconds.'), 'info');
+        return;
+      }
+
+      if (!data.success) {
+        showToast(data.error || 'Failed to fetch live train availability.', 'error');
+        return;
+      }
+
+      if (data.cooldown_notice && !isSilent) {
+        showToast('ℹ️ ' + data.cooldown_notice, 'info');
+      }
+
+      // Populate train filter options from live trains
+      if (data.trains && data.trains.length > 0) {
+        populateTrainFilterOptions(data.trains);
+      }
+
+      detectSeatChanges(data.trains);
+      state.lastSearchData = data;
+      renderResults(data);
+      updateTrackerBar(data);
+
+    } catch (err) {
+      console.error('Live search error:', err);
+      loadingIndicator.classList.add('hidden');
+      searchSubmitBtn.disabled = false;
+      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Find Trains</span>';
+      state.isLoading = false;
+      showToast('Network error while querying live Bangladesh Railway servers.', 'error');
+    }
+  }
+
+  function detectSeatChanges(currentTrains) {
+    let releasedSeatFound = false;
+    let releasedTrainInfo = null;
+
+    const dojParam = formatShohozDoj(state.selectedDate);
+
+    currentTrains.forEach(train => {
+      (train.seat_types || []).forEach(st => {
+        const key = `${train.train_name}_${st.type}`;
+        const prev = state.previousSeatCounts.get(key);
+        const curr = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
+
+        // If previously tracked as 0 seats (Sold out/Booked) and now has seats:
+        // A booked seat became available to buy!
+        if (prev !== undefined && prev === 0 && curr > 0) {
+          releasedSeatFound = true;
+          const chosenClass = st.type || 'S_CHAIR';
+          const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
+
+          releasedTrainInfo = {
+            trainName: train.train_name,
+            trainModel: train.train_model,
+            className: st.display_name || st.type,
+            seats: curr,
+            bookUrl: bookUrl
+          };
+        } else if (prev !== undefined && curr > prev && prev > 0) {
+          // Additional seats released (e.g. cancellations / additional bogie attached)
+          releasedSeatFound = true;
+          const chosenClass = st.type || 'S_CHAIR';
+          const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
+
+          releasedTrainInfo = {
+            trainName: train.train_name,
+            trainModel: train.train_model,
+            className: st.display_name || st.type,
+            seats: curr,
+            bookUrl: bookUrl
+          };
+        }
+
+        state.previousSeatCounts.set(key, curr);
+      });
+    });
+
+    // Evaluate Active Targeted Watchlist Targets
+    if (state.watchlist && state.watchlist.length > 0) {
+      state.watchlist.forEach(target => {
+        if (!target.active) return;
+        const trainMatch = currentTrains.find(t => 
+          (t.train_name && t.train_name.toLowerCase().trim() === target.trainName.toLowerCase().trim()) ||
+          (t.train_model && target.trainModel && String(t.train_model) === String(target.trainModel))
+        );
+        if (!trainMatch) return;
+
+        (trainMatch.seat_types || []).forEach(st => {
+          if (target.className !== 'ANY' && st.type !== target.className) return;
+          const curr = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
+          if (curr >= (target.minSeats || 1)) {
+            const key = `target_notified_${target.id}_${curr}`;
+            if (!state.previousSeatCounts.has(key)) {
+              state.previousSeatCounts.set(key, true);
+              playUrgentAlertChime();
+              showToast(`🎯 <b>WATCHLIST TARGET HIT!</b> ${trainMatch.train_name} has ${curr} seat(s) in ${st.display_name}!`, 'success');
+
+              const alertPayload = {
+                trainName: trainMatch.train_name,
+                trainModel: trainMatch.train_model,
+                className: st.display_name || st.type,
+                seats: curr,
+                fromCity: state.selectedFrom,
+                toCity: state.selectedTo,
+                date: dojParam,
+                bookUrl: buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, st.type)
+              };
+
+              // 🔔 Send Telegram message automatically
+              sendTelegramAlert(alertPayload);
+
+              addStoredNotification({
+                ...alertPayload,
+                title: `🎯 Watchlist Hit (${trainMatch.train_name})`,
+                message: `Target matched! ${trainMatch.train_name} (#${trainMatch.train_model}) currently has ${curr} seat(s) available in ${st.display_name}!`,
+                type: 'SEAT_RELEASED'
+              });
+            }
+          }
+        });
+      });
+    }
+
+    if (releasedSeatFound && releasedTrainInfo) {
+      playUrgentAlertChime();
+      sendDesktopNotification(
+        '🎉 SEAT AVAILABLE TO BUY!',
+        `${releasedTrainInfo.seats} seat(s) released on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Click to book now.`,
+        releasedTrainInfo.bookUrl
+      );
+      showSeatReleaseBanner(releasedTrainInfo);
+      showToast(`🎉 <b>${releasedTrainInfo.seats} seat(s)</b> released on <span class="bg-slate-900 text-white font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.trainName}</span> for <span class="bg-amber-300 text-amber-950 font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.className}</span>!`, 'success');
+
+      // Store in Top Menu Notification Center
+      addStoredNotification({
+        title: `🎉 Seat Alert (${releasedTrainInfo.trainName})`,
+        message: `${releasedTrainInfo.seats} seat(s) just released on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
+        trainName: releasedTrainInfo.trainName,
+        trainModel: releasedTrainInfo.trainModel,
+        className: releasedTrainInfo.className,
+        seats: releasedTrainInfo.seats,
+        fromCity: state.selectedFrom,
+        toCity: state.selectedTo,
+        date: dojParam,
+        bookUrl: releasedTrainInfo.bookUrl,
+        type: 'SEAT_RELEASED'
+      });
+    }
+  }
+
+  // ----------------------------------------------------
+  // Rendering Live Results
+  // ----------------------------------------------------
+  function renderResults(data) {
+    const trains = data.trains || [];
+
+    // Filter by Train if selected
+    let filteredTrains = trains;
+    if (state.selectedTrain && state.selectedTrain !== 'ALL') {
+      filteredTrains = filteredTrains.filter(t => 
+        t.train_name.toLowerCase().trim() === state.selectedTrain.toLowerCase().trim()
+      );
+    }
+
+    // Filter by Class if selected
+    if (state.selectedClass && state.selectedClass !== 'ALL') {
+      filteredTrains = filteredTrains.filter(t => 
+        (t.seat_types || []).some(s => s.type.toUpperCase() === state.selectedClass.toUpperCase())
+      );
+    }
+
+    updateStats(trains);
+
+    if (filteredTrains.length === 0) {
+      trainsGrid.innerHTML = `
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-10 text-center border border-slate-200 dark:border-slate-800 space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto">
+            <i class="fa-solid fa-filter-circle-xmark"></i>
+          </div>
+          <h4 class="font-bold text-slate-800 dark:text-white">No Live Trains Match Filters</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            No live trains returned by Shohoz matched "${state.selectedFrom} &rarr; ${state.selectedTo}" for your selected filter.
+          </p>
+          <div class="pt-2">
+            <button id="resetFiltersBtn" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 hover:text-emerald-600 text-xs font-semibold transition border border-slate-200 dark:border-slate-700">
+              <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filters to All
+            </button>
+          </div>
+        </div>
+      `;
+
+      const resetBtn = document.getElementById('resetFiltersBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          state.selectedTrain = 'ALL';
+          state.selectedClass = 'ALL';
+          trainFilterSelect.value = 'ALL';
+          classFilterSelect.value = 'ALL';
+          renderResults(data);
+        });
+      }
+      return;
+    }
+
+    if (state.viewMode === 'grid') {
+      renderGridView(filteredTrains);
+      trainsGrid.classList.remove('hidden');
+      trainsTableView.classList.add('hidden');
+    } else {
+      renderTableView(filteredTrains);
+      trainsGrid.classList.add('hidden');
+      trainsTableView.classList.remove('hidden');
+    }
+  }
+
+  // ----------------------------------------------------
+  // Update Top Stats Ribbon (Online + Counter + Combined)
+  // ----------------------------------------------------
+  // ----------------------------------------------------
+  // Update Top Stats Ribbon (Total Running Trains & Total Available Seats)
+  // ----------------------------------------------------
+  function updateStats(trains) {
+    statsRibbon.classList.remove('hidden');
+    let totalSeats = 0;
+
+    trains.forEach(t => {
+      (t.seat_types || []).forEach(s => {
+        const onlineCount = Number(s.seats_available || 0);
+        const counterCount = Number(s.counter_seats_available || 0);
+        totalSeats += (onlineCount + counterCount);
+      });
+    });
+
+    statTotalTrains.textContent = trains.length;
+    statCombinedSeats.textContent = totalSeats;
+  }
+
+  function updateTrackerBar(data) {
+    trackerBar.classList.remove('hidden');
+    activeFromBadge.textContent = state.selectedFrom;
+    activeToBadge.textContent = state.selectedTo;
+    activeDateBadge.textContent = formatShohozDoj(state.selectedDate);
+    lastUpdatedTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  // ----------------------------------------------------
+  // Compact Card Grid View Renderer
+  // ----------------------------------------------------
+  function renderGridView(trains) {
+    const dojParam = formatShohozDoj(state.selectedDate);
+
+    trainsGrid.innerHTML = trains.map(train => {
+      const grandTotal = (train.seat_types || []).reduce((sum, s) => {
+        return sum + Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
+      }, 0);
+
+      const hasAnySeats = grandTotal > 0;
+      const availClasses = (train.seat_types || []).filter(s => (Number(s.seats_available || 0) + Number(s.counter_seats_available || 0)) > 0);
+      const chosenClass = state.selectedClass !== 'ALL' ? state.selectedClass : (availClasses.length > 0 ? availClasses[0].type : (train.seat_types?.[0]?.type || 'S_CHAIR'));
+      const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
+
+      return `
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition space-y-2.5">
+          
+          <!-- TOP HEADER: Train Identity, Route, Book & Total Seats in 1 Compact Bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
+            
+            <!-- Left: Train Identity, Model & Off-day -->
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                <i class="fa-solid fa-train"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5 flex-wrap">
+                  <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">${train.train_name}</h3>
+                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold">#${train.train_model}</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                  Off-day: <span class="font-semibold text-slate-600 dark:text-slate-300">${train.off_day || 'None'}</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Right: Total Badge + Actions -->
+            <div class="flex items-center space-x-2 shrink-0 self-end sm:self-center">
+              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-extrabold shadow-2xs ${
+                hasAnySeats 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/80' 
+                  : 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700/80'
+              }">
+                <i class="fa-solid ${hasAnySeats ? 'fa-chair text-emerald-500' : 'fa-circle-xmark text-rose-500'} text-[11px]"></i>
+                <span>${hasAnySeats ? `${grandTotal} Available` : 'SOLD OUT'}</span>
+              </span>
+
+              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700/60 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="Watch this train for seat releases">
+                <i class="fa-solid fa-crosshairs text-[10px]"></i>
+                <span class="hidden xs:inline">Watch</span>
+              </button>
+
+              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/60 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="View Single-Day All-Station Blank Seat Matrix">
+                <i class="fa-solid fa-table-cells text-[10px]"></i>
+                <span class="hidden xs:inline">Stops Matrix</span>
+              </button>
+
+              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/70 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="View Route & Stoppages">
+                <i class="fa-solid fa-route text-emerald-600 text-xs"></i>
+                <span class="hidden xs:inline">Route</span>
+              </button>
+
+              <a href="${bookUrl}" target="_blank" rel="noopener" 
+                class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs ${
+                  hasAnySeats 
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-xs' 
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                } transition whitespace-nowrap">
+                <span>Book</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+
+          </div>
+
+          <!-- COMPACT JOURNEY RIBBON -->
+          <div class="flex items-center justify-between bg-slate-50/90 dark:bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/40 text-xs">
+            <div class="flex items-center space-x-1.5 truncate">
+              <span class="font-extrabold text-slate-900 dark:text-slate-100">${train.departure_time}</span>
+              <span class="text-slate-400 text-[11px] truncate">(${train.departure_station})</span>
+            </div>
+
+            <div class="flex items-center space-x-1 text-slate-400 dark:text-slate-500 px-2 shrink-0 text-[11px]">
+              <i class="fa-solid fa-arrow-right text-emerald-500 text-[10px]"></i>
+              ${train.travel_time ? `<span class="font-medium">${train.travel_time}</span>` : ''}
+            </div>
+
+            <div class="flex items-center space-x-1.5 truncate text-right">
+              <span class="font-extrabold text-slate-900 dark:text-slate-100">${train.arrival_time}</span>
+              <span class="text-slate-400 text-[11px] truncate">(${train.arrival_station})</span>
+            </div>
+          </div>
+
+          <!-- COMPACT SEAT CLASSES GRID -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 pt-0.5">
+            ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
+          </div>
+
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ----------------------------------------------------
+  // Compact Seat Pill Renderer
+  // ----------------------------------------------------
+  function renderSeatPill(seat, fromCity, toCity, journeyDate) {
+    const onlineCount = Number(seat.seats_available || 0);
+    const counterCount = Number(seat.counter_seats_available || 0);
+    const totalSeatCount = onlineCount + counterCount;
+    const isAvail = totalSeatCount > 0;
+    
+    const baseFare = Number(seat.fare || 0);
+    const vat = Number(seat.vat || 0);
+    const totalFare = Number(seat.total_fare !== undefined ? seat.total_fare : (baseFare + vat));
+
+    // Build per-class booking URL
+    const bookUrl = (fromCity && toCity && journeyDate)
+      ? buildShohozBookingUrl(fromCity, toCity, journeyDate, seat.type || 'S_CHAIR')
+      : '#';
+
+    let cardBg = '';
+    let countBadge = '';
+    let icon = '';
+
+    if (isAvail) {
+      cardBg = 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300/90 dark:border-emerald-700/70 text-emerald-900 dark:text-emerald-200';
+      countBadge = `<div class="w-full py-1 px-1.5 rounded-lg bg-emerald-600 text-white font-extrabold text-[11px] text-center shadow-2xs">🟢 ${totalSeatCount} Seats</div>`;
+      icon = '<i class="fa-solid fa-circle text-[6px] text-emerald-500 animate-pulse"></i>';
+    } else {
+      cardBg = 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-200';
+      countBadge = `<div class="w-full py-1 px-1.5 rounded-lg bg-rose-600 text-white font-extrabold text-[11px] text-center shadow-2xs">🔴 SOLD OUT</div>`;
+      icon = '<i class="fa-solid fa-xmark text-[9px] text-rose-600"></i>';
+    }
+
+    const vatSubtext = vat > 0 ? `<span class="text-[9px] font-medium text-slate-500 dark:text-slate-400">incl. ৳${vat} VAT</span>` : `<span class="text-[9px] font-medium text-slate-500 dark:text-slate-400">0% VAT</span>`;
+
+    // Wrap entire pill in an anchor — clicking anywhere on the pill books this class
+    return `
+      <a href="${bookUrl}" target="_blank" rel="noopener"
+        class="seat-pill block p-2.5 rounded-xl border ${cardBg} flex flex-col justify-between space-y-2 shadow-2xs hover:shadow-md transition ${isAvail ? 'hover:border-emerald-500 hover:scale-[1.02]' : 'opacity-80 cursor-not-allowed'}"
+        title="${isAvail ? `Book ${seat.display_name} — ${totalSeatCount} seats available` : `${seat.display_name} — Sold Out`}"
+        ${!isAvail ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : ''}>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-black uppercase tracking-wider truncate">${seat.display_name}</span>
+          ${icon}
+        </div>
+
+        <div>
+          ${countBadge}
+        </div>
+
+        <div class="pt-1.5 border-t border-current/15 flex items-center justify-between text-xs font-bold">
+          <span class="text-emerald-700 dark:text-emerald-300 font-extrabold text-sm">৳${totalFare}</span>
+          ${vatSubtext}
+        </div>
+      </a>
+    `;
+  }
+
+  // ----------------------------------------------------
+  // Compact Table View Renderer (Smooth Glancability & Clean Wrap)
+  // ----------------------------------------------------
+  function renderTableView(trains) {
+    const dojParam = formatShohozDoj(state.selectedDate);
+
+    tableBody.innerHTML = trains.map(train => {
+      const availClasses = (train.seat_types || []).filter(s => {
+        const totalCount = Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
+        return totalCount > 0;
+      });
+
+      const grandTotal = (train.seat_types || []).reduce((sum, s) => {
+        return sum + Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
+      }, 0);
+
+      const hasAnySeats = grandTotal > 0;
+      const chosenClass = availClasses.length > 0 ? availClasses[0].type : (state.selectedClass !== 'ALL' ? state.selectedClass : (train.seat_types?.[0]?.type || 'S_CHAIR'));
+      const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
+
+      let classesHtml = '';
+      if (availClasses.length > 0) {
+        classesHtml = `
+          <div class="flex flex-wrap gap-1.5 items-center py-0.5">
+            ${availClasses.map(s => {
+              const onlineCount = Number(s.seats_available || 0);
+              const counterCount = Number(s.counter_seats_available || 0);
+              const totalCount = onlineCount + counterCount;
+              const baseFare = Number(s.fare || 0);
+              const vat = Number(s.vat || 0);
+              const totalFare = Number(s.total_fare !== undefined ? s.total_fare : (baseFare + vat));
+
+              return `
+                <div class="inline-flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/70 text-xs shadow-2xs whitespace-nowrap">
+                  <span class="font-bold text-slate-900 dark:text-white">${s.display_name || s.type}:</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-600 text-white font-extrabold text-[10px]">🟢 ${totalCount}</span>
+                  <span class="text-emerald-700 dark:text-emerald-300 font-bold text-[11px]">৳${totalFare}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else {
+        classesHtml = `
+          <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-semibold">
+            <i class="fa-solid fa-circle-xmark mr-1 text-rose-500 text-[10px]"></i> All Sold Out (0)
+          </span>
+        `;
+      }
+
+      return `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+          <td class="px-3 py-2.5 align-middle sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r border-slate-200/80 dark:border-slate-800">
+            <div class="font-bold text-slate-900 dark:text-white whitespace-nowrap text-xs sm:text-sm">${train.train_name}</div>
+            <div class="text-[10px] sm:text-[11px] text-slate-400 whitespace-nowrap">#${train.train_model} &bull; Off: ${train.off_day || 'None'}</div>
+          </td>
+          <td class="px-3 py-2.5 align-middle whitespace-nowrap">
+            <div class="font-extrabold text-slate-900 dark:text-slate-100">${train.departure_time}</div>
+            <div class="text-[11px] text-slate-400 truncate max-w-[110px]">${train.departure_station}</div>
+          </td>
+          <td class="px-3 py-2.5 align-middle whitespace-nowrap">
+            <div class="font-extrabold text-slate-900 dark:text-slate-100">${train.arrival_time}</div>
+            <div class="text-[11px] text-slate-400 truncate max-w-[110px]">${train.arrival_station}</div>
+          </td>
+          <td class="px-3 py-2.5 align-middle">
+            ${classesHtml}
+          </td>
+          <td class="px-3 py-2.5 align-middle text-center whitespace-nowrap">
+            ${hasAnySeats 
+              ? `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 font-extrabold text-xs">🟢 ${grandTotal}</span>` 
+              : `<span class="px-2 py-0.5 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-xs">🔴 0</span>`
+            }
+          </td>
+          <td class="px-3 py-2.5 align-middle text-center whitespace-nowrap">
+            <div class="inline-flex items-center space-x-1.5">
+              <button type="button" class="set-watch-btn px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-amber-700/60 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="Watch this train for seat releases">
+                <i class="fa-solid fa-crosshairs text-[10px]"></i>
+              </button>
+
+              <button type="button" class="view-station-matrix-btn px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-700/60 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="View Single-Day All-Station Blank Seat Matrix">
+                <i class="fa-solid fa-table-cells text-[10px]"></i>
+              </button>
+
+              <button type="button" class="view-route-btn px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="View Route & Stoppages">
+                <i class="fa-solid fa-route text-emerald-600 text-xs"></i>
+              </button>
+
+              <a href="${bookUrl}" target="_blank" rel="noopener" 
+                class="px-2.5 py-1 rounded-lg ${hasAnySeats ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'} text-xs transition inline-flex items-center space-x-1">
+                <span>Book</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ----------------------------------------------------
+  // Live Train Route & Schedule Modal (from eticket.railway.gov.bd/train-information)
+  // ----------------------------------------------------
+  const routeModal = document.getElementById('routeModal');
+  const routeModalCloseBtn = document.getElementById('routeModalCloseBtn');
+  const routeModalTrainName = document.getElementById('routeModalTrainName');
+  const routeModalTrainModel = document.getElementById('routeModalTrainModel');
+  const routeModalSubtitle = document.getElementById('routeModalSubtitle');
+  const routeTrainSearchInput = document.getElementById('routeTrainSearchInput');
+  const clearRouteSearchBtn = document.getElementById('clearRouteSearchBtn');
+  const routeSearchDropdown = document.getElementById('routeSearchDropdown');
+  const routeLookupSubmitBtn = document.getElementById('routeLookupSubmitBtn');
+  const routeTotalDuration = document.getElementById('routeTotalDuration');
+  const routeRunningDays = document.getElementById('routeRunningDays');
+  const routeTimelineContainer = document.getElementById('routeTimelineContainer');
+  const openRouteExplorerBtn = document.getElementById('openRouteExplorerBtn');
+
+  if (routeModalCloseBtn) {
+    routeModalCloseBtn.addEventListener('click', () => routeModal.classList.add('hidden'));
+  }
+  if (routeModal) {
+    routeModal.addEventListener('click', (e) => {
+      if (e.target === routeModal) routeModal.classList.add('hidden');
+    });
+  }
+  if (openRouteExplorerBtn) {
+    openRouteExplorerBtn.addEventListener('click', () => {
+      const initialModel = state.lastSearchData?.trains?.[0]?.train_model || '702';
+      const initialName = state.lastSearchData?.trains?.[0]?.train_name || 'Suborno Express';
+      openRouteModal(initialModel, initialName);
+    });
+  }
+
+  function renderRouteSearchDropdown(items) {
+    if (!routeSearchDropdown) return;
+    if (items.length === 0) {
+      routeSearchDropdown.innerHTML = `
+        <div class="px-4 py-3 text-xs text-slate-400 text-center">
+          No matching trains found. You can also enter numeric train code (e.g. 702).
+        </div>
+      `;
+      routeSearchDropdown.classList.remove('hidden');
+      return;
+    }
+
+    routeSearchDropdown.innerHTML = items.slice(0, 15).map(t => `
+      <div class="train-search-item px-4 py-2.5 cursor-pointer flex items-center justify-between text-xs hover:bg-emerald-50/70 dark:hover:bg-slate-700/60 transition group" data-model="${t.model}" data-name="${t.name}">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 group-hover:scale-105 transition">
+            <i class="fa-solid fa-train"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-slate-900 dark:text-white">${t.name}</span>
+              <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold text-[10px] border border-emerald-300 dark:border-emerald-700/60">#${t.model}</span>
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-route text-[10px] text-emerald-500"></i>
+              <span>${t.route || `${t.from} ➔ ${t.to}`}</span>
+            </div>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 group-hover:bg-emerald-600 group-hover:text-white text-slate-600 dark:text-slate-300 text-[10px] font-bold transition">
+          View Route ➔
+        </span>
+      </div>
+    `).join('');
+
+    routeSearchDropdown.querySelectorAll('.train-search-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const model = item.dataset.model;
+        const name = item.dataset.name;
+        routeTrainSearchInput.value = `${name} (#${model})`;
+        routeSearchDropdown.classList.add('hidden');
+        if (clearRouteSearchBtn) clearRouteSearchBtn.classList.remove('hidden');
+        openRouteModal(model, name);
+      });
+    });
+
+    routeSearchDropdown.classList.remove('hidden');
+  }
+
+  if (routeTrainSearchInput) {
+    routeTrainSearchInput.addEventListener('input', () => {
+      const q = routeTrainSearchInput.value.trim().toLowerCase();
+      if (clearRouteSearchBtn) clearRouteSearchBtn.classList.toggle('hidden', !q);
+
+      if (!q) {
+        if (routeSearchDropdown) routeSearchDropdown.classList.add('hidden');
+        return;
+      }
+
+      const matches = state.trainsCatalog.filter(t => 
+        (t.name && t.name.toLowerCase().includes(q)) ||
+        (t.model && t.model.includes(q)) ||
+        (t.from && t.from.toLowerCase().includes(q)) ||
+        (t.to && t.to.toLowerCase().includes(q)) ||
+        (t.route && t.route.toLowerCase().includes(q))
+      );
+
+      renderRouteSearchDropdown(matches);
+    });
+
+    routeTrainSearchInput.addEventListener('focus', () => {
+      const q = routeTrainSearchInput.value.trim().toLowerCase();
+      if (q && routeSearchDropdown) {
+        const matches = state.trainsCatalog.filter(t => 
+          (t.name && t.name.toLowerCase().includes(q)) ||
+          (t.model && t.model.includes(q)) ||
+          (t.from && t.from.toLowerCase().includes(q)) ||
+          (t.to && t.to.toLowerCase().includes(q)) ||
+          (t.route && t.route.toLowerCase().includes(q))
+        );
+        renderRouteSearchDropdown(matches);
+      }
+    });
+
+    routeTrainSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const query = routeTrainSearchInput.value.trim();
+        if (routeSearchDropdown) routeSearchDropdown.classList.add('hidden');
+        if (query) {
+          const exact = state.trainsCatalog.find(t => 
+            t.model === query || t.name.toLowerCase() === query.toLowerCase() || `${t.name} (#${t.model})`.toLowerCase() === query.toLowerCase()
+          );
+          if (exact) {
+            openRouteModal(exact.model, exact.name);
+          } else {
+            const digits = query.replace(/\D/g, '');
+            openRouteModal(digits || query);
+          }
+        }
+      }
+    });
+  }
+
+  if (clearRouteSearchBtn) {
+    clearRouteSearchBtn.addEventListener('click', () => {
+      routeTrainSearchInput.value = '';
+      clearRouteSearchBtn.classList.add('hidden');
+      if (routeSearchDropdown) routeSearchDropdown.classList.add('hidden');
+      routeTrainSearchInput.focus();
+    });
+  }
+
+  if (routeLookupSubmitBtn && routeTrainSearchInput) {
+    routeLookupSubmitBtn.addEventListener('click', () => {
+      const query = routeTrainSearchInput.value.trim();
+      if (routeSearchDropdown) routeSearchDropdown.classList.add('hidden');
+      if (query) {
+        const exact = state.trainsCatalog.find(t => 
+          t.model === query || t.name.toLowerCase() === query.toLowerCase() || `${t.name} (#${t.model})`.toLowerCase() === query.toLowerCase()
+        );
+        if (exact) {
+          openRouteModal(exact.model, exact.name);
+        } else {
+          const digits = query.replace(/\D/g, '');
+          openRouteModal(digits || query);
+        }
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (routeSearchDropdown && !routeSearchDropdown.contains(e.target) && e.target !== routeTrainSearchInput) {
+      routeSearchDropdown.classList.add('hidden');
+    }
+  });
+
+  async function openRouteModal(trainModel, trainName = '') {
+    if (!trainModel) return;
+    const cleanModel = String(trainModel).replace(/\D/g, '') || String(trainModel).trim();
+
+    routeModalTrainName.textContent = trainName || `Train #${cleanModel}`;
+    routeModalTrainModel.textContent = `#${cleanModel}`;
+    routeModalSubtitle.textContent = 'Fetching official schedule from Bangladesh Railway...';
+    routeTotalDuration.textContent = 'Loading...';
+    routeRunningDays.innerHTML = '';
+    routeTimelineContainer.innerHTML = `
+      <div class="py-12 text-center text-slate-400 space-y-2">
+        <i class="fa-solid fa-spinner fa-spin text-2xl text-emerald-500"></i>
+        <p class="text-xs">Connecting to Bangladesh Railway Train Information Service...</p>
+      </div>
+    `;
+    routeTrainSearchInput.value = cleanModel;
+    routeModal.classList.remove('hidden');
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/train-route?model=${encodeURIComponent(cleanModel)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+
+      if (!json.success || !json.data) {
+        routeTimelineContainer.innerHTML = `
+          <div class="py-8 text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-triangle-exclamation text-xl text-amber-500"></i>
+            <p class="text-xs font-semibold">${json.error || 'No route data found for this train model.'}</p>
+            <p class="text-[11px] text-slate-400">Please verify the train number (e.g. 702, 704, 788, 814, 742).</p>
+          </div>
+        `;
+        routeModalSubtitle.textContent = 'Schedule Not Available';
+        return;
+      }
+
+      const routeData = json.data;
+      const officialTrainName = routeData.train_name || trainName || `Train #${cleanModel}`;
+      routeModalTrainName.textContent = officialTrainName;
+      routeModalSubtitle.textContent = 'Official Bangladesh Railway Stoppage Timeline';
+      routeTotalDuration.textContent = routeData.total_duration ? `${routeData.total_duration} Hours` : 'N/A';
+
+      // Render Running Days & Off-Day Badge
+      const allDays = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+      const activeDays = new Set(routeData.days || []);
+      const offDayText = routeData.off_day || 'None';
+      
+      routeRunningDays.innerHTML = `
+        <div class="flex items-center space-x-1 flex-wrap gap-1">
+          ${allDays.map(d => {
+            const isActive = activeDays.has(d);
+            return `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${isActive ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 opacity-50 line-through'}">${d}</span>`;
+          }).join('')}
+          <span class="ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${offDayText !== 'None' ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/80' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300'}">
+            Off-Day: ${offDayText}
+          </span>
+        </div>
+      `;
+
+      // Render Vertical Station Timeline
+      const stops = routeData.routes || [];
+      if (stops.length === 0) {
+        routeTimelineContainer.innerHTML = '<div class="py-6 text-center text-slate-400 text-xs">No stoppage station information available.</div>';
+        return;
+      }
+
+      // Initialize Interactive Intermediate Stoppage Calculator
+      initRouteCalculator(stops);
+
+      routeTimelineContainer.innerHTML = stops.map((stop, idx) => {
+        const isOrigin = idx === 0;
+        const isDest = idx === stops.length - 1;
+        const cityName = (stop.city || 'Station').replace(/_/g, ' ');
+        const arrTime = stop.arrival_time || (isOrigin ? 'Origin Station' : '--');
+        const depTime = stop.departure_time || (isDest ? 'Final Destination' : '--');
+        const halt = stop.halt ? `${stop.halt} min halt` : (isOrigin || isDest ? '' : 'Brief stop');
+        const duration = stop.duration ? `Travel: ${stop.duration}` : '';
+
+        return `
+          <div class="relative flex items-start space-x-3 pb-6 group">
+            <!-- Node dot on timeline -->
+            <div class="relative z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm transition ${
+              isOrigin ? 'bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950' :
+              isDest ? 'bg-rose-600 text-white ring-4 ring-rose-100 dark:ring-rose-950' :
+              'bg-white dark:bg-slate-800 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+            }">
+              ${isOrigin ? '<i class="fa-solid fa-play text-[9px]"></i>' : isDest ? '<i class="fa-solid fa-flag-checkered text-[9px]"></i>' : (idx + 1)}
+            </div>
+
+            <!-- Station Card -->
+            <div class="flex-1 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/70 dark:border-slate-700/60 shadow-xs hover:border-emerald-400 transition">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div class="flex items-center space-x-2">
+                  <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">${cityName}</h4>
+                  ${isOrigin ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold uppercase">Origin</span>' : ''}
+                  ${isDest ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-bold uppercase">Destination</span>' : ''}
+                </div>
+                
+                <div class="flex items-center space-x-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  ${halt ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]"><i class="fa-regular fa-clock mr-1"></i>${halt}</span>` : ''}
+                  ${duration ? `<span class="text-slate-400 text-[10px]">${duration}</span>` : ''}
+                </div>
+              </div>
+
+              <!-- Arrival / Departure Timings -->
+              <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 text-xs">
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold">Arrival</span>
+                  <p class="font-extrabold text-slate-800 dark:text-slate-200">${arrTime}</p>
+                </div>
+                <div class="text-right sm:text-left">
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold">Departure</span>
+                  <p class="font-extrabold text-emerald-600 dark:text-emerald-400">${depTime}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (err) {
+      console.warn('Train route fetch error:', err);
+      routeTimelineContainer.innerHTML = `
+        <div class="py-8 text-center text-slate-400 space-y-2">
+          <i class="fa-solid fa-triangle-exclamation text-xl text-amber-500"></i>
+          <p class="text-xs">Failed to load route information. Please try again.</p>
+        </div>
+      `;
+    }
+  }
+
+  // ----------------------------------------------------
+  // Intermediate Stoppage Duration & Halt Calculator
+  // ----------------------------------------------------
+  let currentModalRouteStops = [];
+
+  function initRouteCalculator(stops) {
+    currentModalRouteStops = stops;
+    if (!routeCalcFromSelect || !routeCalcToSelect) return;
+
+    const optionsHtml = stops.map((s, idx) => `
+      <option value="${idx}">${s.city ? s.city.replace(/_/g, ' ') : `Station ${idx+1}`} (${s.departure_time || s.arrival_time || '--'})</option>
+    `).join('');
+
+    routeCalcFromSelect.innerHTML = optionsHtml;
+    routeCalcToSelect.innerHTML = optionsHtml;
+
+    routeCalcFromSelect.selectedIndex = 0;
+    routeCalcToSelect.selectedIndex = Math.max(0, stops.length - 1);
+
+    calculateIntermediateJourney();
+
+    routeCalcFromSelect.onchange = calculateIntermediateJourney;
+    routeCalcToSelect.onchange = calculateIntermediateJourney;
+  }
+
+  function calculateIntermediateJourney() {
+    if (!currentModalRouteStops || currentModalRouteStops.length === 0) return;
+    const fromIdx = parseInt(routeCalcFromSelect.value, 10);
+    const toIdx = parseInt(routeCalcToSelect.value, 10);
+
+    if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx >= toIdx) {
+      if (routeCalcResultRibbon) routeCalcResultRibbon.classList.add('hidden');
+      return;
+    }
+
+    const fromStop = currentModalRouteStops[fromIdx];
+    const toStop = currentModalRouteStops[toIdx];
+
+    const intermediateStopsCount = toIdx - fromIdx - 1;
+    let totalHaltMinutes = 0;
+
+    for (let i = fromIdx + 1; i < toIdx; i++) {
+      totalHaltMinutes += parseInt(currentModalRouteStops[i].halt, 10) || 2;
+    }
+
+    let durationText = 'N/A';
+    if (fromStop.departure_time && toStop.arrival_time) {
+      const depMins = parseTimeToMinutes(fromStop.departure_time);
+      const arrMins = parseTimeToMinutes(toStop.arrival_time);
+      if (depMins !== null && arrMins !== null) {
+        let diff = arrMins - depMins;
+        if (diff < 0) diff += 24 * 60; // Crosses midnight
+        const hrs = Math.floor(diff / 60);
+        const mins = diff % 60;
+        durationText = `${String(hrs).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m`;
+      }
+    }
+
+    if (routeCalcDuration) routeCalcDuration.textContent = durationText;
+    if (routeCalcStopsCount) routeCalcStopsCount.textContent = `${intermediateStopsCount} stop(s)`;
+    if (routeCalcHaltTime) routeCalcHaltTime.textContent = `${totalHaltMinutes} mins`;
+    if (routeCalcResultRibbon) routeCalcResultRibbon.classList.remove('hidden');
+  }
+
+  function parseTimeToMinutes(timeStr) {
+    if (!timeStr) return null;
+    const clean = timeStr.trim();
+    const match = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (!match) return null;
+    let hrs = parseInt(match[1], 10);
+    const mins = parseInt(match[2], 10);
+    const ampm = match[3] ? match[3].toUpperCase() : null;
+    if (ampm === 'PM' && hrs < 12) hrs += 12;
+    if (ampm === 'AM' && hrs === 12) hrs = 0;
+    return hrs * 60 + mins;
+  }
+
+  // ----------------------------------------------------
+  // View Switchers (Cards, Table, 10-Day Matrix)
+  // ----------------------------------------------------
+  if (viewGridBtn) {
+    viewGridBtn.addEventListener('click', () => {
+      state.viewMode = 'grid';
+      viewGridBtn.className = 'px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition';
+      viewTableBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      if (viewMatrixBtn) viewMatrixBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      if (trainsMatrixView) trainsMatrixView.classList.add('hidden');
+      if (state.lastSearchData) renderResults(state.lastSearchData);
+    });
+  }
+
+  if (viewTableBtn) {
+    viewTableBtn.addEventListener('click', () => {
+      state.viewMode = 'table';
+      viewTableBtn.className = 'px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition';
+      viewGridBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      if (viewMatrixBtn) viewMatrixBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      if (trainsMatrixView) trainsMatrixView.classList.add('hidden');
+      if (state.lastSearchData) renderResults(state.lastSearchData);
+    });
+  }
+
+  if (viewMatrixBtn) {
+    viewMatrixBtn.addEventListener('click', () => {
+      state.viewMode = 'matrix';
+      viewMatrixBtn.className = 'px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition';
+      viewGridBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      viewTableBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+      showMatrixReadyState();
+    });
+  }
+
+  // ----------------------------------------------------
+  // Customizable Multi-Day Calendar Matrix View
+  // ----------------------------------------------------
+  function showMatrixReadyState() {
+    if (trainsGrid) trainsGrid.classList.add('hidden');
+    if (trainsTableView) trainsTableView.classList.add('hidden');
+    if (trainsMatrixView) trainsMatrixView.classList.remove('hidden');
+
+    // Reset start date to today/selected if not set
+    const defaultDate = state.selectedDate || new Date().toISOString().split('T')[0];
+    if (matrixStartDateInput && !matrixStartDateInput.value) {
+      matrixStartDateInput.value = defaultDate;
+    }
+    if (calendarMatrixTitle) {
+      calendarMatrixTitle.textContent = 'Multi-Day Availability Matrix';
+    }
+
+    if (matrixContentContainer) {
+      const from = state.selectedFrom || '—';
+      const to = state.selectedTo || '—';
+      matrixContentContainer.innerHTML = `
+        <div class="py-14 text-center space-y-4">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-3xl text-emerald-500">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div>
+            <p class="text-sm font-extrabold text-slate-800 dark:text-white">${from} ➔ ${to}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Choose how many days to scan using the controls above,<br>then click <strong class="text-emerald-600 dark:text-emerald-400">⟳ Scan</strong> to load live availability.</p>
+          </div>
+          <p class="text-[11px] text-slate-400">Supports 1 – 14 days &bull; Max 14 days per scan</p>
+        </div>
+      `;
+    }
+  }
+
+  function initMultiDayMatrixControls() {
+    if (matrixDaysPresetGroup) {
+      matrixDaysPresetGroup.querySelectorAll('.matrix-day-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const days = parseInt(btn.dataset.days, 10) || 7;
+          state.matrixDays = days;
+          if (matrixCustomDaysInput) matrixCustomDaysInput.value = days;
+          updateMatrixDayBtnStyles(days);
+          // Preset pill click does trigger a scan
+          fetchAndRenderMultiDayMatrix();
+        });
+      });
+    }
+
+    if (matrixCustomDaysInput) {
+      // Only update state, don't auto-scan on typing
+      matrixCustomDaysInput.addEventListener('input', () => {
+        let val = parseInt(matrixCustomDaysInput.value, 10);
+        if (!isNaN(val)) {
+          if (val < 1) val = 1;
+          if (val > 14) val = 14;
+          state.matrixDays = val;
+          updateMatrixDayBtnStyles(val);
+        }
+      });
+    }
+
+    if (matrixStartDateInput) {
+      // Only update state, don't auto-scan on date change
+      matrixStartDateInput.addEventListener('change', () => {
+        state.matrixStartDate = matrixStartDateInput.value;
+      });
+    }
+
+    if (matrixRefreshBtn) {
+      // Scan button is the only trigger
+      matrixRefreshBtn.addEventListener('click', () => {
+        let val = parseInt(matrixCustomDaysInput ? matrixCustomDaysInput.value : state.matrixDays, 10);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > 14) val = 14;
+        if (matrixCustomDaysInput) matrixCustomDaysInput.value = val;
+        state.matrixDays = val;
+        updateMatrixDayBtnStyles(val);
+        fetchAndRenderMultiDayMatrix();
+      });
+    }
+  }
+
+  function updateMatrixDayBtnStyles(selectedDays) {
+    if (!matrixDaysPresetGroup) return;
+    matrixDaysPresetGroup.querySelectorAll('.matrix-day-btn').forEach(btn => {
+      const d = parseInt(btn.dataset.days, 10);
+      if (d === selectedDays) {
+        btn.className = 'matrix-day-btn px-2 py-0.5 rounded-md font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer';
+      } else {
+        btn.className = 'matrix-day-btn px-2 py-0.5 rounded-md font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer';
+      }
+    });
+  }
+
+  async function fetchAndRenderMultiDayMatrix(customDays, customStartDate) {
+    if (!state.selectedFrom || !state.selectedTo) {
+      showToast('Please select both departure and destination stations first.', 'info');
+      return;
+    }
+
+    if (trainsGrid) trainsGrid.classList.add('hidden');
+    if (trainsTableView) trainsTableView.classList.add('hidden');
+    if (trainsMatrixView) trainsMatrixView.classList.remove('hidden');
+    
+    const numDays = customDays || state.matrixDays || 7;
+    const startD = customStartDate || (matrixStartDateInput && matrixStartDateInput.value ? matrixStartDateInput.value : '') || state.selectedDate || new Date().toISOString().split('T')[0];
+
+    if (matrixStartDateInput && !matrixStartDateInput.value) {
+      matrixStartDateInput.value = startD;
+    }
+    if (matrixCustomDaysInput) {
+      matrixCustomDaysInput.value = numDays;
+    }
+    updateMatrixDayBtnStyles(numDays);
+
+    if (calendarMatrixTitle) {
+      calendarMatrixTitle.textContent = `${numDays}-Day Availability Matrix`;
+    }
+
+    if (matrixContentContainer) {
+      matrixContentContainer.innerHTML = `
+        <div class="py-12 text-center text-slate-400 space-y-3">
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500"></i>
+          <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Querying next ${numDays} consecutive days for ${state.selectedFrom} ➔ ${state.selectedTo}...</p>
+          <p class="text-[11px] text-slate-400">Loading live availability across all trains from Bangladesh Railway</p>
+        </div>
+      `;
+    }
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/multi-date-search?from_city=${encodeURIComponent(state.selectedFrom)}&to_city=${encodeURIComponent(state.selectedTo)}&start_date=${encodeURIComponent(startD)}&days=${encodeURIComponent(numDays)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+
+      if (!data.success || !data.matrix || data.matrix.length === 0) {
+        if (matrixContentContainer) {
+          matrixContentContainer.innerHTML = `
+            <div class="py-8 text-center text-slate-400 space-y-2">
+              <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-500"></i>
+              <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Unable to load ${numDays}-day matrix</p>
+              <p class="text-[11px] text-slate-400">${data.error || 'Please ensure your live API session is connected.'}</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      state.multiDateData = data;
+      renderMatrixTable(data.matrix);
+
+    } catch (err) {
+      console.warn('Matrix fetch error:', err);
+      if (matrixContentContainer) {
+        matrixContentContainer.innerHTML = '<div class="py-8 text-center text-xs text-rose-500">Failed to load multi-date matrix. Please try again.</div>';
+      }
+    }
+  }
+
+  function renderMatrixTable(matrixDays) {
+    if (!matrixContentContainer) return;
+
+    const trainMap = new Map();
+    matrixDays.forEach(day => {
+      (day.trains || []).forEach(t => {
+        if (!trainMap.has(t.train_model)) {
+          trainMap.set(t.train_model, {
+            name: t.train_name,
+            model: t.train_model,
+            departure_time: t.departure_time,
+            arrival_time: t.arrival_time,
+            off_day: t.off_day
+          });
+        }
+      });
+    });
+
+    const uniqueTrains = Array.from(trainMap.values());
+
+    let tableHtml = `
+      <table class="w-full text-left text-xs border-collapse min-w-[650px]">
+        <thead>
+          <tr class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+            <th class="p-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r border-slate-200 dark:border-slate-700">Train</th>
+            ${matrixDays.map(d => `
+              <th class="p-2 text-center whitespace-nowrap cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition matrix-header-date" data-date="${d.date}" title="Switch to this date">
+                <div class="text-[10px] text-slate-400 font-mono">${d.day_name}</div>
+                <div class="text-xs font-black text-slate-900 dark:text-white">${d.display_date}</div>
+                <div class="text-[9px] font-bold ${d.total_available_seats > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}">
+                  ${d.total_available_seats > 0 ? `🟢 ${d.total_available_seats}` : '🔴 0'}
+                </div>
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+    `;
+
+    uniqueTrains.forEach(train => {
+      tableHtml += `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+          <td class="p-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r border-slate-200/80 dark:border-slate-800">
+            <div class="text-xs font-extrabold">${train.name}</div>
+            <div class="text-[10px] text-slate-400 font-normal">#${train.model} &bull; ${train.departure_time} &bull; Off: ${train.off_day || 'None'}</div>
+          </td>
+      `;
+
+      matrixDays.forEach(d => {
+        const trainOnDay = (d.trains || []).find(t => t.train_model === train.model);
+        if (!trainOnDay) {
+          tableHtml += `
+            <td class="p-2 text-center text-[10px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/20 font-medium">
+              Off Day
+            </td>
+          `;
+        } else {
+          const totalSeats = trainOnDay.total_seats || 0;
+          let cellBg = '';
+          let badgeText = '';
+
+          if (totalSeats > 10) {
+            cellBg = 'bg-emerald-50/80 hover:bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60';
+            badgeText = `🟢 ${totalSeats}`;
+          } else if (totalSeats > 0) {
+            cellBg = 'bg-amber-50/80 hover:bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60';
+            badgeText = `🟡 ${totalSeats}`;
+          } else {
+            cellBg = 'bg-rose-50/60 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40';
+            badgeText = '🔴 0';
+          }
+
+          const classBreakdown = (trainOnDay.seat_types || []).map(st => `${st.display_name}: ${st.total_seats} (৳${st.total_fare})`).join('\n');
+
+          tableHtml += `
+            <td class="p-1.5 text-center cursor-pointer matrix-cell-click" data-date="${d.date}" data-train-model="${train.model}" title="${classBreakdown}">
+              <div class="px-1.5 py-1 rounded-lg text-[11px] font-extrabold shadow-2xs transition ${cellBg}">
+                ${badgeText}
+              </div>
+            </td>
+          `;
+        }
+      });
+
+      tableHtml += `</tr>`;
+    });
+
+    tableHtml += `
+        </tbody>
+      </table>
+    `;
+
+    matrixContentContainer.innerHTML = tableHtml;
+
+    // Delegate click to switch date
+    matrixContentContainer.querySelectorAll('.matrix-header-date, .matrix-cell-click').forEach(el => {
+      el.addEventListener('click', () => {
+        const targetDate = el.dataset.date;
+        if (targetDate) {
+          state.selectedDate = targetDate;
+          journeyDateInput.value = targetDate;
+          if (viewGridBtn) viewGridBtn.click();
+          executeSearch();
+          showToast(`Switched to ${formatShohozDoj(targetDate)}`, 'info');
+        }
+      });
+    });
+  }
+
+  // ----------------------------------------------------
+  // Telegram 1-Click Login & Alert Module (@railseatfinderbdbot)
+  // ----------------------------------------------------
+
+  let activePairCode = null;
+  let pairStatusCheckTimer = null;
+
+  function getTelegramConfig() {
+    try {
+      const raw = localStorage.getItem('rail_telegram_config');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+
+  function saveTelegramConfig(chat_id, username = '', first_name = '') {
+    localStorage.setItem('rail_telegram_config', JSON.stringify({ chat_id, username, first_name }));
+  }
+
+  function clearTelegramConfig() {
+    localStorage.removeItem('rail_telegram_config');
+  }
+
+  function updateTelegramBadge() {
+    const cfg = getTelegramConfig();
+    if (telegramStatusBadge) {
+      if (cfg && cfg.chat_id) {
+        telegramStatusBadge.classList.remove('hidden');
+      } else {
+        telegramStatusBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  async function updateTelegramUI() {
+    const cfg = getTelegramConfig();
+    updateTelegramBadge();
+
+    if (cfg && cfg.chat_id) {
+      // CONNECTED STATE
+      if (telegramDisconnectedCard) telegramDisconnectedCard.classList.add('hidden');
+      if (telegramConnectedCard) telegramConnectedCard.classList.remove('hidden');
+
+      if (telegramConnectedUserLabel) {
+        telegramConnectedUserLabel.textContent = cfg.username ? `${cfg.username} (${cfg.first_name || 'User'})` : (cfg.first_name || 'Connected');
+      }
+      if (telegramConnectedChatIdBadge) {
+        telegramConnectedChatIdBadge.textContent = `ID: ${cfg.chat_id}`;
+      }
+      if (telegramSetupStatus) telegramSetupStatus.textContent = '';
+      if (pairStatusCheckTimer) clearInterval(pairStatusCheckTimer);
+    } else {
+      // DISCONNECTED STATE -> Prepare 1-Click Login
+      if (telegramConnectedCard) telegramConnectedCard.classList.add('hidden');
+      if (telegramDisconnectedCard) telegramDisconnectedCard.classList.remove('hidden');
+
+      await requestNewTelegramPairCode();
+    }
+  }
+
+  async function requestNewTelegramPairCode() {
+    try {
+      if (telegramPairingSpinner) telegramPairingSpinner.classList.remove('hidden');
+      const res = await fetch('/api/telegram/generate-pair-code', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success && data.pair_code) {
+        activePairCode = data.pair_code;
+        if (telegramPairCodeDisplay) telegramPairCodeDisplay.textContent = data.pair_code;
+        if (telegramLoginBtn) telegramLoginBtn.href = data.direct_url;
+
+        startPairStatusPoller(data.pair_code);
+      }
+    } catch (e) {
+      console.warn('[Telegram] Could not generate pairing code:', e.message);
+    } finally {
+      if (telegramPairingSpinner) telegramPairingSpinner.classList.add('hidden');
+    }
+  }
+
+  function startPairStatusPoller(code) {
+    if (pairStatusCheckTimer) clearInterval(pairStatusCheckTimer);
+
+    pairStatusCheckTimer = setInterval(async () => {
+      const cfg = getTelegramConfig();
+      if (cfg && cfg.chat_id) {
+        clearInterval(pairStatusCheckTimer);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/telegram/pair-status?code=${encodeURIComponent(code)}`);
+        const data = await res.json();
+
+        if (data.success && data.paired && data.chat_id) {
+          clearInterval(pairStatusCheckTimer);
+          saveTelegramConfig(data.chat_id, data.username, data.first_name);
+          showToast(`🎉 Telegram Connected as ${data.username || data.first_name || 'User'}!`, 'success');
+          await updateTelegramUI();
+        }
+      } catch (e) {
+        // Silently ignore transient check error
+      }
+    }, 2500);
+  }
+
+  async function sendTelegramAlert(alertData) {
+    const cfg = getTelegramConfig();
+    if (!cfg || !cfg.chat_id) return; // Silently skip if not configured
+
+    const { trainName, trainModel, className, seats, fromCity, toCity, date, bookUrl } = alertData;
+
+    const message = 
+`🚆 <b>SEAT AVAILABLE — RailSeat BD</b>
+
+🎯 <b>${trainName}</b> (#${trainModel})
+🪑 Class: <b>${className}</b>
+🟢 Seats: <b>${seats} available</b>
+
+📍 ${fromCity} ➔ ${toCity}
+📅 ${date}
+
+<a href="${bookUrl}">📲 Book Now on Shohoz</a>`;
+
+    try {
+      await fetch('/api/telegram/send-alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: cfg.chat_id,
+          message
+        })
+      });
+    } catch (e) {
+      console.warn('[Telegram] Failed to send alert:', e.message);
+    }
+  }
+
+  function initTelegramSetup() {
+    updateTelegramUI();
+
+    // 1. Quick Check / Refresh Button
+    if (telegramQuickCheckBtn) {
+      telegramQuickCheckBtn.addEventListener('click', async () => {
+        if (activePairCode) {
+          try {
+            telegramQuickCheckBtn.textContent = 'Checking...';
+            const res = await fetch(`/api/telegram/pair-status?code=${encodeURIComponent(activePairCode)}`);
+            const data = await res.json();
+            if (data.success && data.paired && data.chat_id) {
+              saveTelegramConfig(data.chat_id, data.username, data.first_name);
+              showToast(`🎉 Telegram Connected as ${data.username || data.first_name || 'User'}!`, 'success');
+              await updateTelegramUI();
+              return;
+            } else {
+              showToast('Not paired yet. Click "Login with Telegram" and press START in Telegram.', 'info');
+            }
+          } catch (e) {
+            showToast('Error checking status.', 'error');
+          } finally {
+            telegramQuickCheckBtn.textContent = 'Check / Refresh';
+          }
+        } else {
+          await requestNewTelegramPairCode();
+        }
+      });
+    }
+
+    // 2. Manual Save Button
+    if (telegramManualSaveBtn) {
+      telegramManualSaveBtn.addEventListener('click', () => {
+        const val = telegramManualChatId ? telegramManualChatId.value.trim() : '';
+        if (!val) {
+          if (telegramSetupStatus) {
+            telegramSetupStatus.textContent = '⚠️ Please enter a valid numeric Chat ID.';
+            telegramSetupStatus.className = 'text-[10px] font-semibold text-center text-rose-600';
+          }
+          return;
+        }
+        saveTelegramConfig(val, '', 'Custom User');
+        showToast('✅ Saved Chat ID manually!', 'success');
+        updateTelegramUI();
+      });
+    }
+
+    // 3. Send Test Alert Button
+    if (telegramSendTestAlertBtn) {
+      telegramSendTestAlertBtn.addEventListener('click', async () => {
+        const cfg = getTelegramConfig();
+        if (!cfg || !cfg.chat_id) {
+          showToast('Please connect Telegram first.', 'error');
+          return;
+        }
+
+        telegramSendTestAlertBtn.disabled = true;
+        telegramSendTestAlertBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[9px] mr-1"></i> Sending...';
+        if (telegramSetupStatus) telegramSetupStatus.textContent = '';
+
+        try {
+          const res = await fetch('/api/telegram/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: cfg.chat_id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            if (telegramSetupStatus) {
+              telegramSetupStatus.textContent = '✅ Test message sent! Check your Telegram app.';
+              telegramSetupStatus.className = 'text-[10px] font-semibold text-center text-emerald-600';
+            }
+            showToast('📨 Test message sent to your Telegram!', 'success');
+          } else {
+            if (telegramSetupStatus) {
+              telegramSetupStatus.textContent = `❌ ${data.error || 'Test failed.'}`;
+              telegramSetupStatus.className = 'text-[10px] font-semibold text-center text-rose-600';
+            }
+            showToast(data.error || 'Test failed.', 'error');
+          }
+        } catch (e) {
+          if (telegramSetupStatus) {
+            telegramSetupStatus.textContent = '❌ Network error.';
+            telegramSetupStatus.className = 'text-[10px] font-semibold text-center text-rose-600';
+          }
+        } finally {
+          telegramSendTestAlertBtn.disabled = false;
+          telegramSendTestAlertBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-[9px] mr-1"></i> Send Test Alert';
+        }
+      });
+    }
+
+    // 4. Disconnect Button
+    if (telegramDisconnectBtn) {
+      telegramDisconnectBtn.addEventListener('click', () => {
+        clearTelegramConfig();
+        if (telegramManualChatId) telegramManualChatId.value = '';
+        if (telegramSetupStatus) {
+          telegramSetupStatus.textContent = 'Telegram disconnected.';
+          telegramSetupStatus.className = 'text-[10px] font-semibold text-center text-slate-500';
+        }
+        showToast('Telegram disconnected.', 'info');
+        updateTelegramUI();
+      });
+    }
+  }
+
+  // ----------------------------------------------------
+  // Targeted Train & Seat Class Watchlist Radar
+  // ----------------------------------------------------
+  function initWatchlist() {
+    updateWatchlistUI();
+    initTelegramSetup();
+
+    if (openWatchlistBtn) {
+      openWatchlistBtn.addEventListener('click', () => {
+        renderWatchlistModal();
+        if (watchlistModal) watchlistModal.classList.remove('hidden');
+      });
+    }
+
+    if (watchlistCloseBtn && watchlistModal) {
+      watchlistCloseBtn.addEventListener('click', () => {
+        watchlistModal.classList.add('hidden');
+      });
+    }
+
+    if (watchlistModal) {
+      watchlistModal.addEventListener('click', (e) => {
+        if (e.target === watchlistModal) watchlistModal.classList.add('hidden');
+      });
+    }
+
+    if (clearWatchlistBtn) {
+      clearWatchlistBtn.addEventListener('click', () => {
+        if (confirm('Clear all watched targets from your watchlist?')) {
+          state.watchlist = [];
+          saveWatchlist();
+          updateWatchlistUI();
+          renderWatchlistModal();
+          showToast('Watchlist cleared.', 'info');
+        }
+      });
+    }
+
+    if (setWatchCloseBtn && setWatchTargetModal) {
+      setWatchCloseBtn.addEventListener('click', () => {
+        setWatchTargetModal.classList.add('hidden');
+      });
+    }
+
+    if (setWatchTargetModal) {
+      setWatchTargetModal.addEventListener('click', (e) => {
+        if (e.target === setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
+      });
+    }
+
+    document.querySelectorAll('.watch-min-seat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.watch-min-seat-btn').forEach(b => {
+          b.className = 'watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs';
+        });
+        btn.className = 'watch-min-seat-btn py-1 rounded-lg border border-emerald-500 bg-emerald-600 text-white font-bold text-xs';
+        if (state.pendingWatchTarget) {
+          state.pendingWatchTarget.minSeats = parseInt(btn.dataset.seats, 10);
+        }
+      });
+    });
+
+    if (saveWatchTargetBtn) {
+      saveWatchTargetBtn.addEventListener('click', () => {
+        if (!state.pendingWatchTarget) return;
+        const targetClass = watchTargetClassSelect ? watchTargetClassSelect.value : 'ANY';
+        const item = {
+          id: 'watch_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          trainName: state.pendingWatchTarget.trainName,
+          trainModel: state.pendingWatchTarget.trainModel,
+          fromCity: state.selectedFrom || 'Dhaka',
+          toCity: state.selectedTo || 'Chattogram',
+          date: state.selectedDate || new Date().toISOString().split('T')[0],
+          className: targetClass,
+          minSeats: state.pendingWatchTarget.minSeats || 1,
+          active: true,
+          createdAt: Date.now()
+        };
+
+        state.watchlist.unshift(item);
+        saveWatchlist();
+        updateWatchlistUI();
+        if (setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
+        showToast(`🎯 Added ${item.trainName} (${item.className}) to your Active Watchlist!`, 'success');
+      });
+    }
+  }
+
+  function saveWatchlist() {
+    try {
+      localStorage.setItem('railway_watchlist', JSON.stringify(state.watchlist));
+    } catch (e) {}
+  }
+
+  function updateWatchlistUI() {
+    const activeCount = state.watchlist.filter(w => w.active).length;
+    if (watchlistBadge) {
+      if (activeCount > 0) {
+        watchlistBadge.textContent = activeCount;
+        watchlistBadge.classList.remove('hidden');
+      } else {
+        watchlistBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  function renderWatchlistModal() {
+    if (!watchlistItemsContainer) return;
+    if (!state.watchlist || state.watchlist.length === 0) {
+      watchlistItemsContainer.innerHTML = `
+        <div class="py-10 text-center text-slate-400 space-y-2">
+          <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+            <i class="fa-solid fa-crosshairs text-base"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">No Active Watchlist Targets</p>
+          <p class="text-[11px] text-slate-400 max-w-xs mx-auto">
+            Click the <span class="text-amber-600 font-bold">"Watch"</span> button on any train card in your search results to set target alert criteria.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    watchlistItemsContainer.innerHTML = state.watchlist.map(item => `
+      <div class="py-3 flex items-center justify-between gap-2">
+        <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+          <button type="button" class="toggle-watch-btn w-6 h-6 rounded-full flex items-center justify-center text-xs transition ${item.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" data-id="${item.id}" title="${item.active ? 'Active (Click to Pause)' : 'Paused (Click to Resume)'}">
+            <i class="fa-solid ${item.active ? 'fa-check' : 'fa-pause'} text-[10px]"></i>
+          </button>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${item.trainName}</h5>
+              <span class="text-[10px] font-mono text-slate-400 font-bold">#${item.trainModel}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${item.className === 'ANY' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}">${item.className}</span>
+              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">≥ ${item.minSeats} seats</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              ${item.fromCity} ➔ ${item.toCity} &bull; ${formatShohozDoj(item.date)}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1 shrink-0">
+          <button type="button" class="delete-watch-btn p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" data-id="${item.id}" title="Delete Watch Target">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    watchlistItemsContainer.querySelectorAll('.toggle-watch-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const target = state.watchlist.find(w => w.id === id);
+        if (target) {
+          target.active = !target.active;
+          saveWatchlist();
+          updateWatchlistUI();
+          renderWatchlistModal();
+        }
+      });
+    });
+
+    watchlistItemsContainer.querySelectorAll('.delete-watch-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        state.watchlist = state.watchlist.filter(w => w.id !== id);
+        saveWatchlist();
+        updateWatchlistUI();
+        renderWatchlistModal();
+        showToast('Target removed from watchlist.', 'info');
+      });
+    });
+  }
+
+  function openSetWatchModal(train) {
+    if (!train) return;
+    state.pendingWatchTarget = {
+      trainName: train.train_name,
+      trainModel: train.train_model,
+      minSeats: 1
+    };
+
+    if (watchTargetTrainName) {
+      watchTargetTrainName.textContent = `${train.train_name} (#${train.train_model})`;
+    }
+    if (watchTargetRouteDate) {
+      watchTargetRouteDate.textContent = `${state.selectedFrom || 'Origin'} ➔ ${state.selectedTo || 'Destination'} • ${formatShohozDoj(state.selectedDate)}`;
+    }
+
+    document.querySelectorAll('.watch-min-seat-btn').forEach((b, idx) => {
+      if (idx === 0) {
+        b.className = 'watch-min-seat-btn py-1 rounded-lg border border-emerald-500 bg-emerald-600 text-white font-bold text-xs';
+      } else {
+        b.className = 'watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs';
+      }
+    });
+
+    if (setWatchTargetModal) setWatchTargetModal.classList.remove('hidden');
+  }
+
+  // ----------------------------------------------------
+  // Live Auto-Monitor Countdown & Pause/Resume
+  // ----------------------------------------------------
+  function startMonitorCountdownTicker() {
+    if (state.countdownTimer) {
+      clearInterval(state.countdownTimer);
+      state.countdownTimer = null;
+    }
+
+    if (state.pollingInterval <= 0) {
+      if (monitorTickerContainer) monitorTickerContainer.classList.add('hidden');
+      return;
+    }
+
+    state.monitorCountdown = state.pollingInterval;
+    if (monitorTickerContainer) monitorTickerContainer.classList.remove('hidden');
+    updateCountdownUI();
+
+    state.countdownTimer = setInterval(() => {
+      if (state.isMonitorPaused) return;
+
+      state.monitorCountdown--;
+      if (state.monitorCountdown <= 0) {
+        state.monitorCountdown = state.pollingInterval;
+        if (state.selectedFrom && state.selectedTo && !state.isLoading && state.isAuthenticated) {
+          executeSearch(true);
+        }
+      }
+      updateCountdownUI();
+    }, 1000);
+  }
+
+  function updateCountdownUI() {
+    if (!monitorCountdownLabel || !monitorProgressBar) return;
+    monitorCountdownLabel.textContent = `${state.monitorCountdown}s`;
+    const pct = Math.max(0, Math.min(100, (state.monitorCountdown / Math.max(1, state.pollingInterval)) * 100));
+    monitorProgressBar.style.width = `${pct}%`;
+  }
+
+  if (monitorPauseResumeBtn) {
+    monitorPauseResumeBtn.addEventListener('click', () => {
+      state.isMonitorPaused = !state.isMonitorPaused;
+      if (monitorPauseIcon) {
+        monitorPauseIcon.className = state.isMonitorPaused ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+      }
+      showToast(state.isMonitorPaused ? '⏸️ Auto-monitor paused' : '▶️ Auto-monitor resumed', 'info');
+    });
+  }
+
+  // ----------------------------------------------------
+  // 1-Click Seat Summary Share (WhatsApp & Clipboard)
+  // ----------------------------------------------------
+  function initShareModule() {
+    if (shareResultsBtn) {
+      shareResultsBtn.addEventListener('click', () => {
+        openShareModal();
+      });
+    }
+
+    if (shareCloseBtn && shareModal) {
+      shareCloseBtn.addEventListener('click', () => {
+        shareModal.classList.add('hidden');
+      });
+    }
+
+    if (shareModal) {
+      shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) shareModal.classList.add('hidden');
+      });
+    }
+
+    if (copyShareSummaryBtn && sharePreviewTextarea) {
+      copyShareSummaryBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(sharePreviewTextarea.value);
+          showToast('📋 Availability summary copied to clipboard!', 'success');
+        } catch (e) {
+          sharePreviewTextarea.select();
+          document.execCommand('copy');
+          showToast('📋 Copied!', 'success');
+        }
+      });
+    }
+  }
+
+  function openShareModal() {
+    const text = generateShareSummaryText();
+    if (sharePreviewTextarea) sharePreviewTextarea.value = text;
+    if (whatsappShareBtn) {
+      whatsappShareBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    }
+    if (shareModal) shareModal.classList.remove('hidden');
+  }
+
+  function generateShareSummaryText() {
+    const from = state.selectedFrom || 'Dhaka';
+    const to = state.selectedTo || 'Chattogram';
+    const date = formatShohozDoj(state.selectedDate || new Date().toISOString().split('T')[0]);
+    const trains = state.lastSearchData?.trains || [];
+
+    let summary = `🚆 *RailSeat Finder BD — Train Seat Availability*\n📍 *Route:* ${from} ➔ ${to}\n📅 *Date:* ${date}\n\n`;
+
+    const availTrains = trains.filter(t => (t.total_combined_seats || 0) > 0);
+    if (availTrains.length === 0) {
+      summary += `🔴 All trains are currently SOLD OUT on this date.\n`;
+    } else {
+      availTrains.forEach(t => {
+        summary += `🟢 *${t.train_name} (#${t.train_model})* — Dep: ${t.departure_time}\n`;
+        (t.seat_types || []).forEach(st => {
+          const count = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
+          if (count > 0) {
+            summary += `   • ${st.display_name}: ${count} seats available (৳${st.total_fare})\n`;
+          }
+        });
+        summary += `\n`;
+      });
+    }
+
+    summary += `🔗 *Book online:* https://eticket.railway.gov.bd\n✨ Checked real-time via RailSeat Finder BD`;
+    return summary;
+  }
+
+  // ----------------------------------------------------
+  // Single-Day All-Station Blank Seat Matrix Module (Multi-Select Supported)
+  // ----------------------------------------------------
+  let currentStationMatrixTarget = {
+    trainModel: '',
+    trainName: '',
+    date: '',
+    selectedFroms: new Set(),
+    selectedTos: new Set(),
+    stoppages: []
+  };
+
+  function initStationMatrixModule() {
+    if (stationMatrixCloseBtn && stationMatrixModal) {
+      stationMatrixCloseBtn.addEventListener('click', () => {
+        stationMatrixModal.classList.add('hidden');
+        closeStationDropdowns();
+      });
+    }
+
+    if (stationMatrixModal) {
+      stationMatrixModal.addEventListener('click', (e) => {
+        if (e.target === stationMatrixModal) {
+          stationMatrixModal.classList.add('hidden');
+          closeStationDropdowns();
+        }
+      });
+    }
+
+    // Dropdown toggles
+    if (matrixFromDropdownBtn) {
+      matrixFromDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = matrixFromDropdownMenu.classList.contains('hidden');
+        closeStationDropdowns();
+        if (isHidden) {
+          matrixFromDropdownMenu.classList.remove('hidden');
+          if (matrixFromDropdownArrow) matrixFromDropdownArrow.classList.add('rotate-180');
+        }
+      });
+    }
+
+    if (matrixToDropdownBtn) {
+      matrixToDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = matrixToDropdownMenu.classList.contains('hidden');
+        closeStationDropdowns();
+        if (isHidden) {
+          matrixToDropdownMenu.classList.remove('hidden');
+          if (matrixToDropdownArrow) matrixToDropdownArrow.classList.add('rotate-180');
+        }
+      });
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+      if (matrixFromDropdownMenu && !matrixFromDropdownMenu.contains(e.target) && e.target !== matrixFromDropdownBtn && !matrixFromDropdownBtn.contains(e.target)) {
+        matrixFromDropdownMenu.classList.add('hidden');
+        if (matrixFromDropdownArrow) matrixFromDropdownArrow.classList.remove('rotate-180');
+      }
+      if (matrixToDropdownMenu && !matrixToDropdownMenu.contains(e.target) && e.target !== matrixToDropdownBtn && !matrixToDropdownBtn.contains(e.target)) {
+        matrixToDropdownMenu.classList.add('hidden');
+        if (matrixToDropdownArrow) matrixToDropdownArrow.classList.remove('rotate-180');
+      }
+    });
+
+    if (matrixFromSelectAllBtn) {
+      matrixFromSelectAllBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        currentStationMatrixTarget.selectedFroms = new Set(stoppages.slice(0, -1).map(s => s.cleanCity));
+        updateDownstreamDestinations();
+        renderStationDropdowns();
+      });
+    }
+
+    if (matrixFromClearBtn) {
+      matrixFromClearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        if (stoppages.length > 0) {
+          currentStationMatrixTarget.selectedFroms = new Set([stoppages[0].cleanCity]);
+          updateDownstreamDestinations();
+          renderStationDropdowns();
+        }
+      });
+    }
+
+    if (matrixToSelectAllBtn) {
+      matrixToSelectAllBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        let minFromIdx = stoppages.length;
+        stoppages.forEach((s, idx) => {
+          if (currentStationMatrixTarget.selectedFroms.has(s.cleanCity) && idx < minFromIdx) {
+            minFromIdx = idx;
+          }
+        });
+        currentStationMatrixTarget.selectedTos = new Set(stoppages.slice(minFromIdx + 1).map(s => s.cleanCity));
+        renderStationDropdowns();
+      });
+    }
+
+    if (matrixToClearBtn) {
+      matrixToClearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        if (stoppages.length > 0) {
+          currentStationMatrixTarget.selectedTos = new Set([stoppages[stoppages.length - 1].cleanCity]);
+          renderStationDropdowns();
+        }
+      });
+    }
+
+    if (matrixJourneyDateInput) {
+      matrixJourneyDateInput.addEventListener('change', (e) => {
+        currentStationMatrixTarget.date = e.target.value;
+        updateMatrixSummary();
+      });
+    }
+
+    if (matrixExecuteQueryBtn) {
+      matrixExecuteQueryBtn.addEventListener('click', () => {
+        closeStationDropdowns();
+        fetchAndRenderStationMatrix();
+      });
+    }
+
+    if (matrixSelectAllPairsBtn) {
+      matrixSelectAllPairsBtn.addEventListener('click', () => {
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        if (stoppages.length === 0) return;
+        currentStationMatrixTarget.selectedFroms = new Set(stoppages.slice(0, -1).map(s => s.cleanCity));
+        currentStationMatrixTarget.selectedTos = new Set(stoppages.slice(1).map(s => s.cleanCity));
+        renderStationDropdowns();
+      });
+    }
+
+    if (matrixResetPairsBtn) {
+      matrixResetPairsBtn.addEventListener('click', () => {
+        const stoppages = currentStationMatrixTarget.stoppages || [];
+        if (stoppages.length === 0) return;
+        const defaultFrom = stoppages[0].cleanCity;
+        currentStationMatrixTarget.selectedFroms = new Set([defaultFrom]);
+        const validDests = stoppages.slice(1).map(s => s.cleanCity);
+        currentStationMatrixTarget.selectedTos = new Set(validDests);
+        renderStationDropdowns();
+      });
+    }
+
+    if (routeModalLaunchMatrixBtn) {
+      routeModalLaunchMatrixBtn.addEventListener('click', () => {
+        const cleanModel = String(routeModalTrainModel.textContent).replace(/\D/g, '');
+        const trainName = routeModalTrainName.textContent || '';
+        openStationMatrixModal(cleanModel, trainName);
+      });
+    }
+  }
+
+  function closeStationDropdowns() {
+    if (matrixFromDropdownMenu) matrixFromDropdownMenu.classList.add('hidden');
+    if (matrixFromDropdownArrow) matrixFromDropdownArrow.classList.remove('rotate-180');
+    if (matrixToDropdownMenu) matrixToDropdownMenu.classList.add('hidden');
+    if (matrixToDropdownArrow) matrixToDropdownArrow.classList.remove('rotate-180');
+  }
+
+  function calculateValidPairsCount() {
+    const stoppages = currentStationMatrixTarget.stoppages || [];
+    let count = 0;
+    for (let i = 0; i < stoppages.length - 1; i++) {
+      const fromStop = stoppages[i];
+      if (!currentStationMatrixTarget.selectedFroms.has(fromStop.cleanCity)) continue;
+      for (let j = i + 1; j < stoppages.length; j++) {
+        const toStop = stoppages[j];
+        if (currentStationMatrixTarget.selectedTos.has(toStop.cleanCity)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  function updateMatrixSummary() {
+    const fromCount = currentStationMatrixTarget.selectedFroms.size;
+    const toCount = currentStationMatrixTarget.selectedTos.size;
+    const pairsCount = calculateValidPairsCount();
+
+    if (matrixFromCountBadge) {
+      matrixFromCountBadge.textContent = `${fromCount} selected`;
+    }
+    if (matrixToCountBadge) {
+      matrixToCountBadge.textContent = `${toCount} selected`;
+    }
+    if (matrixPairsSummaryText) {
+      matrixPairsSummaryText.textContent = `${fromCount} Boarding × ${toCount} Destination (${pairsCount} pair${pairsCount === 1 ? '' : 's'} to search)`;
+    }
+    if (matrixExecuteQueryBtnText) {
+      matrixExecuteQueryBtnText.textContent = `Search (${pairsCount})`;
+    }
+
+    // Update Dropdown Labels
+    const fromArray = Array.from(currentStationMatrixTarget.selectedFroms);
+    if (matrixFromDropdownLabel) {
+      if (fromArray.length === 0) {
+        matrixFromDropdownLabel.textContent = 'Select Boarding Station...';
+      } else if (fromArray.length === 1) {
+        matrixFromDropdownLabel.textContent = `${fromArray[0]}`;
+      } else if (fromArray.length === (currentStationMatrixTarget.stoppages.length - 1)) {
+        matrixFromDropdownLabel.textContent = `All Boarding Stops (${fromArray.length})`;
+      } else if (fromArray.length === 2) {
+        matrixFromDropdownLabel.textContent = `${fromArray[0]}, ${fromArray[1]}`;
+      } else {
+        matrixFromDropdownLabel.textContent = `${fromArray[0]} + ${fromArray.length - 1} more`;
+      }
+    }
+
+    const toArray = Array.from(currentStationMatrixTarget.selectedTos);
+    if (matrixToDropdownLabel) {
+      if (toArray.length === 0) {
+        matrixToDropdownLabel.textContent = 'Select Destination...';
+      } else if (toArray.length === 1) {
+        matrixToDropdownLabel.textContent = `${toArray[0]}`;
+      } else if (toArray.length > 2 && toArray.length === (currentStationMatrixTarget.stoppages.length - 1)) {
+        matrixToDropdownLabel.textContent = `All Downstream Stops (${toArray.length})`;
+      } else if (toArray.length === 2) {
+        matrixToDropdownLabel.textContent = `${toArray[0]}, ${toArray[1]}`;
+      } else {
+        matrixToDropdownLabel.textContent = `${toArray[0]} + ${toArray.length - 1} more`;
+      }
+    }
+  }
+
+  function renderStationDropdowns() {
+    const stoppages = currentStationMatrixTarget.stoppages || [];
+    if (stoppages.length === 0) return;
+
+    // 1. Render From Dropdown Options
+    if (matrixFromOptionsContainer) {
+      const fromStops = stoppages.slice(0, -1);
+      matrixFromOptionsContainer.innerHTML = fromStops.map((s, idx) => {
+        const isSelected = currentStationMatrixTarget.selectedFroms.has(s.cleanCity);
+        const isOrigin = idx === 0;
+
+        return `
+          <label class="flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-slate-800 cursor-pointer transition select-none ${isSelected ? 'bg-emerald-50/70 dark:bg-slate-800/80 font-bold' : ''}">
+            <input type="checkbox" class="matrix-from-checkbox rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer w-3.5 h-3.5" data-city="${s.cleanCity}" ${isSelected ? 'checked' : ''}>
+            <span class="text-xs text-slate-800 dark:text-slate-200 flex-1 truncate">${s.cleanCity} ${isOrigin ? '<span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">(Origin)</span>' : ''}</span>
+            <span class="text-[10px] text-slate-400 font-mono shrink-0">${s.departure_time}</span>
+          </label>
+        `;
+      }).join('');
+
+      matrixFromOptionsContainer.querySelectorAll('.matrix-from-checkbox').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const city = chk.dataset.city;
+          if (chk.checked) {
+            currentStationMatrixTarget.selectedFroms.add(city);
+          } else {
+            if (currentStationMatrixTarget.selectedFroms.size > 1) {
+              currentStationMatrixTarget.selectedFroms.delete(city);
+            } else {
+              chk.checked = true;
+              showToast('At least 1 Boarding Station must be selected.', 'info');
+              return;
+            }
+          }
+          updateDownstreamDestinations();
+          renderStationDropdowns();
+        });
+      });
+    }
+
+    // 2. Render To Dropdown Options
+    if (matrixToOptionsContainer) {
+      let minFromIdx = stoppages.length;
+      stoppages.forEach((s, idx) => {
+        if (currentStationMatrixTarget.selectedFroms.has(s.cleanCity) && idx < minFromIdx) {
+          minFromIdx = idx;
+        }
+      });
+
+      const validDests = stoppages.slice(minFromIdx + 1);
+
+      matrixToOptionsContainer.innerHTML = validDests.map((s, idx) => {
+        const isSelected = currentStationMatrixTarget.selectedTos.has(s.cleanCity);
+        const isTerminus = idx === validDests.length - 1;
+
+        return `
+          <label class="flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg hover:bg-teal-50 dark:hover:bg-slate-800 cursor-pointer transition select-none ${isSelected ? 'bg-teal-50/70 dark:bg-slate-800/80 font-bold' : ''}">
+            <input type="checkbox" class="matrix-to-checkbox rounded text-teal-600 focus:ring-teal-500 cursor-pointer w-3.5 h-3.5" data-city="${s.cleanCity}" ${isSelected ? 'checked' : ''}>
+            <span class="text-xs text-slate-800 dark:text-slate-200 flex-1 truncate">${s.cleanCity} ${isTerminus ? '<span class="text-[10px] text-teal-600 dark:text-teal-400 font-normal">(Terminus)</span>' : ''}</span>
+            <span class="text-[10px] text-slate-400 font-mono shrink-0">${s.arrival_time}</span>
+          </label>
+        `;
+      }).join('');
+
+      matrixToOptionsContainer.querySelectorAll('.matrix-to-checkbox').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const city = chk.dataset.city;
+          if (chk.checked) {
+            currentStationMatrixTarget.selectedTos.add(city);
+          } else {
+            if (currentStationMatrixTarget.selectedTos.size > 1) {
+              currentStationMatrixTarget.selectedTos.delete(city);
+            } else {
+              chk.checked = true;
+              showToast('At least 1 Destination Station must be selected.', 'info');
+              return;
+            }
+          }
+          renderStationDropdowns();
+        });
+      });
+    }
+
+    updateMatrixSummary();
+  }
+
+  function updateDownstreamDestinations() {
+    const stoppages = currentStationMatrixTarget.stoppages || [];
+    let minFromIdx = stoppages.length;
+    stoppages.forEach((s, idx) => {
+      if (currentStationMatrixTarget.selectedFroms.has(s.cleanCity) && idx < minFromIdx) {
+        minFromIdx = idx;
+      }
+    });
+
+    const validDests = new Set(stoppages.slice(minFromIdx + 1).map(s => s.cleanCity));
+    const filteredTos = new Set([...currentStationMatrixTarget.selectedTos].filter(c => validDests.has(c)));
+    if (filteredTos.size === 0 && validDests.size > 0) {
+      currentStationMatrixTarget.selectedTos = validDests;
+    } else {
+      currentStationMatrixTarget.selectedTos = filteredTos;
+    }
+  }
+
+  async function openStationMatrixModal(trainModel, trainName = '', initialDate = '', initialFrom = '', initialTo = '') {
+    if (!trainModel) return;
+    const cleanModel = String(trainModel).replace(/\D/g, '') || String(trainModel).trim();
+    const doj = initialDate || state.selectedDate || new Date().toISOString().split('T')[0];
+
+    currentStationMatrixTarget.trainModel = cleanModel;
+    currentStationMatrixTarget.trainName = trainName || `Train #${cleanModel}`;
+    currentStationMatrixTarget.date = doj;
+
+    if (stationMatrixTrainName) stationMatrixTrainName.textContent = trainName || `Train #${cleanModel}`;
+    if (stationMatrixTrainModel) stationMatrixTrainModel.textContent = `#${cleanModel}`;
+    if (matrixJourneyDateInput) matrixJourneyDateInput.value = doj;
+    if (stationMatrixSubtitle) stationMatrixSubtitle.textContent = 'Loading train stoppage stations...';
+
+    if (stationMatrixModal) stationMatrixModal.classList.remove('hidden');
+
+    if (stationMatrixContent) {
+      stationMatrixContent.innerHTML = `
+        <div class="py-12 text-center text-slate-400 space-y-3">
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500"></i>
+          <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Loading stoppage route for #${cleanModel}...</p>
+        </div>
+      `;
+    }
+
+    try {
+      const token = getAuthToken();
+      const routeRes = await fetch(`/api/train-route?model=${encodeURIComponent(cleanModel)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const routeJson = await routeRes.json();
+
+      if (!routeJson.success || !routeJson.data?.routes || routeJson.data.routes.length === 0) {
+        if (stationMatrixContent) {
+          stationMatrixContent.innerHTML = `
+            <div class="py-8 text-center text-slate-400 space-y-2">
+              <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-500"></i>
+              <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Stoppage Route Not Available</p>
+              <p class="text-[11px] text-slate-400">Could not retrieve stoppage stations for train #${cleanModel}.</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      const stoppages = (routeJson.data.routes || []).map(s => ({
+        city: s.city,
+        cleanCity: (s.city || '').replace(/_/g, ' ').trim(),
+        arrival_time: s.arrival_time || '--',
+        departure_time: s.departure_time || '--'
+      }));
+
+      currentStationMatrixTarget.stoppages = stoppages;
+      if (stationMatrixSubtitle) {
+        stationMatrixSubtitle.textContent = `${formatShohozDoj(doj)} • Off-Day: ${routeJson.data.off_day || 'None'} • ${stoppages.length} Total Stoppages`;
+      }
+
+      // Default selected From: state.selectedFrom or initialFrom if on route, else stoppages[0]
+      const preferredFrom = (initialFrom || state.selectedFrom || '').toLowerCase().trim();
+      const matchFrom = stoppages.slice(0, -1).find(s => 
+        s.cleanCity.toLowerCase() === preferredFrom || s.city.toLowerCase() === preferredFrom
+      );
+
+      const chosenFrom = matchFrom ? matchFrom.cleanCity : stoppages[0].cleanCity;
+      currentStationMatrixTarget.selectedFroms = new Set([chosenFrom]);
+
+      // Default selected To: state.selectedTo if downstream, else all reachable downstream stops
+      const fromIdx = stoppages.findIndex(s => s.cleanCity === chosenFrom);
+      const downstreamStops = stoppages.slice(fromIdx + 1).map(s => s.cleanCity);
+
+      const preferredTo = (initialTo || state.selectedTo || '').toLowerCase().trim();
+      const matchTo = downstreamStops.find(c => c.toLowerCase() === preferredTo);
+
+      if (matchTo) {
+        currentStationMatrixTarget.selectedTos = new Set([matchTo]);
+      } else {
+        currentStationMatrixTarget.selectedTos = new Set(downstreamStops);
+      }
+
+      renderStationDropdowns();
+      await fetchAndRenderStationMatrix();
+
+    } catch (e) {
+      console.error('Error loading route in matrix:', e);
+      if (stationMatrixContent) {
+        stationMatrixContent.innerHTML = `
+          <div class="py-8 text-center text-rose-500 space-y-2">
+            <i class="fa-solid fa-circle-exclamation text-xl"></i>
+            <p class="text-xs">Failed to load route stoppages.</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  async function fetchAndRenderStationMatrix() {
+    if (!stationMatrixContent) return;
+
+    if (currentStationMatrixTarget.selectedFroms.size === 0 || currentStationMatrixTarget.selectedTos.size === 0) {
+      stationMatrixContent.innerHTML = `
+        <div class="py-8 text-center text-slate-400 space-y-2">
+          <i class="fa-solid fa-hand-pointer text-2xl text-emerald-500"></i>
+          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Select Station(s) Above</p>
+          <p class="text-[11px] text-slate-400">Click to select 1 or more Boarding and Destination stations.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const fromListParam = Array.from(currentStationMatrixTarget.selectedFroms).join(',');
+    const toListParam = Array.from(currentStationMatrixTarget.selectedTos).join(',');
+
+    const fromCount = currentStationMatrixTarget.selectedFroms.size;
+    const toCount = currentStationMatrixTarget.selectedTos.size;
+
+    stationMatrixContent.innerHTML = `
+      <div class="py-10 text-center text-slate-400 space-y-3">
+        <i class="fa-solid fa-spinner fa-spin text-3xl text-emerald-500"></i>
+        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Querying live seats for ${fromCount} Boarding ➔ ${toCount} Destination stop(s)...</p>
+        <p class="text-[11px] text-slate-400">Checking vacancies on #${currentStationMatrixTarget.trainModel} (${formatShohozDoj(currentStationMatrixTarget.date)})</p>
+      </div>
+    `;
+
+    try {
+      const token = getAuthToken();
+      const url = `/api/train-station-matrix?model=${encodeURIComponent(currentStationMatrixTarget.trainModel)}&date_of_journey=${encodeURIComponent(currentStationMatrixTarget.date)}&from_station=${encodeURIComponent(fromListParam)}&to_station=${encodeURIComponent(toListParam)}`;
+      const res = await fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        stationMatrixContent.innerHTML = `
+          <div class="py-8 text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-500"></i>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Unable to load Station Seat Matrix</p>
+            <p class="text-[11px] text-slate-400">${data.error || 'Please ensure your live API session is connected.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      renderStationMatrixResults(data);
+
+    } catch (err) {
+      console.warn('Station matrix fetch error:', err);
+      stationMatrixContent.innerHTML = `
+        <div class="py-8 text-center text-rose-500 space-y-2">
+          <i class="fa-solid fa-circle-exclamation text-xl"></i>
+          <p class="text-xs">Failed to fetch station matrix. Please try again.</p>
+        </div>
+      `;
+    }
+  }
+
+  function renderStationMatrixResults(data) {
+    const segments = data.segments || [];
+
+    if (segments.length === 0) {
+      stationMatrixContent.innerHTML = `
+        <div class="py-8 text-center text-slate-400 space-y-2">
+          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">No Station Pairs Found</p>
+          <p class="text-[11px] text-slate-400">Please choose another boarding station or journey date.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Group segments by Boarding Station
+    const grouped = new Map();
+    segments.forEach(seg => {
+      if (!grouped.has(seg.from)) {
+        grouped.set(seg.from, []);
+      }
+      grouped.get(seg.from).push(seg);
+    });
+
+    let html = `
+      <!-- Summary Banner -->
+      <div class="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between gap-2 text-xs">
+        <div class="flex items-center space-x-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <span class="font-extrabold text-slate-900 dark:text-white">${data.train_name} (#${data.train_model})</span>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">${data.display_date} &bull; ${segments.filter(s => s.has_seats).length} segment(s) with vacant seats</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-[11px] text-slate-400 uppercase font-semibold">Total Segments Checked</span>
+          <p class="font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">${segments.length}</p>
+        </div>
+      </div>
+    `;
+
+    grouped.forEach((segList, boardingCity) => {
+      html += `
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs space-y-2.5">
+          <!-- Boarding City Header -->
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">
+                <i class="fa-solid fa-location-dot text-[10px]"></i>
+              </span>
+              <div>
+                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">From ${boardingCity}</h4>
+                <span class="text-[10px] text-slate-400">Departure: ${segList[0]?.departure_time || '--'}</span>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              ${segList.length} Destinations
+            </span>
+          </div>
+
+          <!-- Destinations Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            ${segList.map(seg => {
+              const isAvail = seg.has_seats;
+              const totalSeats = seg.total_seats || 0;
+
+              return `
+                <div class="p-2.5 rounded-xl border ${
+                  isAvail 
+                    ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/90 dark:border-emerald-800/60' 
+                    : 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800'
+                } flex flex-col justify-between space-y-2 transition hover:shadow-xs">
+                  
+                  <!-- Top: Destination & Seat Count Badge -->
+                  <div class="flex items-center justify-between gap-1">
+                    <div class="min-w-0">
+                      <div class="flex items-center space-x-1.5 truncate">
+                        <i class="fa-solid fa-arrow-right text-emerald-500 text-[10px]"></i>
+                        <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${seg.to}</span>
+                      </div>
+                      <div class="text-[10px] text-slate-400 mt-0.5">
+                        Arr: ${seg.arrival_time} ${seg.travel_time ? `&bull; ${seg.travel_time}` : ''}
+                      </div>
+                    </div>
+
+                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold shadow-2xs shrink-0 ${
+                      isAvail 
+                        ? (totalSeats > 10 ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white') 
+                        : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
+                    }">
+                      ${isAvail ? `🟢 ${totalSeats} Seats` : '🔴 Sold Out'}
+                    </span>
+                  </div>
+
+                  <!-- Classes Breakdown & Price -->
+                  ${isAvail && seg.seat_types && seg.seat_types.length > 0 ? `
+                    <div class="flex flex-wrap gap-1 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                      ${seg.seat_types.filter(st => (Number(st.seats_available||0)+Number(st.counter_seats_available||0)) > 0).map(st => {
+                        const cnt = Number(st.seats_available||0)+Number(st.counter_seats_available||0);
+                        const baseFare = Number(st.fare || 0);
+                        const vat = Number(st.vat || 0);
+                        const totalFare = Number(st.total_fare !== undefined ? st.total_fare : (baseFare + vat));
+
+                        return `
+                          <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950 text-[10px] font-bold text-emerald-900 dark:text-emerald-200">
+                            <span>${st.display_name || st.type}:</span>
+                            <span class="font-extrabold">${cnt}</span>
+                            <span class="text-emerald-700 dark:text-emerald-300">(৳${totalFare})</span>
+                          </span>
+                        `;
+                      }).join('')}
+                    </div>
+                  ` : ''}
+
+                  <!-- Action: Direct Book Link -->
+                  <div class="pt-1 flex items-center justify-end">
+                    <a href="${seg.book_url}" target="_blank" rel="noopener" 
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 ${
+                        isAvail 
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs' 
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                      }">
+                      <span>Book ${seg.from} ➔ ${seg.to}</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    stationMatrixContent.innerHTML = html;
+  }
+
+  // ----------------------------------------------------
+  // User Management & Access Control Module
+  // ----------------------------------------------------
+  let cachedUsersList = [];
+
+  function getAuthToken() {
+    return localStorage.getItem('rail_auth_token') || sessionStorage.getItem('rail_auth_token') || '';
+  }
+
+  function setAuthToken(token, remember = true) {
+    if (token) {
+      if (remember) {
+        localStorage.setItem('rail_auth_token', token);
+        sessionStorage.removeItem('rail_auth_token');
+      } else {
+        sessionStorage.setItem('rail_auth_token', token);
+        localStorage.removeItem('rail_auth_token');
+      }
+    } else {
+      localStorage.removeItem('rail_auth_token');
+      sessionStorage.removeItem('rail_auth_token');
+    }
+  }
+
+  function openLoginModal() {
+    if (!userLoginModal) return;
+    const rememberedUser = localStorage.getItem('rail_remembered_username');
+    if (rememberedUser && loginUsername) {
+      loginUsername.value = rememberedUser;
+      if (loginRememberMe) loginRememberMe.checked = true;
+    }
+    if (loginPassword) loginPassword.value = '';
+    if (loginErrorMsg) loginErrorMsg.textContent = '';
+    userLoginModal.classList.remove('hidden');
+  }
+
+  async function performLogout() {
+    try {
+      const token = getAuthToken();
+      if (token) {
+        await fetch('/api/user-auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (e) {
+      console.warn('[Auth] Logout error:', e.message);
+    }
+    setAuthToken(null);
+    state.currentUser = null;
+    showToast('🚪 Signed out successfully.', 'info');
+    if (headerUserDropdown) headerUserDropdown.classList.add('hidden');
+    if (userManagementModal) userManagementModal.classList.add('hidden');
+    await checkDashboardUserAuth();
+  }
+
+  async function checkDashboardUserAuth() {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/user-auth/status', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+
+      state.requireLogin = !!data.require_login;
+      if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
+      if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+      if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
+
+      if (data.logged_in && data.user) {
+        state.currentUser = data.user;
+
+        // Update Top Navigation Bar
+        if (headerSignInBtn) headerSignInBtn.classList.add('hidden');
+        if (headerUserMenuContainer) headerUserMenuContainer.classList.remove('hidden');
+        if (headerUserAvatar) headerUserAvatar.textContent = (data.user.name || data.user.username || 'U')[0].toUpperCase();
+        if (userNavLabel) userNavLabel.textContent = data.user.name || data.user.username;
+        if (userRoleBadge) {
+          userRoleBadge.textContent = data.user.role === 'admin' ? 'Admin' : 'Viewer';
+          userRoleBadge.className = data.user.role === 'admin' 
+            ? 'px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-200/80 dark:bg-purple-900 text-purple-900 dark:text-purple-100'
+            : 'px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300';
+        }
+        if (dropdownUserFullName) dropdownUserFullName.textContent = data.user.name || 'User';
+        if (dropdownUserUsername) dropdownUserUsername.textContent = '@' + data.user.username;
+
+        // Admin-only controls visibility
+        const isAdmin = data.user.role === 'admin';
+        if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.toggle('hidden', !isAdmin);
+        if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.toggle('hidden', !isAdmin);
+        if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = !isAdmin;
+
+        // Update Settings Category 5 Account Card
+        if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = `Signed in as ${data.user.name || data.user.username}`;
+        if (settingAccountUserLabel) settingAccountUserLabel.textContent = `@${data.user.username} (${isAdmin ? 'Administrator' : 'Viewer'})`;
+        if (settingAuthActionBtn) {
+          settingAuthActionBtn.textContent = 'Sign Out';
+          settingAuthActionBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border border-rose-300 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0';
+        }
+      } else {
+        state.currentUser = null;
+
+        // Update Top Navigation Bar
+        if (headerSignInBtn) headerSignInBtn.classList.remove('hidden');
+        if (headerUserMenuContainer) headerUserMenuContainer.classList.add('hidden');
+        if (userNavLabel) userNavLabel.textContent = 'Users';
+        if (userRoleBadge) userRoleBadge.classList.add('hidden');
+        if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.add('hidden');
+        if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.add('hidden');
+        if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = true;
+
+        // Update Settings Category 5 Account Card
+        if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = 'Not Signed In';
+        if (settingAccountUserLabel) settingAccountUserLabel.textContent = 'Public Visitor';
+        if (settingAuthActionBtn) {
+          settingAuthActionBtn.textContent = 'Sign In';
+          settingAuthActionBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-purple-600 text-white hover:bg-purple-700 shrink-0';
+        }
+
+        // If requireLogin is active and user is not logged in, prompt login modal
+        if (state.requireLogin && userLoginModal) {
+          openLoginModal();
+        }
+      }
+
+      // Synchronize Shohoz session credentials & profile for this specific user
+      await checkRailwaySessionStatus();
+    } catch (e) {
+      console.warn('[Auth] Check status error:', e.message);
+    }
+  }
+
+  async function loadUsersList() {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/users', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.users)) {
+        cachedUsersList = data.users;
+        
+        // Update stats
+        if (statTotalUsers) statTotalUsers.textContent = data.users.length;
+        if (statActiveUsers) statActiveUsers.textContent = data.users.filter(u => u.status === 'active').length;
+        if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
+        if (userListTabCount) userListTabCount.textContent = data.users.length;
+        if (settingUserCountBadge) settingUserCountBadge.textContent = `${data.users.length} User${data.users.length > 1 ? 's' : ''}`;
+
+        renderUsersList(data.users);
+      }
+    } catch (e) {
+      console.warn('[Users] Error loading users list:', e.message);
+    }
+  }
+
+  function renderUsersList(users) {
+    if (!usersCardsContainer) return;
+
+    const searchTerm = (userSearchInput ? userSearchInput.value : '').toLowerCase().trim();
+    const filtered = users.filter(u => 
+      !searchTerm || 
+      (u.name && u.name.toLowerCase().includes(searchTerm)) ||
+      (u.username && u.username.toLowerCase().includes(searchTerm))
+    );
+
+    if (filtered.length === 0) {
+      usersCardsContainer.innerHTML = `
+        <div class="py-8 text-center text-slate-400 space-y-1">
+          <i class="fa-solid fa-user-slash text-2xl text-slate-300 dark:text-slate-600"></i>
+          <p class="text-xs font-semibold">No authorized users found matching "${searchTerm}"</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(u => {
+      const isAdmin = (u.role === 'admin');
+      const isActive = (u.status === 'active');
+      const isCurrent = state.currentUser && state.currentUser.id === u.id;
+      const initials = (u.name || u.username || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+      html += `
+        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
+          <!-- Left: User Identity -->
+          <div class="flex items-center space-x-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+              isAdmin 
+                ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60' 
+                : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60'
+            }">
+              ${initials}
+            </div>
+
+            <div class="min-w-0 space-y-0.5">
+              <div class="flex items-center space-x-2">
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${u.name}</span>
+                ${isCurrent ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">You</span>' : ''}
+              </div>
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                <span>@${u.username}</span>
+                <span>&bull;</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                  isAdmin ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+                }">
+                  ${isAdmin ? '👑 Admin' : '👁️ Viewer'}
+                </span>
+                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                  isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                }">
+                  ${isActive ? 'Active' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Actions -->
+          <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
+            <!-- Toggle Active / Disabled -->
+            <button type="button" class="user-toggle-status-btn px-2.5 py-1 rounded-lg font-bold text-[11px] border transition cursor-pointer ${
+              isActive 
+                ? 'border-slate-200 dark:border-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300' 
+                : 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+            }" data-id="${u.id}" data-username="${u.username}" title="${isActive ? 'Disable account' : 'Enable account'}">
+              ${isActive ? 'Disable' : 'Enable'}
+            </button>
+
+            <!-- Reset Password -->
+            <button type="button" class="user-reset-pwd-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Reset Password">
+              <i class="fa-solid fa-key text-[10px]"></i>
+            </button>
+
+            <!-- Delete User -->
+            <button type="button" class="user-delete-btn p-1.5 rounded-lg border border-rose-200 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Delete User">
+              <i class="fa-solid fa-trash-can text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    usersCardsContainer.innerHTML = html;
+  }
+
+  function initUserManagement() {
+    checkDashboardUserAuth();
+    loadUsersList();
+
+    // 1. Header Sign In Button Click
+    if (headerSignInBtn) {
+      headerSignInBtn.addEventListener('click', () => {
+        openLoginModal();
+      });
+    }
+
+    // 2. Header User Dropdown Toggle
+    if (headerUserDropdownBtn && headerUserDropdown) {
+      headerUserDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        headerUserDropdown.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (headerUserMenuContainer && !headerUserMenuContainer.contains(e.target)) {
+          headerUserDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // 3. Header Dropdown Actions
+    if (dropdownManageUsersBtn) {
+      dropdownManageUsersBtn.addEventListener('click', () => {
+        if (headerUserDropdown) headerUserDropdown.classList.add('hidden');
+        if (state.currentUser?.role !== 'admin') {
+          showToast('🚫 Access restricted: Administrator permissions required.', 'error');
+          return;
+        }
+        if (userManagementModal) {
+          userManagementModal.classList.remove('hidden');
+          loadUsersList();
+        }
+      });
+    }
+
+    if (dropdownChangePasswordBtn) {
+      dropdownChangePasswordBtn.addEventListener('click', () => {
+        if (headerUserDropdown) headerUserDropdown.classList.add('hidden');
+        if (state.currentUser && resetPasswordModal) {
+          if (resetPasswordTargetId) resetPasswordTargetId.value = state.currentUser.id;
+          if (resetPasswordTargetUsername) resetPasswordTargetUsername.textContent = '@' + state.currentUser.username;
+          if (resetPasswordNewInput) resetPasswordNewInput.value = '';
+          resetPasswordModal.classList.remove('hidden');
+        }
+      });
+    }
+
+    if (headerLogoutBtn) {
+      headerLogoutBtn.addEventListener('click', performLogout);
+    }
+    if (modalLogoutBtn) {
+      modalLogoutBtn.addEventListener('click', performLogout);
+    }
+
+    // 4. Settings Account Card Action Button
+    if (settingAuthActionBtn) {
+      settingAuthActionBtn.addEventListener('click', () => {
+        if (state.currentUser) {
+          performLogout();
+        } else {
+          if (settingsDropdown) settingsDropdown.classList.add('hidden');
+          openLoginModal();
+        }
+      });
+    }
+
+    // 5. Open User Mgmt Modal from Settings
+    if (settingOpenUserMgmtBtn) {
+      settingOpenUserMgmtBtn.addEventListener('click', () => {
+        if (settingsDropdown) settingsDropdown.classList.add('hidden');
+        if (state.currentUser?.role !== 'admin') {
+          showToast('🚫 Access restricted: Administrator permissions required.', 'error');
+          return;
+        }
+        if (userManagementModal) {
+          userManagementModal.classList.remove('hidden');
+          loadUsersList();
+        }
+      });
+    }
+
+    // 6. Close Modal Handlers
+    if (userManagementCloseBtn) {
+      userManagementCloseBtn.addEventListener('click', () => {
+        userManagementModal.classList.add('hidden');
+      });
+    }
+    if (userManagementDoneBtn) {
+      userManagementDoneBtn.addEventListener('click', () => {
+        userManagementModal.classList.add('hidden');
+      });
+    }
+    if (closeLoginModalBtn) {
+      closeLoginModalBtn.addEventListener('click', () => {
+        userLoginModal.classList.add('hidden');
+      });
+    }
+    if (resetPasswordCloseBtn) {
+      resetPasswordCloseBtn.addEventListener('click', () => {
+        resetPasswordModal.classList.add('hidden');
+      });
+    }
+
+    // 7. User Modal Tab Switching
+    if (userTabListBtn && userTabAddBtn) {
+      userTabListBtn.addEventListener('click', () => {
+        userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer';
+        userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        userSectionList.classList.remove('hidden');
+        userSectionAdd.classList.add('hidden');
+        loadUsersList();
+      });
+
+      userTabAddBtn.addEventListener('click', () => {
+        userTabAddBtn.className = 'px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer';
+        userTabListBtn.className = 'px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer';
+        userSectionAdd.classList.remove('hidden');
+        userSectionList.classList.add('hidden');
+        if (addUserFormStatus) addUserFormStatus.textContent = '';
+      });
+    }
+
+    // 8. Search Filter
+    if (userSearchInput) {
+      userSearchInput.addEventListener('input', () => {
+        renderUsersList(cachedUsersList);
+      });
+    }
+
+    // 9. Require Login Toggle Handler
+    async function handleRequireLoginChange(isChecked) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ requireLogin: isChecked })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.requireLogin = !!data.require_login;
+          if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
+          if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+          if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
+          showToast(data.message, 'success');
+        }
+      } catch (e) {
+        showToast('Failed to update access control setting.', 'error');
+      }
+    }
+
+    if (modalRequireLoginToggle) {
+      modalRequireLoginToggle.addEventListener('change', () => {
+        handleRequireLoginChange(modalRequireLoginToggle.checked);
+      });
+    }
+    if (settingRequireLoginToggle) {
+      settingRequireLoginToggle.addEventListener('change', () => {
+        handleRequireLoginChange(settingRequireLoginToggle.checked);
+      });
+    }
+
+    // 10. Add User Form Submission
+    if (addUserForm) {
+      addUserForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = addUserName.value.trim();
+        const username = addUserUsername.value.trim();
+        const password = addUserPassword.value.trim();
+        const role = addUserRole.value;
+        const status = addUserStatus.value;
+
+        if (!username || !password) return;
+
+        submitAddUserBtn.disabled = true;
+        submitAddUserBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Creating User...';
+        if (addUserFormStatus) addUserFormStatus.textContent = '';
+
+        try {
+          const token = getAuthToken();
+          const res = await fetch('/api/users/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: JSON.stringify({ name, username, password, role, status })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            showToast(`✅ User @${username} added successfully!`, 'success');
+            addUserForm.reset();
+            if (userTabListBtn) userTabListBtn.click();
+          } else {
+            if (addUserFormStatus) {
+              addUserFormStatus.textContent = `❌ ${data.error || 'Failed to create user.'}`;
+              addUserFormStatus.className = 'text-xs font-semibold text-center text-rose-600';
+            }
+          }
+        } catch (err) {
+          if (addUserFormStatus) {
+            addUserFormStatus.textContent = '❌ Network error.';
+            addUserFormStatus.className = 'text-xs font-semibold text-center text-rose-600';
+          }
+        } finally {
+          submitAddUserBtn.disabled = false;
+          submitAddUserBtn.innerHTML = '<i class="fa-solid fa-user-plus mr-1"></i> Create User Account';
+        }
+      });
+    }
+
+    // 7. Login Form Submission (with Remember Me)
+    if (userLoginForm) {
+      userLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+        const rememberMe = loginRememberMe ? loginRememberMe.checked : true;
+
+        if (!username || !password) return;
+
+        submitLoginBtn.disabled = true;
+        submitLoginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Signing In...';
+        if (loginErrorMsg) loginErrorMsg.textContent = '';
+
+        try {
+          const res = await fetch('/api/user-auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, rememberMe })
+          });
+          const data = await res.json();
+
+          if (data.success && data.token) {
+            setAuthToken(data.token, rememberMe);
+            if (rememberMe) {
+              localStorage.setItem('rail_remembered_username', username);
+            } else {
+              localStorage.removeItem('rail_remembered_username');
+            }
+            showToast(`👋 Welcome back, ${data.user.name || data.user.username}!`, 'success');
+            userLoginModal.classList.add('hidden');
+            await checkDashboardUserAuth();
+          } else {
+            if (loginErrorMsg) {
+              loginErrorMsg.textContent = data.error || 'Invalid credentials.';
+            }
+          }
+        } catch (err) {
+          if (loginErrorMsg) {
+            loginErrorMsg.textContent = 'Network error. Please try again.';
+          }
+        } finally {
+          submitLoginBtn.disabled = false;
+          submitLoginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-1"></i> Sign In to Dashboard';
+        }
+      });
+    }
+
+    // 8. Reset Password Form Submission
+    if (resetPasswordForm) {
+      resetPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = resetPasswordTargetId.value;
+        const newPassword = resetPasswordNewInput.value.trim();
+
+        if (!id || !newPassword) return;
+
+        try {
+          const token = getAuthToken();
+          const res = await fetch('/api/users/update-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: JSON.stringify({ id, newPassword })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('✅ Password updated successfully!', 'success');
+            resetPasswordModal.classList.add('hidden');
+            resetPasswordNewInput.value = '';
+          } else {
+            showToast(data.error || 'Failed to update password.', 'error');
+          }
+        } catch (err) {
+          showToast('Network error updating password.', 'error');
+        }
+      });
+    }
+
+    // 9. Delegate Actions for User Cards (Toggle Status, Reset Pwd, Delete)
+    if (usersCardsContainer) {
+      usersCardsContainer.addEventListener('click', async (e) => {
+        // Toggle Status
+        const toggleBtn = e.target.closest('.user-toggle-status-btn');
+        if (toggleBtn) {
+          const id = toggleBtn.dataset.id;
+          const username = toggleBtn.dataset.username;
+          try {
+            const token = getAuthToken();
+            const res = await fetch('/api/users/toggle-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+              body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (data.success) {
+              showToast(`User @${username} is now ${data.status}.`, 'info');
+              loadUsersList();
+            } else {
+              showToast(data.error || 'Action failed.', 'error');
+            }
+          } catch (err) {
+            showToast('Network error.', 'error');
+          }
+          return;
+        }
+
+        // Reset Password
+        const resetBtn = e.target.closest('.user-reset-pwd-btn');
+        if (resetBtn) {
+          const id = resetBtn.dataset.id;
+          const username = resetBtn.dataset.username;
+          if (resetPasswordTargetId) resetPasswordTargetId.value = id;
+          if (resetPasswordTargetUsername) resetPasswordTargetUsername.textContent = '@' + username;
+          if (resetPasswordNewInput) resetPasswordNewInput.value = '';
+          if (resetPasswordModal) resetPasswordModal.classList.remove('hidden');
+          return;
+        }
+
+        // Delete User
+        const deleteBtn = e.target.closest('.user-delete-btn');
+        if (deleteBtn) {
+          const id = deleteBtn.dataset.id;
+          const username = deleteBtn.dataset.username;
+          if (!confirm(`Are you sure you want to remove user @${username}?`)) return;
+
+          try {
+            const token = getAuthToken();
+            const res = await fetch('/api/users/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+              body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (data.success) {
+              showToast(`🗑️ User @${username} removed.`, 'info');
+              loadUsersList();
+            } else {
+              showToast(data.error || 'Failed to remove user.', 'error');
+            }
+          } catch (err) {
+            showToast('Network error deleting user.', 'error');
+          }
+          return;
+        }
+      });
+    }
+  }
+
+  // ----------------------------------------------------
+  // Setup Master Event Listeners
+  // ----------------------------------------------------
+  function setupEventListeners() {
+    updateMonitorUI(state.pollingInterval);
+    startMonitorCountdownTicker();
+    initNotificationCenter();
+    initSettingsMenu();
+    initWatchlist();
+    initShareModule();
+    initStationMatrixModule();
+    initMultiDayMatrixControls();
+    initUserManagement();
+
+    // Delegate click for view route, watch, and station matrix buttons
+    document.addEventListener('click', (e) => {
+      const routeBtn = e.target.closest('.view-route-btn');
+      if (routeBtn) {
+        openRouteModal(routeBtn.dataset.trainModel, routeBtn.dataset.trainName);
+        return;
+      }
+
+      const matrixBtn = e.target.closest('.view-station-matrix-btn');
+      if (matrixBtn) {
+        openStationMatrixModal(matrixBtn.dataset.trainModel, matrixBtn.dataset.trainName);
+        return;
+      }
+
+      const watchBtn = e.target.closest('.set-watch-btn');
+      if (watchBtn) {
+        openSetWatchModal({
+          train_model: watchBtn.dataset.trainModel,
+          train_name: watchBtn.dataset.trainName
+        });
+        return;
+      }
+    });
+  }
+
+});
+
+
+

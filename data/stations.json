@@ -1,0 +1,1538 @@
+[
+  {
+    "name": "Abdulpur",
+    "display_name": "Abdulpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Aditmari",
+    "display_name": "Aditmari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ahsanganj",
+    "display_name": "Ahsanganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Akhanagar",
+    "display_name": "Akhanagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Akhaura",
+    "display_name": "Akhaura",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Akkelpur",
+    "display_name": "Akkelpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Alamdanga",
+    "display_name": "Alamdanga",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Amirabad",
+    "display_name": "Amirabad",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Amnura",
+    "display_name": "Amnura",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Amnura_Bypass",
+    "display_name": "Amnura Bypass",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Arani",
+    "display_name": "Arani",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ashuganj",
+    "display_name": "Ashuganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Atharabari",
+    "display_name": "Atharabari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Azampur",
+    "display_name": "Azampur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Azim Nagar",
+    "display_name": "Azim Nagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Badarganj",
+    "display_name": "Badarganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Badherhat",
+    "display_name": "Badherhat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Badiakhali",
+    "display_name": "Badiakhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Baharpur",
+    "display_name": "Baharpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bajitpur",
+    "display_name": "Bajitpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bajra",
+    "display_name": "Bajra",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bamondanga",
+    "display_name": "Bamondanga",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Banani",
+    "display_name": "Banani",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Baramchal",
+    "display_name": "Baramchal",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Barhatta",
+    "display_name": "Barhatta",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Barkhata",
+    "display_name": "Barkhata",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Baura",
+    "display_name": "Baura",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Benapole",
+    "display_name": "Benapole",
+    "bn_name": "বেনাপোল",
+    "alias": "Benapole"
+  },
+  {
+    "name": "Bhairab_Bazar",
+    "display_name": "Bhairab Bazar",
+    "bn_name": "ভৈরব বাজার",
+    "alias": "Bhairab"
+  },
+  {
+    "name": "Bhanga",
+    "display_name": "Bhanga",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhanga_Junction",
+    "display_name": "Bhanga Junction",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhanugach",
+    "display_name": "Bhanugach",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhatiary",
+    "display_name": "Bhatiary",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bheramara",
+    "display_name": "Bheramara",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhomradah",
+    "display_name": "Bhomradah",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhotmari",
+    "display_name": "Bhotmari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bhuapur",
+    "display_name": "Bhuapur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bidyaganj",
+    "display_name": "Bidyaganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Biman_Bandar",
+    "display_name": "Biman Bandar",
+    "bn_name": "বিমানবন্দর",
+    "alias": "Airport, Dhaka Airport"
+  },
+  {
+    "name": "Birampur",
+    "display_name": "Birampur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Birol",
+    "display_name": "Birol",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Boalmari_Bazar",
+    "display_name": "Boalmari Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bogura",
+    "display_name": "Bogura",
+    "bn_name": "বগুড়া",
+    "alias": "Bogra"
+  },
+  {
+    "name": "Bolakhal",
+    "display_name": "Bolakhal",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Bonar_Para",
+    "display_name": "Bonar Para",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Boral_Bridge",
+    "display_name": "Boral Bridge",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Borashi",
+    "display_name": "Borashi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Brahmanbaria",
+    "display_name": "Brahmanbaria",
+    "bn_name": "ব্রাহ্মণবাড়িয়া",
+    "alias": "B.Baria"
+  },
+  {
+    "name": "Burimari",
+    "display_name": "Burimari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chakaria",
+    "display_name": "Chakaria",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chandpur",
+    "display_name": "Chandpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chandpur_Court",
+    "display_name": "Chandpur Court",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chandradighalia",
+    "display_name": "Chandradighalia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chapainawabganj",
+    "display_name": "Chapainawabganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chapta",
+    "display_name": "Chapta",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chatmohar",
+    "display_name": "Chatmohar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chattogram",
+    "display_name": "Chattogram",
+    "bn_name": "চট্টগ্রাম",
+    "alias": "Chittagong, Ctg"
+  },
+  {
+    "name": "Chilahati",
+    "display_name": "Chilahati",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chirirbandar",
+    "display_name": "Chirirbandar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chitoshi_Road",
+    "display_name": "Chitoshi Road",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Choto Bahirbag",
+    "display_name": "Choto Bahirbag",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Choumuhani",
+    "display_name": "Choumuhani",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chuadanga",
+    "display_name": "Chuadanga",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Chulkati_Bazar",
+    "display_name": "Chulkati Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Cox's Bazar",
+    "display_name": "Cox's Bazar",
+    "bn_name": "কক্সবাজার",
+    "alias": "Coxsbazar, Coxs Bazar"
+  },
+  {
+    "name": "Cumilla",
+    "display_name": "Cumilla",
+    "bn_name": "কুমিল্লা",
+    "alias": "Comilla"
+  },
+  {
+    "name": "Darshana_Halt",
+    "display_name": "Darshana Halt",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dashuria",
+    "display_name": "Dashuria",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Daulatpur",
+    "display_name": "Daulatpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dewanganj_Bazar",
+    "display_name": "Dewanganj Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dhaka",
+    "display_name": "Dhaka",
+    "bn_name": "ঢাকা",
+    "alias": "Kamalapur"
+  },
+  {
+    "name": "Dhaka_Cantonment",
+    "display_name": "Dhaka Cantonment",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dhalarchar",
+    "display_name": "Dhalarchar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dinajpur",
+    "display_name": "Dinajpur",
+    "bn_name": "দিনাজপুর",
+    "alias": "Dinajpur"
+  },
+  {
+    "name": "Dohazari",
+    "display_name": "Dohazari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Domar",
+    "display_name": "Domar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dublia",
+    "display_name": "Dublia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Dulahazara",
+    "display_name": "Dulahazara",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Faridpur",
+    "display_name": "Faridpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Feni",
+    "display_name": "Feni",
+    "bn_name": "ফেনী",
+    "alias": "Feni"
+  },
+  {
+    "name": "Fulbari",
+    "display_name": "Fulbari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gachihata",
+    "display_name": "Gachihata",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gafargaon",
+    "display_name": "Gafargaon",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gaibandha",
+    "display_name": "Gaibandha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gobra",
+    "display_name": "Gobra",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "GOMDANDI",
+    "display_name": "GOMDANDI",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gopalganj",
+    "display_name": "Gopalganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gouripur_Myn",
+    "display_name": "Gouripur Myn",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Gunabati",
+    "display_name": "Gunabati",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hajiganj",
+    "display_name": "Hajiganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Haldibari",
+    "display_name": "Haldibari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Harashpur",
+    "display_name": "Harashpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "HARBANG",
+    "display_name": "HARBANG",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hasanpur",
+    "display_name": "Hasanpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hatibandha",
+    "display_name": "Hatibandha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hemnagar",
+    "display_name": "Hemnagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hi-Tech City",
+    "display_name": "Hi-Tech City",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Hili",
+    "display_name": "Hili",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ibrahimabad",
+    "display_name": "Ibrahimabad",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ishwardi",
+    "display_name": "Ishwardi",
+    "bn_name": "ঈশ্বরদী",
+    "alias": "Ishurdi"
+  },
+  {
+    "name": "Ishwardi Bypass",
+    "display_name": "Ishwardi Bypass",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "ISLAMABAD",
+    "display_name": "ISLAMABAD",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Islampur_Bazar",
+    "display_name": "Islampur Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jaforshahi",
+    "display_name": "Jaforshahi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jagannathgonj_Bazar",
+    "display_name": "Jagannathgonj Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jamalpur_Town",
+    "display_name": "Jamalpur Town",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jamtail",
+    "display_name": "Jamtail",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Janali_Hat",
+    "display_name": "Janali Hat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jashore",
+    "display_name": "Jashore",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Jhikargacha",
+    "display_name": "Jhikargacha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Joydebpur",
+    "display_name": "Joydebpur",
+    "bn_name": "জয়দেবপুর",
+    "alias": "Gazipur"
+  },
+  {
+    "name": "Joypurhat",
+    "display_name": "Joypurhat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kakonhat",
+    "display_name": "Kakonhat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kalukhali",
+    "display_name": "Kalukhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kanchan_Junction",
+    "display_name": "Kanchan Junction",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kankina",
+    "display_name": "Kankina",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kaoraid",
+    "display_name": "Kaoraid",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kashiani",
+    "display_name": "Kashiani",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kashinathpur",
+    "display_name": "Kashinathpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Katakhali",
+    "display_name": "Katakhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kaunia",
+    "display_name": "Kaunia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kawgaon",
+    "display_name": "Kawgaon",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kendua_Bazar",
+    "display_name": "Kendua Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Khoksha",
+    "display_name": "Khoksha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kholahati",
+    "display_name": "Kholahati",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Khulna",
+    "display_name": "Khulna",
+    "bn_name": "খুলনা",
+    "alias": "Khulna"
+  },
+  {
+    "name": "Kishorganj",
+    "display_name": "Kishorganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kismat",
+    "display_name": "Kismat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kolkata",
+    "display_name": "Kolkata",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kotchandpur",
+    "display_name": "Kotchandpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kulaura",
+    "display_name": "Kulaura",
+    "bn_name": "কুলাউড়া",
+    "alias": "Kulaura"
+  },
+  {
+    "name": "Kuliarchar",
+    "display_name": "Kuliarchar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kumarkhali",
+    "display_name": "Kumarkhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kumira",
+    "display_name": "Kumira",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kurigram",
+    "display_name": "Kurigram",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Kushtia_Court",
+    "display_name": "Kushtia Court",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Laksam",
+    "display_name": "Laksam",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Lalmonirhat",
+    "display_name": "Lalmonirhat",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "LOHAGARA",
+    "display_name": "LOHAGARA",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Lohagora",
+    "display_name": "Lohagora",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Lokmanpur",
+    "display_name": "Lokmanpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Lolitnagar",
+    "display_name": "Lolitnagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Madhnagar",
+    "display_name": "Madhnagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Madhukhali",
+    "display_name": "Madhukhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mahendranagar",
+    "display_name": "Mahendranagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mahimaganj",
+    "display_name": "Mahimaganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Maijdi Court",
+    "display_name": "Maijdi Court",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Maijgaon",
+    "display_name": "Maijgaon",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Majhgram",
+    "display_name": "Majhgram",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Manikkhali",
+    "display_name": "Manikkhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Manmathapur",
+    "display_name": "Manmathapur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mawa",
+    "display_name": "Mawa",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Meher",
+    "display_name": "Meher",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Melandah_Bazar",
+    "display_name": "Melandah Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Methikanda",
+    "display_name": "Methikanda",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mirbagh",
+    "display_name": "Mirbagh",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mirpur",
+    "display_name": "Mirpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mirzapur",
+    "display_name": "Mirzapur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Modhu_Road",
+    "display_name": "Modhu Road",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mohammad Nagar",
+    "display_name": "Mohammad Nagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mohanganj",
+    "display_name": "Mohanganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mongalpur",
+    "display_name": "Mongalpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mongla",
+    "display_name": "Mongla",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Montola",
+    "display_name": "Montola",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mubarakganj",
+    "display_name": "Mubarakganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mukundapur",
+    "display_name": "Mukundapur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Muladhuli",
+    "display_name": "Muladhuli",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Mymensingh",
+    "display_name": "Mymensingh",
+    "bn_name": "ময়মনসিংহ",
+    "alias": "Mymensingh"
+  },
+  {
+    "name": "Nachole",
+    "display_name": "Nachole",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Naliagram",
+    "display_name": "Naliagram",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Nandina",
+    "display_name": "Nandina",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Nangolkot",
+    "display_name": "Nangolkot",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Narail",
+    "display_name": "Narail",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Narayanganj",
+    "display_name": "Narayanganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Narsingdi",
+    "display_name": "Narsingdi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Narundi",
+    "display_name": "Narundi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Natherpetua",
+    "display_name": "Natherpetua",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Natore",
+    "display_name": "Natore",
+    "bn_name": "নাটোর",
+    "alias": "Natore"
+  },
+  {
+    "name": "Nayaniburuj",
+    "display_name": "Nayaniburuj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Nayapara",
+    "display_name": "Nayapara",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Netrakona",
+    "display_name": "Netrakona",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "New Jalpaiguri",
+    "display_name": "New Jalpaiguri",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Nilphamari",
+    "display_name": "Nilphamari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Noakhali",
+    "display_name": "Noakhali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Noapara",
+    "display_name": "Noapara",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pabna",
+    "display_name": "Pabna",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pachuria",
+    "display_name": "Pachuria",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Padma",
+    "display_name": "Padma",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Padmabila",
+    "display_name": "Padmabila",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pahartali",
+    "display_name": "Pahartali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Paksey",
+    "display_name": "Paksey",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Panchagarh",
+    "display_name": "Panchagarh",
+    "bn_name": "পঞ্চগড়",
+    "alias": "Panchagar"
+  },
+  {
+    "name": "Panchbibi",
+    "display_name": "Panchbibi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pangsha",
+    "display_name": "Pangsha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Parbatipur",
+    "display_name": "Parbatipur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Patgram",
+    "display_name": "Patgram",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Patiya",
+    "display_name": "Patiya",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Phultala",
+    "display_name": "Phultala",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pirgacha",
+    "display_name": "Pirgacha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pirganj",
+    "display_name": "Pirganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Piyarpur",
+    "display_name": "Piyarpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Poradaha",
+    "display_name": "Poradaha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Pukuria",
+    "display_name": "Pukuria",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Quasba",
+    "display_name": "Quasba",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Raghabpur",
+    "display_name": "Raghabpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Rajbari",
+    "display_name": "Rajbari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Rajshahi",
+    "display_name": "Rajshahi",
+    "bn_name": "রাজশাহী",
+    "alias": "Rajshahi"
+  },
+  {
+    "name": "Rajshahi_Court",
+    "display_name": "Rajshahi Court",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ramu",
+    "display_name": "Ramu",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Rangpur",
+    "display_name": "Rangpur",
+    "bn_name": "রংপুর",
+    "alias": "Rangpur"
+  },
+  {
+    "name": "Rohanpur",
+    "display_name": "Rohanpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ruhia",
+    "display_name": "Ruhia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "SH M Monsur Ali",
+    "display_name": "SH M Monsur Ali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Safdarpur",
+    "display_name": "Safdarpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Saidpur",
+    "display_name": "Saidpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Santahar",
+    "display_name": "Santahar",
+    "bn_name": "সান্তাহার",
+    "alias": "Santahar"
+  },
+  {
+    "name": "Sararchar",
+    "display_name": "Sararchar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sardah_Road",
+    "display_name": "Sardah Road",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sarishabari",
+    "display_name": "Sarishabari",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sathia_Rajapur",
+    "display_name": "Sathia Rajapur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Satkania",
+    "display_name": "Satkania",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Setabganj",
+    "display_name": "Setabganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shahaji_Bazar",
+    "display_name": "Shahaji Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shahrasti",
+    "display_name": "Shahrasti",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shahtali",
+    "display_name": "Shahtali",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shaistaganj",
+    "display_name": "Shaistaganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shamshernagar",
+    "display_name": "Shamshernagar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shashidal",
+    "display_name": "Shashidal",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shibchar",
+    "display_name": "Shibchar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shibganj",
+    "display_name": "Shibganj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sholoshohor",
+    "display_name": "Sholoshohor",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shyamgonj",
+    "display_name": "Shyamgonj",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Shyampur",
+    "display_name": "Shyampur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Singia",
+    "display_name": "Singia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sirajganj_Bazar",
+    "display_name": "Sirajganj Bazar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sirajganjraipur",
+    "display_name": "Sirajganjraipur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sitlai",
+    "display_name": "Sitlai",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sonaimuri",
+    "display_name": "Sonaimuri",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sonatola",
+    "display_name": "Sonatola",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "SOYDABAD",
+    "display_name": "SOYDABAD",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sreemangal",
+    "display_name": "Sreemangal",
+    "bn_name": "শ্রীমঙ্গল",
+    "alias": "Srimangal, Srimongol"
+  },
+  {
+    "name": "Sreepur",
+    "display_name": "Sreepur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sultanpur",
+    "display_name": "Sultanpur",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Sylhet",
+    "display_name": "Sylhet",
+    "bn_name": "সিলেট",
+    "alias": "Sylhet"
+  },
+  {
+    "name": "Talma",
+    "display_name": "Talma",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Talora",
+    "display_name": "Talora",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Tangail",
+    "display_name": "Tangail",
+    "bn_name": "টাঙ্গাইল",
+    "alias": "Tangail"
+  },
+  {
+    "name": "Tantibandha",
+    "display_name": "Tantibandha",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Tarakandi",
+    "display_name": "Tarakandi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Tebunia",
+    "display_name": "Tebunia",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Teesta_Junction",
+    "display_name": "Teesta Junction",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Thakrokona",
+    "display_name": "Thakrokona",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Thakurgaon_Road",
+    "display_name": "Thakurgaon Road",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Tongi",
+    "display_name": "Tongi",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Tushbhandar",
+    "display_name": "Tushbhandar",
+    "bn_name": "",
+    "alias": ""
+  },
+  {
+    "name": "Ullapara",
+    "display_name": "Ullapara",
+    "bn_name": "",
+    "alias": ""
+  }
+]

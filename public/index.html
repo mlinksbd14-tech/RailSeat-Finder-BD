@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <title>RailSeat Finder BD - Bangladesh Railway Seat Availability</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts: Inter & Hind Siliguri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
+            bengali: ['"Hind Siliguri"', 'sans-serif'],
+          },
+          screens: {
+            'xs': '420px'
+          },
+          colors: {
+            rail: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              accent: '#0284c7',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-16 py-2 flex flex-wrap items-center justify-between gap-2.5">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
+          <i class="fa-solid fa-train text-base sm:text-lg"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center space-x-1.5 flex-wrap">
+            <span class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent truncate">
+              RailSeat Finder BD
+            </span>
+            <span id="liveBadge" class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold border border-slate-200 dark:border-slate-700 shrink-0">
+              API Ready
+            </span>
+          </div>
+          <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Bangladesh Railway Real-time Seat Availability</p>
+        </div>
+      </div>
+
+      <!-- Header Action Controls -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0 flex-wrap gap-y-1">
+        
+        <!-- Live API Auth Connection Button -->
+        <button id="authModalOpenBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
+          <i class="fa-solid fa-key text-[11px]" id="authBtnIcon"></i>
+          <span id="authBtnText">Connect Live API</span>
+        </button>
+
+        <!-- Train Route Information Explorer Button -->
+        <button id="openRouteExplorerBtn" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition text-xs font-semibold" title="Lookup Official Bangladesh Railway Train Routes & Schedule">
+          <i class="fa-solid fa-route text-xs text-emerald-600 dark:text-emerald-400"></i>
+          <span class="hidden sm:inline">Train Routes</span>
+        </button>
+
+        <!-- Specific Train & Class Target Watchlist Button -->
+        <button id="openWatchlistBtn" class="relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition text-xs font-semibold" title="Manage Watched Trains & Seat Targets">
+          <i class="fa-solid fa-crosshairs text-xs text-emerald-600 dark:text-emerald-400"></i>
+          <span class="hidden sm:inline">Watchlist</span>
+          <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-emerald-600 text-white font-extrabold text-[10px] rounded-full">0</span>
+        </button>
+
+        <!-- User Account / Login & Logout Controls -->
+        <div class="relative" id="userAuthContainer">
+          <!-- State 1: When NOT Logged In -> Show "Sign In" Button -->
+          <button id="headerSignInBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition text-xs font-bold shadow-xs cursor-pointer" title="Sign In to Dashboard">
+            <i class="fa-solid fa-right-to-bracket text-xs"></i>
+            <span>Sign In</span>
+          </button>
+
+          <!-- State 2: When LOGGED IN -> Show User Profile Pill with Dropdown -->
+          <div id="headerUserMenuContainer" class="hidden relative">
+            <button id="headerUserDropdownBtn" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/80 text-purple-900 dark:text-purple-200 hover:bg-purple-100 transition text-xs font-bold cursor-pointer" title="Account Menu">
+              <div class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black" id="headerUserAvatar">A</div>
+              <span class="hidden sm:inline font-bold max-w-[100px] truncate" id="userNavLabel">Admin</span>
+              <span id="userRoleBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-200/80 dark:bg-purple-900 text-purple-900 dark:text-purple-100">Admin</span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-purple-400"></i>
+            </button>
+
+            <!-- User Dropdown Menu -->
+            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- User Info Card -->
+              <div class="p-3 bg-purple-50/50 dark:bg-purple-950/30">
+                <p class="font-extrabold text-xs text-slate-900 dark:text-white truncate" id="dropdownUserFullName">System Administrator</p>
+                <p class="text-[11px] text-purple-600 dark:text-purple-400 font-mono truncate" id="dropdownUserUsername">@admin</p>
+              </div>
+
+              <!-- Menu Items -->
+              <div class="p-1 text-xs space-y-0.5">
+                <button id="dropdownManageUsersBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 font-semibold flex items-center space-x-2 transition cursor-pointer">
+                  <i class="fa-solid fa-users-gear text-purple-500 text-xs"></i>
+                  <span>Manage Users</span>
+                </button>
+                <button id="dropdownChangePasswordBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 font-semibold flex items-center space-x-2 transition cursor-pointer">
+                  <i class="fa-solid fa-key text-purple-500 text-xs"></i>
+                  <span>Change Password</span>
+                </button>
+              </div>
+
+              <!-- Logout Button -->
+              <div class="p-1">
+                <button id="headerLogoutBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center space-x-2 transition cursor-pointer">
+                  <i class="fa-solid fa-right-from-bracket text-rose-500 text-xs"></i>
+                  <span>Sign Out / Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Menu Notification Center (Stores All Alert Notifications) -->
+        <div class="relative" id="notifCenterContainer">
+          <button id="notifBellBtn" class="relative p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition flex items-center justify-center" title="Alert Notification Center">
+            <i class="fa-solid fa-bell text-sm" id="notifBellIcon"></i>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-600 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
+          </button>
+
+          <!-- Notification Dropdown Panel -->
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in">
+            <!-- Dropdown Header -->
+            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
+              <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-bell text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Alert Notifications</h4>
+                <span id="notifCountPill" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">0</span>
+              </div>
+              <div class="flex items-center space-x-2 text-[11px]">
+                <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition" title="Mark all as read">Mark Read</button>
+                <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+                <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition" title="Clear all stored alerts">Clear</button>
+              </div>
+            </div>
+
+            <!-- Notification Items Scrollable List -->
+            <div id="notifListContainer" class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-1">
+              <!-- Dynamic alert items -->
+            </div>
+
+            <!-- Dropdown Footer -->
+            <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+              <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Stored in local history</span>
+              <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold">Test Alert</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Menu Dropdown (Seat Alert Sound, Desktop Alerts, Theme) -->
+        <div class="relative" id="settingsDropdownContainer">
+          <button id="settingsMenuBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center" title="Settings & Preferences">
+            <i class="fa-solid fa-gear text-sm" id="settingsGearIcon"></i>
+          </button>
+
+          <!-- Settings Dropdown Panel (Category-Wise) -->
+          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in flex flex-col">
+            
+            <!-- Header -->
+            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-gear"></i>
+                </div>
+                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
+              </div>
+              <span class="text-[10px] text-slate-400 font-medium">Auto-saved</span>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="flex items-center space-x-1 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 overflow-x-auto shrink-0 text-[11px]" id="settingsCategoryTabs">
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer shrink-0" data-cat="all">All</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="alerts">🔔 Alerts</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="monitor">⏱️ Monitor</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="telegram">✈️ Telegram</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="appearance">🎨 Theme</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="users">👥 Users</button>
+            </div>
+
+            <!-- Settings Content Container -->
+            <div class="p-3.5 space-y-3.5 overflow-y-auto flex-1 text-xs">
+              
+              <!-- ============================================== -->
+              <!-- CATEGORY 1: 🔔 ALERTS & NOTIFICATIONS -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="alerts">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    <i class="fa-solid fa-bell text-xs"></i>
+                    <span>Alerts & Notifications</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400">Audio & OS</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-3">
+                  
+                  <!-- Seat Sound Alert -->
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-0.5">
+                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                        <i class="fa-solid fa-volume-high text-emerald-600 dark:text-emerald-400 text-xs" id="settingSoundIcon"></i>
+                        <span>Seat Alert Chime</span>
+                      </div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        Play chime when booked seats are released
+                      </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                      <input type="checkbox" id="settingSoundToggle" class="sr-only peer" checked>
+                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  <!-- Test Sound Action -->
+                  <div class="pt-0.5 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between">
+                    <span class="text-[10px] text-slate-400">Preview audio sound:</span>
+                    <button type="button" id="settingTestSoundBtn" class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1">
+                      <i class="fa-solid fa-play text-[9px]"></i>
+                      <span>Test Chime</span>
+                    </button>
+                  </div>
+
+                  <div class="border-t border-slate-200/60 dark:border-slate-700/50"></div>
+
+                  <!-- Desktop OS Notifications -->
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-0.5">
+                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                        <i class="fa-solid fa-desktop text-purple-600 dark:text-purple-400 text-xs"></i>
+                        <span>Desktop OS Alerts</span>
+                      </div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        Background OS notifications when browser is minimized
+                      </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                      <input type="checkbox" id="settingDesktopNotifToggle" class="sr-only peer">
+                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- CATEGORY 2: ⏱️ AUTO-MONITORING RADAR -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="monitor">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    <span>Auto-Monitoring Radar</span>
+                  </div>
+                  <span id="settingMonitorActiveBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
+                    30s
+                  </span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-2.5">
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                    Automatic background refresh interval to catch released seats instantly:
+                  </p>
+
+                  <!-- Presets -->
+                  <div class="grid grid-cols-5 gap-1" id="monitorPresetBtnGroup">
+                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="0">Off</button>
+                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="15">15s</button>
+                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-500 bg-emerald-600 text-white shadow-xs transition" data-sec="30">30s</button>
+                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="60">60s</button>
+                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="120">2m</button>
+                  </div>
+
+                  <!-- Custom Interval Input -->
+                  <div class="flex items-center space-x-1.5 pt-0.5">
+                    <div class="relative flex-1">
+                      <input type="number" id="customMonitorSecondsInput" min="5" max="600" placeholder="Custom sec (5-600)" 
+                        class="w-full pl-2.5 pr-8 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-semibold">sec</span>
+                    </div>
+                    <button type="button" id="applyCustomMonitorBtn" class="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition shrink-0">
+                      Set
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- CATEGORY 3: ✈️ TELEGRAM INTEGRATION -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="telegram">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                    <i class="fa-brands fa-telegram text-xs"></i>
+                    <span>Telegram Alerts</span>
+                  </div>
+                  <span id="telegramStatusBadge" class="hidden px-2 py-0.2 rounded-full bg-emerald-500 text-white text-[9px] font-extrabold">CONNECTED</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/40 dark:bg-sky-950/20 space-y-3">
+                  
+                  <!-- DISCONNECTED STATE: 1-Click Login -->
+                  <div id="telegramDisconnectedCard" class="space-y-2.5">
+                    <div class="flex items-center space-x-2.5">
+                      <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                        <i class="fa-brands fa-telegram"></i>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">@railseatfinderbdbot</h5>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Official Telegram Seat Radar Bot</p>
+                      </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300">
+                      Connect your Telegram in 1-click to get instant seat availability alerts sent straight to your phone.
+                    </p>
+
+                    <!-- Big 1-Click Login with Telegram Button -->
+                    <a id="telegramLoginBtn" href="https://t.me/railseatfinderbdbot" target="_blank" rel="noopener" 
+                      class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center space-x-2 transition cursor-pointer">
+                      <i class="fa-brands fa-telegram text-base"></i>
+                      <span>Login with Telegram (1-Click)</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+
+                    <!-- Pairing Status Bar -->
+                    <div class="flex items-center justify-between text-[11px] bg-white/80 dark:bg-slate-900/80 p-2 rounded-lg border border-sky-100 dark:border-sky-900/50">
+                      <span class="text-slate-500 dark:text-slate-400 text-[10px]">Pairing Code: <strong id="telegramPairCodeDisplay" class="font-mono text-slate-900 dark:text-white font-bold">---</strong></span>
+                      <span id="telegramPairingSpinner" class="hidden text-[10px] text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-spinner fa-spin text-[10px]"></i> Waiting for /start...
+                      </span>
+                      <button id="telegramQuickCheckBtn" type="button" class="text-[10px] text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer">Check / Refresh</button>
+                    </div>
+
+                    <!-- Optional Manual Chat ID Toggle -->
+                    <details class="text-[10px] text-slate-500 dark:text-slate-400">
+                      <summary class="cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 font-semibold">Or enter custom Chat ID manually</summary>
+                      <div class="pt-1.5 space-y-1.5">
+                        <input type="text" id="telegramManualChatId" placeholder="e.g. 781705575 or -100group..." 
+                          class="w-full px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                        <button id="telegramManualSaveBtn" type="button" class="w-full py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold transition cursor-pointer">
+                          Save Chat ID Manually
+                        </button>
+                      </div>
+                    </details>
+                  </div>
+
+                  <!-- CONNECTED STATE -->
+                  <div id="telegramConnectedCard" class="hidden space-y-2.5">
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60">
+                      <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <div class="min-w-0">
+                          <span class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200 block truncate">Telegram Connected</span>
+                          <span id="telegramConnectedUserLabel" class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">@user</span>
+                        </div>
+                      </div>
+                      <span id="telegramConnectedChatIdBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-100">ID: ---</span>
+                    </div>
+
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400">
+                      Target seat releases matching your active watchlist will be sent directly to your Telegram chat.
+                    </p>
+
+                    <div class="flex items-center space-x-1.5 pt-0.5">
+                      <button id="telegramSendTestAlertBtn" type="button" class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-1 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i> Send Test Alert
+                      </button>
+                      <button id="telegramDisconnectBtn" type="button" class="px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition cursor-pointer">
+                        Disconnect
+                      </button>
+                    </div>
+                  </div>
+
+                  <p id="telegramSetupStatus" class="text-[10px] font-semibold text-center text-slate-500 min-h-[0.85rem]"></p>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- CATEGORY 4: 🎨 APPEARANCE & THEME -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="appearance">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    <i class="fa-solid fa-palette text-xs"></i>
+                    <span>Appearance & Theme</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400">UI Display</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                        <i class="fa-solid fa-moon text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                        <span>Dark Theme</span>
+                      </div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        Toggle between dark and light appearance
+                      </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" id="settingDarkThemeToggle" class="sr-only peer">
+                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- CATEGORY 5: 👥 USER ACCESS & MANAGEMENT -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="users">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                    <i class="fa-solid fa-users text-xs"></i>
+                    <span>User Management</span>
+                  </div>
+                  <span id="settingUserCountBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">1 User</span>
+                </div>
+
+                <div class="p-3 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/40 dark:bg-purple-950/20 space-y-2.5">
+                  
+                  <!-- Current Account Card with Login / Logout -->
+                  <div class="flex items-center justify-between p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-100 dark:border-purple-900/50">
+                    <div class="space-y-0.5 min-w-0 pr-2">
+                      <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 block truncate" id="settingAccountStatusLabel">Not Signed In</span>
+                      <span class="text-[10px] text-slate-400 block font-mono truncate" id="settingAccountUserLabel">Public Visitor</span>
+                    </div>
+                    <button type="button" id="settingAuthActionBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-purple-600 text-white hover:bg-purple-700 shrink-0">
+                      Sign In
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div class="space-y-0.5">
+                      <span class="font-bold text-slate-900 dark:text-white block text-xs">Dashboard Access Control</span>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400">Manage authorized users who can view the dashboard</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-100 dark:border-purple-900/50">
+                    <div>
+                      <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
+                      <span class="text-[10px] text-slate-400">Only authorized users can view dashboard</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" id="settingRequireLoginToggle" class="sr-only peer">
+                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                  </div>
+
+                  <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-user-gear text-xs"></i>
+                    <span>Open User Management Panel</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 flex items-center justify-between shrink-0">
+              <span>All preferences stored locally</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold">v2.5</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Official Link -->
+        <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
+          <span>Official Portal</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Search & Filter Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/80 dark:border-slate-800">
+      
+      <!-- 1. Section Header: Title & Info -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>Find Train Seat Availability</span>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800/60 shadow-2xs" id="searchModeBadge">
+              Live Gateway
+            </span>
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Select your journey route and date to inspect real-time seats across all classes.</p>
+        </div>
+      </div>
+
+      <!-- 2. Dedicated Popular Routes Shortcut Strip -->
+      <div class="mb-5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/50 flex flex-col sm:flex-row sm:items-center gap-2.5 shadow-2xs">
+        <div class="flex items-center space-x-1.5 shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300">
+          <i class="fa-solid fa-fire text-amber-500 text-xs"></i>
+          <span>Popular Routes:</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5 items-center flex-1">
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70 hover:bg-emerald-100 transition shadow-2xs" data-from="Dhaka" data-to="Chattogram">
+            Dhaka ⇄ Ctg
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Cox's Bazar">
+            Dhaka ⇄ Cox's Bazar
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Sylhet">
+            Dhaka ⇄ Sylhet
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Rajshahi">
+            Dhaka ⇄ Rajshahi
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Khulna">
+            Dhaka ⇄ Khulna
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Rangpur">
+            Dhaka ⇄ Rangpur
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Dinajpur">
+            Dhaka ⇄ Dinajpur
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Mymensingh">
+            Dhaka ⇄ Mymensingh
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Jamalpur_Town">
+            Dhaka ⇄ Jamalpur
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Benapole">
+            Dhaka ⇄ Benapole
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Dhaka" data-to="Kishorganj">
+            Dhaka ⇄ Kishorganj
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Chattogram" data-to="Sylhet">
+            Ctg ⇄ Sylhet
+          </button>
+          <button class="quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs" data-from="Chattogram" data-to="Chandpur">
+            Ctg ⇄ Chandpur
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Form Grid -->
+      <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end">
+        
+        <!-- From Station (3 cols) -->
+        <div class="lg:col-span-3 relative">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <i class="fa-solid fa-location-dot text-emerald-600 dark:text-emerald-400 mr-1"></i> From Station
+          </label>
+          <div class="relative">
+            <input type="text" id="fromStationInput" autocomplete="off" placeholder="Type station (e.g. Dhaka)" 
+              class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium shadow-sm transition"
+              required>
+            <i class="fa-solid fa-train-subway absolute left-3 top-3 text-slate-400 text-xs"></i>
+            <button type="button" id="clearFromBtn" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <!-- Autocomplete Dropdown -->
+          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+        </div>
+
+        <!-- Swap Button (1 col) -->
+        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center">
+          <button type="button" id="swapStationsBtn" class="w-10 h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:border-emerald-400 text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition flex items-center justify-center shadow-sm" title="Swap From & To Stations">
+            <i class="fa-solid fa-arrow-right-arrow-left text-sm transition-transform duration-300" id="swapIcon"></i>
+          </button>
+        </div>
+
+        <!-- To Station (3 cols) -->
+        <div class="lg:col-span-3 relative">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> Destination Station
+          </label>
+          <div class="relative">
+            <input type="text" id="toStationInput" autocomplete="off" placeholder="Type destination (e.g. Chattogram)" 
+              class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium shadow-sm transition"
+              required>
+            <i class="fa-solid fa-map-pin absolute left-3 top-3 text-slate-400 text-xs"></i>
+            <button type="button" id="clearToBtn" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <!-- Autocomplete Dropdown -->
+          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+        </div>
+
+        <!-- Journey Date (3 cols) -->
+        <div class="lg:col-span-3">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+            <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> Date of Journey
+          </label>
+          <div class="relative">
+            <input type="date" id="journeyDateInput" 
+              class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium shadow-sm transition cursor-pointer"
+              required>
+            <i class="fa-solid fa-calendar absolute left-3 top-3 text-slate-400 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Search Action Button (2 cols) -->
+        <div class="lg:col-span-2">
+          <button type="submit" id="searchSubmitBtn" 
+            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all active:scale-[0.98]">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Find Trains</span>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Date Quick Presets & Filters -->
+      <div class="mt-4 pt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+        
+        <!-- Day Shortcuts -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0" id="dateChipsContainer">
+          <span class="text-slate-400 font-medium whitespace-nowrap mr-1">Quick Date:</span>
+        </div>
+
+        <!-- Filter Selectors: Optional Train & Class Filter -->
+        <div class="flex flex-wrap items-center gap-3">
+          
+          <!-- Optional Train Selector -->
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-400 font-medium whitespace-nowrap">
+              <i class="fa-solid fa-train text-emerald-500 mr-1"></i> Train (Optional):
+            </span>
+            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-300 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[190px] truncate">
+              <option value="ALL">All Trains (Default)</option>
+            </select>
+          </div>
+
+          <!-- Class Filter Selector -->
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-400 font-medium whitespace-nowrap">
+              <i class="fa-solid fa-layer-group text-blue-500 mr-1"></i> Class:
+            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-300 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="ALL">All Classes (Show Matrix)</option>
+              <option value="S_CHAIR">Shovon Chair (S_CHAIR)</option>
+              <option value="SNIGDHA">Snigdha AC (SNIGDHA)</option>
+              <option value="AC_S">AC Seat (AC_S)</option>
+              <option value="AC_B">AC Berth (AC_B)</option>
+              <option value="SHOVON">Shovon (SHOVON)</option>
+              <option value="F_SEAT">First Class Seat (F_SEAT)</option>
+              <option value="F_BERTH">First Class Berth (F_BERTH)</option>
+              <option value="AC_CHAIR">AC Chair (AC_CHAIR)</option>
+            </select>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Active Tracker & Controls Bar -->
+    <div id="trackerBar" class="hidden bg-white dark:bg-slate-900 rounded-xl px-5 py-3.5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Current Route & Refresh Details -->
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2 font-bold text-sm text-slate-800 dark:text-slate-200">
+          <span id="activeFromBadge">Dhaka</span>
+          <i class="fa-solid fa-arrow-right text-emerald-500 text-xs"></i>
+          <span id="activeToBadge">Chattogram</span>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-normal" id="activeDateBadge">28-Aug-2026</span>
+        </div>
+        <span class="text-slate-300 dark:text-slate-700">|</span>
+        <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Updated: <span id="lastUpdatedTime" class="font-semibold text-slate-700 dark:text-slate-300">Just now</span></span>
+        </div>
+      </div>
+
+      <!-- Auto Refresh Controls, Share & View Modes -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        
+        <!-- Live Countdown Ticker & Pause/Resume -->
+        <div id="monitorTickerContainer" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span id="monitorCountdownLabel" class="font-mono font-bold text-[11px]">28s</span>
+          <div class="w-12 h-1.5 bg-emerald-200 dark:bg-emerald-800 rounded-full overflow-hidden">
+            <div id="monitorProgressBar" class="h-full bg-emerald-600 transition-all duration-1000 ease-linear w-full"></div>
+          </div>
+          <button id="monitorPauseResumeBtn" class="p-0.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 transition text-[10px]" title="Pause / Resume Auto-Monitor">
+            <i class="fa-solid fa-pause" id="monitorPauseIcon"></i>
+          </button>
+        </div>
+
+        <!-- Auto Polling Dropdown -->
+        <div class="flex items-center space-x-1.5">
+          <select id="pollingIntervalSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            <option value="0">Monitor: Off</option>
+            <option value="15">Monitor: 15s</option>
+            <option value="30" selected>Monitor: 30s</option>
+            <option value="60">Monitor: 60s</option>
+          </select>
+        </div>
+
+        <!-- 1-Click Share Button -->
+        <button id="shareResultsBtn" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition flex items-center space-x-1" title="Share Availability via WhatsApp or Copy Summary">
+          <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+          <span>Share</span>
+        </button>
+
+        <!-- View Switcher (Cards / Table / 10-Day Matrix) -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+          <button id="viewGridBtn" class="px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition" title="Card Grid View">
+            <i class="fa-solid fa-table-cells-large mr-0.5"></i> Cards
+          </button>
+          <button id="viewTableBtn" class="px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Compact Table View">
+            <i class="fa-solid fa-table-list mr-0.5"></i> Table
+          </button>
+          <button id="viewMatrixBtn" class="px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Customizable Calendar Matrix View">
+            <i class="fa-solid fa-calendar-days mr-0.5 text-emerald-600 dark:text-emerald-400"></i> Matrix
+          </button>
+        </div>
+
+        <!-- Manual Refresh Button -->
+        <button id="manualRefreshBtn" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 transition" title="Refresh Now">
+          <i class="fa-solid fa-rotate text-xs" id="refreshIcon"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Released / Available Seat High-Priority Alert Banner (Single Aligned Line) -->
+    <div id="releasedSeatAlertBanner" class="hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-xl px-4 py-2.5 shadow-lg border border-emerald-400/50 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
+      <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs shadow-2xs shrink-0">
+          <i class="fa-solid fa-bell animate-bounce text-amber-300 text-xs"></i>
+        </div>
+        <div id="releasedSeatText" class="flex-1 min-w-0">
+          <!-- Dynamic single line content rendered by JS -->
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0 w-full sm:w-auto justify-end">
+        <a id="releasedSeatBookBtn" href="#" target="_blank" rel="noopener" class="px-4 py-1.5 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs shadow-md transition text-center inline-flex items-center space-x-1.5 shrink-0">
+          <span>Book Now</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-emerald-600"></i>
+        </a>
+        <button id="closeReleasedBannerBtn" class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition shrink-0" title="Dismiss Alert">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats Ribbon -->
+    <div id="statsRibbon" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      
+      <!-- Total Trains -->
+      <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200/80 dark:border-slate-800 flex items-center space-x-3.5 shadow-sm">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-train"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total Running Trains</p>
+          <p id="statTotalTrains" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">0</p>
+        </div>
+      </div>
+
+      <!-- Total Available Seats (Sum of Online + Counter) -->
+      <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200/80 dark:border-slate-800 flex items-center space-x-3.5 shadow-sm">
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-chair"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total Available Seats</p>
+          <p id="statCombinedSeats" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">0</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Notice / Status Banner -->
+    <div id="noticeBanner" class="hidden p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+      <div class="flex items-center space-x-2.5">
+        <i class="fa-solid fa-circle-info text-sm flex-shrink-0"></i>
+        <span id="noticeText" class="font-medium"></span>
+      </div>
+      <button id="bannerConnectBtn" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm flex-shrink-0 transition">
+        <i class="fa-solid fa-key text-[10px]"></i>
+        <span>Connect Live Account</span>
+      </button>
+    </div>
+
+    <!-- Main Results Display Area -->
+    <div id="resultsContainer" class="space-y-4">
+      
+      <!-- Initial State Welcome Card -->
+      <div id="initialStateCard" class="bg-white dark:bg-slate-900 rounded-2xl p-10 sm:p-14 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-4 shadow-sm">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">
+          <i class="fa-solid fa-magnifying-glass-location"></i>
+        </div>
+        <div class="max-w-md mx-auto space-y-1.5">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ready to Check Train Availability</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Pick your departure station, arrival destination, and journey date above. The dashboard will query Shohoz to list all trains, departure times, fares, and class-wise vacant seats.
+          </p>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton Indicator -->
+      <div id="loadingIndicator" class="hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 animate-pulse space-y-4">
+          <div class="flex justify-between items-center">
+            <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+            <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/6"></div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Train Cards Grid (Rendered by JS) -->
+      <div id="trainsGrid" class="space-y-4"></div>
+
+      <!-- Table Matrix View (Rendered by JS) -->
+      <div id="trainsTableView" class="hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-fade-in">
+        <div class="table-responsive-wrapper overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[680px]">
+            <thead class="bg-slate-50 dark:bg-slate-800/90 text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 tracking-wider">
+              <tr>
+                <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-50 dark:bg-slate-800 z-20 sticky-column-shadow border-r border-slate-200 dark:border-slate-800">Train & Model</th>
+                <th class="px-3 py-2.5 whitespace-nowrap">Departure</th>
+                <th class="px-3 py-2.5 whitespace-nowrap">Arrival</th>
+                <th class="px-3 py-2.5">Available Classes (Live Seats & Fare)</th>
+                <th class="px-3 py-2.5 text-center whitespace-nowrap">Total Seats</th>
+                <th class="px-3 py-2.5 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Customizable Multi-Day Calendar Matrix View (Rendered by JS) -->
+      <div id="trainsMatrixView" class="hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-fade-in">
+        
+        <!-- Matrix Top Controls Strip -->
+        <div class="p-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 bg-slate-50/90 dark:bg-slate-800/60">
+          
+          <!-- Title & Start Date -->
+          <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-900 dark:text-white">
+              <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400"></i>
+              <span id="calendarMatrixTitle">Multi-Day Availability Matrix</span>
+            </div>
+
+            <!-- Start Date Picker for Matrix -->
+            <div class="flex items-center space-x-1 text-xs">
+              <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">From:</span>
+              <input type="date" id="matrixStartDateInput" class="px-2 py-0.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Customizable Days Selector (Preset Pills + Custom Number Input) -->
+          <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Days:</span>
+            
+            <div class="flex items-center space-x-1 bg-slate-200/80 dark:bg-slate-700/80 p-0.5 rounded-lg text-xs" id="matrixDaysPresetGroup">
+              <button type="button" class="matrix-day-btn px-2 py-0.5 rounded-md font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer" data-days="3">3D</button>
+              <button type="button" class="matrix-day-btn px-2 py-0.5 rounded-md font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer" data-days="5">5D</button>
+              <button type="button" class="matrix-day-btn px-2 py-0.5 rounded-md font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer" data-days="7">7D</button>
+              <button type="button" class="matrix-day-btn px-2 py-0.5 rounded-md font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer" data-days="10">10D</button>
+            </div>
+
+            <div class="flex items-center space-x-1">
+              <input type="number" id="matrixCustomDaysInput" min="1" max="14" value="7" class="w-12 px-1.5 py-0.5 text-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none" title="Custom days (1-14)">
+              <button id="matrixRefreshBtn" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs flex items-center space-x-1 cursor-pointer" title="Scan Live Seat Availability">
+                <i class="fa-solid fa-rotate text-xs"></i>
+                <span class="hidden sm:inline">Scan</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Heatmap Legend -->
+          <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end space-x-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-700/60">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Available (&gt;10)</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Low (&lt;10)</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Sold Out (0)</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-400"></span> Off Day</span>
+          </div>
+
+        </div>
+
+        <div class="overflow-x-auto p-2" id="matrixContentContainer">
+          <!-- Multi-date heatmap rendered here by JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Live API Authentication Modal -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-sm shadow-md shrink-0">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white">Connect Live Shohoz API</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Unlock 100% real-time seat availability</p>
+          </div>
+        </div>
+        <button id="authModalCloseBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Current Status Card (When Disconnected) -->
+      <div id="modalAuthStatusCard" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-400" id="statusDot"></span>
+          <span class="font-semibold" id="statusDescription">Status: Not Connected</span>
+        </div>
+      </div>
+
+      <!-- Official Railway Passenger Profile Card (When Connected) -->
+      <div id="modalRailwayProfileCard" class="hidden p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 text-xs space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-emerald-200/60 dark:border-emerald-800/50">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Official Railway Profile</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-100 text-[10px] font-bold">
+            <i class="fa-solid fa-circle-check text-emerald-600 mr-0.5"></i> Verified Live Session
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block uppercase">Passenger Name</span>
+            <span id="railProfileName" class="font-black text-slate-900 dark:text-white block truncate">---</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block uppercase">Mobile Number</span>
+            <span id="railProfilePhone" class="font-bold text-slate-800 dark:text-slate-200 font-mono block truncate">---</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block uppercase">Email</span>
+            <span id="railProfileEmail" class="font-bold text-slate-800 dark:text-slate-200 block truncate">---</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block uppercase">NID Number</span>
+            <span id="railProfileNid" class="font-bold text-slate-800 dark:text-slate-200 font-mono block truncate">---</span>
+          </div>
+        </div>
+
+        <div class="pt-1.5 flex items-center justify-between border-t border-emerald-200/60 dark:border-emerald-800/50 text-[10px] text-slate-500 dark:text-slate-400">
+          <span id="railProfileExpires">Session valid</span>
+          <button type="button" id="disconnectTokenBtn" class="text-rose-500 hover:text-rose-600 font-bold cursor-pointer underline">
+            Disconnect Session
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Switcher (PC Console vs Manual Paste vs Mobile Login) -->
+      <div class="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl shrink-0" id="authTabsNav">
+        <button id="tabScriptBtn" type="button" class="py-2 px-1 text-center rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer transition flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-bolt text-[11px]"></i>
+          <span class="truncate">PC Console</span>
+        </button>
+        <button id="tabTokenBtn" type="button" class="py-2 px-1 text-center rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-paste text-[11px]"></i>
+          <span class="truncate">Manual Paste</span>
+        </button>
+        <button id="tabMobileBtn" type="button" class="py-2 px-1 text-center rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer transition flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-mobile-screen text-[11px]"></i>
+          <span class="truncate">Mobile Login</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: 1-Click Console Copy for PC (Recommended) -->
+      <div id="scriptCopyTab" class="space-y-3 text-xs">
+        <div class="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-[11px] text-emerald-900 dark:text-emerald-200 space-y-1.5">
+          <p class="font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            <span>Quick 3-step automatic copy on PC:</span>
+          </p>
+          <ol class="list-decimal pl-4 space-y-1 text-slate-600 dark:text-slate-300">
+            <li>Log into <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="text-emerald-600 underline font-bold">eticket.railway.gov.bd</a> in your browser.</li>
+            <li>Press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> &rarr; Click <strong>Console</strong> &rarr; Paste this 1-line script & press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono">Enter</kbd>:</li>
+          </ol>
+          <div class="relative mt-1">
+            <input type="text" readonly id="consoleSnippet" value="copy(JSON.stringify({token:localStorage.getItem('token')||sessionStorage.getItem('token')||(document.cookie.match(/(?:^|;\s*)token=([^;]+)/)||[,''])[1],'x-device-id':localStorage.getItem('x-device-id')||localStorage.getItem('device_id')||localStorage.getItem('deviceId')||crypto.randomUUID(),'x-device-key':localStorage.getItem('x-device-key')||localStorage.getItem('device_key')||localStorage.getItem('deviceKey')||'web'}))" 
+              class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
+            <button type="button" id="copySnippetBtn" class="absolute right-1 top-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold transition cursor-pointer">
+              Copy
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400">3. Paste into the box below and click Activate:</p>
+        </div>
+
+        <form id="scriptPasteForm" class="space-y-2">
+          <textarea id="scriptPasteInput" rows="2" placeholder='Paste here (e.g. {"token":"...","x-device-id":"...","x-device-key":"..."})' 
+            class="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-2 focus:ring-emerald-500 focus:outline-none" required></textarea>
+          <button type="submit" id="activateScriptBtn" 
+            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Activate 100% Live API</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Tab 2: Manual Paste Form with DevTools Instruction -->
+      <form id="pasteTokenForm" class="hidden space-y-3 text-xs">
+        
+        <!-- Step-by-Step Instruction Guide Box -->
+        <div class="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-[11px]">
+          <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info text-emerald-600"></i>
+            <span>How to copy Token & Device IDs from Browser DevTools:</span>
+          </div>
+
+          <div class="space-y-2 text-slate-600 dark:text-slate-300">
+            <div class="flex items-start space-x-1.5">
+              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <div>
+                Log into your account at <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="text-emerald-600 underline font-bold">eticket.railway.gov.bd</a>.
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-1.5">
+              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <div>
+                Press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> (or right-click &rarr; <strong>Inspect</strong>).
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-1.5">
+              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+              <div>
+                Go to <strong class="text-slate-800 dark:text-slate-200">Application</strong> (Chrome/Edge) or <strong class="text-slate-800 dark:text-slate-200">Storage</strong> (Firefox) &rarr; Click <strong>Local Storage</strong> &rarr; <code class="text-emerald-600 font-mono">https://eticket.railway.gov.bd</code>.
+                <div class="mt-1 pl-1 space-y-0.5 text-[10.5px]">
+                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">token</code> &rarr; Paste in <strong>token</strong> box below.</div>
+                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-id</code> (UUDID) &rarr; Paste in <strong>x-device-id</strong> box.</div>
+                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-key</code> (SSDK) &rarr; Paste in <strong>x-device-key</strong> box (default is <code class="font-mono">web</code>).</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-0.5">
+            token <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="tokenPasteInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required
+            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[10px] focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
+              x-device-id (UUDID)
+            </label>
+            <input type="text" id="deviceIdInput" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" 
+              class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[10px] focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
+              x-device-key (SSDK)
+            </label>
+            <input type="text" id="deviceKeyInput" placeholder="e.g. web" value="web" 
+              class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[10px] focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <button type="submit" id="saveTokenBtn" 
+          class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Save Credentials & Activate</span>
+        </button>
+      </form>
+
+      <!-- Tab 3: Mobile Login & Guide (For Android & iOS) -->
+      <div id="mobileLoginTab" class="hidden space-y-3 text-xs">
+        
+        <!-- Method 1: 1-Tap Mobile Bookmarklet -->
+        <div class="bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 space-y-2.5">
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <h4 class="font-extrabold text-emerald-950 dark:text-emerald-200 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-bookmark text-emerald-600"></i>
+              <span>Method 1: 1-Tap Mobile Bookmarklet (Recommended)</span>
+            </h4>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 font-bold">Chrome & Safari</span>
+          </div>
+
+          <p class="text-[11px] text-slate-600 dark:text-slate-300">
+            Mobile browsers don't have <kbd class="px-1 py-0.2 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd>. Use this 1-tap bookmark script:
+          </p>
+
+          <!-- Bookmarklet Code Box -->
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Mobile Bookmark Code (Copy this):</span>
+            <div class="relative">
+              <input type="text" readonly id="mobileBookmarkletSnippet" value="javascript:(function(){const d={token:localStorage.getItem('token')||sessionStorage.getItem('token'),'x-device-id':localStorage.getItem('x-device-id')||crypto.randomUUID(),'x-device-key':localStorage.getItem('x-device-key')||'web'};navigator.clipboard.writeText(JSON.stringify(d)).then(()=>alert('✅ Railway Token & Device IDs Copied! Paste into Dashboard.')).catch(()=>prompt('Copy this:',JSON.stringify(d)));})();" 
+                class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
+              <button type="button" id="copyMobileSnippetBtn" class="absolute right-1 top-1 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition cursor-pointer">
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Steps List -->
+          <ol class="list-decimal pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+            <li>Click <strong>Copy</strong> above to copy the mobile bookmark script.</li>
+            <li>Create a bookmark in your mobile browser named <strong>Rail Token</strong> and paste this script as its URL.</li>
+            <li>Open <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="text-emerald-600 underline font-bold">eticket.railway.gov.bd</a> and log in.</li>
+            <li>In the browser address bar, type <strong>Rail Token</strong> & tap the bookmark &rarr; tap OK on the confirmation popup.</li>
+            <li>Paste the copied text in the box below and tap <strong>Activate Live API</strong>.</li>
+          </ol>
+        </div>
+
+        <!-- Method 2: Connect on PC and auto-sync -->
+        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-[11px] space-y-1">
+          <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-arrows-rotate text-emerald-600"></i>
+            <span>Method 2: Auto-Sync via PC (Easiest)</span>
+          </div>
+          <p class="text-slate-500 dark:text-slate-400 text-[10.5px]">
+            If you already connected your Shohoz session on your PC / Laptop, simply sign into your dashboard account on your phone — your Live Railway session is already active!
+          </p>
+        </div>
+
+        <!-- Direct Activation Form in Mobile Tab -->
+        <form id="mobilePasteForm" class="space-y-2 pt-1">
+          <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs">
+            Paste Mobile Extracted Token / JSON:
+          </label>
+          <textarea id="mobilePasteInput" rows="2" placeholder='Paste here (e.g. {"token":"...","x-device-id":"...","x-device-key":"..."})' 
+            class="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-2 focus:ring-emerald-500 focus:outline-none" required></textarea>
+          <button type="submit" id="activateMobileBtn" 
+            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>Activate 100% Live API</span>
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Train Route & Schedule Modal (from eticket.railway.gov.bd/train-information) -->
+  <div id="routeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden modal-dialog-responsive">
+      
+      <!-- Modal Header -->
+      <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-sm shrink-0">
+            <i class="fa-solid fa-route"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2 flex-wrap">
+              <h3 id="routeModalTrainName" class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">Train Route & Stoppages</h3>
+              <span id="routeModalTrainModel" class="text-xs px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono font-bold">#702</span>
+            </div>
+            <p id="routeModalSubtitle" class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Bangladesh Railway Official Schedule</p>
+          </div>
+        </div>
+
+        <button id="routeModalCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-950/50 text-slate-400 dark:text-slate-300 flex items-center justify-center transition cursor-pointer shrink-0 ml-2">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Train Search / Quick Name & Code Lookup with Autocomplete Dropdown -->
+      <div class="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 relative shrink-0">
+        <div class="flex flex-col sm:flex-row items-center gap-2">
+          <div class="relative w-full">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="routeTrainSearchInput" autocomplete="off" placeholder="Search by Train Name (e.g. Suborno, Ekota) or Code (#702)..."
+              class="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+            <button type="button" id="clearRouteSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <button id="routeLookupSubmitBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition whitespace-nowrap flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-route"></i>
+            <span>View Route</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Train Search Suggestions Dropdown -->
+        <div id="routeSearchDropdown" class="hidden absolute left-5 right-5 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
+        </div>
+      </div>
+
+      <!-- Modal Body (Timeline & Running Days) -->
+      <div class="p-5 overflow-y-auto flex-1 space-y-4" id="routeModalBody">
+        
+        <!-- Summary Stats Ribbon -->
+        <div id="routeMetaRibbon" class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/50 text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="text-slate-400 font-medium">Total Duration:</span>
+            <span id="routeTotalDuration" class="font-extrabold text-slate-900 dark:text-white">04h 55m</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-slate-400 font-medium">Days:</span>
+            <div id="routeRunningDays" class="flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+
+        <!-- Intermediate Stoppage & Duration Calculator -->
+        <div class="bg-emerald-50/60 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-calculator text-emerald-600 dark:text-emerald-400"></i>
+              <span>Intermediate Stop & Duration Calculator</span>
+            </span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400">Select any 2 stations</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-0.5">From Station (Boarding)</label>
+              <select id="routeCalcFromSelect" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-0.5">To Station (Destination)</label>
+              <select id="routeCalcToSelect" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+              </select>
+            </div>
+          </div>
+
+          <!-- Calculated Intermediate Result Ribbon -->
+          <div id="routeCalcResultRibbon" class="hidden p-2 rounded-lg bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-slate-400">Travel Time:</span>
+              <span id="routeCalcDuration" class="font-extrabold text-emerald-600 dark:text-emerald-400">--</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-slate-400">Intermediate Stops:</span>
+              <span id="routeCalcStopsCount" class="font-bold text-slate-800 dark:text-slate-200">--</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-slate-400">Total Halt Time:</span>
+              <span id="routeCalcHaltTime" class="font-bold text-amber-600 dark:text-amber-400">--</span>
+            </div>
+          </div>
+
+          <!-- Launch All-Station Blank Seat Matrix from Route Explorer -->
+          <div class="pt-1">
+            <button id="routeModalLaunchMatrixBtn" type="button" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-table-cells text-xs"></i>
+              <span>View Single-Day All-Station Blank Seat Matrix for this Train</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Vertical Route Timeline Container -->
+        <div id="routeTimelineContainer" class="space-y-0 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-emerald-500/30">
+          <!-- Rendered by JS -->
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Single-Day All-Station Blank Seat Matrix Modal -->
+  <div id="stationMatrixModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+      
+      <!-- Header -->
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+            <i class="fa-solid fa-table-cells"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2 flex-wrap">
+              <h3 id="stationMatrixTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Train Stoppages Matrix</h3>
+              <span id="stationMatrixTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
+            </div>
+            <p id="stationMatrixSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Single-Day Station-to-Station Blank Seat Availability & Fare Matrix
+            </p>
+          </div>
+        </div>
+        <button id="stationMatrixCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Controls Strip with Station Dropdowns -->
+      <div class="p-3.5 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+        
+        <!-- Dropdowns & Query Controls Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+          
+          <!-- Boarding Station (From) Dropdown -->
+          <div class="sm:col-span-4 relative">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+              <span class="flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>From (Boarding):</span>
+              </span>
+              <span id="matrixFromCountBadge" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold">1 selected</span>
+            </label>
+            <button id="matrixFromDropdownBtn" type="button" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white flex items-center justify-between shadow-2xs hover:border-emerald-500 focus:outline-none transition cursor-pointer">
+              <span id="matrixFromDropdownLabel" class="truncate font-medium">Select Boarding Station...</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 shrink-0 transition-transform duration-200" id="matrixFromDropdownArrow"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="matrixFromDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
+              <div class="p-1.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <button id="matrixFromSelectAllBtn" type="button" class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Select All</button>
+                <button id="matrixFromClearBtn" type="button" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
+              </div>
+              <div id="matrixFromOptionsContainer" class="p-1.5 overflow-y-auto space-y-1 flex-1">
+                <!-- Dropdown items rendered by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Destination Station (To) Dropdown -->
+          <div class="sm:col-span-4 relative">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+              <span class="flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                <span>To (Destination):</span>
+              </span>
+              <span id="matrixToCountBadge" class="text-[10px] text-teal-600 dark:text-teal-400 font-extrabold">1 selected</span>
+            </label>
+            <button id="matrixToDropdownBtn" type="button" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white flex items-center justify-between shadow-2xs hover:border-teal-500 focus:outline-none transition cursor-pointer">
+              <span id="matrixToDropdownLabel" class="truncate font-medium">Select Destination...</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 shrink-0 transition-transform duration-200" id="matrixToDropdownArrow"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="matrixToDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
+              <div class="p-1.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <button id="matrixToSelectAllBtn" type="button" class="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline">Select All Downstream</button>
+                <button id="matrixToClearBtn" type="button" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
+              </div>
+              <div id="matrixToOptionsContainer" class="p-1.5 overflow-y-auto space-y-1 flex-1">
+                <!-- Dropdown items rendered by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Journey Date -->
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <i class="fa-solid fa-calendar-day text-emerald-500 mr-1 text-[10px]"></i>Date:
+            </label>
+            <input type="date" id="matrixJourneyDateInput" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+          </div>
+
+          <!-- Search Button -->
+          <div class="sm:col-span-2">
+            <button id="matrixExecuteQueryBtn" type="button" class="w-full px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              <span id="matrixExecuteQueryBtnText">Search</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Summary & Quick Action Strip -->
+        <div class="flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-1">
+          <div class="flex items-center space-x-1.5 truncate">
+            <i class="fa-solid fa-route text-emerald-500 text-xs"></i>
+            <span id="matrixPairsSummaryText" class="font-medium truncate">1 Boarding × 1 Destination (1 pair to search)</span>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button id="matrixSelectAllPairsBtn" type="button" class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+              All Stoppage Pairs
+            </button>
+            <span class="text-slate-300 dark:text-slate-700">•</span>
+            <button id="matrixResetPairsBtn" type="button" class="text-[11px] font-bold text-slate-500 hover:underline">
+              Reset
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Matrix Content Body -->
+      <div id="stationMatrixContent" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Footer Info -->
+      <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+        <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Live data direct from Bangladesh Railway Shohoz API</span>
+        <span class="font-medium">Click "Book" to purchase on eticket portal</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Targeted Seat & Train Watchlist Manager Modal -->
+  <div id="watchlistModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+            <i class="fa-solid fa-crosshairs"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white truncate">Active Seat Watchlist Radar</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Targeted alerts for specific trains & classes</p>
+          </div>
+        </div>
+        <button id="watchlistCloseBtn" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0 ml-2">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800" id="watchlistItemsContainer">
+        <!-- Watchlist items rendered by JS -->
+      </div>
+
+      <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
+        <span><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Auto-checks during monitoring</span>
+        <button id="clearWatchlistBtn" class="text-rose-500 hover:text-rose-700 font-bold cursor-pointer">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set Watch Target Modal -->
+  <div id="setWatchTargetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+          <i class="fa-solid fa-bell text-emerald-600"></i>
+          <span>Watch Train Target</span>
+        </h4>
+        <button id="setWatchCloseBtn" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs flex-1">
+        <div>
+          <span class="block text-[10px] text-slate-400 font-semibold uppercase">Train</span>
+          <p id="watchTargetTrainName" class="font-bold text-slate-900 dark:text-white text-sm">Suborno Express (#702)</p>
+          <p id="watchTargetRouteDate" class="text-[11px] text-slate-500">Dhaka ➔ Chattogram &bull; 28-Aug-2026</p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Seat Class</label>
+          <select id="watchTargetClassSelect" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold focus:ring-1 focus:ring-emerald-500">
+            <option value="ANY">Any Seat Class</option>
+            <option value="SNIGDHA">SNIGDHA (AC Chair)</option>
+            <option value="S_CHAIR">S_CHAIR (Non-AC)</option>
+            <option value="AC_S">AC_S (AC Seat)</option>
+            <option value="AC_B">AC_B (AC Berth)</option>
+            <option value="F_SEAT">F_SEAT (First Class)</option>
+            <option value="SHOVAN">SHOVAN</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Minimum Seats to Alert</label>
+          <div class="grid grid-cols-4 gap-1.5" id="watchMinSeatsButtonGroup">
+            <button type="button" data-seats="1" class="watch-min-seat-btn py-1 rounded-lg border border-emerald-500 bg-emerald-600 text-white font-bold text-xs cursor-pointer">≥ 1</button>
+            <button type="button" data-seats="2" class="watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer">≥ 2</button>
+            <button type="button" data-seats="4" class="watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer">≥ 4</button>
+            <button type="button" data-seats="10" class="watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer">≥ 10</button>
+          </div>
+        </div>
+
+        <button id="saveWatchTargetBtn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center space-x-1.5 cursor-pointer">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add to Active Watchlist</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1-Click Seat Availability Share Modal -->
+  <div id="shareModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full max-h-[92vh] flex flex-col p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-arrow-up-from-bracket text-emerald-600"></i>
+          <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">Share Live Availability</h4>
+        </div>
+        <button id="shareCloseBtn" class="text-slate-400 hover:text-slate-600 text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-slate-500 dark:text-slate-400">Share real-time train seats with family & friends:</p>
+        
+        <textarea id="sharePreviewTextarea" readonly rows="7" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[11px] leading-relaxed resize-none focus:outline-none"></textarea>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button id="copyShareSummaryBtn" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy Text</span>
+          </button>
+          <a id="whatsappShareBtn" href="#" target="_blank" rel="noopener" class="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5">
+            <i class="fa-brands fa-whatsapp text-sm"></i>
+            <span>WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- User Management Modal (Admin Control) -->
+  <!-- ============================================== -->
+  <div id="userManagementModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+            <i class="fa-solid fa-users-gear"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white truncate">User Management & Access Control</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Add, remove, and manage authorized dashboard users</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0 ml-2">
+          <button id="modalLogoutBtn" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition border border-rose-200 dark:border-rose-800/80 cursor-pointer" title="Sign Out">
+            <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
+            <span>Logout</span>
+          </button>
+          <button id="userManagementCloseBtn" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Summary Stat Bar -->
+      <div class="grid grid-cols-3 gap-2 p-3 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800 shrink-0 text-xs">
+        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block">Total Users</span>
+            <span id="statTotalUsers" class="font-black text-sm text-slate-900 dark:text-white">1</span>
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block">Active Accounts</span>
+            <span id="statActiveUsers" class="font-black text-sm text-emerald-600 dark:text-emerald-400">1</span>
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold block">Dashboard Gate</span>
+            <span id="statAccessMode" class="font-black text-xs text-slate-700 dark:text-slate-200">Public</span>
+          </div>
+          <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs inside User Modal -->
+      <div class="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+        <div class="flex space-x-1 text-xs">
+          <button id="userTabListBtn" type="button" class="px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer">
+            <i class="fa-solid fa-list mr-1"></i> Authorized Users (<span id="userListTabCount">1</span>)
+          </button>
+          <button id="userTabAddBtn" type="button" class="px-3 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+            <i class="fa-solid fa-user-plus mr-1"></i> Add New User
+          </button>
+        </div>
+
+        <!-- Dashboard Gatekeeping Switch -->
+        <label class="flex items-center space-x-2 text-xs font-semibold cursor-pointer select-none">
+          <span class="text-[11px] text-slate-500 dark:text-slate-400">Require Login:</span>
+          <div class="relative inline-flex items-center">
+            <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
+            <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Tab 1: User List Section -->
+      <div id="userSectionList" class="p-4 overflow-y-auto flex-1 space-y-3">
+        <!-- Search bar -->
+        <div class="relative">
+          <input type="text" id="userSearchInput" placeholder="Search users by name or username..." 
+            class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none">
+          <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+        </div>
+
+        <!-- Users Container -->
+        <div id="usersCardsContainer" class="space-y-2 divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Tab 2: Add New User Form Section -->
+      <div id="userSectionAdd" class="hidden p-4 overflow-y-auto flex-1 space-y-4">
+        <form id="addUserForm" class="space-y-3 text-xs max-w-lg mx-auto">
+          <div class="p-3 bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 rounded-xl space-y-1">
+            <h4 class="font-extrabold text-purple-900 dark:text-purple-200 text-xs">➕ Add New Authorized User</h4>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400">Create an account to allow a user to view and monitor the live seat dashboard.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Username *</label>
+              <input type="text" id="addUserUsername" placeholder="e.g. jdoe" required
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-1 focus:ring-purple-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password *</label>
+              <input type="password" id="addUserPassword" placeholder="Minimum 4 characters" required minlength="4"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-1 focus:ring-purple-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+            <input type="text" id="addUserName" placeholder="e.g. John Doe"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Role / Permissions</label>
+            <select id="addUserRole" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+              <option value="viewer">Viewer (Can View Dashboard & Live Seat Availability)</option>
+              <option value="admin">Administrator (Full Access & User Management)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Initial Status</label>
+            <select id="addUserStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+              <option value="active">Active (Allowed to access)</option>
+              <option value="disabled">Disabled (Access blocked)</option>
+            </select>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" id="submitAddUserBtn" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Create User Account</span>
+            </button>
+          </div>
+          <p id="addUserFormStatus" class="text-xs font-semibold text-center min-h-[1rem]"></p>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
+        <span><i class="fa-solid fa-shield-halved text-purple-500 mr-1"></i> Changes are saved automatically</span>
+        <button id="userManagementDoneBtn" type="button" class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold text-xs transition cursor-pointer">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- User Login / Sign In Modal -->
+  <!-- ============================================== -->
+  <div id="userLoginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+      
+      <!-- Login Header -->
+      <div class="text-center space-y-1.5 pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Sign In to RailSeat BD</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Enter your authorized account credentials to view the dashboard</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="userLoginForm" class="space-y-3 text-xs flex-1">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Username</label>
+          <div class="relative">
+            <input type="text" id="loginUsername" placeholder="Enter your username" required
+              class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            <i class="fa-solid fa-user text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="loginPassword" placeholder="••••••••" required
+              class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            <i class="fa-solid fa-key text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-0.5">
+          <label class="inline-flex items-center space-x-2 cursor-pointer select-none">
+            <input type="checkbox" id="loginRememberMe" checked
+              class="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600">
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Remember me</span>
+          </label>
+        </div>
+
+        <button type="submit" id="submitLoginBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Sign In to Dashboard</span>
+        </button>
+
+        <p id="loginErrorMsg" class="text-xs text-rose-500 font-semibold text-center min-h-[1rem]"></p>
+      </form>
+
+      <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+        <span><i class="fa-solid fa-shield-halved text-purple-500 mr-1"></i> Authorized access only</span>
+        <button id="closeLoginModalBtn" type="button" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 font-semibold cursor-pointer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Reset Password Modal -->
+  <!-- ============================================== -->
+  <div id="resetPasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-3 text-xs overflow-y-auto modal-dialog-responsive">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+          <i class="fa-solid fa-key text-purple-600"></i>
+          <span>Reset Password for <span id="resetPasswordTargetUsername" class="font-mono text-purple-600">user</span></span>
+        </h4>
+        <button id="resetPasswordCloseBtn" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer ml-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="resetPasswordForm" class="space-y-3 flex-1">
+        <input type="hidden" id="resetPasswordTargetId">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+          <input type="password" id="resetPasswordNewInput" placeholder="Minimum 4 characters" required minlength="4"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs focus:ring-1 focus:ring-purple-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+          Update Password
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-5 text-center text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>Bangladesh Railway Seat Matrix &bull; Real-time Shohoz API Gateway</p>
+      <p class="flex items-center space-x-1">
+        <span>Protected with In-Memory Cache & Anti-Bot Proxy</span>
+        <i class="fa-solid fa-shield-halved text-emerald-500 ml-1"></i>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Notification Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+</body>
+</html>

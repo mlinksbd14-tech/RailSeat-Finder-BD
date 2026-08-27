@@ -1,0 +1,30 @@
+{
+  "name": "railseat-finder-bd",
+  "version": "1.0.0",
+  "description": "RailSeat Finder BD - Bangladesh Railway (Shohoz) Real-Time Seat Availability Tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "bangladesh-railway",
+    "shohoz",
+    "train-seat-availability",
+    "dashboard",
+    "eticket"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlinksbd14-tech/RailSeat-Finder-BD.git"
+  },
+  "author": "mlinksbd14-tech",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "firebase": "^12.18.0"
+  }
+}

@@ -1,8 +1,159 @@
 {
   "settings": {
-    "requireLogin": true
+    "firebaseWebConfig": {
+      "projectId": "railseat-finder-bd",
+      "authDomain": "railseat-finder-bd.firebaseapp.com",
+      "apiKey": "AIzaSyD67AVgu4gq5Ya4txcKJee7XL61na7nd6E",
+      "appId": "1:266186751082:web:ee5f2695ac16bda97e9e13",
+      "updatedAt": "2026-08-27T06:04:39.285Z"
+    },
+    "requireLogin": true,
+    "authNotice": "Welcome to RailSeat Finder BD!",
+    "authNoticeEnabled": true,
+    "requireAdminApproval": false,
+    "requireEmailVerification": false,
+    "allowRegistration": true
   },
   "users": [
+    {
+      "createdAt": "2026-08-27T06:35:28.688Z",
+      "firebaseUid": "5gofRzFUYJWhAywCBjJCuJorsHH2",
+      "password": "scrypt$16384$8$1$1e1b75bb14d23ebf4f691768ebc00f82$cda937e265e40d55ded111976c50e5fac27b25fbf3072917fcb9d92524455c40305316c2f598625da1bdd0a7ca3bc038b1681fcbb2af3f75797be5c2aeab0b06",
+      "role": "viewer",
+      "name": "Saydur Rahaman Shawon",
+      "id": "usr_1787812528386_taky",
+      "email": "srshawon421@gmail.com",
+      "username": "shawon421",
+      "emailVerified": true,
+      "canViewDashboard": true,
+      "status": "active",
+      "shohozSession": {
+        "lastUpdated": "2026-08-27T06:42:34.021Z",
+        "cookie": null,
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662e08c506b800c075902adc4bdbcc6ce6155c402e8e91fd35da7dc177e002c7f790bc6644015064631d05b98eb9bee038",
+        "deviceId": "274f841e5d430002460554d06be06d83",
+        "user": {
+          "nidType": "NID",
+          "phone": "01679145257",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "name": "MD SAIDUR RAHAMAN",
+          "nid": "5557116489",
+          "issuedAt": "2026-08-27T06:41:43.000Z",
+          "isExpired": false,
+          "locale": "bn-BD",
+          "email": "srshawon421@gmail.com",
+          "expiresAt": "2026-08-27T18:41:43.000Z"
+        },
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc4MTI5MDMsImV4cCI6MTc4Nzg1NjEwMywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImNkY2UyNjFlLWRiZjctNDVlZC1iZDk0LTFiMmJlOGViZjUyNCIsImF1dGhfdGltZSI6MTc4NzgxMjkwMywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTY3OTE0NTI1NyIsImVtYWlsIjoic3JzaGF3b240MjFAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTY3OTE0NTI1NyIsImRpc3BsYXlfbmFtZSI6Ik1EIFNBSURVUiBSQUhBTUFOIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiNTU1NzExNjQ4OSIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.OixVCNfXcQ7dhQZ1bjS2As6sgYLQx96SHSLReS24ynOIwaVF4abDsGyBYlCfVv37FxVpAhVtwK8XhQYWn-M0y9nfCUS1txqXGMITBD1jUCeFmmce9g4f2QrOD2CL-XzpJU36d4QbGzy9zbK3sIrBQnch56gGMWs-k1NHTmmNQD_OoCEKctVGrMn5b_vL2vZFXzlJpjfWYGIDYAl9B5QT6KTyRiDQbrlb6mAMs1grY6IMNhPrlXdvwFSFzjJ9ejrX732P8x_XxjoNlhPjfWRSLON8wRsn4NHQG75EadS9idVrw6NTPOqrIOuk_LV2Tas5Vo3hTBXhMIvrkPMET353oA"
+      },
+      "lastLogin": "2026-08-27T11:32:20.782Z",
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:32:20.782Z",
+          "ip": "103.177.220.164",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151"
+        }
+      ],
+      "lastIp": "103.177.220.164",
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+      "ips": [
+        "103.177.220.164"
+      ],
+      "loginCount": 1,
+      "lastDevice": {
+        "os": "Windows 10/11",
+        "browser": "Edge 151",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+        "device": "Desktop"
+      }
+    },
+    {
+      "createdAt": "2026-08-27T09:53:19.298Z",
+      "firebaseUid": "6KOqCrkAEzZ0eqolmOvPze94L3n2",
+      "password": "scrypt$16384$8$1$554b94f6ff7617f736d6dad6ab3d6b38$e39fa9ea68f98e7d68fbba79e690393c12234ec9e7c42ca1e02bbb3aa84553b95452ca6fe7953ac478f44c0520135802c7c3993f6ea8b9e122c5af3d3edcf6ed",
+      "role": "viewer",
+      "name": "Al-Amin",
+      "id": "usr_1787824399185_mn09",
+      "email": "alaminislam.kg@gmail.com",
+      "username": "al-amin",
+      "emailVerified": true,
+      "canViewDashboard": true,
+      "status": "active",
+      "lastLogin": "2026-08-27T10:04:30.926Z",
+      "shohozSession": {
+        "lastUpdated": "2026-08-27T10:06:22.990Z",
+        "cookie": null,
+        "deviceKey": "3cf6647fa5c6d4f7765958b286bd79b51571dcaae304a9ebbc2003928e6270f3594b7601870f0b0f084a6e54ecb86592d508c705cbed939b439b0221cc9a1a055dd6eef8e0f947b7276ce66617ea80a7",
+        "deviceId": "2158cf47241f520ae1ddee28d4d4d6b1",
+        "user": {
+          "nidType": "NID",
+          "phone": "01743583399",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "name": "MD. AL- AMIN ISLAM",
+          "nid": "5104409262",
+          "issuedAt": "2026-08-27T10:05:21.000Z",
+          "isExpired": false,
+          "locale": "bn-BD",
+          "email": "alaminislam.ai7@gmail.com",
+          "expiresAt": "2026-08-27T22:05:21.000Z"
+        },
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc4MjUxMjEsImV4cCI6MTc4Nzg2ODMyMSwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImJlMTZjNWU4LWYzYWQtNGRjOC1hMjFmLTE3ZDYyMDgwZmYyNSIsImF1dGhfdGltZSI6MTc4NzgyNTEyMSwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTc0MzU4MzM5OSIsImVtYWlsIjoiYWxhbWluaXNsYW0uYWk3QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoiMDE3NDM1ODMzOTkiLCJkaXNwbGF5X25hbWUiOiJNRC4gQUwtIEFNSU4gSVNMQU0iLCJsb2NhbGUiOiJibi1CRCIsIm5pZG4iOiI1MTA0NDA5MjYyIiwibmlkbnQiOiJOSUQiLCJyb2xlIjpbInVzZXIiLCJhbm9ueW1vdXMiXSwic2NvcGUiOlsic2hvaG96LmlhbS50cmFpbiIsIm9mZmxpbmVfYWNjZXNzIl0sImFtciI6WyJwd2QiXX0.AN9zHQuNQT41wKsJBPY9IX9u9jtMDGxInFSb91bZhj9eAKfOd6u-5VeIWI1w70eUQQ0H3553zTngcFmBQNwbBCA7Q5MvUQnwJVIQUyfjBYMWzijFx263ya2wUrLksyaAK0uI_ZvaiRNRMwnC6ZZLd8DckYDy5FS7uTSeJngMvXYqYfOwigEEX-nEnZn1CrPxZTC3HoACkw0EhYulV6ZADycQ5er_Q9Dmeihb_3pjQioLVG-AnqehLiExoIMmEMcwmD-a7nOq-uE84viWmlyBWDIxt_nRPwZPx1Adz7nwtFbr5c1aobcv_vx0FaN1b7RJu5BKU8GzA5906X4Ybf-slw"
+      }
+    },
+    {
+      "role": "viewer",
+      "lastIp": "::1",
+      "canViewDashboard": true,
+      "ips": [
+        "::1"
+      ],
+      "authProvider": "password",
+      "createdAt": "2026-08-27T11:29:45.316Z",
+      "emailVerified": true,
+      "firebaseUid": null,
+      "password": "scrypt$16384$8$1$17c45e8846aa6e6e2d2051022d96bc82$cee1baadc8e365054ce0e7adf5d46f634f6f9a5ccd14c5d8d766343128c427ca5cca59bc3261bdd6cfefff047bc973bc2aba29fbddbc5516416a1e8ef18839bd",
+      "lastUserAgent": "",
+      "name": "Instant User",
+      "id": "usr_1787830185279_pb4j",
+      "email": "auto_user_mtbfxjqz@example.com",
+      "status": "active",
+      "username": "auto_user_mtbfxjqz",
+      "lastDevice": {
+        "os": "Unknown OS",
+        "browser": "Unknown Browser",
+        "raw": "",
+        "device": "Desktop"
+      },
+      "lastLogin": "2026-08-27T11:29:48.008Z",
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:29:48.008Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser"
+        },
+        {
+          "action": "register",
+          "timestamp": "2026-08-27T11:29:45.317Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser"
+        }
+      ],
+      "loginCount": 1
+    },
     {
       "id": "usr_admin_001",
       "username": "admin",
@@ -12,12 +163,11 @@
       "status": "active",
       "canViewDashboard": true,
       "createdAt": "2026-08-26T08:57:48.900Z",
-      "lastLogin": "2026-08-27T04:18:28.018Z",
       "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc3OTkzMDYsImV4cCI6MTc4Nzg0MjUwNiwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4Nzc5OTMwNiwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.hmaP9Q_sOEf0KDmad0j_Sp5RFL1W4AX08TZBmO8MK4TnSslVJZh8f7JJAc25SSvkfqtHp7y98Phz3cKo4OJ64jB6V15wAxj2CP-ktSreP-KIJXq71qF1zD6M9x4kJwrcAEpiWTcD2Ftk9Zs9XWnslhysvpRf0kbKQJw4JQrdYB6TpV83E0z93MatKLUxz9hg4VZTdCfN_iLxvuEanJf78WXjXAh5MC-OlOiNxETt6yy9ErYBLF3IzsSzx0f4pgsQINn6Xs7OLGTNQIchF6pX9KIaMmiBEjp_E_je9QTB-G5fn9xjljpa6lXB_7l6Sq8eqEdAcYXNsTQiO5a0l06EsA",
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
+        "lastUpdated": "2026-08-27T09:33:16.683Z",
         "user": {
           "name": "Md. Habibullah",
           "phone": "01871860487",
@@ -29,23 +179,60 @@
             "user",
             "anonymous"
           ],
-          "expiresAt": "2026-08-27T14:55:06.000Z",
-          "issuedAt": "2026-08-27T02:55:06.000Z",
-          "isExpired": false
+          "isExpired": false,
+          "issuedAt": "2026-08-27T09:32:31.000Z",
+          "expiresAt": "2026-08-27T21:32:31.000Z"
         },
-        "lastUpdated": "2026-08-27T04:10:01.953Z"
-      }
-    },
-    {
-      "id": "usr_1787738027302_ku3o",
-      "username": "test",
-      "password": "scrypt$16384$8$1$6e394ef859e9809663372cdc572ffd28$ff76d934f0f70d3fc0fbb085a4c6575538bca927c1ec4d5d90645eb5e4ac3c48f93d3403a063ff126007529f3e4836ea1eabf0718a796db935180685354b3bc4",
-      "name": "test",
-      "role": "viewer",
-      "status": "active",
-      "canViewDashboard": true,
-      "createdAt": "2026-08-26T09:53:47.334Z",
-      "lastLogin": "2026-08-26T12:01:11.075Z"
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc4MjMxNTEsImV4cCI6MTc4Nzg2NjM1MSwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4NzgyMzE1MSwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.aAEyyyQQzrNruwLW_YCrjvQKoCFusZaj_cODG1ZHeSewZtemjAI1npzYF3SuRvrH9a06zJuHnDIJDfcAIAJqgiT0OfVXsbOHItYs0KomoOKcD6rLXpsg3duyWez9uk48k6VMu0men5_JpZDMT7nXlAOCYgKSc0ytFO7WWxrIwKl-HbT0ImCkHRtRc7QTKpFFK5UBi_aDPrFuhQTvS8d--QGiusfVhzvY6I70uEs4dpzSobR3sUthqs0AsiVzgq66r5TyiTL8LGMCwTUf8LJnMce891yMmDuOGloX4w_4GZcKoLbzthoVI2_DtOfAW6FJvDF8TyUjKcT-FxiyAdFMBQ"
+      },
+      "lastUserAgent": "",
+      "lastDevice": {
+        "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
+        "raw": ""
+      },
+      "ips": [
+        "::1",
+        "27.147.149.234"
+      ],
+      "lastLogin": "2026-08-27T11:38:09.407Z",
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:38:09.407Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser"
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:32:57.090Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151"
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:09:07.263Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151"
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T10:58:51.379Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151"
+        }
+      ],
+      "lastIp": "::1",
+      "loginCount": 4
     }
   ]
 }

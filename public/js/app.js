@@ -254,6 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const userListTabCount = document.getElementById('userListTabCount');
   const modalRequireLoginToggle = document.getElementById('modalRequireLoginToggle');
   const modalRequireApprovalToggle = document.getElementById('modalRequireApprovalToggle');
+  const badgeRequireLoginStatus = document.getElementById('badgeRequireLoginStatus');
+  const badgeRequireApprovalStatus = document.getElementById('badgeRequireApprovalStatus');
+  const settingRequireApprovalToggle = document.getElementById('settingRequireApprovalToggle');
   const userSectionList = document.getElementById('userSectionList');
   const userSectionAdd = document.getElementById('userSectionAdd');
   const userSearchInput = document.getElementById('userSearchInput');
@@ -4532,9 +4535,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       state.requireLogin = !!data.require_login;
       state.requireAdminApproval = (data.require_admin_approval !== false);
-      if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
-      if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
-      if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+      if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
       if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
 
       const pendingCount = data.pending_count || 0;
@@ -4635,8 +4636,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
         if (data.require_admin_approval !== undefined) {
           state.requireAdminApproval = (data.require_admin_approval !== false);
-          if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
         }
+        if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
         if (userListTabCount) userListTabCount.textContent = data.users.length;
         if (userPendingTabCount) userPendingTabCount.textContent = pendingCount;
         if (settingUserCountBadge) settingUserCountBadge.textContent = `${data.users.length} User${data.users.length > 1 ? 's' : ''}`;
@@ -4954,11 +4955,39 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify({ requireLogin: isChecked })
         });
+    // Helper to update visual badges for access control
+    function updateAccessControlBadges() {
+      if (badgeRequireLoginStatus) {
+        badgeRequireLoginStatus.textContent = state.requireLogin ? 'Protected' : 'Public';
+        badgeRequireLoginStatus.className = state.requireLogin
+          ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300'
+          : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      }
+      if (badgeRequireApprovalStatus) {
+        badgeRequireApprovalStatus.textContent = state.requireAdminApproval ? 'Required' : 'Instant (Auto)';
+        badgeRequireApprovalStatus.className = state.requireAdminApproval
+          ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+          : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300';
+      }
+      if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
+      if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+      if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
+      if (settingRequireApprovalToggle) settingRequireApprovalToggle.checked = state.requireAdminApproval;
+    }
+
+    // 10. Require Login Toggle Handler
+    async function handleRequireLoginChange(isChecked) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ requireLogin: isChecked })
+        });
         const data = await res.json();
         if (data.success) {
           state.requireLogin = !!data.require_login;
-          if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
-          if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+          updateAccessControlBadges();
           if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
           showToast(data.message, 'success');
         }
@@ -4990,7 +5019,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (data.success) {
           state.requireAdminApproval = (data.require_admin_approval !== false);
-          if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
+          updateAccessControlBadges();
           showToast(
             state.requireAdminApproval
               ? '🔒 Admin Approval is ON: New signups require admin approval.'
@@ -5006,6 +5035,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalRequireApprovalToggle) {
       modalRequireApprovalToggle.addEventListener('change', () => {
         handleRequireAdminApprovalChange(modalRequireApprovalToggle.checked);
+      });
+    }
+    if (settingRequireApprovalToggle) {
+      settingRequireApprovalToggle.addEventListener('change', () => {
+        handleRequireAdminApprovalChange(settingRequireApprovalToggle.checked);
       });
     }
 

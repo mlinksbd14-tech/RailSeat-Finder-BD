@@ -489,14 +489,27 @@
                     </div>
                   </div>
 
-                  <div class="flex items-center justify-between p-2 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-100 dark:border-purple-900/50">
+                  <!-- Require Login Switch in Settings -->
+                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-900/60 shadow-xs">
                     <div>
-                      <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
-                      <span class="text-[10px] text-slate-400">Only authorized users can view dashboard</span>
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
+                      <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer shrink-0">
                       <input type="checkbox" id="settingRequireLoginToggle" class="sr-only peer">
-                      <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                  </div>
+
+                  <!-- Admin Approval Switch in Settings -->
+                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-900/60 shadow-xs">
+                    <div>
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
+                      <span class="text-[10px] text-slate-400">Require admin approval for new users</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only peer" checked>
+                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600"></div>
                     </label>
                   </div>
 
@@ -1610,42 +1623,56 @@
         </div>
       </div>
 
-      <!-- Top Summary Stat Bar -->
-      <div class="grid grid-cols-3 gap-2 p-3 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800 shrink-0 text-xs">
-        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
-          <div>
-            <span class="text-[10px] text-slate-400 font-bold block">Total Users</span>
-            <span id="statTotalUsers" class="font-black text-sm text-slate-900 dark:text-white">1</span>
+      <!-- Top Policy Control Cards: Require Login & Admin Approval -->
+      <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          
+          <!-- Control 1: Require Login (Dashboard Access Gate) -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-3 hover:border-purple-300 dark:hover:border-purple-700 transition">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 flex items-center justify-center text-sm shrink-0 font-bold">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Require Login</span>
+                  <span id="badgeRequireLoginStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Public</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Restrict dashboard to logged-in users</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
+            </label>
           </div>
-          <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-users"></i>
-          </div>
-        </div>
 
-        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
-          <div>
-            <span class="text-[10px] text-slate-400 font-bold block">Active Accounts</span>
-            <span id="statActiveUsers" class="font-black text-sm text-emerald-600 dark:text-emerald-400">1</span>
+          <!-- Control 2: Admin Approval for Signups -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0 font-bold">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Admin Approval</span>
+                  <span id="badgeRequireApprovalStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Required</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">New signups require manual review</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
+            </label>
           </div>
-          <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-user-check"></i>
-          </div>
-        </div>
 
-        <div class="p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
-          <div>
-            <span class="text-[10px] text-slate-400 font-bold block">Dashboard Gate</span>
-            <span id="statAccessMode" class="font-black text-xs text-slate-700 dark:text-slate-200">Public</span>
-          </div>
-          <div class="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
         </div>
       </div>
 
-      <!-- Navigation Tabs inside User Modal -->
-      <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-        <div class="flex flex-wrap items-center gap-1 text-xs">
+      <!-- Navigation Tabs & Stats Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+        <div class="flex flex-wrap items-center gap-1.5 text-xs">
           <button id="userTabListBtn" type="button" class="px-3 py-1.5 rounded-xl font-bold bg-purple-600 text-white shadow-2xs transition cursor-pointer">
             <i class="fa-solid fa-list mr-1"></i> All Users (<span id="userListTabCount">1</span>)
           </button>
@@ -1657,25 +1684,10 @@
           </button>
         </div>
 
-        <!-- Dashboard Gatekeeping & Approval Switches -->
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Require Login Switch -->
-          <label class="flex items-center space-x-1.5 text-xs font-semibold cursor-pointer select-none" title="Toggle public access vs required user authentication">
-            <span class="text-[11px] text-slate-500 dark:text-slate-400">Require Login:</span>
-            <div class="relative inline-flex items-center">
-              <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
-              <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
-            </div>
-          </label>
-
-          <!-- Admin Approval Switch -->
-          <label class="flex items-center space-x-1.5 text-xs font-semibold cursor-pointer select-none" title="When OFF, new users are instantly approved without manual review">
-            <span class="text-[11px] text-slate-500 dark:text-slate-400">Admin Approval:</span>
-            <div class="relative inline-flex items-center">
-              <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only peer" checked>
-              <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </div>
-          </label>
+        <div class="flex items-center space-x-2 text-[11px] font-bold text-slate-400">
+          <span>Active: <strong id="statActiveUsers" class="text-emerald-600 dark:text-emerald-400">1</strong></span>
+          <span>&bull;</span>
+          <span>Total: <strong id="statTotalUsers" class="text-slate-700 dark:text-slate-200">1</strong></span>
         </div>
       </div>
 

@@ -189,8 +189,24 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastLogin": "2026-08-27T11:39:15.299Z",
+      "lastIp": "::1",
+      "lastUserAgent": "",
+      "lastDevice": {
+        "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
+        "raw": ""
+      },
+      "lastLogin": "2026-08-27T11:41:19.941Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:41:19.941Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser"
+        },
         {
           "action": "login",
           "timestamp": "2026-08-27T11:39:15.299Z",
@@ -232,15 +248,7 @@
           "browser": "Edge 151"
         }
       ],
-      "lastIp": "::1",
-      "lastUserAgent": "",
-      "loginCount": 5,
-      "lastDevice": {
-        "browser": "Unknown Browser",
-        "os": "Unknown OS",
-        "device": "Desktop",
-        "raw": ""
-      }
+      "loginCount": 6
     }
   ]
 }

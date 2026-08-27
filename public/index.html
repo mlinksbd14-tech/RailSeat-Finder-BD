@@ -1657,14 +1657,26 @@
           </button>
         </div>
 
-        <!-- Dashboard Gatekeeping Switch -->
-        <label class="flex items-center space-x-2 text-xs font-semibold cursor-pointer select-none">
-          <span class="text-[11px] text-slate-500 dark:text-slate-400">Require Login:</span>
-          <div class="relative inline-flex items-center">
-            <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
-            <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
-          </div>
-        </label>
+        <!-- Dashboard Gatekeeping & Approval Switches -->
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Require Login Switch -->
+          <label class="flex items-center space-x-1.5 text-xs font-semibold cursor-pointer select-none" title="Toggle public access vs required user authentication">
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Require Login:</span>
+            <div class="relative inline-flex items-center">
+              <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
+              <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-600"></div>
+            </div>
+          </label>
+
+          <!-- Admin Approval Switch -->
+          <label class="flex items-center space-x-1.5 text-xs font-semibold cursor-pointer select-none" title="When OFF, new users are instantly approved without manual review">
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">Admin Approval:</span>
+            <div class="relative inline-flex items-center">
+              <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only peer" checked>
+              <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <!-- Tab 1: User List Section -->

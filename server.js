@@ -2080,6 +2080,7 @@ app.get('/api/user-auth/status', (req, res) => {
   res.json({
     success: true,
     require_login: !!data.settings?.requireLogin,
+    require_admin_approval: data.settings?.requireAdminApproval !== false,
     logged_in: !!session,
     pending_count: pendingCount,
     user: session ? {
@@ -2091,7 +2092,7 @@ app.get('/api/user-auth/status', (req, res) => {
   });
 });
 
-// 2. User Registration (Viewer Self-Registration with Email Verification & Admin Approval)
+// 2. User Registration (Viewer Self-Registration with Email Verification & Optional Admin Approval)
 app.post('/api/user-auth/register', async (req, res) => {
   const { username, password, name, email, firebaseUid, emailVerified } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
@@ -2128,31 +2129,45 @@ app.post('/api/user-auth/register', async (req, res) => {
     }
   }
 
+  const requireApproval = data.settings?.requireAdminApproval !== false;
+  const isFirstUser = data.users.length === 0;
+  const role = isFirstUser ? 'admin' : 'viewer';
+  const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
+  const canViewDashboard = isFirstUser || !requireApproval;
+
   const newUser = {
     id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     username: cleanUsername,
     email: cleanEmail || null,
     password: hashPassword(cleanPassword),
     name: cleanName,
-    role: data.users.length === 0 ? 'admin' : 'viewer',
-    status: data.users.length === 0 ? 'active' : 'pending',
-    emailVerified: data.users.length === 0 ? true : !!emailVerified,
+    role,
+    status,
+    emailVerified: isFirstUser ? true : !!emailVerified,
     firebaseUid: firebaseUid || null,
-    canViewDashboard: data.users.length === 0,
+    canViewDashboard,
     createdAt: new Date().toISOString(),
     lastLogin: null
   };
 
   data.users.push(newUser);
   saveUsersData(data);
-  console.log(`[Users] 📝 New registration submitted: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, EmailVerified: ${newUser.emailVerified}`);
+  console.log(`[Users] 📝 New registration: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, RequireApproval: ${requireApproval}`);
+
+  // Auto-sync to Firebase
+  await syncUserToFirebase(newUser, 'update', cleanPassword);
 
   res.json({
     success: true,
     emailVerified: newUser.emailVerified,
+    instantActive: status === 'active',
     message: cleanEmail
-      ? 'Registration submitted! Please verify your email via the link sent to your inbox. Once approved by administrator, you will be able to sign in.'
-      : 'Registration submitted successfully! Your account is pending administrator approval.'
+      ? (requireApproval
+          ? 'Registration submitted! Please verify your email via the link sent to your inbox. Once approved by administrator, you will be able to sign in.'
+          : 'Registration successful! Please verify your email via the link sent to your inbox. You can sign in immediately once verified.')
+      : (requireApproval
+          ? 'Registration submitted successfully! Your account is pending administrator approval.'
+          : 'Registration successful! Your account is active and you can sign in now.')
   });
 });
 
@@ -2339,6 +2354,11 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
         finalUsername = `${generatedUsername}${counter++}`;
       }
 
+      const requireApproval = data.settings?.requireAdminApproval !== false;
+      const isFirstUser = data.users.length === 0;
+      const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
+      const canViewDashboard = isFirstUser || !requireApproval;
+
       user = {
         id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         username: finalUsername,
@@ -2347,16 +2367,20 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
         name: name,
         picture: picture,
         authProvider: 'firebase_google',
-        role: data.users.length === 0 ? 'admin' : 'viewer',
-        status: data.users.length === 0 ? 'active' : 'pending',
-        canViewDashboard: data.users.length === 0,
+        role: isFirstUser ? 'admin' : 'viewer',
+        status,
+        canViewDashboard,
+        emailVerified: true,
         createdAt: new Date().toISOString(),
         lastLogin: null
       };
 
       data.users.push(user);
       saveUsersData(data);
-      console.log(`[Firebase Auth] 👤 New user registered via Firebase: ${user.username} (${user.email || user.id}) - Status: ${user.status}`);
+      console.log(`[Firebase Auth] 👤 New user registered via Firebase: ${user.username} (${user.email || user.id}) - Status: ${user.status}, RequireApproval: ${requireApproval}`);
+
+      // Auto-sync to Firebase
+      await syncUserToFirebase(user, 'update');
     } else {
       let updated = false;
       if (!user.firebaseUid) { user.firebaseUid = uid; updated = true; }
@@ -2469,6 +2493,7 @@ app.get('/api/users', requireAdmin, (req, res) => {
     count: safeUsers.length,
     pending_count: pendingCount,
     require_login: !!data.settings?.requireLogin,
+    require_admin_approval: data.settings?.requireAdminApproval !== false,
     users: safeUsers
   });
 });
@@ -2735,19 +2760,35 @@ app.post('/api/users/update-password', requireAdmin, async (req, res) => {
 });
 
 // 10. Update Access Control Settings (Admin-only + Auto Firebase Sync)
-app.post('/api/users/update-settings', requireAdmin, (req, res) => {
-  const { requireLogin } = req.body;
+app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
+  const { requireLogin, requireAdminApproval } = req.body;
   const data = loadUsersData();
 
   data.settings = data.settings || {};
-  data.settings.requireLogin = !!requireLogin;
+  if (requireLogin !== undefined) {
+    data.settings.requireLogin = !!requireLogin;
+  }
+  if (requireAdminApproval !== undefined) {
+    data.settings.requireAdminApproval = !!requireAdminApproval;
+  }
   saveUsersData(data);
 
-  console.log(`[Access Control] 🔒 Dashboard login requirement set to: ${data.settings.requireLogin}`);
+  // Sync settings to Cloud Firestore if connected
+  if (firestoreDb && isFirebaseConnected) {
+    try {
+      await firestoreDb.collection('system_config').doc('settings').set(data.settings, { merge: true });
+      console.log('[Firebase Firestore] ☁️ Synced access control settings to Cloud Firestore');
+    } catch (e) {
+      console.warn('[Firebase Firestore] Warning syncing settings:', e.message);
+    }
+  }
+
+  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}`);
   res.json({
     success: true,
-    require_login: data.settings.requireLogin,
-    message: data.settings.requireLogin ? 'Dashboard now requires authorized user login.' : 'Dashboard is now publicly accessible.'
+    require_login: !!data.settings.requireLogin,
+    require_admin_approval: data.settings.requireAdminApproval !== false,
+    message: `Settings updated: Require Login = ${data.settings.requireLogin ? 'ON' : 'OFF'}, Admin Approval = ${data.settings.requireAdminApproval !== false ? 'ON' : 'OFF'}.`
   });
 });
 

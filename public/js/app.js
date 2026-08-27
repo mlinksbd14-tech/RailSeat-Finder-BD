@@ -253,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const userTabAddBtn = document.getElementById('userTabAddBtn');
   const userListTabCount = document.getElementById('userListTabCount');
   const modalRequireLoginToggle = document.getElementById('modalRequireLoginToggle');
+  const modalRequireApprovalToggle = document.getElementById('modalRequireApprovalToggle');
   const userSectionList = document.getElementById('userSectionList');
   const userSectionAdd = document.getElementById('userSectionAdd');
   const userSearchInput = document.getElementById('userSearchInput');
@@ -4530,7 +4531,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       state.requireLogin = !!data.require_login;
+      state.requireAdminApproval = (data.require_admin_approval !== false);
       if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
+      if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
       if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
       if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
 
@@ -4630,6 +4633,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statTotalUsers) statTotalUsers.textContent = data.users.length;
         if (statActiveUsers) statActiveUsers.textContent = data.users.filter(u => u.status === 'active').length;
         if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
+        if (data.require_admin_approval !== undefined) {
+          state.requireAdminApproval = (data.require_admin_approval !== false);
+          if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
+        }
         if (userListTabCount) userListTabCount.textContent = data.users.length;
         if (userPendingTabCount) userPendingTabCount.textContent = pendingCount;
         if (settingUserCountBadge) settingUserCountBadge.textContent = `${data.users.length} User${data.users.length > 1 ? 's' : ''}`;
@@ -4968,6 +4975,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (settingRequireLoginToggle) {
       settingRequireLoginToggle.addEventListener('change', () => {
         handleRequireLoginChange(settingRequireLoginToggle.checked);
+      });
+    }
+
+    // 10.1. Require Admin Approval Toggle Handler
+    async function handleRequireAdminApprovalChange(isChecked) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ requireAdminApproval: isChecked })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.requireAdminApproval = (data.require_admin_approval !== false);
+          if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
+          showToast(
+            state.requireAdminApproval
+              ? '🔒 Admin Approval is ON: New signups require admin approval.'
+              : '⚡ Admin Approval is OFF: New users are activated instantly without admin approval!',
+            'success'
+          );
+        }
+      } catch (e) {
+        showToast('Failed to update admin approval setting.', 'error');
+      }
+    }
+
+    if (modalRequireApprovalToggle) {
+      modalRequireApprovalToggle.addEventListener('change', () => {
+        handleRequireAdminApprovalChange(modalRequireApprovalToggle.checked);
       });
     }
 

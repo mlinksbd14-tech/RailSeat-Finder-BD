@@ -2073,6 +2073,91 @@ app.post('/api/telegram/test', async (req, res) => {
 // 7. User Management & Dashboard Access Control API
 // ====================================================
 
+// User Agent & Device Telemetry Helper for Admin Inspection
+function parseUserAgent(uaString = '') {
+  const ua = uaString || '';
+  let browser = 'Unknown Browser';
+  let os = 'Unknown OS';
+  let device = 'Desktop';
+
+  // Device type detection
+  if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua)) {
+    device = 'Mobile';
+  } else if (/ipad|tablet|playbook|silk/i.test(ua)) {
+    device = 'Tablet';
+  }
+
+  // OS detection
+  if (/windows nt 10/i.test(ua)) os = 'Windows 10/11';
+  else if (/windows nt 6.3/i.test(ua)) os = 'Windows 8.1';
+  else if (/windows nt 6.2/i.test(ua)) os = 'Windows 8';
+  else if (/windows nt 6.1/i.test(ua)) os = 'Windows 7';
+  else if (/windows/i.test(ua)) os = 'Windows';
+  else if (/android/i.test(ua)) {
+    const v = ua.match(/android\s([0-9.]+)/i);
+    os = v ? `Android ${v[1]}` : 'Android';
+  } else if (/iphone|ipad|ipod/i.test(ua)) {
+    const v = ua.match(/os\s([0-9_]+)/i);
+    os = v ? `iOS ${v[1].replace(/_/g, '.')}` : 'iOS';
+  } else if (/mac os x/i.test(ua)) {
+    os = 'macOS';
+  } else if (/cros/i.test(ua)) {
+    os = 'ChromeOS';
+  } else if (/linux/i.test(ua)) {
+    os = 'Linux';
+  }
+
+  // Browser detection
+  if (/edg/i.test(ua)) {
+    const v = ua.match(/edg\/([0-9.]+)/i);
+    browser = v ? `Edge ${v[1].split('.')[0]}` : 'Edge';
+  } else if (/opr|opera/i.test(ua)) {
+    browser = 'Opera';
+  } else if (/chrome|crios/i.test(ua)) {
+    const v = ua.match(/(?:chrome|crios)\/([0-9.]+)/i);
+    browser = v ? `Chrome ${v[1].split('.')[0]}` : 'Chrome';
+  } else if (/firefox|fxios/i.test(ua)) {
+    const v = ua.match(/(?:firefox|fxios)\/([0-9.]+)/i);
+    browser = v ? `Firefox ${v[1].split('.')[0]}` : 'Firefox';
+  } else if (/safari/i.test(ua)) {
+    const v = ua.match(/version\/([0-9.]+)/i);
+    browser = v ? `Safari ${v[1].split('.')[0]}` : 'Safari';
+  }
+
+  return { browser, os, device, raw: ua.slice(0, 200) };
+}
+
+function recordUserTelemetry(user, req, action = 'login') {
+  if (!user) return;
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+  const uaString = req.headers['user-agent'] || '';
+  const parsedUa = parseUserAgent(uaString);
+  const now = new Date().toISOString();
+
+  user.lastIp = clientIp;
+  user.lastUserAgent = uaString.slice(0, 250);
+  user.lastDevice = parsedUa;
+  user.lastLogin = now;
+  user.loginCount = (user.loginCount || 0) + (action === 'login' ? 1 : 0);
+
+  user.ips = user.ips || [];
+  if (clientIp && clientIp !== 'unknown' && !user.ips.includes(clientIp)) {
+    user.ips.unshift(clientIp);
+    if (user.ips.length > 10) user.ips.pop();
+  }
+
+  user.activityHistory = user.activityHistory || [];
+  user.activityHistory.unshift({
+    action,
+    timestamp: now,
+    ip: clientIp,
+    device: parsedUa.device,
+    os: parsedUa.os,
+    browser: parsedUa.browser
+  });
+  if (user.activityHistory.length > 25) user.activityHistory.pop();
+}
+
 // 1. Dashboard User Auth Status Check
 app.get('/api/user-auth/status', (req, res) => {
   const data = loadUsersData();
@@ -2168,14 +2253,18 @@ app.post('/api/user-auth/register', async (req, res) => {
     status,
     emailVerified: finalEmailVerified,
     firebaseUid: firebaseUid || null,
+    authProvider: 'password',
     canViewDashboard,
     createdAt: new Date().toISOString(),
     lastLogin: null
   };
 
+  // Record IP and device telemetry
+  recordUserTelemetry(newUser, req, 'register');
+
   data.users.push(newUser);
   saveUsersData(data);
-  console.log(`[Users] 📝 New registration: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, EmailVerified: ${newUser.emailVerified}, RequireEmailVerif: ${requireEmailVerification}`);
+  console.log(`[Users] 📝 New registration: ${cleanUsername} (${cleanEmail}) - IP: ${newUser.lastIp}, Status: ${newUser.status}, RequireApproval: ${requireApproval}`);
 
   // Auto-sync to Firebase
   await syncUserToFirebase(newUser, 'update', cleanPassword);
@@ -2304,8 +2393,8 @@ app.post('/api/user-auth/login', async (req, res) => {
     user.password = hashPassword(cleanPassword);
   }
 
-  // Update last login
-  user.lastLogin = new Date().toISOString();
+  // Record Telemetry (IP, OS, Browser, Device, Login Count)
+  recordUserTelemetry(user, req, 'login');
   saveUsersData(data);
 
   // Generate session token (30 days if rememberMe, 1 day otherwise)
@@ -2323,6 +2412,7 @@ app.post('/api/user-auth/login', async (req, res) => {
   };
 
   userSessions.set(token, sessionData);
+  console.log(`[Users] 🔑 User logged in: ${user.username} (${user.role}) - IP: ${user.lastIp}`);
 
   res.json({
     success: true,
@@ -2333,7 +2423,8 @@ app.post('/api/user-auth/login', async (req, res) => {
       username: user.username,
       name: user.name,
       role: user.role || 'viewer',
-      status: user.status
+      status: user.status,
+      canViewDashboard: user.canViewDashboard !== false
     }
   });
 });
@@ -2413,9 +2504,10 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
         lastLogin: null
       };
 
+      recordUserTelemetry(user, req, 'register');
       data.users.push(user);
       saveUsersData(data);
-      console.log(`[Firebase Auth] 👤 New user registered via Firebase: ${user.username} (${user.email || user.id}) - Status: ${user.status}, RequireApproval: ${requireApproval}`);
+      console.log(`[Firebase Auth] 👤 New user registered via Firebase: ${user.username} (${user.email || user.id}) - IP: ${user.lastIp}`);
 
       // Auto-sync to Firebase
       await syncUserToFirebase(user, 'update');
@@ -2444,8 +2536,8 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
       });
     }
 
-    // Update last login
-    user.lastLogin = new Date().toISOString();
+    // Record Telemetry (IP, OS, Browser, Device, Login Count)
+    recordUserTelemetry(user, req, 'login');
     saveUsersData(data);
 
     // Generate dashboard session token
@@ -2464,7 +2556,7 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
     };
 
     userSessions.set(token, sessionData);
-    console.log(`[Firebase Auth] 🔑 User logged in via Firebase: ${user.username} (${user.role})`);
+    console.log(`[Firebase Auth] 🔑 User logged in via Firebase: ${user.username} (${user.role}) - IP: ${user.lastIp}`);
 
     return res.json({
       success: true,
@@ -2477,21 +2569,22 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
         email: user.email || null,
         picture: user.picture || null,
         role: user.role || 'viewer',
-        status: user.status
+        status: user.status,
+        canViewDashboard: user.canViewDashboard !== false
       }
     });
   } catch (err) {
-    console.error('[Firebase Auth] ❌ Token verification error:', err.message);
+    console.error('[Firebase Auth] Error in firebase-login:', err.message);
     return res.status(401).json({ success: false, error: 'Firebase authentication failed: ' + err.message });
   }
 });
 
 // 4. User Logout
 app.post('/api/user-auth/logout', (req, res) => {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  if (token) userSessions.delete(token);
-
+  const token = getAuthToken(req);
+  if (token && userSessions.has(token)) {
+    userSessions.delete(token);
+  }
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
@@ -2507,7 +2600,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// 5. Get All Users (Admin-only)
+// 5. Get All Users (Admin-only + Full Telemetry & History)
 app.get('/api/users', requireAdmin, (req, res) => {
   const data = loadUsersData();
   
@@ -2516,10 +2609,19 @@ app.get('/api/users', requireAdmin, (req, res) => {
     id: u.id,
     username: u.username,
     name: u.name,
+    email: u.email || null,
     role: u.role || 'viewer',
     status: u.status || 'active',
     canViewDashboard: u.canViewDashboard !== false,
     has_shohoz_session: !!(u.shohozSession && u.shohozSession.token),
+    emailVerified: u.emailVerified !== false,
+    authProvider: u.authProvider || 'password',
+    lastIp: u.lastIp || 'N/A',
+    ips: u.ips || [],
+    lastDevice: u.lastDevice || null,
+    lastUserAgent: u.lastUserAgent || null,
+    loginCount: u.loginCount || 0,
+    activityHistory: u.activityHistory || [],
     createdAt: u.createdAt,
     lastLogin: u.lastLogin
   }));

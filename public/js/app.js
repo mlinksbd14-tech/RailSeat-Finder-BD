@@ -311,6 +311,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const headerPendingBadge = document.getElementById('headerPendingBadge');
   const manageUsersPendingBadge = document.getElementById('manageUsersPendingBadge');
   const toggleLoginPasswordBtn = document.getElementById('toggleLoginPasswordBtn');
+  const userTelemetryModal = document.getElementById('userTelemetryModal');
+  const closeTelemetryModalBtn = document.getElementById('closeTelemetryModalBtn');
+  const telemetryUserName = document.getElementById('telemetryUserName');
+  const telemetryUserHandle = document.getElementById('telemetryUserHandle');
+  const telemetryLastIp = document.getElementById('telemetryLastIp');
+  const telemetryDeviceIcon = document.getElementById('telemetryDeviceIcon');
+  const telemetryDeviceText = document.getElementById('telemetryDeviceText');
+  const telemetryBrowser = document.getElementById('telemetryBrowser');
+  const telemetryAuthProvider = document.getElementById('telemetryAuthProvider');
+  const telemetryEmailVerified = document.getElementById('telemetryEmailVerified');
+  const telemetryLoginCount = document.getElementById('telemetryLoginCount');
+  const telemetryLastLogin = document.getElementById('telemetryLastLogin');
+  const telemetryCreatedAt = document.getElementById('telemetryCreatedAt');
+  const telemetryIpList = document.getElementById('telemetryIpList');
+  const telemetryActivityLog = document.getElementById('telemetryActivityLog');
   const closeFirebaseConfigBtn = document.getElementById('closeFirebaseConfigBtn');
   const firebaseConfigForm = document.getElementById('firebaseConfigForm');
   const firebaseCfgApiKey = document.getElementById('firebaseCfgApiKey');
@@ -4717,14 +4732,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const isAdmin = (u.role === 'admin');
       const isActive = (u.status === 'active');
       const isPending = (u.status === 'pending');
+      const isGoogle = (u.authProvider === 'firebase_google');
       const isCurrent = state.currentUser && state.currentUser.id === u.id;
       const initials = (u.name || u.username || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const deviceLabel = u.lastDevice ? `${u.lastDevice.os} • ${u.lastDevice.browser}` : (u.lastIp ? 'Web Client' : 'No activity');
 
       html += `
-        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition ${isPending ? 'bg-amber-50/40 dark:bg-amber-950/20 p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-800/40' : ''}">
-          <!-- Left: User Identity -->
-          <div class="flex items-center space-x-3 min-w-0">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+        <div class="py-3 px-2 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40 ${isPending ? 'bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/40' : 'border border-transparent'}">
+          <!-- Left: User Identity & Telemetry Details -->
+          <div class="flex items-start space-x-3 min-w-0">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 mt-0.5 ${
               isPending
                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
                 : isAdmin 
@@ -4734,32 +4751,58 @@ document.addEventListener('DOMContentLoaded', () => {
               ${initials}
             </div>
 
-            <div class="min-w-0 space-y-0.5">
-              <div class="flex items-center space-x-2">
+            <div class="min-w-0 space-y-1">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-0.5">
                 <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${u.name}</span>
                 ${isCurrent ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">You</span>' : ''}
+                <span class="text-[10px] text-slate-400 font-mono">@${u.username}</span>
+                ${u.email ? `<span class="text-[10px] text-slate-400 truncate max-w-[140px] hidden md:inline">(${u.email})</span>` : ''}
               </div>
-              <div class="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono flex-wrap">
-                <span>@${u.username}</span>
-                <span>&bull;</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+
+              <!-- Badges Line 1: Role, Status, Auth Provider -->
+              <div class="flex items-center space-x-1.5 text-[10px] font-mono flex-wrap gap-y-1">
+                <span class="px-1.5 py-0.2 rounded-full font-bold ${
                   isAdmin ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                 }">
                   ${isAdmin ? '👑 Admin' : '👁️ Viewer'}
                 </span>
-                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                <span class="px-1.5 py-0.2 rounded-full font-bold ${
                   isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700' :
                   isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 
                   'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                 }">
-                  ${isPending ? '⏳ Pending Approval' : isActive ? 'Active' : 'Disabled'}
+                  ${isPending ? '⏳ Pending' : isActive ? 'Active' : 'Disabled'}
                 </span>
+                <span class="px-1.5 py-0.2 rounded-full font-bold ${
+                  isGoogle ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                }">
+                  ${isGoogle ? '<i class="fa-brands fa-google text-[9px] mr-0.5"></i>Google' : '<i class="fa-solid fa-key text-[9px] mr-0.5"></i>Password'}
+                </span>
+                ${u.emailVerified ? '<span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300"><i class="fa-solid fa-check text-[8px] mr-0.5"></i>Verified</span>' : ''}
+              </div>
+
+              <!-- Badges Line 2: Public/Shared IP and Device Info -->
+              <div class="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono flex-wrap gap-y-1 pt-0.5">
+                <span class="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60">
+                  <i class="fa-solid fa-globe text-blue-500 text-[9px]"></i>
+                  <span class="font-bold text-slate-700 dark:text-slate-300">${u.lastIp || 'No IP recorded'}</span>
+                </span>
+                <span class="inline-flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60">
+                  <i class="fa-solid fa-${u.lastDevice && u.lastDevice.device === 'Mobile' ? 'mobile-screen' : 'laptop'} text-purple-500 text-[9px]"></i>
+                  <span class="truncate max-w-[150px]">${deviceLabel}</span>
+                </span>
+                ${u.loginCount ? `<span class="text-slate-400">(${u.loginCount} logins)</span>` : ''}
               </div>
             </div>
           </div>
 
-          <!-- Right: Actions -->
+          <!-- Right: Actions & History Inspector -->
           <div class="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
+            <!-- View Activity History & Telemetry Modal -->
+            <button type="button" class="user-telemetry-btn p-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition cursor-pointer" data-id="${u.id}" title="View IP, Device, and User Data History">
+              <i class="fa-solid fa-chart-line text-[11px]"></i>
+            </button>
+
             ${isPending ? `
               <!-- Quick 1-Click Approve Button -->
               <button type="button" class="user-approve-btn px-2.5 py-1 rounded-lg font-extrabold text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1 cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Approve this user account">
@@ -5527,11 +5570,17 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(`👋 Welcome, ${data.user.name || data.user.username}! Signed in with Google.`, 'success');
           userLoginModal.classList.add('hidden');
           await checkDashboardUserAuth();
+        } else if (data.registrationClosed) {
+          try { await firebase.auth().signOut(); } catch (e) {}
+          showToast(data.error || '🔒 New registration is currently closed by administrator.', 'error');
+          if (loginErrorMsg) loginErrorMsg.textContent = data.error;
+          if (registerStatusMsg) registerStatusMsg.textContent = data.error;
         } else if (data.pending) {
           showToast(data.error || 'Your Google Account is pending administrator approval.', 'info');
           if (loginErrorMsg) loginErrorMsg.textContent = data.error;
           if (registerStatusMsg) registerStatusMsg.textContent = data.error;
         } else {
+          try { await firebase.auth().signOut(); } catch (e) {}
           showToast(data.error || 'Google Sign-In failed.', 'error');
           if (loginErrorMsg) loginErrorMsg.textContent = data.error;
           if (registerStatusMsg) registerStatusMsg.textContent = data.error;
@@ -5561,6 +5610,74 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPwd = loginPassword.type === 'password';
         loginPassword.type = isPwd ? 'text' : 'password';
         toggleLoginPasswordBtn.innerHTML = isPwd ? '<i class="fa-regular fa-eye-slash text-xs text-purple-600"></i>' : '<i class="fa-regular fa-eye text-xs"></i>';
+      });
+    }
+
+    // User Telemetry Modal Viewer (Admin)
+    function openTelemetryModal(u) {
+      if (!userTelemetryModal) return;
+      if (telemetryUserName) telemetryUserName.textContent = u.name || u.username;
+      if (telemetryUserHandle) telemetryUserHandle.textContent = `@${u.username}${u.email ? ` • ${u.email}` : ''}`;
+      if (telemetryLastIp) telemetryLastIp.textContent = u.lastIp || 'No IP recorded';
+      
+      const dev = u.lastDevice || {};
+      const devType = dev.device || 'Desktop';
+      const os = dev.os || 'Unknown OS';
+      const browser = dev.browser || (u.lastUserAgent ? u.lastUserAgent.substring(0, 40) : 'Unknown');
+
+      if (telemetryDeviceText) telemetryDeviceText.textContent = `${os} (${devType})`;
+      if (telemetryDeviceIcon) {
+        telemetryDeviceIcon.className = devType === 'Mobile' 
+          ? 'fa-solid fa-mobile-screen text-purple-500' 
+          : (devType === 'Tablet' ? 'fa-solid fa-tablet-screen-button text-purple-500' : 'fa-solid fa-laptop text-purple-500');
+      }
+      if (telemetryBrowser) telemetryBrowser.textContent = browser;
+      if (telemetryAuthProvider) telemetryAuthProvider.textContent = u.authProvider === 'firebase_google' ? 'Google Sign-In (Firebase)' : 'Username & Password';
+      if (telemetryEmailVerified) telemetryEmailVerified.innerHTML = u.emailVerified ? '<span class="text-teal-600 dark:text-teal-400 font-bold">✅ Verified</span>' : '<span class="text-rose-500 font-bold">❌ Not Verified</span>';
+      if (telemetryLoginCount) telemetryLoginCount.textContent = `${u.loginCount || 0} time${(u.loginCount || 0) === 1 ? '' : 's'}`;
+      if (telemetryLastLogin) telemetryLastLogin.textContent = u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Never logged in';
+      if (telemetryCreatedAt) telemetryCreatedAt.textContent = u.createdAt ? new Date(u.createdAt).toLocaleString() : 'Unknown';
+
+      // IP History list
+      if (telemetryIpList) {
+        const ips = (u.ips && u.ips.length) ? u.ips : (u.lastIp ? [u.lastIp] : []);
+        if (ips.length) {
+          telemetryIpList.innerHTML = ips.map(ip => `
+            <span class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-600 font-mono text-[10px] flex items-center space-x-1">
+              <i class="fa-solid fa-globe text-blue-500 text-[8px]"></i>
+              <span>${ip}</span>
+            </span>
+          `).join('');
+        } else {
+          telemetryIpList.innerHTML = '<span class="text-slate-400 text-[10px]">No IP addresses recorded</span>';
+        }
+      }
+
+      // Activity Log list
+      if (telemetryActivityLog) {
+        const history = u.activityHistory || [];
+        if (history.length) {
+          telemetryActivityLog.innerHTML = history.map(item => `
+            <div class="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[10px]">
+              <div class="flex items-center space-x-2">
+                <span class="px-1.5 py-0.2 rounded font-bold uppercase text-[8px] ${item.action === 'register' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">${item.action || 'login'}</span>
+                <span class="font-mono text-slate-700 dark:text-slate-300">${item.ip || 'unknown'}</span>
+                <span class="text-slate-400 truncate max-w-[120px]">${item.os || ''} • ${item.browser || ''}</span>
+              </div>
+              <span class="text-slate-400 text-[9px] shrink-0">${item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : ''}</span>
+            </div>
+          `).join('');
+        } else {
+          telemetryActivityLog.innerHTML = '<p class="text-slate-400 text-center py-2 text-[10px]">No recent activity entries recorded yet.</p>';
+        }
+      }
+
+      userTelemetryModal.classList.remove('hidden');
+    }
+
+    if (closeTelemetryModalBtn && userTelemetryModal) {
+      closeTelemetryModalBtn.addEventListener('click', () => {
+        userTelemetryModal.classList.add('hidden');
       });
     }
 
@@ -5594,9 +5711,19 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 15. Delegate Actions for User Cards (Approve, Toggle Status, Reset Pwd, Delete)
+    // 15. Delegate Actions for User Cards (Telemetry, Approve, Toggle Status, Edit, Reset Pwd, Delete)
     if (usersCardsContainer) {
       usersCardsContainer.addEventListener('click', async (e) => {
+        // View Telemetry & Activity Modal
+        const telemetryBtn = e.target.closest('.user-telemetry-btn');
+        if (telemetryBtn) {
+          const id = telemetryBtn.dataset.id;
+          const user = (cachedUsersList || []).find(u => u.id === id);
+          if (user) {
+            openTelemetryModal(user);
+          }
+          return;
+        }
         // Approve Pending User
         const approveBtn = e.target.closest('.user-approve-btn');
         if (approveBtn) {

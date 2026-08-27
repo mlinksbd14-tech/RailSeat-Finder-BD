@@ -1903,6 +1903,95 @@
   </div>
 
   <!-- ============================================== -->
+  <!-- User Device & Activity Telemetry Modal (Admin) -->
+  <!-- ============================================== -->
+  <div id="userTelemetryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white" id="telemetryUserName">User Telemetry & History</h4>
+            <p id="telemetryUserHandle" class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">@username</p>
+          </div>
+        </div>
+        <button type="button" id="closeTelemetryModalBtn" class="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Identity & Connection Overview Card -->
+      <div class="grid grid-cols-2 gap-2.5 text-xs">
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Public IP Address</span>
+          <div class="flex items-center space-x-1.5 font-mono font-bold text-slate-900 dark:text-white text-xs">
+            <i class="fa-solid fa-globe text-blue-500"></i>
+            <span id="telemetryLastIp" class="truncate">--</span>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-1">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Device & OS</span>
+          <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white text-xs">
+            <i class="fa-solid fa-laptop text-purple-500" id="telemetryDeviceIcon"></i>
+            <span id="telemetryDeviceText" class="truncate">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Telemetry Specs -->
+      <div class="space-y-2.5 text-xs">
+        <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Web Browser:</span>
+            <span id="telemetryBrowser" class="font-bold text-slate-900 dark:text-white font-mono">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Auth Provider:</span>
+            <span id="telemetryAuthProvider" class="font-bold text-slate-900 dark:text-white">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Email Verification:</span>
+            <span id="telemetryEmailVerified" class="font-bold text-slate-900 dark:text-white">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Total Logins:</span>
+            <span id="telemetryLoginCount" class="font-bold text-slate-900 dark:text-white font-mono">0</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Last Active / Login:</span>
+            <span id="telemetryLastLogin" class="font-bold text-slate-900 dark:text-white font-mono text-[11px]">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Registered On:</span>
+            <span id="telemetryCreatedAt" class="font-bold text-slate-900 dark:text-white font-mono text-[11px]">--</span>
+          </div>
+        </div>
+
+        <!-- IP Address History -->
+        <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">IP History (Public / Shared IPs)</span>
+          <div id="telemetryIpList" class="flex flex-wrap gap-1">
+            <span class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[10px]">None recorded</span>
+          </div>
+        </div>
+
+        <!-- Recent Activity Timeline -->
+        <div class="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Recent Activity Log (Last 25 Events)</span>
+          <div id="telemetryActivityLog" class="space-y-1.5 max-h-44 overflow-y-auto font-mono text-[11px]">
+            <!-- Dynamic items rendered via app.js -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
   <!-- User Login / Sign In / Registration Modal -->
   <!-- ============================================== -->
   <div id="userLoginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">

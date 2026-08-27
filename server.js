@@ -2177,8 +2177,9 @@ app.post('/api/user-auth/resend-verification', async (req, res) => {
   }
 
   try {
-    if (isFirebaseConnected && getApps().length) {
-      const link = await getAuth().generateEmailVerificationLink(user.email);
+    const auth = getAdminAuth();
+    if (isFirebaseConnected && auth) {
+      const link = await auth.generateEmailVerificationLink(user.email);
       console.log(`[Firebase Auth] ✉️ Generated email verification link for ${user.email}: ${link}`);
     }
   } catch (err) {
@@ -2220,9 +2221,10 @@ app.post('/api/user-auth/login', async (req, res) => {
 
   // Check Email Verification Status with Firebase Auth
   if (user.email && user.emailVerified === false) {
-    if (isFirebaseConnected && getApps().length && user.firebaseUid) {
+    const auth = getAdminAuth();
+    if (isFirebaseConnected && auth && user.firebaseUid) {
       try {
-        const firebaseUser = await getAuth().getUser(user.firebaseUid);
+        const firebaseUser = await auth.getUser(user.firebaseUid);
         if (firebaseUser && firebaseUser.emailVerified) {
           user.emailVerified = true;
           saveUsersData(data);
@@ -2306,8 +2308,9 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
 
   try {
     let decodedToken = null;
-    if (isFirebaseConnected && getApps().length) {
-      decodedToken = await getAuth().verifyIdToken(idToken);
+    const auth = getAdminAuth();
+    if (isFirebaseConnected && auth) {
+      decodedToken = await auth.verifyIdToken(idToken);
     } else {
       // Fallback decode if running without serviceAccountKey
       const base64Url = idToken.split('.')[1];

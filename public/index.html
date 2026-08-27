@@ -18,6 +18,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- PWA & Mobile Web App Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#9333ea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/favicon.ico">
   <link rel="stylesheet" href="css/style.css">
   <script>
     tailwind.config = {
@@ -1948,6 +1954,14 @@
           <div class="flex items-center justify-between">
             <span class="text-slate-500 dark:text-slate-400 font-semibold">Web Browser:</span>
             <span id="telemetryBrowser" class="font-bold text-slate-900 dark:text-white font-mono">--</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Geo Location:</span>
+            <span id="telemetryLocation" class="font-bold text-slate-900 dark:text-white">🌐 Detecting...</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-semibold">Network / ISP:</span>
+            <span id="telemetryIsp" class="font-bold text-slate-900 dark:text-white font-mono text-[11px]">--</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-slate-500 dark:text-slate-400 font-semibold">Auth Provider:</span>

@@ -189,8 +189,17 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastLogin": "2026-08-27T11:57:30.920Z",
+      "lastLogin": "2026-08-27T11:58:13.611Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:58:13.611Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151",
+          "location": null
+        },
         {
           "action": "login",
           "timestamp": "2026-08-27T11:57:30.920Z",
@@ -266,13 +275,13 @@
         }
       ],
       "lastIp": "::1",
-      "lastUserAgent": "",
-      "loginCount": 9,
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+      "loginCount": 10,
       "lastDevice": {
-        "browser": "Unknown Browser",
-        "os": "Unknown OS",
+        "browser": "Edge 151",
+        "os": "Windows 10/11",
         "device": "Desktop",
-        "raw": ""
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
       }
     }
   ]

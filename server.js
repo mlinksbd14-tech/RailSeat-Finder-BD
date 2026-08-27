@@ -2085,6 +2085,7 @@ app.get('/api/user-auth/status', (req, res) => {
     success: true,
     require_login: !!data.settings?.requireLogin,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
+    require_email_verification: data.settings?.requireEmailVerification !== false,
     logged_in: !!session,
     pending_count: pendingCount,
     user: session ? {
@@ -2096,7 +2097,7 @@ app.get('/api/user-auth/status', (req, res) => {
   });
 });
 
-// 2. User Registration (Viewer Self-Registration with Email Verification & Optional Admin Approval)
+// 2. User Registration (Viewer Self-Registration with Optional Email Verification & Admin Approval)
 app.post('/api/user-auth/register', async (req, res) => {
   const { username, password, name, email, firebaseUid, emailVerified } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
@@ -2134,10 +2135,12 @@ app.post('/api/user-auth/register', async (req, res) => {
   }
 
   const requireApproval = data.settings?.requireAdminApproval !== false;
+  const requireEmailVerification = data.settings?.requireEmailVerification !== false;
   const isFirstUser = data.users.length === 0;
   const role = isFirstUser ? 'admin' : 'viewer';
   const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
   const canViewDashboard = isFirstUser || !requireApproval;
+  const finalEmailVerified = (isFirstUser || !requireEmailVerification) ? true : !!emailVerified;
 
   const newUser = {
     id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -2147,7 +2150,7 @@ app.post('/api/user-auth/register', async (req, res) => {
     name: cleanName,
     role,
     status,
-    emailVerified: isFirstUser ? true : !!emailVerified,
+    emailVerified: finalEmailVerified,
     firebaseUid: firebaseUid || null,
     canViewDashboard,
     createdAt: new Date().toISOString(),
@@ -2156,7 +2159,7 @@ app.post('/api/user-auth/register', async (req, res) => {
 
   data.users.push(newUser);
   saveUsersData(data);
-  console.log(`[Users] 📝 New registration: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, RequireApproval: ${requireApproval}`);
+  console.log(`[Users] 📝 New registration: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, EmailVerified: ${newUser.emailVerified}, RequireEmailVerif: ${requireEmailVerification}`);
 
   // Auto-sync to Firebase
   await syncUserToFirebase(newUser, 'update', cleanPassword);
@@ -2165,7 +2168,8 @@ app.post('/api/user-auth/register', async (req, res) => {
     success: true,
     emailVerified: newUser.emailVerified,
     instantActive: status === 'active',
-    message: cleanEmail
+    requireEmailVerification,
+    message: (cleanEmail && requireEmailVerification)
       ? (requireApproval
           ? 'Registration submitted! Please verify your email via the link sent to your inbox. Once approved by administrator, you will be able to sign in.'
           : 'Registration successful! Please verify your email via the link sent to your inbox. You can sign in immediately once verified.')
@@ -2238,8 +2242,9 @@ app.post('/api/user-auth/login', async (req, res) => {
     return res.json({ success: false, error: 'Invalid username/email or password.' });
   }
 
-  // Check Email Verification Status with Firebase Auth
-  if (user.email && user.emailVerified === false) {
+  // Check Email Verification Status if Email Verification is enabled
+  const requireEmailVerification = data.settings?.requireEmailVerification !== false;
+  if (requireEmailVerification && user.email && user.emailVerified === false) {
     const auth = getAdminAuth();
     if (isFirebaseConnected && auth && user.firebaseUid) {
       try {
@@ -2498,6 +2503,7 @@ app.get('/api/users', requireAdmin, (req, res) => {
     pending_count: pendingCount,
     require_login: !!data.settings?.requireLogin,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
+    require_email_verification: data.settings?.requireEmailVerification !== false,
     users: safeUsers
   });
 });
@@ -2765,7 +2771,7 @@ app.post('/api/users/update-password', requireAdmin, async (req, res) => {
 
 // 10. Update Access Control Settings (Admin-only + Auto Firebase Sync)
 app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
-  const { requireLogin, requireAdminApproval } = req.body;
+  const { requireLogin, requireAdminApproval, requireEmailVerification } = req.body;
   const data = loadUsersData();
 
   data.settings = data.settings || {};
@@ -2774,6 +2780,9 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   }
   if (requireAdminApproval !== undefined) {
     data.settings.requireAdminApproval = !!requireAdminApproval;
+  }
+  if (requireEmailVerification !== undefined) {
+    data.settings.requireEmailVerification = !!requireEmailVerification;
   }
   saveUsersData(data);
 
@@ -2787,12 +2796,13 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
     }
   }
 
-  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}`);
+  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}, EmailVerification=${data.settings.requireEmailVerification !== false}`);
   res.json({
     success: true,
     require_login: !!data.settings.requireLogin,
     require_admin_approval: data.settings.requireAdminApproval !== false,
-    message: `Settings updated: Require Login = ${data.settings.requireLogin ? 'ON' : 'OFF'}, Admin Approval = ${data.settings.requireAdminApproval !== false ? 'ON' : 'OFF'}.`
+    require_email_verification: data.settings.requireEmailVerification !== false,
+    message: `Settings updated: Require Login = ${data.settings.requireLogin ? 'ON' : 'OFF'}, Admin Approval = ${data.settings.requireAdminApproval !== false ? 'ON' : 'OFF'}, Email Verification = ${data.settings.requireEmailVerification !== false ? 'ON' : 'OFF'}.`
   });
 });
 

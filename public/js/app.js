@@ -254,9 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const userListTabCount = document.getElementById('userListTabCount');
   const modalRequireLoginToggle = document.getElementById('modalRequireLoginToggle');
   const modalRequireApprovalToggle = document.getElementById('modalRequireApprovalToggle');
+  const modalRequireEmailVerificationToggle = document.getElementById('modalRequireEmailVerificationToggle');
   const badgeRequireLoginStatus = document.getElementById('badgeRequireLoginStatus');
   const badgeRequireApprovalStatus = document.getElementById('badgeRequireApprovalStatus');
+  const badgeRequireEmailVerificationStatus = document.getElementById('badgeRequireEmailVerificationStatus');
   const settingRequireApprovalToggle = document.getElementById('settingRequireApprovalToggle');
+  const settingRequireEmailVerificationToggle = document.getElementById('settingRequireEmailVerificationToggle');
   const userSectionList = document.getElementById('userSectionList');
   const userSectionAdd = document.getElementById('userSectionAdd');
   const userSearchInput = document.getElementById('userSearchInput');
@@ -4535,6 +4538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       state.requireLogin = !!data.require_login;
       state.requireAdminApproval = (data.require_admin_approval !== false);
+      state.requireEmailVerification = (data.require_email_verification !== false);
       if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
       if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
 
@@ -4636,6 +4640,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
         if (data.require_admin_approval !== undefined) {
           state.requireAdminApproval = (data.require_admin_approval !== false);
+        }
+        if (data.require_email_verification !== undefined) {
+          state.requireEmailVerification = (data.require_email_verification !== false);
         }
         if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
         if (userListTabCount) userListTabCount.textContent = data.users.length;
@@ -4960,10 +4967,18 @@ document.addEventListener('DOMContentLoaded', () => {
           ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300';
       }
+      if (badgeRequireEmailVerificationStatus) {
+        badgeRequireEmailVerificationStatus.textContent = state.requireEmailVerification ? 'Required' : 'Disabled (Instant)';
+        badgeRequireEmailVerificationStatus.className = state.requireEmailVerification
+          ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
+          : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400';
+      }
       if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
       if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
       if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
       if (settingRequireApprovalToggle) settingRequireApprovalToggle.checked = state.requireAdminApproval;
+      if (modalRequireEmailVerificationToggle) modalRequireEmailVerificationToggle.checked = state.requireEmailVerification;
+      if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.checked = state.requireEmailVerification;
     }
 
     // 10. Require Login Toggle Handler
@@ -5031,6 +5046,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (settingRequireApprovalToggle) {
       settingRequireApprovalToggle.addEventListener('change', () => {
         handleRequireAdminApprovalChange(settingRequireApprovalToggle.checked);
+      });
+    }
+
+    // 10.2. Require Email Verification Toggle Handler
+    async function handleRequireEmailVerificationChange(isChecked) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ requireEmailVerification: isChecked })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.requireEmailVerification = (data.require_email_verification !== false);
+          updateAccessControlBadges();
+          showToast(
+            state.requireEmailVerification
+              ? '✉️ Email Verification is ON: New users must verify their email link.'
+              : '⚡ Email Verification is OFF: New users do NOT need email verification!',
+            'success'
+          );
+        }
+      } catch (e) {
+        showToast('Failed to update email verification setting.', 'error');
+      }
+    }
+
+    if (modalRequireEmailVerificationToggle) {
+      modalRequireEmailVerificationToggle.addEventListener('change', () => {
+        handleRequireEmailVerificationChange(modalRequireEmailVerificationToggle.checked);
+      });
+    }
+    if (settingRequireEmailVerificationToggle) {
+      settingRequireEmailVerificationToggle.addEventListener('change', () => {
+        handleRequireEmailVerificationChange(settingRequireEmailVerificationToggle.checked);
       });
     }
 

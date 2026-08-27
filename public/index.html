@@ -513,6 +513,18 @@
                     </label>
                   </div>
 
+                  <!-- Email Verification Switch in Settings -->
+                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-900/60 shadow-xs">
+                    <div>
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
+                      <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only peer" checked>
+                      <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
                   <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
                     <i class="fa-solid fa-user-gear text-xs"></i>
                     <span>Open User Management Panel</span>
@@ -1623,47 +1635,67 @@
         </div>
       </div>
 
-      <!-- Top Policy Control Cards: Require Login & Admin Approval -->
+      <!-- Top Policy Control Cards: Require Login, Admin Approval, and Email Verification -->
       <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           
           <!-- Control 1: Require Login (Dashboard Access Gate) -->
-          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-3 hover:border-purple-300 dark:hover:border-purple-700 transition">
-            <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 flex items-center justify-center text-sm shrink-0 font-bold">
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-purple-300 dark:hover:border-purple-700 transition">
+            <div class="flex items-center space-x-2 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 flex items-center justify-center text-xs shrink-0 font-bold">
                 <i class="fa-solid fa-lock"></i>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center space-x-1.5">
+                <div class="flex items-center space-x-1">
                   <span class="font-extrabold text-xs text-slate-900 dark:text-white">Require Login</span>
                   <span id="badgeRequireLoginStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Public</span>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Restrict dashboard to logged-in users</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Restrict dashboard</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer shrink-0">
               <input type="checkbox" id="modalRequireLoginToggle" class="sr-only peer">
-              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
+              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
             </label>
           </div>
 
           <!-- Control 2: Admin Approval for Signups -->
-          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
-            <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0 font-bold">
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
+            <div class="flex items-center space-x-2 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-xs shrink-0 font-bold">
                 <i class="fa-solid fa-user-shield"></i>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center space-x-1.5">
+                <div class="flex items-center space-x-1">
                   <span class="font-extrabold text-xs text-slate-900 dark:text-white">Admin Approval</span>
                   <span id="badgeRequireApprovalStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Required</span>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">New signups require manual review</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Manual review</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer shrink-0">
               <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only peer" checked>
-              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
+              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-emerald-600 shadow-inner"></div>
+            </label>
+          </div>
+
+          <!-- Control 3: Email Verification -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-blue-300 dark:hover:border-blue-700 transition">
+            <div class="flex items-center space-x-2 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs shrink-0 font-bold">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1">
+                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Email Verification</span>
+                  <span id="badgeRequireEmailVerificationStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">Required</span>
+                </div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Inbox email link</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" id="modalRequireEmailVerificationToggle" class="sr-only peer" checked>
+              <div class="w-10 h-5.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-blue-600 shadow-inner"></div>
             </label>
           </div>
 

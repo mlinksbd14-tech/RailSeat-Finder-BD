@@ -5,7 +5,9 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { exec } = require('child_process');
-const admin = require('firebase-admin');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 require('dotenv').config();
 
 // Global crash protection for network blips & unhandled rejections
@@ -129,12 +131,12 @@ function initFirebase() {
 
   if (serviceAccount && serviceAccount.project_id) {
     try {
-      if (!admin.apps.length) {
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
+      if (!getApps().length) {
+        initializeApp({
+          credential: cert(serviceAccount)
         });
       }
-      firestoreDb = admin.firestore();
+      firestoreDb = getFirestore();
       isFirebaseConnected = true;
       firebaseProjectId = serviceAccount.project_id;
       console.log(`[Firebase] ☁️ Connected to Cloud Firestore (Project: ${firebaseProjectId})`);
@@ -2164,6 +2166,131 @@ app.post('/api/user-auth/login', (req, res) => {
       status: user.status
     }
   });
+});
+
+// 3.1. Firebase Authentication Login / Sign-In (Supports Google Sign-In & Firebase Auth Providers)
+app.post('/api/user-auth/firebase-login', async (req, res) => {
+  const { idToken, rememberMe } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ success: false, error: 'Firebase ID token is required.' });
+  }
+
+  try {
+    let decodedToken = null;
+    if (isFirebaseConnected && getApps().length) {
+      decodedToken = await getAuth().verifyIdToken(idToken);
+    } else {
+      // Fallback decode if running without serviceAccountKey
+      const base64Url = idToken.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      decodedToken = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+    }
+
+    if (!decodedToken || !decodedToken.uid) {
+      return res.status(401).json({ success: false, error: 'Invalid or expired Firebase token.' });
+    }
+
+    const email = decodedToken.email || '';
+    const name = decodedToken.name || decodedToken.display_name || (email ? email.split('@')[0] : 'Firebase User');
+    const uid = decodedToken.uid;
+    const picture = decodedToken.picture || null;
+
+    const data = loadUsersData();
+    let user = data.users.find(u => u.firebaseUid === uid || (email && u.email === email) || u.username === email || u.username === uid);
+
+    if (!user) {
+      // Create new user registered through Firebase
+      const generatedUsername = email ? email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() : `user_${uid.substring(0, 6)}`;
+      let finalUsername = generatedUsername;
+      let counter = 1;
+      while (data.users.some(u => u.username === finalUsername)) {
+        finalUsername = `${generatedUsername}${counter++}`;
+      }
+
+      user = {
+        id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        username: finalUsername,
+        firebaseUid: uid,
+        email: email || null,
+        name: name,
+        picture: picture,
+        authProvider: 'firebase_google',
+        role: data.users.length === 0 ? 'admin' : 'viewer',
+        status: data.users.length === 0 ? 'active' : 'pending',
+        canViewDashboard: data.users.length === 0,
+        createdAt: new Date().toISOString(),
+        lastLogin: null
+      };
+
+      data.users.push(user);
+      saveUsersData(data);
+      console.log(`[Firebase Auth] 👤 New user registered via Firebase: ${user.username} (${user.email || user.id}) - Status: ${user.status}`);
+    } else {
+      let updated = false;
+      if (!user.firebaseUid) { user.firebaseUid = uid; updated = true; }
+      if (email && !user.email) { user.email = email; updated = true; }
+      if (picture && !user.picture) { user.picture = picture; updated = true; }
+      if (updated) saveUsersData(data);
+    }
+
+    // Check account approval status
+    if (user.status === 'pending') {
+      return res.json({
+        success: false,
+        pending: true,
+        error: 'Your Google Account has been registered, but is pending administrator approval before you can sign in.'
+      });
+    }
+
+    if (user.status === 'disabled') {
+      return res.json({
+        success: false,
+        disabled: true,
+        error: 'This account has been disabled by Administrator.'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date().toISOString();
+    saveUsersData(data);
+
+    // Generate dashboard session token
+    const token = 'sess_' + crypto.randomBytes(24).toString('hex');
+    const durationMs = rememberMe ? (30 * 24 * 60 * 60 * 1000) : (24 * 60 * 60 * 1000);
+    const sessionData = {
+      token,
+      userId: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email || null,
+      picture: user.picture || null,
+      role: user.role || 'viewer',
+      status: user.status,
+      expiresAt: Date.now() + durationMs
+    };
+
+    userSessions.set(token, sessionData);
+    console.log(`[Firebase Auth] 🔑 User logged in via Firebase: ${user.username} (${user.role})`);
+
+    return res.json({
+      success: true,
+      token,
+      rememberMe: !!rememberMe,
+      user: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        email: user.email || null,
+        picture: user.picture || null,
+        role: user.role || 'viewer',
+        status: user.status
+      }
+    });
+  } catch (err) {
+    console.error('[Firebase Auth] ❌ Token verification error:', err.message);
+    return res.status(401).json({ success: false, error: 'Firebase authentication failed: ' + err.message });
+  }
 });
 
 // 4. User Logout

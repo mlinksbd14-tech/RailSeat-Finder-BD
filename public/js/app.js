@@ -276,6 +276,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginPassword = document.getElementById('loginPassword');
   const loginRememberMe = document.getElementById('loginRememberMe');
   const loginErrorMsg = document.getElementById('loginErrorMsg');
+  const firebaseGoogleSignInBtn = document.getElementById('firebaseGoogleSignInBtn');
+  const firebaseGoogleRegisterBtn = document.getElementById('firebaseGoogleRegisterBtn');
   const userRegisterForm = document.getElementById('userRegisterForm');
   const registerName = document.getElementById('registerName');
   const registerUsername = document.getElementById('registerUsername');
@@ -4901,6 +4903,64 @@ document.addEventListener('DOMContentLoaded', () => {
           submitLoginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-1"></i> Sign In to Dashboard';
         }
       });
+    }
+
+    // 13.1. Firebase Google Authentication Handlers
+    async function handleFirebaseGoogleAuth() {
+      try {
+        if (!window.firebase || !firebase.auth) {
+          showToast('Firebase Auth SDK is not available.', 'error');
+          return;
+        }
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+
+        const result = await firebase.auth().signInWithPopup(provider);
+        const idToken = await result.user.getIdToken();
+        const rememberMe = loginRememberMe ? loginRememberMe.checked : true;
+
+        showToast('🔐 Verifying Google identity with server...', 'info');
+
+        const res = await fetch('/api/user-auth/firebase-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken, rememberMe })
+        });
+
+        const data = await res.json();
+        if (data.success && data.token) {
+          setAuthToken(data.token, rememberMe);
+          showToast(`👋 Welcome, ${data.user.name || data.user.username}! Signed in with Google.`, 'success');
+          userLoginModal.classList.add('hidden');
+          await checkDashboardUserAuth();
+        } else if (data.pending) {
+          showToast(data.error || 'Your Google Account is pending administrator approval.', 'info');
+          if (loginErrorMsg) loginErrorMsg.textContent = data.error;
+          if (registerStatusMsg) registerStatusMsg.textContent = data.error;
+        } else {
+          showToast(data.error || 'Google Sign-In failed.', 'error');
+          if (loginErrorMsg) loginErrorMsg.textContent = data.error;
+          if (registerStatusMsg) registerStatusMsg.textContent = data.error;
+        }
+      } catch (err) {
+        console.warn('[Firebase Auth] Error:', err);
+        if (err.code === 'auth/popup-closed-by-user') {
+          showToast('Sign-In popup was closed.', 'info');
+        } else if (err.code === 'auth/unauthorized-domain') {
+          showToast('Authorized domain required. Please ensure localhost is in your Firebase Auth domain list.', 'error');
+        } else {
+          showToast(err.message || 'Google Sign-In error.', 'error');
+        }
+      }
+    }
+
+    if (firebaseGoogleSignInBtn) {
+      firebaseGoogleSignInBtn.addEventListener('click', handleFirebaseGoogleAuth);
+    }
+    if (firebaseGoogleRegisterBtn) {
+      firebaseGoogleRegisterBtn.addEventListener('click', handleFirebaseGoogleAuth);
     }
 
     // 14. Reset Password Form Submission

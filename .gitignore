@@ -5,6 +5,9 @@ node_modules/
 .env
 .env.*
 !.env.example
+serviceAccountKey*.json
+firebase-debug.log*
+
 
 # Local Databases & Sensitive Storage
 data/*.json

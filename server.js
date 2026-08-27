@@ -351,9 +351,138 @@ function clearPersistedSession() {
 loadSavedSession();
 loadUsersData();
 
-// Enable CORS and JSON parsing
+// ====================================================
+// 🛡️ ADVANCED MULTI-LAYER SECURITY & ANTI-LEAK SUITE
+// ====================================================
+
+// 1. Hide Express & Server Identifiers
+app.disable('x-powered-by');
+
+// 2. Strict Security Headers (Helmet-Grade Protection)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  next();
+});
+
+// 3. Codebase Source Code, Database & Path Traversal Shield
+const FORBIDDEN_SECURITY_PATTERNS = [
+  /\/\./,                                                               // Any dotfile or dotfolder (.git, .env, .system_generated, etc.)
+  /\.\.[\/\\]|\.\.$|%2e%2e|%2f|%5c|\0|%00/i,                            // Path traversal and null-byte injection
+  /^\/(data|scratch|node_modules|\.git|\.gemini|builtin)(\/|$)/i,       // Protected server directories
+  /^\/(server\.js|package\.json|package-lock\.json|vercel\.json|\.gitignore|\.env)/i, // Critical root files
+  /\.(env|json|db|sqlite|log|sql|bak|yml|yaml|config|lock|ts|py|sh|bat|md|git|map)$/i // Sensitive file extensions
+];
+
+app.use((req, res, next) => {
+  let decodedPath = '';
+  let originalUrl = '';
+  try {
+    decodedPath = decodeURIComponent(req.path || '');
+    originalUrl = decodeURIComponent(req.originalUrl || '');
+  } catch (e) {
+    return res.status(400).json({ success: false, error: 'Malformed URI.' });
+  }
+
+  // Allow only public static assets (.js, .css, .html, images inside /public)
+  const isAllowedPublicAsset = req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/images/') || req.path === '/favicon.ico' || req.path === '/';
+
+  for (const pattern of FORBIDDEN_SECURITY_PATTERNS) {
+    if (pattern.test(decodedPath) || pattern.test(originalUrl)) {
+      if (!isAllowedPublicAsset) {
+        console.warn(`[Security Shield] 🚨 Blocked unauthorized file access attempt: "${req.path}" from IP: ${req.ip}`);
+        return res.status(403).json({
+          success: false,
+          error: 'Access Denied: Forbidden by security shield policy.'
+        });
+      }
+    }
+  }
+  next();
+});
+
+// 4. Advanced In-Memory Sliding-Window API Rate Limiters (Anti-DoS & Anti-Brute-Force)
+const apiRateLimits = new Map();
+const authRateLimits = new Map();
+
+function createRateLimiter(store, maxRequests, windowMs, errorMessage) {
+  return (req, res, next) => {
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown-ip';
+    const now = Date.now();
+    const record = store.get(clientIp);
+
+    if (!record || now > record.resetAt) {
+      store.set(clientIp, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    if (record.count >= maxRequests) {
+      const retryAfter = Math.ceil((record.resetAt - now) / 1000);
+      res.setHeader('Retry-After', retryAfter);
+      return res.status(429).json({
+        success: false,
+        error: errorMessage || 'Too many requests. Please slow down and try again.',
+        retry_after_seconds: retryAfter
+      });
+    }
+
+    record.count += 1;
+    next();
+  };
+}
+
+// Periodic cleanup of expired rate limit entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of apiRateLimits.entries()) {
+    if (now > rec.resetAt) apiRateLimits.delete(ip);
+  }
+  for (const [ip, rec] of authRateLimits.entries()) {
+    if (now > rec.resetAt) authRateLimits.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
+// Global API Limiter: 150 req / 60s
+app.use('/api/', createRateLimiter(apiRateLimits, 150, 60 * 1000, 'API rate limit exceeded. Please try again in a few seconds.'));
+
+// Sensitive Auth & Telegram Limiter: 25 req / 60s
+app.use(['/api/user-auth/', '/api/users/', '/api/telegram/'], createRateLimiter(authRateLimits, 25, 60 * 1000, 'Too many requests on security endpoint. Please wait a moment.'));
+
+// 5. Clamped Body Parser with Strict Size Limits (Anti-Buffer Overflow)
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false, limit: '100kb' }));
+
+// 6. Anti-Prototype Pollution & Deep Input Sanitization Middleware
+function deepSanitizeInput(obj, depth = 0) {
+  if (!obj || typeof obj !== 'object' || depth > 5) return;
+  
+  for (const key of Object.keys(obj)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      delete obj[key];
+      continue;
+    }
+    const val = obj[key];
+    if (typeof val === 'string') {
+      obj[key] = val.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').slice(0, 10000);
+    } else if (typeof val === 'object' && val !== null) {
+      deepSanitizeInput(val, depth + 1);
+    }
+  }
+}
+
+app.use((req, res, next) => {
+  if (req.body) deepSanitizeInput(req.body);
+  if (req.query) deepSanitizeInput(req.query);
+  if (req.params) deepSanitizeInput(req.params);
+  next();
+});
 
 // Serve static assets from 'public' folder
 const publicDir = path.join(__dirname, 'public');
@@ -2498,6 +2627,15 @@ app.use((req, res, next) => {
     return res.sendFile(indexPath);
   }
   res.status(404).send('Cannot GET ' + req.path);
+});
+
+// Centralized Safe Error Handling Middleware (Zero Leakage of Stack Traces or Code Paths)
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ success: false, error: 'Malformed JSON payload rejected by security filter.' });
+  }
+  console.error('[Security] 🛡️ Unhandled runtime exception safely handled:', err.message);
+  res.status(500).json({ success: false, error: 'Internal server error occurred.' });
 });
 
 let browserOpened = false;

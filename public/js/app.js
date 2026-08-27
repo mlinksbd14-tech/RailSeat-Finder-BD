@@ -213,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingSoundToggle = document.getElementById('settingSoundToggle');
   const settingSoundIcon = document.getElementById('settingSoundIcon');
   const settingTestSoundBtn = document.getElementById('settingTestSoundBtn');
+  const settingTestRadarSoundBtn = document.getElementById('settingTestRadarSoundBtn');
   const settingDesktopNotifToggle = document.getElementById('settingDesktopNotifToggle');
   const settingDarkThemeToggle = document.getElementById('settingDarkThemeToggle');
   const settingMonitorActiveBadge = document.getElementById('settingMonitorActiveBadge');
@@ -485,8 +486,20 @@ document.addEventListener('DOMContentLoaded', () => {
           if (settingSoundToggle) settingSoundToggle.checked = true;
           updateSoundUI();
         }
-        playUrgentAlertChime();
-        showToast('Playing sample seat alert chime...', 'info');
+        playNormalSeatReleaseSound();
+        showToast('🔔 Playing Normal Seat Release Chime (Gentle Railway Bell)...', 'success');
+      });
+    }
+
+    if (settingTestRadarSoundBtn) {
+      settingTestRadarSoundBtn.addEventListener('click', () => {
+        if (!state.isSoundEnabled) {
+          state.isSoundEnabled = true;
+          if (settingSoundToggle) settingSoundToggle.checked = true;
+          updateSoundUI();
+        }
+        playRadarTargetHitSound();
+        showRadarHitToast('Suborno Express', 'SNIGDHA', 4, '#');
       });
     }
 
@@ -1193,27 +1206,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notifListContainer.innerHTML = state.notifications.map(item => {
       const timeStr = formatRelativeTime(item.timestamp);
+      const isRadarHit = item.type === 'RADAR_TARGET_HIT';
+
       return `
-        <div class="p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-start space-x-2.5 ${item.isRead ? 'opacity-90' : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-2 border-emerald-500'}">
-          <div class="w-8 h-8 rounded-xl ${item.type === 'SEAT_RELEASED' ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white' : 'bg-blue-600 text-white'} flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">
-            <i class="fa-solid ${item.type === 'SEAT_RELEASED' ? 'fa-chair' : 'fa-bell'} text-xs"></i>
+        <div class="p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-start space-x-2.5 ${
+          item.isRead 
+            ? 'opacity-90' 
+            : isRadarHit 
+              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-l-4 border-amber-500 shadow-2xs' 
+              : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-2 border-emerald-500'
+        }">
+          <div class="w-8 h-8 rounded-xl ${
+            isRadarHit 
+              ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-xs' 
+              : item.type === 'SEAT_RELEASED' 
+                ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-2xs' 
+                : 'bg-blue-600 text-white'
+          } flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+            <i class="fa-solid ${isRadarHit ? 'fa-crosshairs' : (item.type === 'SEAT_RELEASED' ? 'fa-chair' : 'fa-bell')} text-xs"></i>
           </div>
 
           <div class="flex-1 min-w-0 space-y-1.5">
             <!-- Header with Title, Seats & Time -->
             <div class="flex items-center justify-between gap-1">
               <div class="flex items-center space-x-1.5">
-                <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Seat Alert</span>
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
+                  isRadarHit 
+                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/80 font-mono' 
+                    : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                }">${isRadarHit ? '🎯 Radar Target' : '🟢 Seat Alert'}</span>
                 <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
               </div>
-              ${item.seats ? `<span class="text-[11px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700/60 shadow-2xs">${item.seats} Available</span>` : ''}
+              ${item.seats ? `<span class="text-[11px] font-black ${
+                isRadarHit 
+                  ? 'text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-700' 
+                  : 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700/60'
+              } px-2 py-0.5 rounded-full shadow-2xs">${item.seats} Available</span>` : ''}
             </div>
 
             <!-- Focused Highlights: Train Name & Seat Class -->
             <div class="flex items-center flex-wrap gap-1.5 py-0.5">
               <!-- Train Name Highlight Badge -->
-              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-black shadow-xs">
-                <i class="fa-solid fa-train text-[10px] text-emerald-400"></i>
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${isRadarHit ? 'bg-amber-950 text-amber-100 border border-amber-700/60' : 'bg-slate-900 dark:bg-slate-800 text-white'} text-xs font-black shadow-xs">
+                <i class="fa-solid fa-train text-[10px] ${isRadarHit ? 'text-amber-400' : 'text-emerald-400'}"></i>
                 <span>${item.trainName || 'Intercity Train'}</span>
                 ${item.trainModel ? `<span class="text-slate-400 font-mono text-[10px]">#${item.trainModel}</span>` : ''}
               </span>
@@ -1231,7 +1266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${item.fromCity && item.toCity ? `${item.fromCity} ➔ ${item.toCity} &bull; ${item.date}` : item.date}
               </span>
               ${item.bookUrl && item.bookUrl !== '#' ? `
-                <a href="${item.bookUrl}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] shadow-xs inline-flex items-center space-x-1 transition hover:scale-105">
+                <a href="${item.bookUrl}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg ${
+                  isRadarHit ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                } text-white font-black text-[10px] shadow-xs inline-flex items-center space-x-1 transition hover:scale-105">
                   <span>Book</span>
                   <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                 </a>
@@ -1253,69 +1290,98 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // Sound Alerts via Web Audio API (Synthesized chime)
+  // Sound Alerts via Web Audio API
+  // 1. Normal Seat Release (Pleasant Melodious Railway Bell)
+  // 2. Watchlist Radar Target Hit (Urgent High-Priority Sonar Sweep)
   // ----------------------------------------------------
-  function playNotificationChime() {
+  
+  // 🎵 Alert 1: Normal Route Seat Release Chime (Gentle D5 -> A5 Melodious Bell)
+  function playNormalSeatReleaseSound() {
     if (!state.isSoundEnabled) return;
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const now = audioCtx.currentTime;
 
-      // Note 1 (E5)
+      // Note 1: D5 (587.33 Hz)
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(659.25, now);
-      gain1.gain.setValueAtTime(0.15, now);
+      osc1.frequency.setValueAtTime(587.33, now);
+      gain1.gain.setValueAtTime(0.2, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc1.connect(gain1);
       gain1.connect(audioCtx.destination);
       osc1.start(now);
       osc1.stop(now + 0.35);
 
-      // Note 2 (B5)
+      // Note 2: A5 (880.00 Hz)
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(987.77, now + 0.12);
-      gain2.gain.setValueAtTime(0.2, now + 0.12);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc2.frequency.setValueAtTime(880.00, now + 0.14);
+      gain2.gain.setValueAtTime(0.25, now + 0.14);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
       osc2.connect(gain2);
       gain2.connect(audioCtx.destination);
-      osc2.start(now + 0.12);
-      osc2.stop(now + 0.6);
+      osc2.start(now + 0.14);
+      osc2.stop(now + 0.65);
     } catch (e) {
-      console.warn('Audio Context error:', e);
+      console.warn('Normal audio alert error:', e);
     }
   }
 
-  function playUrgentAlertChime() {
+  // 🚨 Alert 2: Watchlist Radar Target Hit Alarm (High-Priority Sonar/Radar Arpeggio)
+  function playRadarTargetHitSound() {
     if (!state.isSoundEnabled) return;
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const now = audioCtx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
 
+      // Pulse 1: Fast Rising 4-Tone Sonar Sweep (C5 -> G5 -> C6 -> E6)
+      const notes = [523.25, 783.99, 1046.50, 1318.51];
       notes.forEach((freq, i) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + i * 0.09);
-        gain.gain.setValueAtTime(0.25, now + i * 0.09);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.35);
+        osc.frequency.setValueAtTime(freq, now + i * 0.07);
+        gain.gain.setValueAtTime(0.28, now + i * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.28);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.start(now + i * 0.09);
-        osc.stop(now + i * 0.09 + 0.35);
+        osc.start(now + i * 0.07);
+        osc.stop(now + i * 0.07 + 0.28);
+      });
+
+      // Pulse 2: High-Pitched Resonant Radar Ping Echoes (1760 Hz A6)
+      const echoTimes = [0.36, 0.48];
+      echoTimes.forEach(t => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1760.00, now + t);
+        gain.gain.setValueAtTime(0.3, now + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + t);
+        osc.stop(now + t + 0.22);
       });
     } catch (e) {
-      console.warn('Urgent audio alert error:', e);
+      console.warn('Radar audio alert error:', e);
     }
   }
 
+  // Alias for backward compatibility
+  function playNotificationChime() {
+    playNormalSeatReleaseSound();
+  }
+
+  function playUrgentAlertChime() {
+    playRadarTargetHitSound();
+  }
 
   // ----------------------------------------------------
-  // Toast Notifications
+  // Toast Notifications (Normal Toast & Radar Target Toast)
   // ----------------------------------------------------
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -1342,6 +1408,40 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.style.transition = 'opacity 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 5500);
+  }
+
+  // 🎯 Specialized Watchlist Radar Hit Toast
+  function showRadarHitToast(trainName, className, seats, bookUrl) {
+    const toast = document.createElement('div');
+    toast.className = 'flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl shadow-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white text-xs font-bold ring-2 ring-amber-300 dark:ring-amber-400 animate-fade-in pointer-events-auto border border-amber-200/40';
+    toast.innerHTML = `
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center text-sm shadow-xs shrink-0">
+          <i class="fa-solid fa-crosshairs animate-spin text-amber-200 text-sm"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-950/70 text-amber-200 border border-amber-400/40">Radar Target Hit</span>
+            <span class="font-extrabold text-white truncate">${trainName}</span>
+          </div>
+          <p class="text-[11px] text-amber-100 font-medium truncate mt-0.5">
+            <span class="font-black text-white underline">${seats} seat(s)</span> available in <span class="font-black text-amber-200">${className}</span>!
+          </p>
+        </div>
+      </div>
+      ${bookUrl && bookUrl !== '#' ? `
+        <a href="${bookUrl}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-white text-amber-950 hover:bg-amber-100 font-black text-xs shadow-md transition shrink-0 inline-flex items-center space-x-1 hover:scale-105">
+          <span>Book</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-amber-700"></i>
+        </a>
+      ` : ''}
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 7000);
   }
 
   // ----------------------------------------------------
@@ -1781,8 +1881,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = `target_notified_${target.id}_${curr}`;
             if (!state.previousSeatCounts.has(key)) {
               state.previousSeatCounts.set(key, true);
-              playUrgentAlertChime();
-              showToast(`🎯 <b>WATCHLIST TARGET HIT!</b> ${trainMatch.train_name} has ${curr} seat(s) in ${st.display_name}!`, 'success');
+
+              // 🚨 Play High-Priority Watchlist Radar Alarm Sound
+              playRadarTargetHitSound();
+
+              // 🎯 Show Glowing Radar Toast
+              showRadarHitToast(trainMatch.train_name, st.display_name || st.type, curr, buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, st.type));
 
               const alertPayload = {
                 trainName: trainMatch.train_name,
@@ -1792,17 +1896,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 fromCity: state.selectedFrom,
                 toCity: state.selectedTo,
                 date: dojParam,
-                bookUrl: buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, st.type)
+                bookUrl: buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, st.type),
+                isRadarHit: true
               };
 
-              // 🔔 Send Telegram message automatically
+              // 🖥️ Send High-Priority Desktop Notification
+              sendDesktopNotification(
+                `🎯 [RADAR HIT] ${trainMatch.train_name} Released ${curr} Seats!`,
+                `Target matched: ${curr} seat(s) available in ${st.display_name || st.type} on ${trainMatch.train_name} for ${dojParam}! Click to book now.`,
+                alertPayload.bookUrl
+              );
+
+              // 🔔 Send Telegram message automatically with Radar formatting
               sendTelegramAlert(alertPayload);
 
+              // 📥 Record in Notification Center with Gold/Amber Radar badge
               addStoredNotification({
                 ...alertPayload,
-                title: `🎯 Watchlist Hit (${trainMatch.train_name})`,
+                title: `🎯 Radar Hit: ${trainMatch.train_name}`,
                 message: `Target matched! ${trainMatch.train_name} (#${trainMatch.train_model}) currently has ${curr} seat(s) available in ${st.display_name}!`,
-                type: 'SEAT_RELEASED'
+                type: 'RADAR_TARGET_HIT'
               });
             }
           }
@@ -1811,18 +1924,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (releasedSeatFound && releasedTrainInfo) {
-      playUrgentAlertChime();
+      // 🎵 Play Normal Pleasant Railway Bell Sound
+      playNormalSeatReleaseSound();
+
+      // 🖥️ Send Standard Desktop Notification
       sendDesktopNotification(
-        '🎉 SEAT AVAILABLE TO BUY!',
+        '🚆 Seat Available to Buy!',
         `${releasedTrainInfo.seats} seat(s) released on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Click to book now.`,
         releasedTrainInfo.bookUrl
       );
+
+      // 🟢 Show Standard Banner & Toast
       showSeatReleaseBanner(releasedTrainInfo);
       showToast(`🎉 <b>${releasedTrainInfo.seats} seat(s)</b> released on <span class="bg-slate-900 text-white font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.trainName}</span> for <span class="bg-amber-300 text-amber-950 font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.className}</span>!`, 'success');
 
-      // Store in Top Menu Notification Center
+      // 📥 Store in Top Menu Notification Center with Green badge
       addStoredNotification({
-        title: `🎉 Seat Alert (${releasedTrainInfo.trainName})`,
+        title: `🟢 Seat Alert (${releasedTrainInfo.trainName})`,
         message: `${releasedTrainInfo.seats} seat(s) just released on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
         trainName: releasedTrainInfo.trainName,
         trainModel: releasedTrainInfo.trainModel,
@@ -3007,19 +3125,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const cfg = getTelegramConfig();
     if (!cfg || !cfg.chat_id) return; // Silently skip if not configured
 
-    const { trainName, trainModel, className, seats, fromCity, toCity, date, bookUrl } = alertData;
+    const { trainName, trainModel, className, seats, fromCity, toCity, date, bookUrl, isRadarHit } = alertData;
 
-    const message = 
-`🚆 <b>SEAT AVAILABLE — RailSeat BD</b>
+    const message = isRadarHit ? 
+`🎯 <b>WATCHLIST RADAR TARGET HIT!</b> 🎯
+━━━━━━━━━━━━━━━━━━━
+🚆 <b>Train:</b> ${trainName} (#${trainModel})
+💺 <b>Class:</b> <b>${className}</b>
+🟢 <b>Seats:</b> <b>${seats} AVAILABLE TO BUY!</b>
 
-🎯 <b>${trainName}</b> (#${trainModel})
-🪑 Class: <b>${className}</b>
-🟢 Seats: <b>${seats} available</b>
+📍 <b>Route:</b> ${fromCity} ➔ ${toCity}
+📅 <b>Date:</b> ${date}
+━━━━━━━━━━━━━━━━━━━
+⚡ <i>Book immediately before seats sell out!</i>
+🔗 <a href="${bookUrl}">📲 Click to Book on Bangladesh Railway</a>`
+:
+`🚆 <b>SEAT RELEASED ON ROUTE</b>
+━━━━━━━━━━━━━━━━━━━
+🚆 <b>Train:</b> ${trainName} (#${trainModel})
+🪑 <b>Class:</b> ${className}
+🟢 <b>Seats:</b> <b>${seats} available</b>
 
-📍 ${fromCity} ➔ ${toCity}
-📅 ${date}
-
-<a href="${bookUrl}">📲 Book Now on Shohoz</a>`;
+📍 <b>Route:</b> ${fromCity} ➔ ${toCity}
+📅 <b>Date:</b> ${date}
+━━━━━━━━━━━━━━━━━━━
+🔗 <a href="${bookUrl}">📲 Book on Bangladesh Railway</a>`;
 
     try {
       await fetch('/api/telegram/send-alert', {

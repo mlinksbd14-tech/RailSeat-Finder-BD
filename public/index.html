@@ -247,13 +247,20 @@
                     </label>
                   </div>
 
-                  <!-- Test Sound Action -->
-                  <div class="pt-0.5 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between">
-                    <span class="text-[10px] text-slate-400">Preview audio sound:</span>
-                    <button type="button" id="settingTestSoundBtn" class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1">
-                      <i class="fa-solid fa-play text-[9px]"></i>
-                      <span>Test Chime</span>
-                    </button>
+                  <!-- Test Sound Actions (Normal Chime & Radar Alarm) -->
+                  <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between gap-2 flex-wrap">
+                    <span class="text-[10px] text-slate-400">Preview sounds:</span>
+                    <div class="flex items-center space-x-2">
+                      <button type="button" id="settingTestSoundBtn" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1" title="Test standard route seat release sound">
+                        <i class="fa-solid fa-play text-[8px]"></i>
+                        <span>Normal Chime</span>
+                      </button>
+                      <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                      <button type="button" id="settingTestRadarSoundBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center space-x-1" title="Test high-priority watchlist radar alarm">
+                        <i class="fa-solid fa-satellite-dish text-[9px]"></i>
+                        <span>Radar Alarm</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div class="border-t border-slate-200/60 dark:border-slate-700/50"></div>

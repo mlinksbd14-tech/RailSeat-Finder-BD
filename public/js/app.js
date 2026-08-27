@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Watchlist Elements
   const openWatchlistBtn = document.getElementById('openWatchlistBtn');
   const watchlistBadge = document.getElementById('watchlistBadge');
+  const radarUserBadge = document.getElementById('radarUserBadge');
   const watchlistModal = document.getElementById('watchlistModal');
   const watchlistCloseBtn = document.getElementById('watchlistCloseBtn');
   const watchlistItemsContainer = document.getElementById('watchlistItemsContainer');
@@ -3442,6 +3443,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Targeted Train & Seat Class Watchlist Radar (24/7 Server Synced)
   // ----------------------------------------------------
+  // Targeted Train & Seat Class Watchlist Radar (24/7 Server-Side User-Wise Synced)
+  // ----------------------------------------------------
+  async function loadUserWatchlistFromServer() {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/radar/watchlist', {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.targets)) {
+        state.watchlist = data.targets;
+        updateWatchlistUI();
+        if (watchlistModal && !watchlistModal.classList.contains('hidden')) {
+          renderWatchlistModal();
+        }
+      }
+    } catch (e) {
+      console.warn('[Radar] Error loading user watchlist:', e.message);
+    }
+  }
+
   async function syncWatchlistWithServer() {
     try {
       const tgConfig = getTelegramConfig();
@@ -3473,10 +3497,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function initWatchlist() {
     updateWatchlistUI();
     initTelegramSetup();
-    syncWatchlistWithServer();
+    loadUserWatchlistFromServer();
 
     if (openWatchlistBtn) {
       openWatchlistBtn.addEventListener('click', () => {
+        loadUserWatchlistFromServer();
         renderWatchlistModal();
         if (watchlistModal) watchlistModal.classList.remove('hidden');
       });
@@ -3573,6 +3598,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderWatchlistModal() {
     if (!watchlistItemsContainer) return;
+
+    if (radarUserBadge) {
+      if (state.currentUser && state.currentUser.username) {
+        radarUserBadge.textContent = `@${state.currentUser.username}`;
+        radarUserBadge.classList.remove('hidden');
+      } else {
+        radarUserBadge.classList.add('hidden');
+      }
+    }
+
     if (!state.watchlist || state.watchlist.length === 0) {
       watchlistItemsContainer.innerHTML = `
         <div class="py-10 text-center text-slate-400 space-y-2">
@@ -3581,7 +3616,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <p class="text-xs font-bold text-slate-700 dark:text-slate-200">No Active Watchlist Targets</p>
           <p class="text-[11px] text-slate-400 max-w-xs mx-auto">
-            Click the <span class="text-amber-600 font-bold">"Watch"</span> button on any train card in your search results to set target alert criteria.
+            Click the <span class="text-amber-600 font-bold">"Watch"</span> button on any train card in your search results to set target alert criteria for 24/7 background scanning.
           </p>
         </div>
       `;
@@ -4528,6 +4563,9 @@ document.addEventListener('DOMContentLoaded', () => {
           settingAuthActionBtn.textContent = 'Sign Out';
           settingAuthActionBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border border-rose-300 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0';
         }
+
+        // Load user-wise 24/7 background radar targets
+        loadUserWatchlistFromServer();
       } else {
         state.currentUser = null;
 

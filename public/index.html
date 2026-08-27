@@ -250,16 +250,21 @@
                     </label>
                   </div>
 
-                  <!-- Test Sound Actions (Normal Chime & Radar Alarm) -->
+                  <!-- Test Sound Actions (Normal Chime, Sold Out -> Available Alert & Radar Alarm) -->
                   <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between gap-2 flex-wrap">
                     <span class="text-[10px] text-slate-400">Preview sounds:</span>
-                    <div class="flex items-center space-x-2">
-                      <button type="button" id="settingTestSoundBtn" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1" title="Test standard route seat release sound">
-                        <i class="fa-solid fa-play text-[8px]"></i>
-                        <span>Normal Chime</span>
+                    <div class="flex items-center space-x-2 flex-wrap">
+                      <button type="button" id="settingTestSoundBtn" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test normal available seat chime">
+                        <i class="fa-solid fa-bell text-[8px]"></i>
+                        <span>Normal Seat</span>
                       </button>
                       <span class="text-slate-300 dark:text-slate-600">&bull;</span>
-                      <button type="button" id="settingTestRadarSoundBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center space-x-1" title="Test high-priority watchlist radar alarm">
+                      <button type="button" id="settingTestSoldOutSoundBtn" class="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-extrabold inline-flex items-center space-x-1 cursor-pointer" title="Test urgent alert when seats release from All Sold Out">
+                        <i class="fa-solid fa-bolt text-[9px] text-rose-500"></i>
+                        <span>Sold Out ➔ Released</span>
+                      </button>
+                      <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                      <button type="button" id="settingTestRadarSoundBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test high-priority watchlist radar alarm">
                         <i class="fa-solid fa-satellite-dish text-[9px]"></i>
                         <span>Radar Alarm</span>
                       </button>

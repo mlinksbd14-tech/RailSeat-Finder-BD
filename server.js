@@ -2702,23 +2702,33 @@ async function runBackgroundRadarCycle() {
               if (availableSeats >= minSeats) {
                 // Check if already notified for this exact seat count
                 if (target.lastNotifiedSeats !== availableSeats) {
+                  const wasSoldOut = (target.lastNotifiedSeats === 0 || target.lastNotifiedSeats === undefined);
                   target.lastNotifiedSeats = availableSeats;
                   target.lastNotifiedAt = new Date().toISOString();
 
                   const chatId = target.telegramChatId;
                   if (chatId && FIXED_TELEGRAM_BOT_TOKEN) {
-                    console.log(`[Radar 24/7] 🎯 ALERT: ${train.train_name} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
+                    console.log(`[Radar 24/7] 🎯 ALERT (${wasSoldOut ? 'SOLD_OUT_RELEASED' : 'RADAR_HIT'}): ${train.train_name} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
 
                     const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
                     
-                    const msgText = 
+                    const msgText = wasSoldOut ?
+                      `🚨 <b>[RELEASED SEAT ALERT: ALL SOLD OUT ➔ AVAILABLE!]</b>\n\n` +
+                      `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
+                      `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
+                      `📅 <b>Date:</b> ${dateOfJourney}\n` +
+                      `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
+                      `🔥 <b>Available Seats:</b> <b>${availableSeats}</b> (Online: ${st.seats_available}, Counter: ${st.counter_seats_available})\n\n` +
+                      `⚡ <i>This train was previously SOLD OUT and new seats just dropped! Book immediately before they are gone!</i>\n` +
+                      `🔗 <a href="${bookUrl}">Click here to Book on Railway</a>`
+                      :
                       `🎯 <b>WATCHLIST RADAR HIT!</b>\n\n` +
                       `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
                       `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
                       `📅 <b>Date:</b> ${dateOfJourney}\n` +
                       `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
                       `🟢 <b>Available Seats:</b> <b>${availableSeats}</b> (Online: ${st.seats_available}, Counter: ${st.counter_seats_available})\n\n` +
-                      `⚡ <i>Book immediately on Bangladesh Railway before seats sell out!</i>\n` +
+                      `⚡ <i>Book immediately on Bangladesh Railway!</i>\n` +
                       `🔗 <a href="${bookUrl}">Click here to Book on Railway</a>`;
 
                     try {

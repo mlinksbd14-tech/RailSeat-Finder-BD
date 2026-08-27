@@ -213,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingSoundToggle = document.getElementById('settingSoundToggle');
   const settingSoundIcon = document.getElementById('settingSoundIcon');
   const settingTestSoundBtn = document.getElementById('settingTestSoundBtn');
+  const settingTestSoldOutSoundBtn = document.getElementById('settingTestSoldOutSoundBtn');
   const settingTestRadarSoundBtn = document.getElementById('settingTestRadarSoundBtn');
   const settingDesktopNotifToggle = document.getElementById('settingDesktopNotifToggle');
   const settingDarkThemeToggle = document.getElementById('settingDarkThemeToggle');
@@ -500,7 +501,19 @@ document.addEventListener('DOMContentLoaded', () => {
           updateSoundUI();
         }
         playNormalSeatReleaseSound();
-        showToast('🔔 Playing Normal Seat Release Chime (Gentle Railway Bell)...', 'success');
+        showToast('🔔 <b>Normal Seat Chime:</b> Gentle railway bell for routine seat availability', 'info');
+      });
+    }
+
+    if (settingTestSoldOutSoundBtn) {
+      settingTestSoldOutSoundBtn.addEventListener('click', () => {
+        if (!state.isSoundEnabled) {
+          state.isSoundEnabled = true;
+          if (settingSoundToggle) settingSoundToggle.checked = true;
+          updateSoundUI();
+        }
+        playSoldOutReleasedSound();
+        showSoldOutReleasedToast('Sonar Bangla Express', 'S_CHAIR', 4, '#');
       });
     }
 
@@ -1052,10 +1065,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showSeatReleaseBanner(info) {
-    const { trainName, trainModel, className, seats, bookUrl } = info;
+    const { trainName, trainModel, className, seats, bookUrl, fromSoldOut } = info;
     if (releasedSeatAlertBanner && releasedSeatText && releasedSeatBookBtn) {
+      if (fromSoldOut) {
+        releasedSeatAlertBanner.className = 'bg-gradient-to-r from-rose-600 via-amber-600 to-emerald-600 text-white rounded-xl px-4 py-2.5 shadow-xl border border-amber-300/60 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in ring-2 ring-rose-500/40';
+      } else {
+        releasedSeatAlertBanner.className = 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-xl px-4 py-2.5 shadow-lg border border-emerald-400/50 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in';
+      }
+
       releasedSeatText.innerHTML = `
         <div class="flex items-center flex-wrap gap-2 text-xs text-white">
+          ${fromSoldOut ? `
+            <span class="font-black bg-rose-500 text-white px-2 py-0.5 rounded-lg shadow-sm border border-rose-300 inline-flex items-center gap-1 whitespace-nowrap animate-pulse">
+              <i class="fa-solid fa-bolt text-amber-300 text-[10px]"></i>
+              <span>SOLD OUT ➔ RELEASED!</span>
+            </span>
+          ` : `
+            <span class="font-black bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded-lg shadow-sm border border-emerald-500 inline-flex items-center gap-1 whitespace-nowrap">
+              <i class="fa-solid fa-bell text-emerald-300 text-[10px]"></i>
+              <span>SEATS AVAILABLE</span>
+            </span>
+          `}
           <span class="font-black bg-slate-900/80 text-white px-2.5 py-1 rounded-lg border border-white/20 shadow-xs inline-flex items-center gap-1.5 whitespace-nowrap">
             <i class="fa-solid fa-train text-emerald-400 text-[10px]"></i>
             <span>${trainName}</span>
@@ -1065,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="fa-solid fa-couch text-[9px] text-amber-800"></i>
             <span>${className}</span>
           </span>
-          <span class="font-black text-amber-200 text-xs whitespace-nowrap">
+          <span class="font-black ${fromSoldOut ? 'text-amber-100' : 'text-amber-200'} text-xs whitespace-nowrap">
             ${seats} Seat(s) Available to Buy!
           </span>
         </div>
@@ -1220,23 +1250,26 @@ document.addEventListener('DOMContentLoaded', () => {
     notifListContainer.innerHTML = state.notifications.map(item => {
       const timeStr = formatRelativeTime(item.timestamp);
       const isRadarHit = item.type === 'RADAR_TARGET_HIT';
+      const isSoldOutReleased = item.type === 'SOLD_OUT_RELEASED';
 
       return `
         <div class="p-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-start space-x-2.5 ${
           item.isRead 
             ? 'opacity-90' 
-            : isRadarHit 
-              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-l-4 border-amber-500 shadow-2xs' 
-              : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-2 border-emerald-500'
+            : isSoldOutReleased
+              ? 'bg-rose-50/80 dark:bg-rose-950/40 border-l-4 border-rose-500 shadow-xs ring-1 ring-rose-300/40'
+              : isRadarHit 
+                ? 'bg-amber-50/70 dark:bg-amber-950/40 border-l-4 border-amber-500 shadow-2xs' 
+                : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-l-2 border-emerald-500'
         }">
           <div class="w-8 h-8 rounded-xl ${
-            isRadarHit 
-              ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-xs' 
-              : item.type === 'SEAT_RELEASED' 
-                ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-2xs' 
-                : 'bg-blue-600 text-white'
+            isSoldOutReleased
+              ? 'bg-gradient-to-tr from-rose-600 via-red-500 to-amber-500 text-white shadow-sm'
+              : isRadarHit 
+                ? 'bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-xs' 
+                : 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-2xs'
           } flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-            <i class="fa-solid ${isRadarHit ? 'fa-crosshairs' : (item.type === 'SEAT_RELEASED' ? 'fa-chair' : 'fa-bell')} text-xs"></i>
+            <i class="fa-solid ${isSoldOutReleased ? 'fa-bolt animate-pulse' : (isRadarHit ? 'fa-crosshairs' : 'fa-bell')} text-xs"></i>
           </div>
 
           <div class="flex-1 min-w-0 space-y-1.5">
@@ -1244,31 +1277,35 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex items-center justify-between gap-1">
               <div class="flex items-center space-x-1.5">
                 <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${
-                  isRadarHit 
-                    ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/80 font-mono' 
-                    : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                }">${isRadarHit ? '🎯 Radar Target' : '🟢 Seat Alert'}</span>
+                  isSoldOutReleased
+                    ? 'bg-rose-100 dark:bg-rose-950 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-700/80 font-mono font-bold'
+                    : isRadarHit 
+                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/80 font-mono' 
+                      : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                }">${isSoldOutReleased ? '🚨 Sold Out ➔ Released' : (isRadarHit ? '🎯 Radar Target' : '🟢 Seat Alert')}</span>
                 <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
               </div>
               ${item.seats ? `<span class="text-[11px] font-black ${
-                isRadarHit 
-                  ? 'text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-700' 
-                  : 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700/60'
+                isSoldOutReleased
+                  ? 'text-rose-900 dark:text-rose-200 bg-rose-100 dark:bg-rose-950/90 border border-rose-300 dark:border-rose-700'
+                  : isRadarHit 
+                    ? 'text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/90 border border-amber-300 dark:border-amber-700' 
+                    : 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/90 border border-emerald-300 dark:border-emerald-700/60'
               } px-2 py-0.5 rounded-full shadow-2xs">${item.seats} Available</span>` : ''}
             </div>
 
             <!-- Focused Highlights: Train Name & Seat Class -->
             <div class="flex items-center flex-wrap gap-1.5 py-0.5">
               <!-- Train Name Highlight Badge -->
-              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${isRadarHit ? 'bg-amber-950 text-amber-100 border border-amber-700/60' : 'bg-slate-900 dark:bg-slate-800 text-white'} text-xs font-black shadow-xs">
-                <i class="fa-solid fa-train text-[10px] ${isRadarHit ? 'text-amber-400' : 'text-emerald-400'}"></i>
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${isSoldOutReleased ? 'bg-rose-950 text-rose-100 border border-rose-700/60' : (isRadarHit ? 'bg-amber-950 text-amber-100 border border-amber-700/60' : 'bg-slate-900 dark:bg-slate-800 text-white')} text-xs font-black shadow-xs">
+                <i class="fa-solid fa-train text-[10px] ${isSoldOutReleased ? 'text-amber-300' : (isRadarHit ? 'text-amber-400' : 'text-emerald-400')}"></i>
                 <span>${item.trainName || 'Intercity Train'}</span>
                 ${item.trainModel ? `<span class="text-slate-400 font-mono text-[10px]">#${item.trainModel}</span>` : ''}
               </span>
 
               <!-- Seat Class Highlight Badge -->
-              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-black text-xs border border-amber-300 dark:border-amber-700/80 shadow-2xs">
-                <i class="fa-solid fa-couch text-[9px] text-amber-600 dark:text-amber-400"></i>
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg ${isSoldOutReleased ? 'bg-rose-100 dark:bg-rose-950 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-700' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/80'} font-black text-xs shadow-2xs">
+                <i class="fa-solid fa-couch text-[9px] ${isSoldOutReleased ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}"></i>
                 <span>${item.className || 'Seat Class'}</span>
               </span>
             </div>
@@ -1280,7 +1317,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
               ${item.bookUrl && item.bookUrl !== '#' ? `
                 <a href="${item.bookUrl}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg ${
-                  isRadarHit ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                  isSoldOutReleased
+                    ? 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 ring-1 ring-rose-400'
+                    : isRadarHit 
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' 
+                      : 'bg-emerald-600 hover:bg-emerald-700'
                 } text-white font-black text-[10px] shadow-xs inline-flex items-center space-x-1 transition hover:scale-105">
                   <span>Book</span>
                   <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
@@ -1305,7 +1346,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Sound Alerts via Web Audio API
   // 1. Normal Seat Release (Pleasant Melodious Railway Bell)
-  // 2. Watchlist Radar Target Hit (Urgent High-Priority Sonar Sweep)
+  // 2. Available from ALL SOLD OUT (Urgent Energetic Triple-Burst Alarm)
+  // 3. Watchlist Radar Target Hit (High-Priority Sonar Sweep)
   // ----------------------------------------------------
   
   // 🎵 Alert 1: Normal Route Seat Release Chime (Gentle D5 -> A5 Melodious Bell)
@@ -1343,7 +1385,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🚨 Alert 2: Watchlist Radar Target Hit Alarm (High-Priority Sonar/Radar Arpeggio)
+  // 🚨 Alert 2: Available Seat from ALL SOLD OUT (Urgent Ascending Triple-Burst Alarm)
+  function playSoldOutReleasedSound() {
+    if (!state.isSoundEnabled) return;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+
+      // Ascending rapid alert bursts: G5 -> C6 -> E6 -> G6 -> C7
+      const freqs = [783.99, 1046.50, 1318.51, 1567.98, 2093.00];
+      freqs.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+        gain.gain.setValueAtTime(0.25, now + idx * 0.055);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.20);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.055);
+        osc.stop(now + idx * 0.055 + 0.20);
+      });
+
+      // High resonant echo pings (C7: 2093 Hz)
+      const echoTimes = [0.32, 0.44];
+      echoTimes.forEach(t => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(2093.00, now + t);
+        gain.gain.setValueAtTime(0.3, now + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + t);
+        osc.stop(now + t + 0.22);
+      });
+    } catch (e) {
+      console.warn('Sold-out released audio alert error:', e);
+    }
+  }
+
+  // 🎯 Alert 3: Watchlist Radar Target Hit Alarm (High-Priority Sonar/Radar Arpeggio)
   function playRadarTargetHitSound() {
     if (!state.isSoundEnabled) return;
     try {
@@ -1390,11 +1473,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function playUrgentAlertChime() {
-    playRadarTargetHitSound();
+    playSoldOutReleasedSound();
   }
 
   // ----------------------------------------------------
-  // Toast Notifications (Normal Toast & Radar Target Toast)
+  // Toast Notifications (Normal, Sold Out -> Available, & Radar Hit)
   // ----------------------------------------------------
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -1421,6 +1504,40 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.style.transition = 'opacity 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 5500);
+  }
+
+  // 🚨 Specialized Sold Out -> Available Toast
+  function showSoldOutReleasedToast(trainName, className, seats, bookUrl) {
+    const toast = document.createElement('div');
+    toast.className = 'flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl shadow-2xl bg-gradient-to-r from-rose-600 via-amber-600 to-emerald-600 text-white text-xs font-bold ring-2 ring-rose-400 dark:ring-rose-500 animate-fade-in pointer-events-auto border border-amber-200/50';
+    toast.innerHTML = `
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-black/25 flex items-center justify-center text-sm shadow-xs shrink-0 animate-bounce">
+          <i class="fa-solid fa-bolt text-amber-300 text-sm"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-rose-950/80 text-amber-200 border border-rose-400/50">Sold Out ➔ Released</span>
+            <span class="font-extrabold text-white truncate">${trainName}</span>
+          </div>
+          <p class="text-[11px] text-amber-100 font-medium truncate mt-0.5">
+            <span class="font-black text-white underline">${seats} seat(s)</span> released in <span class="font-black text-amber-200">${className}</span>!
+          </p>
+        </div>
+      </div>
+      ${bookUrl && bookUrl !== '#' ? `
+        <a href="${bookUrl}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-white text-rose-950 hover:bg-rose-100 font-black text-xs shadow-md transition shrink-0 inline-flex items-center space-x-1 hover:scale-105">
+          <span>Book</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-rose-700"></i>
+        </a>
+      ` : ''}
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 7500);
   }
 
   // 🎯 Specialized Watchlist Radar Hit Toast
@@ -1833,7 +1950,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function detectSeatChanges(currentTrains) {
-    let releasedSeatFound = false;
+    let soldOutReleasedFound = false;
+    let normalSeatFound = false;
     let releasedTrainInfo = null;
 
     const dojParam = formatShohozDoj(state.selectedDate);
@@ -1844,10 +1962,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const prev = state.previousSeatCounts.get(key);
         const curr = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
 
-        // If previously tracked as 0 seats (Sold out/Booked) and now has seats:
-        // A booked seat became available to buy!
+        // CASE 1: Previously ALL SOLD OUT (0 seats) and now has seats (>0) -> URGENT RELEASED SEAT!
         if (prev !== undefined && prev === 0 && curr > 0) {
-          releasedSeatFound = true;
+          soldOutReleasedFound = true;
           const chosenClass = st.type || 'S_CHAIR';
           const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
 
@@ -1856,21 +1973,26 @@ document.addEventListener('DOMContentLoaded', () => {
             trainModel: train.train_model,
             className: st.display_name || st.type,
             seats: curr,
-            bookUrl: bookUrl
+            bookUrl: bookUrl,
+            fromSoldOut: true
           };
-        } else if (prev !== undefined && curr > prev && prev > 0) {
-          // Additional seats released (e.g. cancellations / additional bogie attached)
-          releasedSeatFound = true;
+        } 
+        // CASE 2: Normal seat increase / additional availability (prev > 0 and curr > prev)
+        else if (prev !== undefined && curr > prev && prev > 0) {
+          normalSeatFound = true;
           const chosenClass = st.type || 'S_CHAIR';
           const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
 
-          releasedTrainInfo = {
-            trainName: train.train_name,
-            trainModel: train.train_model,
-            className: st.display_name || st.type,
-            seats: curr,
-            bookUrl: bookUrl
-          };
+          if (!releasedTrainInfo) {
+            releasedTrainInfo = {
+              trainName: train.train_name,
+              trainModel: train.train_model,
+              className: st.display_name || st.type,
+              seats: curr,
+              bookUrl: bookUrl,
+              fromSoldOut: false
+            };
+          }
         }
 
         state.previousSeatCounts.set(key, curr);
@@ -1895,7 +2017,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!state.previousSeatCounts.has(key)) {
               state.previousSeatCounts.set(key, true);
 
-              // 🚨 Play High-Priority Watchlist Radar Alarm Sound
+              // 🎯 Play High-Priority Watchlist Radar Alarm Sound
               playRadarTargetHitSound();
 
               // 🎯 Show Glowing Radar Toast
@@ -1936,25 +2058,57 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (releasedSeatFound && releasedTrainInfo) {
+    // 🚨 CASE 1: AVAILABLE SEATS RELEASED FROM ALL SOLD OUT (Urgent High Priority Alert)
+    if (soldOutReleasedFound && releasedTrainInfo) {
+      // 🚨 Play Urgent Ascending Alarm Sound
+      playSoldOutReleasedSound();
+
+      // 🖥️ Send Urgent Desktop Notification
+      sendDesktopNotification(
+        `🚨 [ALL SOLD OUT ➔ RELEASED] ${releasedTrainInfo.trainName} Has Seats!`,
+        `Urgent Alert: ${releasedTrainInfo.seats} seat(s) just released from All Sold Out on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Book immediately.`,
+        releasedTrainInfo.bookUrl
+      );
+
+      // 🔴 Show Urgent Glowing Banner & Fiery Toast
+      showSeatReleaseBanner(releasedTrainInfo);
+      showSoldOutReleasedToast(releasedTrainInfo.trainName, releasedTrainInfo.className, releasedTrainInfo.seats, releasedTrainInfo.bookUrl);
+
+      // 📥 Store in Top Menu Notification Center with Bold Red/Amber Badge
+      addStoredNotification({
+        title: `🚨 Sold Out ➔ Available (${releasedTrainInfo.trainName})`,
+        message: `⚡ ${releasedTrainInfo.seats} seat(s) just dropped from All Sold Out on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
+        trainName: releasedTrainInfo.trainName,
+        trainModel: releasedTrainInfo.trainModel,
+        className: releasedTrainInfo.className,
+        seats: releasedTrainInfo.seats,
+        fromCity: state.selectedFrom,
+        toCity: state.selectedTo,
+        date: dojParam,
+        bookUrl: releasedTrainInfo.bookUrl,
+        type: 'SOLD_OUT_RELEASED'
+      });
+    } 
+    // 🟢 CASE 2: NORMAL AVAILABLE SEAT INCREASE (Pleasant Routine Chime)
+    else if (normalSeatFound && releasedTrainInfo) {
       // 🎵 Play Normal Pleasant Railway Bell Sound
       playNormalSeatReleaseSound();
 
       // 🖥️ Send Standard Desktop Notification
       sendDesktopNotification(
-        '🚆 Seat Available to Buy!',
-        `${releasedTrainInfo.seats} seat(s) released on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Click to book now.`,
+        `🚆 Seat Update: ${releasedTrainInfo.trainName}`,
+        `${releasedTrainInfo.seats} seat(s) available on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Click to book.`,
         releasedTrainInfo.bookUrl
       );
 
       // 🟢 Show Standard Banner & Toast
       showSeatReleaseBanner(releasedTrainInfo);
-      showToast(`🎉 <b>${releasedTrainInfo.seats} seat(s)</b> released on <span class="bg-slate-900 text-white font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.trainName}</span> for <span class="bg-amber-300 text-amber-950 font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.className}</span>!`, 'success');
+      showToast(`🟢 <b>${releasedTrainInfo.seats} seat(s)</b> available on <span class="bg-slate-900 text-white font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.trainName}</span> for <span class="bg-amber-300 text-amber-950 font-black px-1.5 py-0.5 rounded shadow-2xs">${releasedTrainInfo.className}</span>`, 'success');
 
       // 📥 Store in Top Menu Notification Center with Green badge
       addStoredNotification({
         title: `🟢 Seat Alert (${releasedTrainInfo.trainName})`,
-        message: `${releasedTrainInfo.seats} seat(s) just released on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
+        message: `${releasedTrainInfo.seats} seat(s) available on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
         trainName: releasedTrainInfo.trainName,
         trainModel: releasedTrainInfo.trainModel,
         className: releasedTrainInfo.className,

@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "enabled": true,
+    "intervalSeconds": 25,
+    "lastRunAt": null
+  },
+  "targets": []
+}

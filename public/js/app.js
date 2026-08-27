@@ -3141,11 +3141,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // Targeted Train & Seat Class Watchlist Radar
+  // Targeted Train & Seat Class Watchlist Radar (24/7 Server Synced)
   // ----------------------------------------------------
+  async function syncWatchlistWithServer() {
+    try {
+      const tgConfig = getTelegramConfig();
+      const token = getAuthToken();
+      await fetch('/api/radar/watchlist/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          targets: state.watchlist,
+          telegramChatId: tgConfig ? tgConfig.chat_id : null,
+          telegramUsername: tgConfig ? tgConfig.username : null
+        })
+      });
+    } catch (e) {
+      console.warn('[Radar] Background sync error:', e.message);
+    }
+  }
+
+  function saveWatchlist() {
+    try {
+      localStorage.setItem('railway_watchlist', JSON.stringify(state.watchlist));
+      syncWatchlistWithServer();
+    } catch (e) {}
+  }
+
   function initWatchlist() {
     updateWatchlistUI();
     initTelegramSetup();
+    syncWatchlistWithServer();
 
     if (openWatchlistBtn) {
       openWatchlistBtn.addEventListener('click', () => {
@@ -3206,6 +3235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveWatchTargetBtn.addEventListener('click', () => {
         if (!state.pendingWatchTarget) return;
         const targetClass = watchTargetClassSelect ? watchTargetClassSelect.value : 'ANY';
+        const tgConfig = getTelegramConfig();
         const item = {
           id: 'watch_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
           trainName: state.pendingWatchTarget.trainName,
@@ -3215,6 +3245,8 @@ document.addEventListener('DOMContentLoaded', () => {
           date: state.selectedDate || new Date().toISOString().split('T')[0],
           className: targetClass,
           minSeats: state.pendingWatchTarget.minSeats || 1,
+          telegramChatId: tgConfig ? tgConfig.chat_id : null,
+          telegramUsername: tgConfig ? tgConfig.username : null,
           active: true,
           createdAt: Date.now()
         };
@@ -3223,15 +3255,9 @@ document.addEventListener('DOMContentLoaded', () => {
         saveWatchlist();
         updateWatchlistUI();
         if (setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
-        showToast(`🎯 Added ${item.trainName} (${item.className}) to your Active Watchlist!`, 'success');
+        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className})! Alerts will be sent to Telegram even when browser is closed.`, 'success');
       });
     }
-  }
-
-  function saveWatchlist() {
-    try {
-      localStorage.setItem('railway_watchlist', JSON.stringify(state.watchlist));
-    } catch (e) {}
   }
 
   function updateWatchlistUI() {

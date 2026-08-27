@@ -2147,6 +2147,347 @@ app.post('/api/users/update-settings', requireAdmin, (req, res) => {
   });
 });
 
+// ====================================================
+// 8. 🛰️ 24/7 Server-Side Background Watchlist Radar Engine
+// ====================================================
+
+const RADAR_FILE = path.join(__dirname, 'data', 'radar_watchlist.json');
+
+function loadRadarData() {
+  try {
+    if (fs.existsSync(RADAR_FILE)) {
+      const raw = fs.readFileSync(RADAR_FILE, 'utf8');
+      if (raw.trim()) {
+        const data = JSON.parse(raw);
+        data.settings = data.settings || { enabled: true, intervalSeconds: 25, lastRunAt: null };
+        data.targets = Array.isArray(data.targets) ? data.targets : [];
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('[Radar] Error reading radar_watchlist.json:', err.message);
+  }
+  return { settings: { enabled: true, intervalSeconds: 25, lastRunAt: null }, targets: [] };
+}
+
+function saveRadarData(data) {
+  try {
+    const dir = path.dirname(RADAR_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(RADAR_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Radar] Error writing radar_watchlist.json:', err.message);
+  }
+}
+
+// Find best Shohoz token for background scanning
+function getRadarShohozSession(targetUserId) {
+  const usersData = loadUsersData();
+  // 1. Try target user
+  if (targetUserId) {
+    const targetUser = usersData.users.find(u => u.id === targetUserId);
+    if (targetUser && targetUser.shohozSession && targetUser.shohozSession.token) {
+      return targetUser.shohozSession;
+    }
+  }
+  // 2. Try any user with an active Shohoz session (prefer admin)
+  const userWithSession = usersData.users.find(u => u.shohozSession && u.shohozSession.token);
+  if (userWithSession) {
+    return userWithSession.shohozSession;
+  }
+  // 3. Try global in-memory session
+  if (authCredentials && authCredentials.token) {
+    return authCredentials;
+  }
+  return { token: null };
+}
+
+// Background Radar Poller (Executes 24/7 even when browser tabs are closed)
+let isRadarRunning = false;
+async function runBackgroundRadarCycle() {
+  if (isRadarRunning) return;
+  const radarData = loadRadarData();
+  if (radarData.settings.enabled === false) return;
+
+  const activeTargets = radarData.targets.filter(t => t.active !== false);
+  if (activeTargets.length === 0) return;
+
+  isRadarRunning = true;
+  radarData.settings.lastRunAt = new Date().toISOString();
+
+  try {
+    // Group active targets by unique route (fromCity, toCity, date)
+    const routeGroups = new Map();
+    for (const target of activeTargets) {
+      if (!target.fromCity || !target.toCity || !target.date) continue;
+      const key = `${target.fromCity.toUpperCase().trim()}___${target.toCity.toUpperCase().trim()}___${target.date.trim()}`;
+      if (!routeGroups.has(key)) {
+        routeGroups.set(key, []);
+      }
+      routeGroups.get(key).push(target);
+    }
+
+    for (const [routeKey, targets] of routeGroups.entries()) {
+      const [fromCity, toCity, dateOfJourney] = routeKey.split('___');
+      const session = getRadarShohozSession(targets[0]?.userId);
+
+      if (!session || !session.token) {
+        continue;
+      }
+
+      try {
+        const result = await querySingleShohozTrip(fromCity, toCity, dateOfJourney, session);
+        if (!result.success || !Array.isArray(result.trains)) continue;
+
+        const trains = result.trains;
+
+        for (const target of targets) {
+          target.lastCheckedAt = new Date().toISOString();
+
+          // Match train
+          const matchingTrains = trains.filter(t => {
+            if (!target.trainName || target.trainName === 'ALL') return true;
+            if (target.trainModel && String(t.train_model) === String(target.trainModel)) return true;
+            if (t.train_name && target.trainName && t.train_name.toLowerCase().trim() === target.trainName.toLowerCase().trim()) return true;
+            return false;
+          });
+
+          for (const train of matchingTrains) {
+            const seatTypes = train.seat_types || [];
+            for (const st of seatTypes) {
+              if (target.className && target.className !== 'ANY' && st.type !== target.className) continue;
+
+              const availableSeats = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
+              const minSeats = Number(target.minSeats) || 1;
+
+              if (availableSeats >= minSeats) {
+                // Check if already notified for this exact seat count
+                if (target.lastNotifiedSeats !== availableSeats) {
+                  target.lastNotifiedSeats = availableSeats;
+                  target.lastNotifiedAt = new Date().toISOString();
+
+                  const chatId = target.telegramChatId;
+                  if (chatId && FIXED_TELEGRAM_BOT_TOKEN) {
+                    console.log(`[Radar 24/7] 🎯 ALERT: ${train.train_name} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
+
+                    const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
+                    
+                    const msgText = 
+                      `🎯 <b>WATCHLIST RADAR HIT!</b>\n\n` +
+                      `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
+                      `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
+                      `📅 <b>Date:</b> ${dateOfJourney}\n` +
+                      `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
+                      `🟢 <b>Available Seats:</b> <b>${availableSeats}</b> (Online: ${st.seats_available}, Counter: ${st.counter_seats_available})\n\n` +
+                      `⚡ <i>Book immediately on Bangladesh Railway before seats sell out!</i>\n` +
+                      `🔗 <a href="${bookUrl}">Click here to Book on Railway</a>`;
+
+                    try {
+                      await axios.post(`https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        chat_id: chatId,
+                        text: msgText,
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: false
+                      });
+                    } catch (tgErr) {
+                      console.warn('[Radar] ❌ Telegram send error:', tgErr.response?.data?.description || tgErr.message);
+                    }
+                  }
+                }
+              } else if (availableSeats === 0 && (target.lastNotifiedSeats || 0) > 0) {
+                // Reset so when seats release again, alert fires immediately
+                target.lastNotifiedSeats = 0;
+              }
+            }
+          }
+        }
+      } catch (routeErr) {
+        console.warn(`[Radar] Error scanning route ${routeKey}:`, routeErr.message);
+      }
+
+      // Small throttling delay between routes
+      await new Promise(r => setTimeout(r, 1200));
+    }
+
+    saveRadarData(radarData);
+  } catch (err) {
+    console.error('[Radar] Error in background radar cycle:', err.message);
+  } finally {
+    isRadarRunning = false;
+  }
+}
+
+// Start Server-Side Radar Daemon
+if (!process.env.VERCEL) {
+  setInterval(runBackgroundRadarCycle, 25000);
+  setTimeout(runBackgroundRadarCycle, 5000);
+}
+
+// --- Radar API Endpoints ---
+
+// 1. Radar Status Check
+app.get('/api/radar/status', (req, res) => {
+  const radarData = loadRadarData();
+  const activeCount = radarData.targets.filter(t => t.active !== false).length;
+  res.json({
+    success: true,
+    running: !!radarData.settings.enabled,
+    interval_seconds: radarData.settings.intervalSeconds || 25,
+    last_run_at: radarData.settings.lastRunAt,
+    total_targets: radarData.targets.length,
+    active_targets: activeCount
+  });
+});
+
+// 2. Get Radar Watchlist Targets
+app.get('/api/radar/watchlist', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const radarData = loadRadarData();
+  
+  let userTargets = radarData.targets;
+  if (session && session.role !== 'admin') {
+    userTargets = radarData.targets.filter(t => t.userId === session.userId || !t.userId);
+  }
+
+  res.json({
+    success: true,
+    targets: userTargets,
+    settings: radarData.settings
+  });
+});
+
+// 3. Add or Update Radar Target
+app.post('/api/radar/watchlist/add', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const { fromCity, toCity, date, trainName, trainModel, className, minSeats, telegramChatId, telegramUsername } = req.body;
+
+  if (!fromCity || !toCity || !date) {
+    return res.json({ success: false, error: 'fromCity, toCity, and date are required.' });
+  }
+
+  const radarData = loadRadarData();
+  const newTarget = {
+    id: 'radar_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    userId: session ? session.userId : null,
+    username: session ? session.username : 'guest',
+    fromCity: fromCity.trim().toUpperCase(),
+    toCity: toCity.trim().toUpperCase(),
+    date: date.trim(),
+    trainName: (trainName || 'ALL').trim(),
+    trainModel: trainModel || null,
+    className: className || 'ANY',
+    minSeats: Number(minSeats) || 1,
+    telegramChatId: telegramChatId || null,
+    telegramUsername: telegramUsername || null,
+    active: true,
+    lastNotifiedSeats: 0,
+    lastCheckedAt: null,
+    createdAt: new Date().toISOString()
+  };
+
+  radarData.targets.push(newTarget);
+  saveRadarData(radarData);
+
+  console.log(`[Radar] ➕ Added target: ${newTarget.trainName} on ${newTarget.fromCity} ➔ ${newTarget.toCity} (${newTarget.date})`);
+
+  // Trigger instant scan cycle
+  setTimeout(runBackgroundRadarCycle, 500);
+
+  res.json({
+    success: true,
+    message: 'Added to 24/7 Background Radar! Telegram alerts will be sent automatically.',
+    target: newTarget
+  });
+});
+
+// 4. Batch Sync Browser Watchlist with Server Radar
+app.post('/api/radar/watchlist/sync', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const { targets = [], telegramChatId, telegramUsername } = req.body;
+
+  if (!Array.isArray(targets)) {
+    return res.json({ success: false, error: 'Invalid targets array.' });
+  }
+
+  const radarData = loadRadarData();
+
+  // Replace or merge user targets
+  if (session && session.userId) {
+    radarData.targets = radarData.targets.filter(t => t.userId !== session.userId);
+  } else {
+    radarData.targets = radarData.targets.filter(t => t.userId);
+  }
+
+  for (const t of targets) {
+    if (!t.fromCity || !t.toCity || !t.date) continue;
+    radarData.targets.push({
+      id: t.id || ('radar_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+      userId: session ? session.userId : null,
+      username: session ? session.username : 'guest',
+      fromCity: (t.fromCity || '').trim().toUpperCase(),
+      toCity: (t.toCity || '').trim().toUpperCase(),
+      date: (t.date || '').trim(),
+      trainName: (t.trainName || 'ALL').trim(),
+      trainModel: t.trainModel || null,
+      className: t.className || 'ANY',
+      minSeats: Number(t.minSeats) || 1,
+      telegramChatId: t.telegramChatId || telegramChatId || null,
+      telegramUsername: t.telegramUsername || telegramUsername || null,
+      active: t.active !== false,
+      lastNotifiedSeats: t.lastNotifiedSeats || 0,
+      lastCheckedAt: null,
+      createdAt: t.createdAt || new Date().toISOString()
+    });
+  }
+
+  saveRadarData(radarData);
+  console.log(`[Radar] 🔄 Synced ${targets.length} watchlist targets into 24/7 background radar.`);
+
+  setTimeout(runBackgroundRadarCycle, 500);
+
+  res.json({
+    success: true,
+    count: radarData.targets.length,
+    message: 'Watchlist synchronized with 24/7 Background Radar.'
+  });
+});
+
+// 5. Toggle Target Active State
+app.post('/api/radar/watchlist/toggle', (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.json({ success: false, error: 'Target ID is required.' });
+
+  const radarData = loadRadarData();
+  const target = radarData.targets.find(t => t.id === id);
+  if (!target) return res.json({ success: false, error: 'Target not found.' });
+
+  target.active = !target.active;
+  saveRadarData(radarData);
+
+  res.json({
+    success: true,
+    active: target.active,
+    message: `Target is now ${target.active ? 'active' : 'paused'}.`
+  });
+});
+
+// 6. Delete Target
+app.post('/api/radar/watchlist/delete', (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.json({ success: false, error: 'Target ID is required.' });
+
+  const radarData = loadRadarData();
+  const initialLen = radarData.targets.length;
+  radarData.targets = radarData.targets.filter(t => t.id !== id);
+
+  if (radarData.targets.length === initialLen) {
+    return res.json({ success: false, error: 'Target not found.' });
+  }
+
+  saveRadarData(radarData);
+  res.json({ success: true, message: 'Target removed from 24/7 Radar.' });
+});
+
 // Fallback for SPA routing & API 404 handler
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {

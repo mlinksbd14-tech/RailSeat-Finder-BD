@@ -1460,12 +1460,24 @@
         </button>
       </div>
 
+      <!-- 24/7 Server Background Radar Status Banner -->
+      <div class="px-4 py-2.5 bg-emerald-50/80 dark:bg-emerald-950/40 border-b border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-200 shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span class="font-extrabold text-[11px]">24/7 Server Radar: <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">Online</span></span>
+        </div>
+        <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">⚡ Telegram alerts sent even when browser is closed</span>
+      </div>
+
       <div class="p-4 overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800" id="watchlistItemsContainer">
         <!-- Watchlist items rendered by JS -->
       </div>
 
       <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
-        <span><i class="fa-solid fa-bolt text-emerald-500 mr-1"></i> Auto-checks during monitoring</span>
+        <span><i class="fa-solid fa-satellite-dish text-emerald-500 mr-1"></i> Background scan runs 24/7 on server</span>
         <button id="clearWatchlistBtn" class="text-rose-500 hover:text-rose-700 font-bold cursor-pointer">Clear All</button>
       </div>
     </div>

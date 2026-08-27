@@ -185,19 +185,20 @@
         },
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc4MjMxNTEsImV4cCI6MTc4Nzg2NjM1MSwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4NzgyMzE1MSwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.aAEyyyQQzrNruwLW_YCrjvQKoCFusZaj_cODG1ZHeSewZtemjAI1npzYF3SuRvrH9a06zJuHnDIJDfcAIAJqgiT0OfVXsbOHItYs0KomoOKcD6rLXpsg3duyWez9uk48k6VMu0men5_JpZDMT7nXlAOCYgKSc0ytFO7WWxrIwKl-HbT0ImCkHRtRc7QTKpFFK5UBi_aDPrFuhQTvS8d--QGiusfVhzvY6I70uEs4dpzSobR3sUthqs0AsiVzgq66r5TyiTL8LGMCwTUf8LJnMce891yMmDuOGloX4w_4GZcKoLbzthoVI2_DtOfAW6FJvDF8TyUjKcT-FxiyAdFMBQ"
       },
-      "lastUserAgent": "",
-      "lastDevice": {
-        "browser": "Unknown Browser",
-        "os": "Unknown OS",
-        "device": "Desktop",
-        "raw": ""
-      },
       "ips": [
         "::1",
         "27.147.149.234"
       ],
-      "lastLogin": "2026-08-27T11:38:09.407Z",
+      "lastLogin": "2026-08-27T11:39:15.299Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:39:15.299Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser"
+        },
         {
           "action": "login",
           "timestamp": "2026-08-27T11:38:09.407Z",
@@ -232,7 +233,14 @@
         }
       ],
       "lastIp": "::1",
-      "loginCount": 4
+      "lastUserAgent": "",
+      "loginCount": 5,
+      "lastDevice": {
+        "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
+        "raw": ""
+      }
     }
   ]
 }

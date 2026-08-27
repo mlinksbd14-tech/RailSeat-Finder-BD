@@ -3,12 +3,22 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 const { exec } = require('child_process');
-const { initializeApp, cert, getApps } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
-const { getAuth } = require('firebase-admin/auth');
 require('dotenv').config();
+
+// Dynamic Safe Firebase Admin SDK Loader (Prevents crashes in serverless bundling)
+let adminApp = null;
+let firestoreModule = null;
+let authModule = null;
+try {
+  adminApp = require('firebase-admin/app');
+  firestoreModule = require('firebase-admin/firestore');
+  authModule = require('firebase-admin/auth');
+} catch (e) {
+  console.warn('[Firebase Admin] Optional SDK not initialized:', e.message);
+}
 
 // Global crash protection for network blips & unhandled rejections
 process.on('uncaughtException', (err) => {
@@ -20,8 +30,25 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SESSION_FILE = path.join(__dirname, 'data', 'session.json');
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
+const isVercel = !!process.env.VERCEL;
+
+// On Vercel serverless lambda, the filesystem (/var/task) is read-only.
+// Use /tmp for writable storage while reading initial seed data from bundled directories.
+const DATA_DIR = isVercel ? path.join(os.tmpdir(), 'rail_data') : path.join(__dirname, 'data');
+const SEED_DATA_DIR = path.join(__dirname, 'data');
+
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.warn('[Storage] Warning creating DATA_DIR:', e.message);
+}
+
+const SESSION_FILE = path.join(DATA_DIR, 'session.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const SEED_USERS_FILE = path.join(SEED_DATA_DIR, 'users.json');
+const SEED_SESSION_FILE = path.join(SEED_DATA_DIR, 'session.json');
 
 // In-memory active dashboard user sessions (token -> { userId, username, role, name, expiresAt })
 const userSessions = new Map();
@@ -110,7 +137,20 @@ let firestoreDb = null;
 let isFirebaseConnected = false;
 let firebaseProjectId = null;
 
+function getAdminAuth() {
+  try {
+    if (authModule && typeof authModule.getAuth === 'function' && adminApp && adminApp.getApps().length) {
+      return authModule.getAuth();
+    }
+  } catch (e) {}
+  return null;
+}
+
 function initFirebase() {
+  if (!adminApp || !firestoreModule) {
+    console.log('[Firebase] ℹ️ Operating in local database mode.');
+    return;
+  }
   const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
   let serviceAccount = null;
 
@@ -131,12 +171,12 @@ function initFirebase() {
 
   if (serviceAccount && serviceAccount.project_id) {
     try {
-      if (!getApps().length) {
-        initializeApp({
-          credential: cert(serviceAccount)
+      if (!adminApp.getApps().length) {
+        adminApp.initializeApp({
+          credential: adminApp.cert(serviceAccount)
         });
       }
-      firestoreDb = getFirestore();
+      firestoreDb = firestoreModule.getFirestore();
       isFirebaseConnected = true;
       firebaseProjectId = serviceAccount.project_id;
       console.log(`[Firebase] ☁️ Connected to Cloud Firestore (Project: ${firebaseProjectId})`);
@@ -149,7 +189,7 @@ function initFirebase() {
       firestoreDb = null;
     }
   } else {
-    console.log('[Firebase] ℹ️ Operating in local database mode (data/users.json). Place serviceAccountKey.json in root to connect Firebase.');
+    console.log('[Firebase] ℹ️ Operating in local database mode. Place serviceAccountKey.json in root to connect Firebase.');
   }
 }
 
@@ -198,6 +238,10 @@ function loadLocalUsersData() {
       const raw = fs.readFileSync(USERS_FILE, 'utf8');
       const data = JSON.parse(raw);
       if (data && Array.isArray(data.users)) return data;
+    } else if (fs.existsSync(SEED_USERS_FILE)) {
+      const raw = fs.readFileSync(SEED_USERS_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.users)) return data;
     }
   } catch (e) {}
   return {
@@ -224,7 +268,7 @@ function saveLocalUsersData(data) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
-    console.error('[Users] Failed to save users.json:', err.message);
+    console.warn('[Users] Warning saving users.json:', err.message);
   }
 }
 
@@ -405,8 +449,13 @@ function clearUserShohozSession(req) {
 // Persistent Session Management Functions
 function loadSavedSession() {
   try {
+    let raw = null;
     if (fs.existsSync(SESSION_FILE)) {
-      const raw = fs.readFileSync(SESSION_FILE, 'utf8');
+      raw = fs.readFileSync(SESSION_FILE, 'utf8');
+    } else if (fs.existsSync(SEED_SESSION_FILE)) {
+      raw = fs.readFileSync(SEED_SESSION_FILE, 'utf8');
+    }
+    if (raw) {
       const data = JSON.parse(raw);
       if (data && data.token) {
         const decodedProfile = decodeShohozJwtProfile(data.token);
@@ -418,7 +467,7 @@ function loadSavedSession() {
           user: decodedProfile || data.user || { name: 'Saved Live Session' },
           lastUpdated: data.lastUpdated || new Date().toISOString()
         };
-        console.log(`[Session] Restored saved session from data/session.json (User: ${authCredentials.user?.name || 'Passenger'})`);
+        console.log(`[Session] Restored saved session (User: ${authCredentials.user?.name || 'Passenger'})`);
       }
     }
   } catch (err) {
@@ -2590,18 +2639,22 @@ app.post('/api/users/update-settings', requireAdmin, (req, res) => {
 // 8. 🛰️ 24/7 Server-Side Background Watchlist Radar Engine
 // ====================================================
 
-const RADAR_FILE = path.join(__dirname, 'data', 'radar_watchlist.json');
+const RADAR_FILE = path.join(DATA_DIR, 'radar_watchlist.json');
+const SEED_RADAR_FILE = path.join(SEED_DATA_DIR, 'radar_watchlist.json');
 
 function loadRadarData() {
   try {
+    let raw = null;
     if (fs.existsSync(RADAR_FILE)) {
-      const raw = fs.readFileSync(RADAR_FILE, 'utf8');
-      if (raw.trim()) {
-        const data = JSON.parse(raw);
-        data.settings = data.settings || { enabled: true, intervalSeconds: 25, lastRunAt: null };
-        data.targets = Array.isArray(data.targets) ? data.targets : [];
-        return data;
-      }
+      raw = fs.readFileSync(RADAR_FILE, 'utf8');
+    } else if (fs.existsSync(SEED_RADAR_FILE)) {
+      raw = fs.readFileSync(SEED_RADAR_FILE, 'utf8');
+    }
+    if (raw && raw.trim()) {
+      const data = JSON.parse(raw);
+      data.settings = data.settings || { enabled: true, intervalSeconds: 25, lastRunAt: null };
+      data.targets = Array.isArray(data.targets) ? data.targets : [];
+      return data;
     }
   } catch (err) {
     console.warn('[Radar] Error reading radar_watchlist.json:', err.message);
@@ -2615,7 +2668,7 @@ function saveRadarData(data) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(RADAR_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
-    console.error('[Radar] Error writing radar_watchlist.json:', err.message);
+    console.warn('[Radar] Warning writing radar_watchlist.json:', err.message);
   }
 }
 

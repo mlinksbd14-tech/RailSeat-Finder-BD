@@ -1818,6 +1818,14 @@
           </button>
 
           <p id="loginErrorMsg" class="text-xs text-rose-500 font-semibold text-center min-h-[1rem]"></p>
+          
+          <!-- Resend Email Verification Button (Shown if email unverified) -->
+          <div id="resendVerificationContainer" class="hidden text-center pt-1">
+            <button type="button" id="resendVerificationBtn" class="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-paper-plane text-[10px]"></i>
+              <span>Resend Verification Email</span>
+            </button>
+          </div>
         </form>
       </div>
 
@@ -1826,7 +1834,7 @@
         <!-- Security / Approval Banner -->
         <div class="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-[10.5px] text-amber-800 dark:text-amber-300 flex items-start space-x-2">
           <i class="fa-solid fa-shield-halved mt-0.5 shrink-0 text-amber-600"></i>
-          <span><strong>Approval Policy:</strong> Your account will be submitted for 1-time Administrator approval before dashboard access is unlocked.</span>
+          <span><strong>Verification Policy:</strong> A verification link will be sent to your email. Administrator approval is required before dashboard access.</span>
         </div>
 
         <!-- Registration Form -->
@@ -1838,9 +1846,21 @@
           </div>
 
           <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address * <span class="text-[10px] text-purple-600 dark:text-purple-400 font-normal">(For verification link)</span></label>
+            <div class="relative">
+              <input type="email" id="registerEmail" placeholder="e.g. rahat@gmail.com" required
+                class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              <i class="fa-solid fa-envelope text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+            </div>
+          </div>
+
+          <div>
             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Desired Username *</label>
-            <input type="text" id="registerUsername" placeholder="e.g. rahat123 (min 3 chars)" required minlength="3"
-              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            <div class="relative">
+              <input type="text" id="registerUsername" placeholder="e.g. rahat123 (min 3 chars)" required minlength="3"
+                class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              <i class="fa-solid fa-user text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-xs"></i>
+            </div>
           </div>
 
           <div>
@@ -1856,8 +1876,8 @@
           </div>
 
           <button type="submit" id="submitRegisterBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
-            <i class="fa-solid fa-user-plus"></i>
-            <span>Submit Registration</span>
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Create Account & Send Verification</span>
           </button>
 
           <p id="registerStatusMsg" class="text-xs font-semibold text-center min-h-[1rem]"></p>

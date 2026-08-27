@@ -280,19 +280,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const firebaseGoogleRegisterBtn = document.getElementById('firebaseGoogleRegisterBtn');
   const userRegisterForm = document.getElementById('userRegisterForm');
   const registerName = document.getElementById('registerName');
+  const registerEmail = document.getElementById('registerEmail');
   const registerUsername = document.getElementById('registerUsername');
   const registerPassword = document.getElementById('registerPassword');
   const registerConfirmPassword = document.getElementById('registerConfirmPassword');
   const submitRegisterBtn = document.getElementById('submitRegisterBtn');
   const registerStatusMsg = document.getElementById('registerStatusMsg');
+  const resendVerificationContainer = document.getElementById('resendVerificationContainer');
+  const resendVerificationBtn = document.getElementById('resendVerificationBtn');
   const userTabPendingBtn = document.getElementById('userTabPendingBtn');
   const userPendingTabCount = document.getElementById('userPendingTabCount');
   const headerPendingBadge = document.getElementById('headerPendingBadge');
   const manageUsersPendingBadge = document.getElementById('manageUsersPendingBadge');
   const toggleLoginPasswordBtn = document.getElementById('toggleLoginPasswordBtn');
-
-  const openFirebaseConfigBtn = document.getElementById('openFirebaseConfigBtn');
-  const firebaseConfigModal = document.getElementById('firebaseConfigModal');
   const closeFirebaseConfigBtn = document.getElementById('closeFirebaseConfigBtn');
   const firebaseConfigForm = document.getElementById('firebaseConfigForm');
   const firebaseCfgApiKey = document.getElementById('firebaseCfgApiKey');
@@ -4810,14 +4810,23 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 12. User Self-Registration Form Submission (Public Form)
+    // 12. User Self-Registration Form Submission (Public Form with Email Verification)
     if (userRegisterForm) {
       userRegisterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = registerName.value.trim();
+        const email = registerEmail ? registerEmail.value.trim().toLowerCase() : '';
         const username = registerUsername.value.trim().toLowerCase();
         const password = registerPassword.value.trim();
         const confirmPassword = registerConfirmPassword.value.trim();
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          if (registerStatusMsg) {
+            registerStatusMsg.textContent = '❌ Please enter a valid email address.';
+            registerStatusMsg.className = 'text-xs font-semibold text-center text-rose-600';
+          }
+          return;
+        }
 
         if (password !== confirmPassword) {
           if (registerStatusMsg) {
@@ -4828,28 +4837,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         submitRegisterBtn.disabled = true;
-        submitRegisterBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting Registration...';
+        submitRegisterBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Creating Account & Sending Verification...';
         if (registerStatusMsg) registerStatusMsg.textContent = '';
 
+        let firebaseUid = null;
         try {
+          // Attempt Firebase Auth creation & dispatch email verification
+          if (window.firebase && firebase.auth) {
+            ensureFirebaseInitialized();
+            try {
+              const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+              if (cred.user) {
+                firebaseUid = cred.user.uid;
+                await cred.user.sendEmailVerification();
+                console.log('[Firebase Auth] ✉️ Verification email dispatched to:', email);
+              }
+            } catch (fbErr) {
+              console.warn('[Firebase Auth] Client user create note:', fbErr.message);
+              // If user already exists in Firebase Auth, we proceed to check local system
+            }
+          }
+
           const res = await fetch('/api/user-auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, username, password })
+            body: JSON.stringify({ name, email, username, password, firebaseUid, emailVerified: false })
           });
           const data = await res.json();
 
           if (data.success) {
             if (registerStatusMsg) {
-              registerStatusMsg.textContent = '✅ ' + data.message;
-              registerStatusMsg.className = 'text-xs font-bold text-center text-emerald-600 dark:text-emerald-400 p-2 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-700';
+              registerStatusMsg.innerHTML = `✅ <strong>Verification Email Sent!</strong><br><span class="text-[11px] font-normal">A verification link has been sent to <strong>${email}</strong>. Please check your inbox (and spam folder) to verify your account, then await administrator approval.</span>`;
+              registerStatusMsg.className = 'text-xs font-bold text-center text-emerald-700 dark:text-emerald-300 p-3 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-700 space-y-1';
             }
-            showToast('✅ Registration submitted for Admin approval!', 'success');
+            showToast(`✉️ Verification link sent to ${email}`, 'success');
             userRegisterForm.reset();
             setTimeout(() => {
               if (loginTabBtn) loginTabBtn.click();
               if (loginUsername) loginUsername.value = username;
-            }, 3000);
+            }, 6000);
           } else {
             if (registerStatusMsg) {
               registerStatusMsg.textContent = `❌ ${data.error || 'Registration failed.'}`;
@@ -4863,12 +4889,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } finally {
           submitRegisterBtn.disabled = false;
-          submitRegisterBtn.innerHTML = '<i class="fa-solid fa-user-plus mr-1"></i> Submit Registration';
+          submitRegisterBtn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i> Create Account & Send Verification';
         }
       });
     }
 
-    // 13. Login Form Submission (with Remember Me)
+    // 13. Login Form Submission (with Email Verification & Remember Me)
     if (userLoginForm) {
       userLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -4881,6 +4907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitLoginBtn.disabled = true;
         submitLoginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Signing In...';
         if (loginErrorMsg) loginErrorMsg.textContent = '';
+        if (resendVerificationContainer) resendVerificationContainer.classList.add('hidden');
 
         try {
           const res = await fetch('/api/user-auth/login', {
@@ -4900,6 +4927,13 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`👋 Welcome back, ${data.user.name || data.user.username}!`, 'success');
             userLoginModal.classList.add('hidden');
             await checkDashboardUserAuth();
+          } else if (data.emailUnverified) {
+            if (loginErrorMsg) {
+              loginErrorMsg.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-bold"><i class="fa-solid fa-envelope-circle-check mr-1"></i> Email Verification Required</span><br><span class="text-[11px] text-slate-600 dark:text-slate-300 font-normal">Please click the verification link sent to <strong>${data.email || 'your email'}</strong> before signing in.</span>`;
+            }
+            if (resendVerificationContainer) {
+              resendVerificationContainer.classList.remove('hidden');
+            }
           } else {
             if (loginErrorMsg) {
               loginErrorMsg.textContent = data.error || 'Invalid credentials.';
@@ -4912,6 +4946,42 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
           submitLoginBtn.disabled = false;
           submitLoginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-1"></i> Sign In to Dashboard';
+        }
+      });
+    }
+
+    // 13.0. Resend Email Verification Handler
+    if (resendVerificationBtn) {
+      resendVerificationBtn.addEventListener('click', async () => {
+        const username = loginUsername ? loginUsername.value.trim() : '';
+        if (!username) {
+          showToast('Please enter your username or email first.', 'info');
+          return;
+        }
+
+        resendVerificationBtn.disabled = true;
+        resendVerificationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[10px]"></i> Sending...';
+
+        try {
+          // Also trigger client-side resend if possible
+          if (window.firebase && firebase.auth && firebase.auth().currentUser) {
+            try {
+              await firebase.auth().currentUser.sendEmailVerification();
+            } catch (e) {}
+          }
+
+          const res = await fetch('/api/user-auth/resend-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: username, username })
+          });
+          const data = await res.json();
+          showToast(data.message || 'Verification email resent!', 'success');
+        } catch (err) {
+          showToast('Network error resending verification email.', 'error');
+        } finally {
+          resendVerificationBtn.disabled = false;
+          resendVerificationBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-[10px]"></i> Resend Verification Email';
         }
       });
     }

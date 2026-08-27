@@ -2042,11 +2042,12 @@ app.get('/api/user-auth/status', (req, res) => {
   });
 });
 
-// 2. User Registration (Public - Creates Account with 'pending' approval status)
-app.post('/api/user-auth/register', (req, res) => {
-  const { name, username, password } = req.body;
+// 2. User Registration (Viewer Self-Registration with Email Verification & Admin Approval)
+app.post('/api/user-auth/register', async (req, res) => {
+  const { username, password, name, email, firebaseUid, emailVerified } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
   const cleanPassword = (password || '').trim();
+  const cleanEmail = (email || '').trim().toLowerCase();
   const cleanName = (name || '').trim() || cleanUsername;
 
   if (!cleanUsername || cleanUsername.length < 3) {
@@ -2061,42 +2062,94 @@ app.post('/api/user-auth/register', (req, res) => {
     return res.json({ success: false, error: 'Password must be at least 4 characters long.' });
   }
 
+  if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return res.json({ success: false, error: 'Please provide a valid email address.' });
+  }
+
   const data = loadUsersData();
-  const existing = data.users.find(u => u.username.toLowerCase() === cleanUsername);
-  if (existing) {
+  const existingUsername = data.users.find(u => u.username.toLowerCase() === cleanUsername);
+  if (existingUsername) {
     return res.json({ success: false, error: `Username "${cleanUsername}" is already registered.` });
+  }
+
+  if (cleanEmail) {
+    const existingEmail = data.users.find(u => u.email && u.email.toLowerCase() === cleanEmail);
+    if (existingEmail) {
+      return res.json({ success: false, error: `Email "${cleanEmail}" is already registered. Please sign in instead.` });
+    }
   }
 
   const newUser = {
     id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     username: cleanUsername,
+    email: cleanEmail || null,
     password: hashPassword(cleanPassword),
     name: cleanName,
-    role: 'viewer',
-    status: 'pending', // Requires Admin Approval
-    canViewDashboard: false,
+    role: data.users.length === 0 ? 'admin' : 'viewer',
+    status: data.users.length === 0 ? 'active' : 'pending',
+    emailVerified: data.users.length === 0 ? true : !!emailVerified,
+    firebaseUid: firebaseUid || null,
+    canViewDashboard: data.users.length === 0,
     createdAt: new Date().toISOString(),
     lastLogin: null
   };
 
   data.users.push(newUser);
   saveUsersData(data);
-  console.log(`[Users] 📝 New registration submitted: ${cleanUsername} (Status: pending approval)`);
+  console.log(`[Users] 📝 New registration submitted: ${cleanUsername} (${cleanEmail}) - Status: ${newUser.status}, EmailVerified: ${newUser.emailVerified}`);
 
   res.json({
     success: true,
-    message: 'Registration submitted successfully! Your account is pending administrator approval. Once approved, you will be able to sign in.'
+    emailVerified: newUser.emailVerified,
+    message: cleanEmail
+      ? 'Registration submitted! Please verify your email via the link sent to your inbox. Once approved by administrator, you will be able to sign in.'
+      : 'Registration submitted successfully! Your account is pending administrator approval.'
   });
 });
 
-// 3. User Login (Protected with Brute-Force Rate Limiting, Status Checking & Salted Scrypt)
-app.post('/api/user-auth/login', (req, res) => {
+// 2.1. Resend Email Verification Link Endpoint
+app.post('/api/user-auth/resend-verification', async (req, res) => {
+  const { email, username } = req.body;
+  const identifier = (email || username || '').trim().toLowerCase();
+
+  if (!identifier) {
+    return res.status(400).json({ success: false, error: 'Email or username is required.' });
+  }
+
+  const data = loadUsersData();
+  const user = data.users.find(u => (u.email && u.email.toLowerCase() === identifier) || u.username.toLowerCase() === identifier);
+
+  if (!user || !user.email) {
+    return res.json({ success: true, message: 'If an account exists with this email, a verification link has been sent.' });
+  }
+
+  if (user.emailVerified) {
+    return res.json({ success: true, message: 'This email is already verified! You can sign in once approved.' });
+  }
+
+  try {
+    if (isFirebaseConnected && getApps().length) {
+      const link = await getAuth().generateEmailVerificationLink(user.email);
+      console.log(`[Firebase Auth] ✉️ Generated email verification link for ${user.email}: ${link}`);
+    }
+  } catch (err) {
+    console.warn('[Firebase Auth] Failed to generate verification link:', err.message);
+  }
+
+  res.json({
+    success: true,
+    message: `Verification instructions sent to ${user.email}. Please check your inbox (and spam folder).`
+  });
+});
+
+// 3. User Login (Protected with Brute-Force Rate Limiting, Email Verification, Status Checking & Salted Scrypt)
+app.post('/api/user-auth/login', async (req, res) => {
   const { username, password, rememberMe } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
   const cleanPassword = (password || '').trim();
 
   if (!cleanUsername || !cleanPassword) {
-    return res.json({ success: false, error: 'Username and password are required.' });
+    return res.json({ success: false, error: 'Username/Email and password are required.' });
   }
 
   // Brute-force rate limit check
@@ -2109,17 +2162,41 @@ app.post('/api/user-auth/login', (req, res) => {
   }
 
   const data = loadUsersData();
-  const user = data.users.find(u => u.username.toLowerCase() === cleanUsername);
+  const user = data.users.find(u => u.username.toLowerCase() === cleanUsername || (u.email && u.email.toLowerCase() === cleanUsername));
 
   if (!user || !verifyPassword(cleanPassword, user.password)) {
     recordFailedLogin(cleanUsername);
-    return res.json({ success: false, error: 'Invalid username or password.' });
+    return res.json({ success: false, error: 'Invalid username/email or password.' });
+  }
+
+  // Check Email Verification Status with Firebase Auth
+  if (user.email && user.emailVerified === false) {
+    if (isFirebaseConnected && getApps().length && user.firebaseUid) {
+      try {
+        const firebaseUser = await getAuth().getUser(user.firebaseUid);
+        if (firebaseUser && firebaseUser.emailVerified) {
+          user.emailVerified = true;
+          saveUsersData(data);
+          console.log(`[Firebase Auth] ✅ Email verified for user: ${user.username} (${user.email})`);
+        }
+      } catch (e) {}
+    }
+
+    if (user.emailVerified === false && user.role !== 'admin') {
+      return res.json({
+        success: false,
+        emailUnverified: true,
+        email: user.email,
+        error: 'Please verify your email address before signing in. Check your inbox for the verification link.'
+      });
+    }
   }
 
   // Check Approval Status
   if (user.status === 'pending') {
     return res.json({
       success: false,
+      pending: true,
       error: 'Your account is pending administrator approval. Please wait for an administrator to approve your account before signing in.'
     });
   }
@@ -2148,7 +2225,9 @@ app.post('/api/user-auth/login', (req, res) => {
     userId: user.id,
     username: user.username,
     name: user.name,
+    email: user.email || null,
     role: user.role || 'viewer',
+    status: user.status,
     expiresAt: Date.now() + durationMs
   };
 

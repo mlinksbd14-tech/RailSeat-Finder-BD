@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Helper to Parse & Activate JSON / Token
+  // Helper to Parse & Activate JSON / Token / cURL
   async function handleTokenActivation(rawString) {
     const raw = (rawString || '').trim();
     if (!raw) return;
@@ -829,24 +829,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let deviceId = '';
     let deviceKey = '';
 
+    // Check if pasted cURL command from DevTools
+    if (raw.toLowerCase().includes('curl') || raw.includes('authorization:') || raw.includes('Authorization:') || raw.includes('x-device-id')) {
+      const authMatch = raw.match(/[-H\s]['"]?[Aa]uthorization:\s*(Bearer\s+)?([^'"\r\n]+)['"]?/i);
+      const deviceIdMatch = raw.match(/[-H\s]['"]?x-device-id:\s*([^'"\r\n]+)['"]?/i);
+      const deviceKeyMatch = raw.match(/[-H\s]['"]?x-device-key:\s*([^'"\r\n]+)['"]?/i);
+
+      if (authMatch) token = authMatch[2].trim();
+      if (deviceIdMatch) deviceId = deviceIdMatch[1].trim();
+      if (deviceKeyMatch) deviceKey = deviceKeyMatch[1].trim();
+
+      await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });
+      return;
+    }
+
     if (raw.startsWith('{') && raw.endsWith('}')) {
       try {
         const parsed = JSON.parse(raw);
         token = parsed.token || parsed.authToken || parsed.access_token || parsed.accessToken || '';
         deviceId = parsed['x-device-id'] || parsed.deviceId || parsed.device_id || parsed.device_uuid || '';
-        deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || '';
+        deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || parsed.ssdk || parsed.SSDK || '';
       } catch (err) {
         token = raw;
       }
     } else {
       token = raw;
-    }
-
-    if (!deviceId || deviceId === 'null' || deviceId === 'undefined') {
-      deviceId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : '34a817c4-8b87-5716-32d2-a7a1d50575a4';
-    }
-    if (!deviceKey || deviceKey === 'null' || deviceKey === 'undefined') {
-      deviceKey = 'web';
     }
 
     await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });

@@ -1024,17 +1024,17 @@
             <li>Press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> &rarr; Click <strong>Console</strong> &rarr; Paste this 1-line script & press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono">Enter</kbd>:</li>
           </ol>
           <div class="relative mt-1">
-            <input type="text" readonly id="consoleSnippet" value="copy(JSON.stringify({token:localStorage.getItem('token')||sessionStorage.getItem('token')||(document.cookie.match(/(?:^|;\s*)token=([^;]+)/)||[,''])[1],'x-device-id':localStorage.getItem('x-device-id')||localStorage.getItem('device_id')||localStorage.getItem('deviceId')||crypto.randomUUID(),'x-device-key':localStorage.getItem('x-device-key')||localStorage.getItem('device_key')||localStorage.getItem('deviceKey')||'web'}))" 
+            <input type="text" readonly id="consoleSnippet" value="copy((()=>{let t='',d='',k='';for(const s of[localStorage,sessionStorage]){for(let i=0;i<s.length;i++){const key=s.key(i),val=s.getItem(key);if(!val)continue;if(!t&amp;&amp;(key.toLowerCase().includes('token')||val.startsWith('eyJ'))){t=val.startsWith('eyJ')?val:(val.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/)?.[0]||t)}if(!d&amp;&amp;(key.toLowerCase().includes('device')||key.toLowerCase().includes('uuid'))){d=val}if(!k&amp;&amp;(key.toLowerCase().includes('key')||key.toLowerCase().includes('ssdk'))){k=val}try{const o=JSON.parse(val);if(o&amp;&amp;typeof o==='object'){t=t||o.token||o.access_token||o.accessToken;d=d||o['x-device-id']||o.deviceId||o.device_id||o.uuid;k=k||o['x-device-key']||o.deviceKey||o.device_key||o.ssdk||o.SSDK}}catch(e){}}}if(!t){const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/);if(m)t=m[1]}return JSON.stringify({token:(t||'').replace(/^Bearer\s+/i,''),'x-device-id':d||localStorage.getItem('x-device-id')||'','x-device-key':k||localStorage.getItem('x-device-key')||'web'});})())" 
               class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
             <button type="button" id="copySnippetBtn" class="absolute right-1 top-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold transition cursor-pointer">
               Copy
             </button>
           </div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400">3. Paste into the box below and click Activate:</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400">3. Paste into the box below (or paste a copied <strong>cURL</strong> from Network tab) & click Activate:</p>
         </div>
 
         <form id="scriptPasteForm" class="space-y-2">
-          <textarea id="scriptPasteInput" rows="2" placeholder='Paste here (e.g. {"token":"...","x-device-id":"...","x-device-key":"..."})' 
+          <textarea id="scriptPasteInput" rows="2" placeholder='Paste JSON (e.g. {"token":"...","x-device-id":"...","x-device-key":"..."}) or raw cURL from Network Tab' 
             class="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-2 focus:ring-emerald-500 focus:outline-none" required></textarea>
           <button type="submit" id="activateScriptBtn" 
             class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
@@ -1044,41 +1044,36 @@
         </form>
       </div>
 
-      <!-- Tab 2: Manual Paste Form with DevTools Instruction -->
+      <!-- Tab 2: Manual Paste Form with DevTools & Network cURL Instruction -->
       <form id="pasteTokenForm" class="hidden space-y-3 text-xs">
         
         <!-- Step-by-Step Instruction Guide Box -->
         <div class="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-[11px]">
           <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
             <i class="fa-solid fa-circle-info text-emerald-600"></i>
-            <span>How to copy Token & Device IDs from Browser DevTools:</span>
+            <span>How to get 100% Exact Token, Original UUID & SSDK from Browser:</span>
           </div>
 
           <div class="space-y-2 text-slate-600 dark:text-slate-300">
-            <div class="flex items-start space-x-1.5">
-              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-              <div>
-                Log into your account at <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="text-emerald-600 underline font-bold">eticket.railway.gov.bd</a>.
+            <!-- Method A: Network cURL -->
+            <div class="p-2 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+              <strong class="text-emerald-900 dark:text-emerald-200 block mb-0.5">🌟 Method A: Copy as cURL (100% Original SSDK & UUID):</strong>
+              <div class="text-[10.5px] space-y-0.5">
+                <div>1. In <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="underline text-emerald-600 font-bold">eticket.railway.gov.bd</a>, press <kbd class="px-1 py-0.2 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> &rarr; Click <strong>Network</strong> tab.</div>
+                <div>2. Search for any train or refresh page.</div>
+                <div>3. Find any request to <code class="font-mono text-emerald-700 dark:text-emerald-300">railspaapi.shohoz.com</code> or <code class="font-mono">search-trip</code>.</div>
+                <div>4. <strong>Right-click</strong> &rarr; <strong>Copy</strong> &rarr; <strong>Copy as cURL (bash)</strong>.</div>
+                <div>5. Paste directly into the <strong>PC Console Tab</strong> box — the dashboard will auto-extract your token, original UUID, and SSDK!</div>
               </div>
             </div>
 
-            <div class="flex items-start space-x-1.5">
-              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <div>
-                Press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> (or right-click &rarr; <strong>Inspect</strong>).
-              </div>
-            </div>
-
-            <div class="flex items-start space-x-1.5">
-              <span class="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-              <div>
-                Go to <strong class="text-slate-800 dark:text-slate-200">Application</strong> (Chrome/Edge) or <strong class="text-slate-800 dark:text-slate-200">Storage</strong> (Firefox) &rarr; Click <strong>Local Storage</strong> &rarr; <code class="text-emerald-600 font-mono">https://eticket.railway.gov.bd</code>.
-                <div class="mt-1 pl-1 space-y-0.5 text-[10.5px]">
-                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">token</code> &rarr; Paste in <strong>token</strong> box below.</div>
-                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-id</code> (UUDID) &rarr; Paste in <strong>x-device-id</strong> box.</div>
-                  <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-key</code> (SSDK) &rarr; Paste in <strong>x-device-key</strong> box (default is <code class="font-mono">web</code>).</div>
-                </div>
-              </div>
+            <!-- Method B: DevTools Application tab -->
+            <div class="text-[10.5px] space-y-0.5">
+              <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Method B: Manual Input from Storage:</strong>
+              <div>Press <kbd class="px-1 py-0.2 bg-slate-200 dark:bg-slate-700 rounded font-mono">F12</kbd> &rarr; <strong>Application</strong> &rarr; <strong>Local Storage</strong> &rarr; <code class="text-emerald-600 font-mono">https://eticket.railway.gov.bd</code>.</div>
+              <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">token</code> &rarr; Paste in <strong>token</strong> box below.</div>
+              <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-id</code> (UUDID) &rarr; Paste in <strong>x-device-id</strong> box.</div>
+              <div>&bull; Copy <code class="font-bold text-slate-800 dark:text-slate-200 font-mono">x-device-key</code> (SSDK) &rarr; Paste in <strong>x-device-key</strong> box.</div>
             </div>
           </div>
         </div>
@@ -1096,7 +1091,7 @@
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
               x-device-id (UUDID)
             </label>
-            <input type="text" id="deviceIdInput" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" 
+            <input type="text" id="deviceIdInput" placeholder="e.g. 34a817c48b87571632d2a7a1d50575a4" 
               class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[10px] focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
 
@@ -1104,7 +1099,7 @@
             <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-0.5">
               x-device-key (SSDK)
             </label>
-            <input type="text" id="deviceKeyInput" placeholder="e.g. web" value="web" 
+            <input type="text" id="deviceKeyInput" placeholder="e.g. web or b20211d0901587..." value="web" 
               class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[10px] focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
         </div>
@@ -1137,7 +1132,7 @@
           <div class="space-y-1">
             <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Mobile Bookmark Code (Copy this):</span>
             <div class="relative">
-              <input type="text" readonly id="mobileBookmarkletSnippet" value="javascript:(function(){const d={token:localStorage.getItem('token')||sessionStorage.getItem('token'),'x-device-id':localStorage.getItem('x-device-id')||crypto.randomUUID(),'x-device-key':localStorage.getItem('x-device-key')||'web'};navigator.clipboard.writeText(JSON.stringify(d)).then(()=>alert('✅ Railway Token & Device IDs Copied! Paste into Dashboard.')).catch(()=>prompt('Copy this:',JSON.stringify(d)));})();" 
+              <input type="text" readonly id="mobileBookmarkletSnippet" value="javascript:(function(){let t='',d='',k='';for(const s of[localStorage,sessionStorage]){for(let i=0;i<s.length;i++){const key=s.key(i),val=s.getItem(key);if(!val)continue;if(!t&amp;&amp;(key.toLowerCase().includes('token')||val.startsWith('eyJ'))){t=val.startsWith('eyJ')?val:(val.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/)?.[0]||t)}if(!d&amp;&amp;(key.toLowerCase().includes('device')||key.toLowerCase().includes('uuid'))){d=val}if(!k&amp;&amp;(key.toLowerCase().includes('key')||key.toLowerCase().includes('ssdk'))){k=val}try{const o=JSON.parse(val);if(o&amp;&amp;typeof o==='object'){t=t||o.token||o.access_token||o.accessToken;d=d||o['x-device-id']||o.deviceId||o.device_id||o.uuid;k=k||o['x-device-key']||o.deviceKey||o.device_key||o.ssdk||o.SSDK}}catch(e){}}}if(!t){const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/);if(m)t=m[1]}const res={token:(t||'').replace(/^Bearer\s+/i,''),'x-device-id':d||localStorage.getItem('x-device-id')||'','x-device-key':k||localStorage.getItem('x-device-key')||'web'};navigator.clipboard.writeText(JSON.stringify(res)).then(()=>alert('✅ Railway Token &amp; Device IDs Copied! Paste into Dashboard.')).catch(()=>prompt('Copy this:',JSON.stringify(res)));})();" 
                 class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
               <button type="button" id="copyMobileSnippetBtn" class="absolute right-1 top-1 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition cursor-pointer">
                 Copy

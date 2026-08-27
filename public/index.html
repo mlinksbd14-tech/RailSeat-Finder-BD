@@ -102,6 +102,12 @@
           <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-emerald-600 text-white font-extrabold text-[10px] rounded-full">0</span>
         </button>
 
+        <!-- Install PWA Mobile/Desktop App Button -->
+        <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition text-xs font-bold shadow-sm cursor-pointer" title="Install RailSeat BD App">
+          <i class="fa-solid fa-download text-xs"></i>
+          <span class="hidden sm:inline">Install App</span>
+        </button>
+
         <!-- User Account / Login & Logout Controls -->
         <div class="relative" id="userAuthContainer">
           <!-- State 1: When NOT Logged In -> Show "Sign In" Button -->
@@ -906,6 +912,11 @@
             <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Alternate Major Junction & Split-Journey Route Container -->
+      <div id="alternateRoutesContainer" class="hidden space-y-3">
+        <!-- Rendered by app.js when direct trains have 0 seats -->
       </div>
 
       <!-- Train Cards Grid (Rendered by JS) -->

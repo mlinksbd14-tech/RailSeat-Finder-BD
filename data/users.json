@@ -189,16 +189,25 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastIp": "::1",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
-      "lastDevice": {
-        "browser": "Edge 151",
-        "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
-      },
-      "lastLogin": "2026-08-27T11:48:10.240Z",
+      "lastLogin": "2026-08-27T11:57:30.920Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:57:30.920Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": null
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-27T11:53:23.525Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 152"
+        },
         {
           "action": "login",
           "timestamp": "2026-08-27T11:48:10.240Z",
@@ -256,7 +265,15 @@
           "browser": "Edge 151"
         }
       ],
-      "loginCount": 7
+      "lastIp": "::1",
+      "lastUserAgent": "",
+      "loginCount": 9,
+      "lastDevice": {
+        "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
+        "raw": ""
+      }
     }
   ]
 }

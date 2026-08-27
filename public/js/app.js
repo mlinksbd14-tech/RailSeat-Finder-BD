@@ -33,7 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
     trainsCatalog: [],
     isLoading: false,
     isAuthenticated: false,
-    authUserData: null
+    authUserData: null,
+    requireLogin: true,
+    requireAdminApproval: true,
+    requireEmailVerification: false,
+    allowRegistration: true,
+    authNotice: '',
+    authNoticeEnabled: true
   };
 
   // Load stored alert notifications from localStorage
@@ -4560,7 +4566,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
 
-      state.requireLogin = !!data.require_login;
+      state.requireLogin = (data.require_login !== false);
       state.requireAdminApproval = (data.require_admin_approval !== false);
       state.requireEmailVerification = (data.require_email_verification !== false);
       state.allowRegistration = (data.allow_registration !== false);
@@ -4664,7 +4670,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update stats
         if (statTotalUsers) statTotalUsers.textContent = data.users.length;
         if (statActiveUsers) statActiveUsers.textContent = data.users.filter(u => u.status === 'active').length;
-        if (statAccessMode) statAccessMode.textContent = data.require_login ? 'Protected (Login)' : 'Public Access';
+        if (data.require_login !== undefined) {
+          state.requireLogin = (data.require_login !== false);
+        }
         if (data.require_admin_approval !== undefined) {
           state.requireAdminApproval = (data.require_admin_approval !== false);
         }
@@ -5266,7 +5274,7 @@ document.addEventListener('DOMContentLoaded', () => {
           db.collection('system_config').doc('settings').onSnapshot(doc => {
             if (doc && doc.exists) {
               const data = doc.data() || {};
-              if (data.requireLogin !== undefined) state.requireLogin = !!data.requireLogin;
+              if (data.requireLogin !== undefined) state.requireLogin = (data.requireLogin !== false);
               if (data.requireAdminApproval !== undefined) state.requireAdminApproval = (data.requireAdminApproval !== false);
               if (data.requireEmailVerification !== undefined) state.requireEmailVerification = (data.requireEmailVerification !== false);
               if (data.allowRegistration !== undefined) state.allowRegistration = (data.allowRegistration !== false);

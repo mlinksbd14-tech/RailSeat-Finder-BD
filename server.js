@@ -245,7 +245,7 @@ function loadLocalUsersData() {
     }
   } catch (e) {}
   return {
-    settings: { requireLogin: false },
+    settings: { requireLogin: true },
     users: [
       {
         id: 'usr_admin_001',
@@ -300,7 +300,7 @@ function saveUsersData(data) {
           batch.set(docRef, user, { merge: true });
         }
         const settingsRef = firestoreDb.collection('system_settings').doc('access_control');
-        batch.set(settingsRef, data.settings || { requireLogin: false }, { merge: true });
+        batch.set(settingsRef, data.settings || { requireLogin: true }, { merge: true });
         await batch.commit();
       } catch (err) {
         console.warn('[Firebase] ⚠️ Async Firestore write error:', err.message);
@@ -2168,7 +2168,7 @@ app.get('/api/user-auth/status', (req, res) => {
 
   res.json({
     success: true,
-    require_login: !!data.settings?.requireLogin,
+    require_login: data.settings?.requireLogin !== false,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
     require_email_verification: data.settings?.requireEmailVerification !== false,
     allow_registration: data.settings?.allowRegistration !== false,
@@ -2632,7 +2632,7 @@ app.get('/api/users', requireAdmin, (req, res) => {
     success: true,
     count: safeUsers.length,
     pending_count: pendingCount,
-    require_login: !!data.settings?.requireLogin,
+    require_login: data.settings?.requireLogin !== false,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
     require_email_verification: data.settings?.requireEmailVerification !== false,
     allow_registration: data.settings?.allowRegistration !== false,
@@ -2942,8 +2942,8 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}, EmailVerification=${data.settings.requireEmailVerification !== false}, AllowReg=${data.settings.allowRegistration !== false}, Notice="${data.settings.authNotice || ''}"`);
   res.json({
     success: true,
-    require_login: !!data.settings.requireLogin,
-    require_admin_approval: data.settings.requireAdminApproval !== false,
+    require_login: data.settings?.requireLogin !== false,
+    require_admin_approval: data.settings?.requireAdminApproval !== false,
     require_email_verification: data.settings.requireEmailVerification !== false,
     allow_registration: data.settings.allowRegistration !== false,
     auth_notice: data.settings.authNotice || '',

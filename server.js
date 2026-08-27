@@ -287,28 +287,6 @@ function loadUsersData() {
   return data;
 }
 
-function saveUsersData(data) {
-  saveLocalUsersData(data);
-
-  // Sync to Cloud Firestore if connected
-  if (firestoreDb && isFirebaseConnected) {
-    (async () => {
-      try {
-        const batch = firestoreDb.batch();
-        for (const user of data.users) {
-          const docRef = firestoreDb.collection('system_users').doc(user.id);
-          batch.set(docRef, user, { merge: true });
-        }
-        const settingsRef = firestoreDb.collection('system_settings').doc('access_control');
-        batch.set(settingsRef, data.settings || { requireLogin: true }, { merge: true });
-        await batch.commit();
-      } catch (err) {
-        console.warn('[Firebase] ⚠️ Async Firestore write error:', err.message);
-      }
-    })();
-  }
-}
-
 // Synchronize HTML default attributes in public/index.html to match active settings
 function updateHtmlDefaults(settings) {
   try {
@@ -390,6 +368,35 @@ function syncChangesToGitHub(commitMessage = 'config(admin): update system setti
   });
 
   return gitSyncQueue;
+}
+
+function saveUsersData(data, gitCommitMsg = null) {
+  saveLocalUsersData(data);
+
+  if (data && data.settings) {
+    updateHtmlDefaults(data.settings);
+  }
+
+  // Sync to Cloud Firestore if connected
+  if (firestoreDb && isFirebaseConnected) {
+    (async () => {
+      try {
+        const batch = firestoreDb.batch();
+        for (const user of data.users) {
+          const docRef = firestoreDb.collection('system_users').doc(user.id);
+          batch.set(docRef, user, { merge: true });
+        }
+        const settingsRef = firestoreDb.collection('system_settings').doc('access_control');
+        batch.set(settingsRef, data.settings || { requireLogin: true }, { merge: true });
+        await batch.commit();
+      } catch (err) {
+        console.warn('[Firebase] ⚠️ Async Firestore write error:', err.message);
+      }
+    })();
+  }
+
+  // Automatically commit and push all User Management & Access Control changes to GitHub repository
+  syncChangesToGitHub(gitCommitMsg || 'data(users): sync user management & access control updates [via Dashboard/System]');
 }
 
 // Initialize Firebase upon startup

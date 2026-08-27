@@ -1641,76 +1641,103 @@
         </div>
       </div>
 
-      <!-- Top Policy Control Cards: Require Login, Admin Approval, and Email Verification -->
-      <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <!-- Top Policy Control Cards: Require Login, Allow Registration, Admin Approval, and Email Verification -->
+      <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 shrink-0 space-y-2.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           
           <!-- Control 1: Require Login (Dashboard Access Gate) -->
-          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-purple-300 dark:hover:border-purple-700 transition">
-            <div class="flex items-center space-x-2 min-w-0">
-              <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 flex items-center justify-center text-xs shrink-0 font-bold">
-                <i class="fa-solid fa-lock"></i>
+          <div class="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2 hover:border-purple-300 dark:hover:border-purple-700 transition">
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1 mb-0.5">
+                <i class="fa-solid fa-lock text-purple-600 dark:text-purple-400 text-[11px]"></i>
+                <span class="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Require Login</span>
               </div>
-              <div class="min-w-0">
-                <div class="flex items-center space-x-1">
-                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Require Login</span>
-                  <span id="badgeRequireLoginStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Public</span>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Restrict dashboard</p>
-              </div>
+              <span id="badgeRequireLoginStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Public</span>
             </div>
             <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireLoginToggle">
               <input type="checkbox" id="modalRequireLoginToggle" class="sr-only">
-              <div class="custom-toggle-track toggle-purple">
-                <div class="custom-toggle-thumb"></div>
+              <div class="custom-toggle-track toggle-purple" style="width:36px!important;height:20px!important;min-width:36px!important;min-height:20px!important;">
+                <div class="custom-toggle-thumb" style="width:16px!important;height:16px!important;"></div>
               </div>
             </label>
           </div>
 
-          <!-- Control 2: Admin Approval for Signups -->
-          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
-            <div class="flex items-center space-x-2 min-w-0">
-              <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-xs shrink-0 font-bold">
-                <i class="fa-solid fa-user-shield"></i>
+          <!-- Control 2: Allow Registration (Account Creation Switch) -->
+          <div class="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2 hover:border-emerald-300 dark:hover:border-emerald-700 transition">
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1 mb-0.5">
+                <i class="fa-solid fa-user-plus text-emerald-600 dark:text-emerald-400 text-[11px]"></i>
+                <span class="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Allow Signup</span>
               </div>
-              <div class="min-w-0">
-                <div class="flex items-center space-x-1">
-                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Admin Approval</span>
-                  <span id="badgeRequireApprovalStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Required</span>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Manual review</p>
+              <span id="badgeAllowRegistrationStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Open</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalAllowRegistrationToggle">
+              <input type="checkbox" id="modalAllowRegistrationToggle" class="sr-only" checked>
+              <div class="custom-toggle-track toggle-emerald" style="width:36px!important;height:20px!important;min-width:36px!important;min-height:20px!important;">
+                <div class="custom-toggle-thumb" style="width:16px!important;height:16px!important;"></div>
               </div>
+            </label>
+          </div>
+
+          <!-- Control 3: Admin Approval for Signups -->
+          <div class="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2 hover:border-teal-300 dark:hover:border-teal-700 transition">
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1 mb-0.5">
+                <i class="fa-solid fa-user-shield text-teal-600 dark:text-teal-400 text-[11px]"></i>
+                <span class="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Approval</span>
+              </div>
+              <span id="badgeRequireApprovalStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Required</span>
             </div>
             <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireApprovalToggle">
               <input type="checkbox" id="modalRequireApprovalToggle" class="sr-only" checked>
-              <div class="custom-toggle-track toggle-emerald">
-                <div class="custom-toggle-thumb"></div>
+              <div class="custom-toggle-track toggle-emerald" style="width:36px!important;height:20px!important;min-width:36px!important;min-height:20px!important;">
+                <div class="custom-toggle-thumb" style="width:16px!important;height:16px!important;"></div>
               </div>
             </label>
           </div>
 
-          <!-- Control 3: Email Verification -->
-          <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2.5 hover:border-blue-300 dark:hover:border-blue-700 transition">
-            <div class="flex items-center space-x-2 min-w-0">
-              <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs shrink-0 font-bold">
-                <i class="fa-solid fa-envelope-circle-check"></i>
+          <!-- Control 4: Email Verification -->
+          <div class="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2 hover:border-blue-300 dark:hover:border-blue-700 transition">
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1 mb-0.5">
+                <i class="fa-solid fa-envelope-circle-check text-blue-600 dark:text-blue-400 text-[11px]"></i>
+                <span class="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Email Link</span>
               </div>
-              <div class="min-w-0">
-                <div class="flex items-center space-x-1">
-                  <span class="font-extrabold text-xs text-slate-900 dark:text-white">Email Verification</span>
-                  <span id="badgeRequireEmailVerificationStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">Required</span>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Inbox email link</p>
-              </div>
+              <span id="badgeRequireEmailVerificationStatus" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">Required</span>
             </div>
             <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="modalRequireEmailVerificationToggle">
               <input type="checkbox" id="modalRequireEmailVerificationToggle" class="sr-only" checked>
-              <div class="custom-toggle-track toggle-blue">
-                <div class="custom-toggle-thumb"></div>
+              <div class="custom-toggle-track toggle-blue" style="width:36px!important;height:20px!important;min-width:36px!important;min-height:20px!important;">
+                <div class="custom-toggle-thumb" style="width:16px!important;height:16px!important;"></div>
               </div>
             </label>
           </div>
 
+        </div>
+
+        <!-- Live Auth & Signup Broadcast Notice Configurator -->
+        <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-300/40 dark:border-amber-700/40 text-xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-1.5 min-w-0">
+              <i class="fa-solid fa-bullhorn text-amber-600 dark:text-amber-400 text-xs"></i>
+              <span class="font-bold text-[11px] text-slate-900 dark:text-white">Login & Signup Live Notice Banner</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:inline">(Live sync to all users)</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none shrink-0" for="adminAuthNoticeToggle">
+              <input type="checkbox" id="adminAuthNoticeToggle" class="sr-only" checked>
+              <div class="custom-toggle-track toggle-emerald" style="width:32px!important;height:18px!important;min-width:32px!important;min-height:18px!important;">
+                <div class="custom-toggle-thumb" style="width:14px!important;height:14px!important;"></div>
+              </div>
+            </label>
+          </div>
+          <div class="flex gap-1.5">
+            <input type="text" id="adminAuthNoticeInput" placeholder="e.g. Welcome! Registration is open. Live seat tracking is updated in real time." 
+              class="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
+            <button type="button" id="adminSaveAuthNoticeBtn" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1 cursor-pointer shrink-0">
+              <i class="fa-solid fa-paper-plane text-[10px]"></i>
+              <span>Broadcast</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1901,19 +1928,41 @@
       <!-- Elegant Divider -->
       <div class="relative flex py-0.5 items-center">
         <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-        <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">or with username</span>
+        <span class="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">or with credentials</span>
         <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
       </div>
 
+      <!-- Live Broadcast Notice Banner from Admin -->
+      <div id="authNoticeBanner" class="hidden p-3 rounded-2xl bg-amber-500/10 border border-amber-300/60 dark:border-amber-700/60 text-xs text-amber-900 dark:text-amber-200 animate-fade-in flex items-start space-x-2.5 shadow-xs">
+        <div class="w-6 h-6 rounded-lg bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+          <i class="fa-solid fa-bullhorn"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="font-extrabold text-[10px] uppercase tracking-wider block text-amber-700 dark:text-amber-300">Notice from Admin</span>
+          <p id="authNoticeText" class="text-xs font-semibold text-slate-800 dark:text-slate-100 mt-0.5 leading-snug break-words">---</p>
+        </div>
+      </div>
+
+      <!-- Registration Closed Warning Banner -->
+      <div id="registrationClosedBanner" class="hidden p-3 rounded-2xl bg-rose-500/10 border border-rose-300/60 dark:border-rose-700/60 text-xs text-rose-900 dark:text-rose-200 flex items-start space-x-2.5 shadow-xs">
+        <div class="w-6 h-6 rounded-lg bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200 flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="font-extrabold text-[10px] uppercase tracking-wider block text-rose-700 dark:text-rose-300">Registration Closed</span>
+          <p class="text-xs font-semibold text-slate-800 dark:text-slate-100 mt-0.5 leading-snug">New account registration is currently disabled by administrator.</p>
+        </div>
+      </div>
+
       <!-- Segmented Tabs for Traditional Sign In / Sign Up -->
-      <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl shrink-0">
+      <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl shrink-0" id="authSegmentedTabsContainer">
         <button type="button" id="loginTabBtn" class="py-2 rounded-lg font-extrabold text-xs bg-purple-600 text-white shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
           <i class="fa-solid fa-right-to-bracket"></i>
           <span>Sign In</span>
         </button>
         <button type="button" id="registerTabBtn" class="py-2 rounded-lg font-bold text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center space-x-1.5 cursor-pointer">
           <i class="fa-solid fa-user-plus"></i>
-          <span>Create Account</span>
+          <span id="registerTabBtnText">Create Account</span>
         </button>
       </div>
 

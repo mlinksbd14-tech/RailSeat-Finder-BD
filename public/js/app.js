@@ -255,9 +255,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalRequireLoginToggle = document.getElementById('modalRequireLoginToggle');
   const modalRequireApprovalToggle = document.getElementById('modalRequireApprovalToggle');
   const modalRequireEmailVerificationToggle = document.getElementById('modalRequireEmailVerificationToggle');
+  const modalAllowRegistrationToggle = document.getElementById('modalAllowRegistrationToggle');
   const badgeRequireLoginStatus = document.getElementById('badgeRequireLoginStatus');
   const badgeRequireApprovalStatus = document.getElementById('badgeRequireApprovalStatus');
   const badgeRequireEmailVerificationStatus = document.getElementById('badgeRequireEmailVerificationStatus');
+  const badgeAllowRegistrationStatus = document.getElementById('badgeAllowRegistrationStatus');
+  const adminAuthNoticeToggle = document.getElementById('adminAuthNoticeToggle');
+  const adminAuthNoticeInput = document.getElementById('adminAuthNoticeInput');
+  const adminSaveAuthNoticeBtn = document.getElementById('adminSaveAuthNoticeBtn');
+  const authNoticeBanner = document.getElementById('authNoticeBanner');
+  const authNoticeText = document.getElementById('authNoticeText');
+  const registrationClosedBanner = document.getElementById('registrationClosedBanner');
+  const registerTabBtnText = document.getElementById('registerTabBtnText');
   const settingRequireApprovalToggle = document.getElementById('settingRequireApprovalToggle');
   const settingRequireEmailVerificationToggle = document.getElementById('settingRequireEmailVerificationToggle');
   const userSectionList = document.getElementById('userSectionList');
@@ -4539,6 +4548,9 @@ document.addEventListener('DOMContentLoaded', () => {
       state.requireLogin = !!data.require_login;
       state.requireAdminApproval = (data.require_admin_approval !== false);
       state.requireEmailVerification = (data.require_email_verification !== false);
+      state.allowRegistration = (data.allow_registration !== false);
+      state.authNotice = data.auth_notice || '';
+      state.authNoticeEnabled = (data.auth_notice_enabled !== false);
       if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
       if (statAccessMode) statAccessMode.textContent = state.requireLogin ? 'Protected (Login)' : 'Public Access';
 
@@ -4643,6 +4655,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (data.require_email_verification !== undefined) {
           state.requireEmailVerification = (data.require_email_verification !== false);
+        }
+        if (data.allow_registration !== undefined) {
+          state.allowRegistration = (data.allow_registration !== false);
+        }
+        if (data.auth_notice !== undefined) {
+          state.authNotice = data.auth_notice || '';
+        }
+        if (data.auth_notice_enabled !== undefined) {
+          state.authNoticeEnabled = (data.auth_notice_enabled !== false);
         }
         if (typeof updateAccessControlBadges === 'function') updateAccessControlBadges();
         if (userListTabCount) userListTabCount.textContent = data.users.length;
@@ -4953,13 +4974,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Helper to update visual badges for access control
+    // Helper to update visual badges for access control & live broadcast notices
     function updateAccessControlBadges() {
       if (badgeRequireLoginStatus) {
         badgeRequireLoginStatus.textContent = state.requireLogin ? 'Protected' : 'Public';
         badgeRequireLoginStatus.className = state.requireLogin
           ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300'
           : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
+      }
+      if (badgeAllowRegistrationStatus) {
+        const isOpen = state.allowRegistration !== false;
+        badgeAllowRegistrationStatus.textContent = isOpen ? 'Open' : 'Closed';
+        badgeAllowRegistrationStatus.className = isOpen
+          ? 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+          : 'px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300';
       }
       if (badgeRequireApprovalStatus) {
         badgeRequireApprovalStatus.textContent = state.requireAdminApproval ? 'Required' : 'Instant (Auto)';
@@ -4975,10 +5003,42 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (modalRequireLoginToggle) modalRequireLoginToggle.checked = state.requireLogin;
       if (settingRequireLoginToggle) settingRequireLoginToggle.checked = state.requireLogin;
+      if (modalAllowRegistrationToggle) modalAllowRegistrationToggle.checked = (state.allowRegistration !== false);
       if (modalRequireApprovalToggle) modalRequireApprovalToggle.checked = state.requireAdminApproval;
       if (settingRequireApprovalToggle) settingRequireApprovalToggle.checked = state.requireAdminApproval;
       if (modalRequireEmailVerificationToggle) modalRequireEmailVerificationToggle.checked = state.requireEmailVerification;
       if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.checked = state.requireEmailVerification;
+
+      if (adminAuthNoticeToggle) adminAuthNoticeToggle.checked = (state.authNoticeEnabled !== false);
+      if (adminAuthNoticeInput && document.activeElement !== adminAuthNoticeInput) {
+        adminAuthNoticeInput.value = state.authNotice || '';
+      }
+
+      // Update Live Notice in Login & Registration Modal
+      if (authNoticeBanner && authNoticeText) {
+        const hasNotice = !!(state.authNotice && state.authNotice.trim() && state.authNoticeEnabled !== false);
+        if (hasNotice) {
+          authNoticeText.textContent = state.authNotice.trim();
+          authNoticeBanner.classList.remove('hidden');
+        } else {
+          authNoticeBanner.classList.add('hidden');
+        }
+      }
+
+      // Update Registration Open/Closed State in Auth Modal
+      if (registrationClosedBanner) {
+        const isRegClosed = (state.allowRegistration === false);
+        registrationClosedBanner.classList.toggle('hidden', !isRegClosed);
+        if (registerTabBtnText) {
+          registerTabBtnText.textContent = isRegClosed ? 'Signup Closed' : 'Create Account';
+        }
+        if (registerTabBtn) {
+          registerTabBtn.classList.toggle('opacity-50', isRegClosed);
+        }
+        if (submitRegisterBtn) {
+          submitRegisterBtn.disabled = isRegClosed;
+        }
+      }
     }
 
     // 10. Require Login Toggle Handler
@@ -5084,6 +5144,105 @@ document.addEventListener('DOMContentLoaded', () => {
         handleRequireEmailVerificationChange(settingRequireEmailVerificationToggle.checked);
       });
     }
+
+    // 10.3. Allow Registration Toggle Handler (Turn On/Off Account Creation)
+    async function handleAllowRegistrationChange(isChecked) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ allowRegistration: isChecked })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.allowRegistration = (data.allow_registration !== false);
+          updateAccessControlBadges();
+          showToast(
+            state.allowRegistration
+              ? '📝 Signup is OPEN: New users can create accounts.'
+              : '🔒 Signup is CLOSED: New account registration is turned OFF.',
+            'success'
+          );
+        }
+      } catch (e) {
+        showToast('Failed to update registration setting.', 'error');
+      }
+    }
+
+    if (modalAllowRegistrationToggle) {
+      modalAllowRegistrationToggle.addEventListener('change', () => {
+        handleAllowRegistrationChange(modalAllowRegistrationToggle.checked);
+      });
+    }
+
+    // 10.4. Live Auth Notice Save & Toggle Handler
+    async function handleSaveAuthNotice(noticeText, isEnabled) {
+      try {
+        const token = getAuthToken();
+        const res = await fetch('/api/users/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            authNotice: noticeText,
+            authNoticeEnabled: isEnabled
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.authNotice = data.auth_notice || '';
+          state.authNoticeEnabled = (data.auth_notice_enabled !== false);
+          updateAccessControlBadges();
+          showToast('📢 Live broadcast notice updated & synced to all users!', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to save broadcast notice.', 'error');
+      }
+    }
+
+    if (adminSaveAuthNoticeBtn) {
+      adminSaveAuthNoticeBtn.addEventListener('click', () => {
+        const text = (adminAuthNoticeInput ? adminAuthNoticeInput.value : '').trim();
+        const isEnabled = adminAuthNoticeToggle ? adminAuthNoticeToggle.checked : true;
+        handleSaveAuthNotice(text, isEnabled);
+      });
+    }
+
+    if (adminAuthNoticeToggle) {
+      adminAuthNoticeToggle.addEventListener('change', () => {
+        const text = (adminAuthNoticeInput ? adminAuthNoticeInput.value : '').trim();
+        handleSaveAuthNotice(text, adminAuthNoticeToggle.checked);
+      });
+    }
+
+    // Setup Live Firestore Snapshot Listener for Real-Time Notice & Policy Sync across all devices
+    function setupFirestoreRealtimeSettingsListener() {
+      try {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+          const db = firebase.firestore();
+          db.collection('system_config').doc('settings').onSnapshot(doc => {
+            if (doc && doc.exists) {
+              const data = doc.data() || {};
+              if (data.requireLogin !== undefined) state.requireLogin = !!data.requireLogin;
+              if (data.requireAdminApproval !== undefined) state.requireAdminApproval = (data.requireAdminApproval !== false);
+              if (data.requireEmailVerification !== undefined) state.requireEmailVerification = (data.requireEmailVerification !== false);
+              if (data.allowRegistration !== undefined) state.allowRegistration = (data.allowRegistration !== false);
+              if (data.authNotice !== undefined) state.authNotice = data.authNotice || '';
+              if (data.authNoticeEnabled !== undefined) state.authNoticeEnabled = (data.authNoticeEnabled !== false);
+              updateAccessControlBadges();
+              console.log('[Firestore Sync] ⚡ Live settings & notice synchronized in real-time');
+            }
+          }, err => {
+            console.warn('[Firestore Sync] Snapshot listener warning:', err.message);
+          });
+        }
+      } catch (e) {
+        console.warn('[Firestore Sync] Real-time listener init warning:', e.message);
+      }
+    }
+
+    // Attempt listener attachment
+    setTimeout(setupFirestoreRealtimeSettingsListener, 2000);
 
     // 11. Add User Form Submission (Admin Panel)
     if (addUserForm) {

@@ -2086,6 +2086,9 @@ app.get('/api/user-auth/status', (req, res) => {
     require_login: !!data.settings?.requireLogin,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
     require_email_verification: data.settings?.requireEmailVerification !== false,
+    allow_registration: data.settings?.allowRegistration !== false,
+    auth_notice: data.settings?.authNotice || '',
+    auth_notice_enabled: data.settings?.authNoticeEnabled !== false,
     logged_in: !!session,
     pending_count: pendingCount,
     user: session ? {
@@ -2105,6 +2108,21 @@ app.post('/api/user-auth/register', async (req, res) => {
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanName = (name || '').trim() || cleanUsername;
 
+  const data = loadUsersData();
+  const isFirstUser = data.users.length === 0;
+  const allowRegistration = data.settings?.allowRegistration !== false;
+
+  if (!allowRegistration && !isFirstUser) {
+    const customNotice = (data.settings?.authNotice && data.settings?.authNoticeEnabled !== false)
+      ? data.settings.authNotice
+      : 'New account registration is currently closed by administrator.';
+    return res.json({
+      success: false,
+      registrationClosed: true,
+      error: `Registration Closed: ${customNotice}`
+    });
+  }
+
   if (!cleanUsername || cleanUsername.length < 3) {
     return res.json({ success: false, error: 'Username must be at least 3 characters long.' });
   }
@@ -2121,7 +2139,6 @@ app.post('/api/user-auth/register', async (req, res) => {
     return res.json({ success: false, error: 'Please provide a valid email address.' });
   }
 
-  const data = loadUsersData();
   const existingUsername = data.users.find(u => u.username.toLowerCase() === cleanUsername);
   if (existingUsername) {
     return res.json({ success: false, error: `Username "${cleanUsername}" is already registered.` });
@@ -2136,7 +2153,6 @@ app.post('/api/user-auth/register', async (req, res) => {
 
   const requireApproval = data.settings?.requireAdminApproval !== false;
   const requireEmailVerification = data.settings?.requireEmailVerification !== false;
-  const isFirstUser = data.users.length === 0;
   const role = isFirstUser ? 'admin' : 'viewer';
   const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
   const canViewDashboard = isFirstUser || !requireApproval;
@@ -2355,6 +2371,20 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
     let user = data.users.find(u => u.firebaseUid === uid || (email && u.email === email) || u.username === email || u.username === uid);
 
     if (!user) {
+      const allowRegistration = data.settings?.allowRegistration !== false;
+      const isFirstUser = data.users.length === 0;
+
+      if (!allowRegistration && !isFirstUser) {
+        const customNotice = (data.settings?.authNotice && data.settings?.authNoticeEnabled !== false)
+          ? data.settings.authNotice
+          : 'New account registration is currently closed by administrator.';
+        return res.json({
+          success: false,
+          registrationClosed: true,
+          error: `Registration Closed: ${customNotice}`
+        });
+      }
+
       // Create new user registered through Firebase
       const generatedUsername = email ? email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() : `user_${uid.substring(0, 6)}`;
       let finalUsername = generatedUsername;
@@ -2364,7 +2394,6 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
       }
 
       const requireApproval = data.settings?.requireAdminApproval !== false;
-      const isFirstUser = data.users.length === 0;
       const status = (isFirstUser || !requireApproval) ? 'active' : 'pending';
       const canViewDashboard = isFirstUser || !requireApproval;
 
@@ -2504,6 +2533,9 @@ app.get('/api/users', requireAdmin, (req, res) => {
     require_login: !!data.settings?.requireLogin,
     require_admin_approval: data.settings?.requireAdminApproval !== false,
     require_email_verification: data.settings?.requireEmailVerification !== false,
+    allow_registration: data.settings?.allowRegistration !== false,
+    auth_notice: data.settings?.authNotice || '',
+    auth_notice_enabled: data.settings?.authNoticeEnabled !== false,
     users: safeUsers
   });
 });
@@ -2771,7 +2803,7 @@ app.post('/api/users/update-password', requireAdmin, async (req, res) => {
 
 // 10. Update Access Control Settings (Admin-only + Auto Firebase Sync)
 app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
-  const { requireLogin, requireAdminApproval, requireEmailVerification } = req.body;
+  const { requireLogin, requireAdminApproval, requireEmailVerification, allowRegistration, authNotice, authNoticeEnabled } = req.body;
   const data = loadUsersData();
 
   data.settings = data.settings || {};
@@ -2783,6 +2815,15 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
   }
   if (requireEmailVerification !== undefined) {
     data.settings.requireEmailVerification = !!requireEmailVerification;
+  }
+  if (allowRegistration !== undefined) {
+    data.settings.allowRegistration = !!allowRegistration;
+  }
+  if (authNotice !== undefined) {
+    data.settings.authNotice = String(authNotice || '').trim();
+  }
+  if (authNoticeEnabled !== undefined) {
+    data.settings.authNoticeEnabled = !!authNoticeEnabled;
   }
   saveUsersData(data);
 
@@ -2796,13 +2837,16 @@ app.post('/api/users/update-settings', requireAdmin, async (req, res) => {
     }
   }
 
-  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}, EmailVerification=${data.settings.requireEmailVerification !== false}`);
+  console.log(`[Access Control] 🔒 Dashboard settings updated: Login=${data.settings.requireLogin}, AdminApproval=${data.settings.requireAdminApproval !== false}, EmailVerification=${data.settings.requireEmailVerification !== false}, AllowReg=${data.settings.allowRegistration !== false}, Notice="${data.settings.authNotice || ''}"`);
   res.json({
     success: true,
     require_login: !!data.settings.requireLogin,
     require_admin_approval: data.settings.requireAdminApproval !== false,
     require_email_verification: data.settings.requireEmailVerification !== false,
-    message: `Settings updated: Require Login = ${data.settings.requireLogin ? 'ON' : 'OFF'}, Admin Approval = ${data.settings.requireAdminApproval !== false ? 'ON' : 'OFF'}, Email Verification = ${data.settings.requireEmailVerification !== false ? 'ON' : 'OFF'}.`
+    allow_registration: data.settings.allowRegistration !== false,
+    auth_notice: data.settings.authNotice || '',
+    auth_notice_enabled: data.settings.authNoticeEnabled !== false,
+    message: `Settings updated: Allow Registration = ${data.settings.allowRegistration !== false ? 'ON' : 'OFF'}, Notice = ${data.settings.authNoticeEnabled !== false && data.settings.authNotice ? 'ACTIVE' : 'OFF'}.`
   });
 });
 

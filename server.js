@@ -3177,6 +3177,15 @@ app.post('/api/radar/watchlist/delete', (req, res) => {
   res.json({ success: true, message: 'Target removed from 24/7 Radar.' });
 });
 
+// Dedicated User Manual Documentation Route
+app.get('/manual', (req, res) => {
+  const manualPath = path.join(__dirname, 'public', 'manual.html');
+  if (fs.existsSync(manualPath)) {
+    return res.sendFile(manualPath);
+  }
+  res.redirect('/USER_MANUAL.md');
+});
+
 // Fallback for SPA routing & API 404 handler
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {

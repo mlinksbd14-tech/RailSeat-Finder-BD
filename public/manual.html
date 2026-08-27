@@ -1,0 +1,316 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Manual & Documentation — RailSeat Finder BD</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚆</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="/" class="flex items-center space-x-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-base shadow-md group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-train"></i>
+          </div>
+          <div>
+            <span class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white block leading-tight">RailSeat Finder BD</span>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Official User Manual</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button id="themeToggleBtn" type="button" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 flex items-center justify-center transition cursor-pointer" title="Toggle Dark/Light Mode">
+          <i class="fa-solid fa-moon text-xs dark:hidden"></i>
+          <i class="fa-solid fa-sun text-xs hidden dark:inline text-amber-400"></i>
+        </button>
+        <a href="/" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+          <span>Open Dashboard</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Documentation Container -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+
+      <!-- Left Sidebar: Table of Contents -->
+      <aside class="hidden lg:block sticky top-24 space-y-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-xs">
+        <span class="font-extrabold uppercase text-[10px] tracking-wider text-slate-400 block px-2">Table of Contents</span>
+        <nav class="space-y-1">
+          <a href="#section-1" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">1. Getting Started & Sign-In</a>
+          <a href="#section-2" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">2. Finding Seat Availability</a>
+          <a href="#section-3" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">3. View Modes & Layouts</a>
+          <a href="#section-4" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">4. Live Auto-Monitoring</a>
+          <a href="#section-5" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">5. Seat Alerts & Audio Chimes</a>
+          <a href="#section-6" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">6. Watchlist Radar & Telegram</a>
+          <a href="#section-7" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">7. Sharing & Exporting</a>
+          <a href="#section-8" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">8. Settings & Sound Test</a>
+          <a href="#section-9" class="block px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-medium">9. FAQ</a>
+        </nav>
+      </aside>
+
+      <!-- Main Document Content -->
+      <article class="lg:col-span-3 space-y-8 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+
+        <!-- Hero Header -->
+        <div class="border-b border-slate-100 dark:border-slate-800 pb-6 space-y-2">
+          <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+            <i class="fa-solid fa-book-open"></i>
+            <span>User Documentation & Guide</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            How to Use RailSeat Finder BD
+          </h1>
+          <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            Welcome to <strong>RailSeat Finder BD</strong>, your real-time Bangladesh Railway train seat availability tracker, auto-monitor, and instant booking assistant. This guide covers all user features, alert modes, and mobile Telegram integration.
+          </p>
+        </div>
+
+        <!-- Section 1 -->
+        <section id="section-1" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-black">1</span>
+            <span>Getting Started & Sign In</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <ul class="space-y-2 list-disc list-inside">
+              <li><strong>1-Click Google Sign-In:</strong> Click <strong>Sign In</strong> in the top-right navigation bar and select <strong>"Continue with Google"</strong> for instant 1-click access.</li>
+              <li><strong>Username / Email Sign-In:</strong> You can also sign in with your registered username/email and password.</li>
+              <li><strong>Account Self-Registration:</strong> Switch to the <strong>"Create Account"</strong> tab, enter your Full Name, Email, Username, and Password. A verification link will be sent to your inbox. Click the verification link to activate your email.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="section-2" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black">2</span>
+            <span>Finding Train Seat Availability</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <ol class="space-y-2 list-decimal list-inside">
+              <li><strong>From Station:</strong> Type your departure station (e.g. <code>Dhaka</code>). Autocomplete suggestions will appear as you type.</li>
+              <li><strong>Swap Button (<code>⇄</code>):</strong> Click the swap icon to instantly reverse your origin and destination.</li>
+              <li><strong>Destination Station:</strong> Type your target station (e.g. <code>Chattogram</code> or <code>Cox's Bazar</code>).</li>
+              <li><strong>Date of Journey:</strong> Pick your travel date (up to 10 days in advance).</li>
+              <li><strong>Quick Date Chips:</strong> Click chips like <code>Today</code>, <code>Tomorrow</code>, <code>Fri</code> for 1-click date selection.</li>
+              <li><strong>Popular Route Strip:</strong> Click on quick routes (e.g., <em>Dhaka ➔ Cox's Bazar</em>) for instant pre-filled searches.</li>
+              <li>Click <strong>"Find Trains"</strong> to query live seat availability.</li>
+            </ol>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400">💡 Dynamic Train Filter:</span> When you select a specific train from the <em>Train (Optional)</em> dropdown, dynamic counters immediately calculate the <strong>Total Available Seats</strong> and <strong>Total Running Trains</strong> for that specific selection.
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="section-3" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-black">3</span>
+            <span>View Modes & Layouts</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                <h4 class="font-bold text-slate-900 dark:text-white text-xs mb-1">🎴 Train Cards View</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Complete cards with departure/arrival times, travel duration, fares per class, online vs counter seat availability, and 1-click Book buttons.</p>
+              </div>
+              <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                <h4 class="font-bold text-slate-900 dark:text-white text-xs mb-1">📊 Comparative Table View</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">High-density spreadsheet-style table comparing all running trains and seat availability side-by-side.</p>
+              </div>
+              <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                <h4 class="font-bold text-slate-900 dark:text-white text-xs mb-1">📅 10-Day Availability Matrix</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Multi-day heatmap showing seat availability across all 10 upcoming days simultaneously.</p>
+              </div>
+              <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                <h4 class="font-bold text-slate-900 dark:text-white text-xs mb-1">🗺️ Stoppage & Route Schedule</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Click <em>View Route / Stops</em> on any train card to inspect its full intermediate stoppage timings and station schedule.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="section-4" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xs font-black">4</span>
+            <span>Live Auto-Monitoring & Countdown Ticker</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p>For high-demand routes where seats drop frequently due to cancellations:</p>
+            <ul class="space-y-2 list-disc list-inside">
+              <li><strong>Polling Intervals:</strong> Select <code>Monitor: 15s</code>, <code>30s</code>, or <code>60s</code> from the Tracker Bar dropdown.</li>
+              <li><strong>Live Countdown Bar:</strong> An animated ticker indicates the exact seconds remaining until the next live scan.</li>
+              <li><strong>Pause / Resume (<code>⏸</code> / <code>▶</code>):</strong> Temporarily freeze auto-refreshing at any time.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="section-5" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-black">5</span>
+            <span>Seat Alerts & Distinct Audio Notifications</span>
+          </h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <th class="p-3">Alert Type</th>
+                  <th class="p-3">Audio Synthesizer</th>
+                  <th class="p-3">Visual Display</th>
+                  <th class="p-3">Trigger Scenario</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                <tr>
+                  <td class="p-3 font-bold text-emerald-600">🟢 Normal Seat Alert</td>
+                  <td class="p-3">Gentle melodious railway chime (D5 ➔ A5)</td>
+                  <td class="p-3">Emerald badge & green toast</td>
+                  <td class="p-3">Routine seat discovery or regular availability increase.</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-rose-600">🚨 Sold Out ➔ Released</td>
+                  <td class="p-3">High-energy rapid ascending alarm (G5 ➔ C7)</td>
+                  <td class="p-3">Glowing fiery banner & urgent toast</td>
+                  <td class="p-3">Train/class was <strong>0 / ALL SOLD OUT</strong> and seats suddenly released!</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold text-amber-600">🎯 Watchlist Radar Hit</td>
+                  <td class="p-3">High-priority sonar sweep & echo ping</td>
+                  <td class="p-3">Gold/amber radar badge & toast</td>
+                  <td class="p-3">Custom watched train/class criteria met.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Section 6 -->
+        <section id="section-6" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-black">6</span>
+            <span>Active Seat Watchlist Radar & Telegram Alerts</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p>Set custom alert targets to receive instant mobile phone notifications via Telegram:</p>
+            <ol class="space-y-2 list-decimal list-inside">
+              <li>Click the <strong>"Watch" (<code>🎯</code>)</strong> button on any train card in search results.</li>
+              <li>Select your desired seat class (or <em>Any Class</em>) and minimum seats required (e.g. <code>≥ 1 Seat</code>, <code>≥ 2 Seats</code>, <code>≥ 4 Seats</code>).</li>
+              <li>Connect your Telegram Chat ID in the <strong>Watchlist Radar</strong> modal to receive mobile alerts even when your computer or browser is closed.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Section 7 -->
+        <section id="section-7" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-black">7</span>
+            <span>Sharing & Exporting Availability</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <ul class="space-y-2 list-disc list-inside">
+              <li><strong>WhatsApp 1-Click Share:</strong> Click <strong>Share</strong> on the tracker bar and choose WhatsApp to share clean formatted seat summaries with family or travel companions.</li>
+              <li><strong>Copy Summary:</strong> Copy a formatted table of all running trains and available seats to your clipboard.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 8 -->
+        <section id="section-8" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center text-xs font-black">8</span>
+            <span>Appearance, Sound Previews & Settings</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p>Open <strong>⚙️ Settings</strong> in the top navigation bar to:</p>
+            <ul class="space-y-2 list-disc list-inside">
+              <li>Toggle between <strong>Dark Theme</strong> and <strong>Light Theme</strong>.</li>
+              <li>Enable or mute <strong>Audio Chimes</strong>.</li>
+              <li>Test and preview alert tones using the <strong>Normal Seat</strong>, <strong>Sold Out ➔ Released</strong>, and <strong>Radar Alarm</strong> preview buttons.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 9 -->
+        <section id="section-9" class="space-y-4 scroll-mt-24">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xs font-black">9</span>
+            <span>Frequently Asked Questions (FAQ)</span>
+          </h2>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <div class="space-y-1">
+              <p class="font-bold text-slate-900 dark:text-white">Q: How do I book tickets?</p>
+              <p class="text-slate-500 dark:text-slate-400">A: Click the <strong>"Book"</strong> button on any train card or notification to open Bangladesh Railway's official booking checkout portal with your train and seat class pre-selected.</p>
+            </div>
+            <div class="space-y-1">
+              <p class="font-bold text-slate-900 dark:text-white">Q: Will I get Telegram alerts when my browser is closed?</p>
+              <p class="text-slate-500 dark:text-slate-400">A: Yes! Once you set targets in the Watchlist Radar with your Telegram Chat ID, alerts are delivered straight to your Telegram app.</p>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="font-medium text-slate-700 dark:text-slate-300">
+        RailSeat Finder BD &bull; Developed By <span class="font-bold text-emerald-600 dark:text-emerald-400">Md. Saidur Rahaman Shawon</span>
+      </p>
+      <a href="/" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Return to Dashboard ➔</a>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle handler
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const isDark = localStorage.getItem('rail_theme') === 'dark' || (!localStorage.getItem('rail_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) document.documentElement.classList.add('dark');
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const dark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('rail_theme', dark ? 'dark' : 'light');
+      });
+    }
+  </script>
+</body>
+</html>

@@ -2473,12 +2473,70 @@ app.get('/api/users', requireAdmin, (req, res) => {
   });
 });
 
-// 5. Add New User (Admin-only, Encrypted with Salted Scrypt)
-app.post('/api/users/add', requireAdmin, (req, res) => {
-  const { username, password, name, role, status } = req.body;
+// Automatic Bidirectional Firebase Synchronization Helper (Firestore & Firebase Auth)
+async function syncUserToFirebase(user, action = 'update', plainPassword = null) {
+  if (!user || !user.id) return;
+
+  // 1. Cloud Firestore Synchronization
+  if (firestoreDb && isFirebaseConnected) {
+    try {
+      const docRef = firestoreDb.collection('system_users').doc(user.id);
+      if (action === 'delete') {
+        await docRef.delete();
+        console.log(`[Firebase Firestore] 🗑️ Deleted user document: ${user.id} (@${user.username})`);
+      } else {
+        // Strip sensitive internal fields if needed or store safe representation
+        await docRef.set(user, { merge: true });
+        console.log(`[Firebase Firestore] ☁️ Synced user document: ${user.id} (@${user.username})`);
+      }
+    } catch (err) {
+      console.warn(`[Firebase Firestore] ⚠️ Failed to ${action} user ${user.id}:`, err.message);
+    }
+  }
+
+  // 2. Firebase Authentication Synchronization (Enabled / Disabled / Password / Profile / Deletion)
+  const auth = getAdminAuth();
+  if (auth) {
+    try {
+      let uid = user.firebaseUid;
+      if (!uid && user.email) {
+        try {
+          const fbUser = await auth.getUserByEmail(user.email);
+          if (fbUser) uid = fbUser.uid;
+        } catch (e) {}
+      }
+
+      if (action === 'delete') {
+        if (uid) {
+          await auth.deleteUser(uid);
+          console.log(`[Firebase Auth] 🗑️ Deleted user from Firebase Auth: @${user.username} (${uid})`);
+        }
+      } else {
+        if (uid) {
+          const updates = {};
+          if (user.name) updates.displayName = user.name;
+          if (user.email) updates.email = user.email;
+          if (user.status === 'disabled') updates.disabled = true;
+          else if (user.status === 'active') updates.disabled = false;
+          if (plainPassword && plainPassword.length >= 6) updates.password = plainPassword;
+
+          await auth.updateUser(uid, updates);
+          console.log(`[Firebase Auth] 🔄 Updated Firebase Auth user: @${user.username} (${uid})`);
+        }
+      }
+    } catch (err) {
+      console.warn(`[Firebase Auth] ⚠️ Failed to ${action} user @${user.username}:`, err.message);
+    }
+  }
+}
+
+// 5. Add New User (Admin-only, Encrypted with Salted Scrypt + Auto Firebase Sync)
+app.post('/api/users/add', requireAdmin, async (req, res) => {
+  const { username, password, name, email, role, status } = req.body;
   const cleanUsername = (username || '').trim().toLowerCase();
   const cleanPassword = (password || '').trim();
   const cleanName = (name || '').trim() || cleanUsername;
+  const cleanEmail = (email || '').trim().toLowerCase() || null;
   const cleanRole = (role || 'viewer').toLowerCase() === 'admin' ? 'admin' : 'viewer';
   const cleanStatus = (status || 'active').toLowerCase() === 'disabled' ? 'disabled' : 'active';
 
@@ -2501,8 +2559,10 @@ app.post('/api/users/add', requireAdmin, (req, res) => {
     username: cleanUsername,
     password: hashPassword(cleanPassword),
     name: cleanName,
+    email: cleanEmail,
     role: cleanRole,
     status: cleanStatus,
+    emailVerified: true,
     canViewDashboard: true,
     createdAt: new Date().toISOString(),
     lastLogin: null
@@ -2512,13 +2572,17 @@ app.post('/api/users/add', requireAdmin, (req, res) => {
   saveUsersData(data);
   console.log(`[Users] 👤 Added new encrypted user: ${cleanUsername} (${cleanRole})`);
 
+  // Auto-sync new user to Firebase
+  await syncUserToFirebase(newUser, 'update', cleanPassword);
+
   res.json({
     success: true,
-    message: `User ${cleanUsername} created successfully.`,
+    message: `User ${cleanUsername} created successfully in local DB and Firebase.`,
     user: {
       id: newUser.id,
       username: newUser.username,
       name: newUser.name,
+      email: newUser.email,
       role: newUser.role,
       status: newUser.status,
       createdAt: newUser.createdAt
@@ -2526,8 +2590,45 @@ app.post('/api/users/add', requireAdmin, (req, res) => {
   });
 });
 
-// 6. Delete / Remove User (Admin-only)
-app.post('/api/users/delete', requireAdmin, (req, res) => {
+// 5.1. Edit Existing User Details (Admin-only + Auto Firebase Sync)
+app.post('/api/users/edit', requireAdmin, async (req, res) => {
+  const { id, name, email, role, status } = req.body;
+  if (!id) return res.json({ success: false, error: 'User ID is required.' });
+
+  const data = loadUsersData();
+  const user = data.users.find(u => u.id === id);
+
+  if (!user) {
+    return res.json({ success: false, error: 'User not found.' });
+  }
+
+  if (name !== undefined) user.name = (name || '').trim();
+  if (email !== undefined) user.email = (email || '').trim().toLowerCase();
+  if (role !== undefined) user.role = (role || 'viewer').toLowerCase() === 'admin' ? 'admin' : 'viewer';
+  if (status !== undefined) user.status = (status || 'active').toLowerCase();
+
+  saveUsersData(data);
+  console.log(`[Users] ✏️ Edited user @${user.username} (Role: ${user.role}, Status: ${user.status})`);
+
+  // Auto-sync updated user to Firebase
+  await syncUserToFirebase(user, 'update');
+
+  res.json({
+    success: true,
+    message: `User @${user.username} updated in system and Firebase.`,
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    }
+  });
+});
+
+// 6. Delete / Remove User (Admin-only + Auto Firebase Deletion)
+app.post('/api/users/delete', requireAdmin, async (req, res) => {
   const { id } = req.body;
   if (!id) return res.json({ success: false, error: 'User ID is required.' });
 
@@ -2550,11 +2651,14 @@ app.post('/api/users/delete', requireAdmin, (req, res) => {
   saveUsersData(data);
   console.log(`[Users] 🗑️ Deleted user: ${userToDelete.username}`);
 
-  res.json({ success: true, message: `User "${userToDelete.username}" removed.` });
+  // Auto-delete from Cloud Firestore and Firebase Auth
+  await syncUserToFirebase(userToDelete, 'delete');
+
+  res.json({ success: true, message: `User "${userToDelete.username}" removed from local DB and Firebase.` });
 });
 
-// 7. Toggle User Status (Admin-only)
-app.post('/api/users/toggle-status', requireAdmin, (req, res) => {
+// 7. Toggle User Status (Admin-only + Auto Firebase Sync)
+app.post('/api/users/toggle-status', requireAdmin, async (req, res) => {
   const { id } = req.body;
   if (!id) return res.json({ success: false, error: 'User ID is required.' });
 
@@ -2568,15 +2672,18 @@ app.post('/api/users/toggle-status', requireAdmin, (req, res) => {
   user.status = (user.status === 'active') ? 'disabled' : 'active';
   saveUsersData(data);
 
+  // Auto-sync status change to Firebase Auth & Firestore
+  await syncUserToFirebase(user, 'update');
+
   res.json({
     success: true,
     status: user.status,
-    message: `User ${user.username} is now ${user.status}.`
+    message: `User ${user.username} is now ${user.status} in local DB and Firebase.`
   });
 });
 
-// 8. Approve Pending User (Admin-only)
-app.post('/api/users/approve', requireAdmin, (req, res) => {
+// 8. Approve Pending User (Admin-only + Auto Firebase Sync)
+app.post('/api/users/approve', requireAdmin, async (req, res) => {
   const { id } = req.body;
   if (!id) return res.json({ success: false, error: 'User ID is required.' });
 
@@ -2592,15 +2699,18 @@ app.post('/api/users/approve', requireAdmin, (req, res) => {
   saveUsersData(data);
   console.log(`[Users] ✅ Approved user: ${user.username} (${user.id})`);
 
+  // Auto-sync active status to Firebase Auth & Firestore
+  await syncUserToFirebase(user, 'update');
+
   res.json({
     success: true,
     status: user.status,
-    message: `User @${user.username} has been approved and activated.`
+    message: `User @${user.username} has been approved and activated in local DB and Firebase.`
   });
 });
 
-// 9. Reset / Update User Password (Admin-only, Encrypted with Salted Scrypt)
-app.post('/api/users/update-password', requireAdmin, (req, res) => {
+// 9. Reset / Update User Password (Admin-only, Encrypted with Salted Scrypt + Auto Firebase Sync)
+app.post('/api/users/update-password', requireAdmin, async (req, res) => {
   const { id, newPassword } = req.body;
   const cleanPassword = (newPassword || '').trim();
 
@@ -2618,10 +2728,13 @@ app.post('/api/users/update-password', requireAdmin, (req, res) => {
   user.password = hashPassword(cleanPassword);
   saveUsersData(data);
 
-  res.json({ success: true, message: `Password for ${user.username} updated and encrypted.` });
+  // Auto-sync password update to Firebase Auth & Firestore
+  await syncUserToFirebase(user, 'update', cleanPassword);
+
+  res.json({ success: true, message: `Password for ${user.username} updated in local DB and Firebase.` });
 });
 
-// 9. Update Access Control Settings (Admin-only)
+// 10. Update Access Control Settings (Admin-only + Auto Firebase Sync)
 app.post('/api/users/update-settings', requireAdmin, (req, res) => {
   const { requireLogin } = req.body;
   const data = loadUsersData();

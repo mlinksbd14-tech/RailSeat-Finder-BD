@@ -310,6 +310,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const resetPasswordTargetUsername = document.getElementById('resetPasswordTargetUsername');
   const resetPasswordNewInput = document.getElementById('resetPasswordNewInput');
 
+  // Edit User Modal Elements
+  const editUserModal = document.getElementById('editUserModal');
+  const editUserCloseBtn = document.getElementById('editUserCloseBtn');
+  const editUserForm = document.getElementById('editUserForm');
+  const editUserTargetId = document.getElementById('editUserTargetId');
+  const editUserTargetUsername = document.getElementById('editUserTargetUsername');
+  const editUserNameInput = document.getElementById('editUserNameInput');
+  const editUserEmailInput = document.getElementById('editUserEmailInput');
+  const editUserRoleSelect = document.getElementById('editUserRoleSelect');
+  const editUserStatusSelect = document.getElementById('editUserStatusSelect');
+  const editUserCancelBtn = document.getElementById('editUserCancelBtn');
+
   // Released Seat Alert Banner Elements
   const releasedSeatAlertBanner = document.getElementById('releasedSeatAlertBanner');
   const releasedSeatText = document.getElementById('releasedSeatText');
@@ -4733,6 +4745,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${isActive ? 'Disable' : 'Enable'}
               </button>
 
+              <!-- Edit User Details -->
+              <button type="button" class="user-edit-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" data-name="${encodeURIComponent(u.name || '')}" data-email="${encodeURIComponent(u.email || '')}" data-role="${u.role || 'viewer'}" data-status="${u.status || 'active'}" title="Edit User">
+                <i class="fa-solid fa-user-pen text-[10px]"></i>
+              </button>
+
               <!-- Reset Password -->
               <button type="button" class="user-reset-pwd-btn p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 transition cursor-pointer" data-id="${u.id}" data-username="${u.username}" title="Reset Password">
                 <i class="fa-solid fa-key text-[10px]"></i>
@@ -5364,6 +5381,26 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        // Edit User Details
+        const editBtn = e.target.closest('.user-edit-btn');
+        if (editBtn) {
+          const id = editBtn.dataset.id;
+          const username = editBtn.dataset.username;
+          const name = decodeURIComponent(editBtn.dataset.name || '');
+          const email = decodeURIComponent(editBtn.dataset.email || '');
+          const role = editBtn.dataset.role || 'viewer';
+          const status = editBtn.dataset.status || 'active';
+
+          if (editUserTargetId) editUserTargetId.value = id;
+          if (editUserTargetUsername) editUserTargetUsername.textContent = '@' + username;
+          if (editUserNameInput) editUserNameInput.value = name;
+          if (editUserEmailInput) editUserEmailInput.value = email;
+          if (editUserRoleSelect) editUserRoleSelect.value = role;
+          if (editUserStatusSelect) editUserStatusSelect.value = status;
+          if (editUserModal) editUserModal.classList.remove('hidden');
+          return;
+        }
+
         // Reset Password
         const resetBtn = e.target.closest('.user-reset-pwd-btn');
         if (resetBtn) {
@@ -5376,12 +5413,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Delete / Reject User
+        // Delete / Reject User (Auto-syncs with Firebase)
         const deleteBtn = e.target.closest('.user-delete-btn');
         if (deleteBtn) {
           const id = deleteBtn.dataset.id;
           const username = deleteBtn.dataset.username;
-          if (!confirm(`Are you sure you want to remove user @${username}?`)) return;
+          if (!confirm(`Are you sure you want to remove user @${username}? This will also delete the user from Firebase.`)) return;
 
           try {
             const token = getAuthToken();
@@ -5392,7 +5429,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (data.success) {
-              showToast(`🗑️ User @${username} removed.`, 'info');
+              showToast(`🗑️ User @${username} removed from local DB and Firebase.`, 'info');
               loadUsersList();
               checkDashboardUserAuth();
             } else {
@@ -5402,6 +5439,51 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Network error deleting user.', 'error');
           }
           return;
+        }
+      });
+    }
+
+    // 16. Edit User Modal Actions & Form Submission (Auto-syncs with Firebase)
+    if (editUserCloseBtn && editUserModal) {
+      editUserCloseBtn.addEventListener('click', () => editUserModal.classList.add('hidden'));
+    }
+    if (editUserCancelBtn && editUserModal) {
+      editUserCancelBtn.addEventListener('click', () => editUserModal.classList.add('hidden'));
+    }
+    if (editUserModal) {
+      editUserModal.addEventListener('click', (e) => {
+        if (e.target === editUserModal) editUserModal.classList.add('hidden');
+      });
+    }
+    if (editUserForm) {
+      editUserForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = editUserTargetId ? editUserTargetId.value : '';
+        const name = editUserNameInput ? editUserNameInput.value.trim() : '';
+        const email = editUserEmailInput ? editUserEmailInput.value.trim().toLowerCase() : '';
+        const role = editUserRoleSelect ? editUserRoleSelect.value : 'viewer';
+        const status = editUserStatusSelect ? editUserStatusSelect.value : 'active';
+
+        if (!id) return;
+
+        try {
+          const token = getAuthToken();
+          const res = await fetch('/api/users/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: JSON.stringify({ id, name, email, role, status })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('✅ User updated and synced with Firebase!', 'success');
+            if (editUserModal) editUserModal.classList.add('hidden');
+            loadUsersList();
+            checkDashboardUserAuth();
+          } else {
+            showToast(data.error || 'Failed to update user.', 'error');
+          }
+        } catch (err) {
+          showToast('Network error updating user.', 'error');
         }
       });
     }

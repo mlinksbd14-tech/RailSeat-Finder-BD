@@ -1738,9 +1738,72 @@
 
       <!-- Modal Footer -->
       <div class="p-3 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
-        <span><i class="fa-solid fa-shield-halved text-purple-500 mr-1"></i> Changes are saved automatically</span>
+        <span><i class="fa-solid fa-shield-halved text-purple-500 mr-1"></i> Changes are synced to Firebase automatically</span>
         <button id="userManagementDoneBtn" type="button" class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold text-xs transition cursor-pointer">Done</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Edit User Modal (Admin-only with Auto Firebase Sync) -->
+  <!-- ============================================== -->
+  <div id="editUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 modal-dialog-responsive">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">Edit User</h4>
+            <p id="editUserTargetUsername" class="text-[10px] text-slate-400 font-mono">@username</p>
+          </div>
+        </div>
+        <button type="button" id="editUserCloseBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <form id="editUserForm" class="space-y-3 text-xs">
+        <input type="hidden" id="editUserTargetId">
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+          <input type="text" id="editUserNameInput" required
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+          <input type="email" id="editUserEmailInput" placeholder="e.g. user@example.com"
+            class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Role / Permissions</label>
+          <select id="editUserRoleSelect" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+            <option value="viewer">Viewer (Can View Dashboard & Live Seat Availability)</option>
+            <option value="admin">Administrator (Full Access & User Management)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Account Status</label>
+          <select id="editUserStatusSelect" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-1 focus:ring-purple-500">
+            <option value="active">Active (Approved & Can Log In)</option>
+            <option value="pending">Pending (Awaiting Admin Approval)</option>
+            <option value="disabled">Disabled (Access Blocked)</option>
+          </select>
+        </div>
+
+        <div class="pt-2 flex items-center space-x-2">
+          <button type="button" id="editUserCancelBtn" class="w-1/2 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">Cancel</button>
+          <button type="submit" id="editUserSubmitBtn" class="w-1/2 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1 cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1"></i>
+            <span>Save & Sync</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

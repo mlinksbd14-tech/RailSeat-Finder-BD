@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingAdminLockedNotice = document.getElementById('settingAdminLockedNotice');
   const settingAdminControlsContainer = document.getElementById('settingAdminControlsContainer');
   const settingAdminTabBtn = document.getElementById('settingAdminTabBtn');
+  const settingAdminSection = document.getElementById('settingAdminSection');
   const settingAuthActionBtn = document.getElementById('settingAuthActionBtn');
 
   // User Management, Auth & Account Elements
@@ -675,8 +676,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        // Show/hide sections
+        // Show/hide sections (Admin section is strictly restricted to admin users)
+        const isAdmin = !!(state.currentUser && state.currentUser.role === 'admin');
         catSections.forEach(section => {
+          if (section.dataset.cat === 'admin' && !isAdmin) {
+            section.classList.add('hidden');
+            return;
+          }
           if (selectedCat === 'all' || section.dataset.cat === selectedCat) {
             section.classList.remove('hidden');
           } else {
@@ -4874,18 +4880,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownUserFullName) dropdownUserFullName.textContent = data.user.name || 'User';
         if (dropdownUserUsername) dropdownUserUsername.textContent = '@' + data.user.username;
 
-        // Admin-only controls visibility
+        // Admin-only controls visibility: strictly hidden for viewer accounts
         const isAdmin = data.user.role === 'admin';
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.toggle('hidden', !isAdmin);
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.toggle('hidden', !isAdmin);
+        if (settingAdminTabBtn) settingAdminTabBtn.classList.toggle('hidden', !isAdmin);
+        if (settingAdminSection) settingAdminSection.classList.toggle('hidden', !isAdmin);
         if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = !isAdmin;
         if (settingRequireApprovalToggle) settingRequireApprovalToggle.disabled = !isAdmin;
         if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.disabled = !isAdmin;
-        if (settingAdminLockedNotice) settingAdminLockedNotice.classList.toggle('hidden', isAdmin);
-        if (settingAdminControlsContainer) {
-          settingAdminControlsContainer.classList.toggle('opacity-50', !isAdmin);
-          settingAdminControlsContainer.classList.toggle('pointer-events-none', !isAdmin);
-        }
 
         // Update Settings Category 5 Account Card & Role Badge
         if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = `Signed in as ${data.user.name || data.user.username}`;
@@ -4917,13 +4920,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userRoleBadge) userRoleBadge.classList.add('hidden');
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.add('hidden');
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.add('hidden');
+        if (settingAdminTabBtn) settingAdminTabBtn.classList.add('hidden');
+        if (settingAdminSection) settingAdminSection.classList.add('hidden');
         if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = true;
         if (settingRequireApprovalToggle) settingRequireApprovalToggle.disabled = true;
         if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.disabled = true;
-        if (settingAdminLockedNotice) settingAdminLockedNotice.classList.remove('hidden');
-        if (settingAdminControlsContainer) {
-          settingAdminControlsContainer.classList.add('opacity-50', 'pointer-events-none');
-        }
 
         // Update Settings Category 5 Account Card
         if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = 'Not Signed In';

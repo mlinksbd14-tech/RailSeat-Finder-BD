@@ -2348,7 +2348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ----------------------------------------------------
   // ----------------------------------------------------
-  // Modern Train Card Grid View Renderer
+  // Compact & Modern Train Card Grid View Renderer
   // ----------------------------------------------------
   function renderGridView(trains) {
     const dojParam = formatShohozDoj(state.selectedDate);
@@ -2364,84 +2364,81 @@ document.addEventListener('DOMContentLoaded', () => {
       const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
 
       return `
-        <div class="travel-card bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm transition space-y-4">
+        <div class="travel-card bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-slate-800 shadow-xs transition space-y-2.5">
           
           <!-- TOP HEADER: Train Identity & Timetable Ribbon -->
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3.5 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
             
             <!-- Train Identity -->
-            <div class="flex items-center space-x-3 min-w-0">
-              <div class="w-10 h-10 rounded-2xl ${hasAnySeats ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'} flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-xl ${hasAnySeats ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                 <i class="fa-solid fa-train"></i>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center space-x-2 flex-wrap">
-                  <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
-                  <span class="text-[11px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold">#${train.train_model}</span>
+                <div class="flex items-center space-x-1.5 flex-wrap">
+                  <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
+                  <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold">#${train.train_model}</span>
                 </div>
-                <p class="text-xs text-slate-400">
-                  Off-day: <span class="font-bold text-slate-600 dark:text-slate-300">${train.off_day || 'None'}</span>
+                <p class="text-[11px] text-slate-400">
+                  Off: <span class="font-bold text-slate-600 dark:text-slate-300">${train.off_day || 'None'}</span>
                 </p>
               </div>
             </div>
 
             <!-- Route Timings (Departure ➔ Duration ➔ Arrival) -->
-            <div class="flex items-center justify-between sm:justify-end space-x-4 bg-slate-50/90 dark:bg-slate-800/50 px-4 py-2 rounded-2xl border border-slate-200/60 dark:border-slate-700/50 text-xs">
+            <div class="flex items-center justify-between sm:justify-end space-x-3 bg-slate-50/90 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700/50 text-xs self-start sm:self-auto">
               <div class="text-left">
-                <div class="font-black text-slate-900 dark:text-white text-sm">${train.departure_time}</div>
-                <div class="text-[11px] text-slate-400 truncate">${train.departure_station}</div>
+                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.departure_time}</div>
+                <div class="text-[10px] text-slate-400 truncate max-w-[90px]">${train.departure_station}</div>
               </div>
 
-              <div class="flex flex-col items-center px-2">
-                <span class="text-[10px] font-bold text-slate-400">${train.travel_time || 'Express'}</span>
-                <div class="w-12 h-0.5 bg-slate-300 dark:bg-slate-700 my-1 relative">
-                  <i class="fa-solid fa-chevron-right text-[8px] text-emerald-500 absolute -right-1 -top-1"></i>
+              <div class="flex flex-col items-center px-1">
+                <span class="text-[9px] font-bold text-slate-400">${train.travel_time || 'Express'}</span>
+                <div class="w-10 h-0.5 bg-slate-300 dark:bg-slate-700 my-0.5 relative">
+                  <i class="fa-solid fa-chevron-right text-[7px] text-emerald-500 absolute -right-1 -top-1"></i>
                 </div>
               </div>
 
               <div class="text-right">
-                <div class="font-black text-slate-900 dark:text-white text-sm">${train.arrival_time}</div>
-                <div class="text-[11px] text-slate-400 truncate">${train.arrival_station}</div>
+                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.arrival_time}</div>
+                <div class="text-[10px] text-slate-400 truncate max-w-[90px]">${train.arrival_station}</div>
               </div>
             </div>
 
           </div>
 
-          <!-- SEAT CLASSES MATRIX (Clean Travel Pill Layout) -->
-          <div>
-            <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Available Classes & Fares</div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
-              ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
-            </div>
+          <!-- SEAT CLASSES MATRIX (Compact Grid with Decreased Gap) -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2">
+            ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
           </div>
 
           <!-- BOTTOM ACTION FOOTER -->
-          <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
             
             <!-- Left: Total Status & Quick Tools -->
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <span class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black ${
+            <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold ${
                 hasAnySeats 
                   ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
                   : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
               }">
-                <i class="fa-solid ${hasAnySeats ? 'fa-chair text-emerald-500' : 'fa-circle-xmark text-rose-500'}"></i>
-                <span>${hasAnySeats ? `${grandTotal} Seats Total` : 'SOLD OUT'}</span>
+                <i class="fa-solid ${hasAnySeats ? 'fa-chair text-emerald-500' : 'fa-circle-xmark text-rose-500'} text-[10px]"></i>
+                <span>${hasAnySeats ? `${grandTotal} Available` : 'SOLD OUT'}</span>
               </span>
 
-              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="View Train Stops & Schedule">
-                <i class="fa-solid fa-route text-emerald-500"></i>
+                <i class="fa-solid fa-route text-emerald-500 text-[10px]"></i>
                 <span>Stops</span>
               </button>
 
-              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer"
+              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="Set 24/7 seat drop alert">
-                <i class="fa-solid fa-bell text-amber-500"></i>
+                <i class="fa-solid fa-bell text-amber-500 text-[10px]"></i>
                 <span>Alert Me</span>
               </button>
             </div>
@@ -2449,13 +2446,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <!-- Right: 1-Click Shohoz Booking Button -->
             <div>
               <a href="${bookUrl}" target="_blank" rel="noopener" 
-                class="inline-flex items-center space-x-2 px-5 py-2 rounded-xl text-xs font-black transition-all ${
+                class="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
                   hasAnySeats 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-600/20 active:scale-95' 
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs active:scale-95' 
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
                 }">
                 <span>Book on Shohoz</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
               </a>
             </div>
 
@@ -2467,7 +2464,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // Clean Travel Seat Class Pill Renderer
+  // Compact Seat Class Pill Renderer
   // ----------------------------------------------------
   function renderSeatPill(seat, fromCity, toCity, journeyDate) {
     const onlineCount = Number(seat.seats_available || 0);
@@ -2487,31 +2484,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let countBadge = '';
 
     if (isAvail) {
-      cardBorder = 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 hover:shadow-md';
-      countBadge = `<div class="py-1 px-2 rounded-xl bg-emerald-600 text-white font-black text-xs text-center shadow-xs">🟢 ${totalSeatCount} Seats</div>`;
+      cardBorder = 'border-emerald-300/80 dark:border-emerald-700/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500';
+      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-emerald-600 text-white font-extrabold text-[11px] text-center shadow-2xs">🟢 ${totalSeatCount} Seats</div>`;
     } else {
-      cardBorder = 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 text-slate-400 opacity-70';
-      countBadge = `<div class="py-1 px-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold text-[11px] text-center">Sold Out</div>`;
+      cardBorder = 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-400 opacity-60';
+      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-slate-200 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 font-bold text-[10px] text-center">Sold Out</div>`;
     }
 
     return `
       <a href="${bookUrl}" target="_blank" rel="noopener"
-        class="seat-pill block p-3 rounded-2xl border ${cardBorder} flex flex-col justify-between space-y-2.5 transition ${isAvail ? 'cursor-pointer' : 'cursor-not-allowed'}"
+        class="seat-pill block p-2 sm:p-2.5 rounded-xl border ${cardBorder} flex flex-col justify-between space-y-1.5 transition ${isAvail ? 'cursor-pointer' : 'cursor-not-allowed'}"
         title="${isAvail ? `Book ${seat.display_name} (${totalSeatCount} available)` : `${seat.display_name} (Sold Out)`}"
         ${!isAvail ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : ''}>
         
         <div class="flex items-center justify-between">
-          <span class="text-xs font-black uppercase tracking-wider truncate">${seat.display_name}</span>
-          ${isAvail ? '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>' : ''}
+          <span class="text-[11px] font-black uppercase tracking-wider truncate">${seat.display_name}</span>
+          ${isAvail ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>' : ''}
         </div>
 
         <div>
           ${countBadge}
         </div>
 
-        <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
-          <span class="font-black text-sm text-slate-900 dark:text-white">৳${totalFare}</span>
-          <span class="text-[10px] text-slate-400">fare</span>
+        <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+          <span class="font-extrabold text-xs text-slate-900 dark:text-white">৳${totalFare}</span>
+          <span class="text-[9px] text-slate-400">fare</span>
         </div>
       </a>
     `;

@@ -3731,7 +3731,7 @@ async function runBackgroundRadarCycle() {
                     const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
                     
                     const msgText = wasSoldOut ?
-                      `🚨 <b>[RELEASED SEAT ALERT: ALL SOLD OUT ➔ AVAILABLE!]</b>\n\n` +
+                      `🚨 <b>[RELEASED!]</b>\n\n` +
                       `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
                       `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
                       `📅 <b>Date:</b> ${dateOfJourney}\n` +

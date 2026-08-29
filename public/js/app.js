@@ -1133,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${fromSoldOut ? `
             <span class="font-black bg-rose-500 text-white px-2 py-0.5 rounded-lg shadow-sm border border-rose-300 inline-flex items-center gap-1 whitespace-nowrap animate-pulse">
               <i class="fa-solid fa-bolt text-amber-300 text-[10px]"></i>
-              <span>SOLD OUT ➔ RELEASED!</span>
+              <span>🚨 RELEASED!</span>
             </span>
           ` : `
             <span class="font-black bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded-lg shadow-sm border border-emerald-500 inline-flex items-center gap-1 whitespace-nowrap">
@@ -1337,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     : isRadarHit 
                       ? 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/80 font-mono' 
                       : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                }">${isSoldOutReleased ? '🚨 Sold Out ➔ Released' : (isRadarHit ? '🎯 Radar Target' : '🟢 Seat Alert')}</span>
+                }">${isSoldOutReleased ? '🚨 RELEASED!' : (isRadarHit ? '🎯 Radar Target' : '🟢 Seat Alert')}</span>
                 <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
               </div>
               ${item.seats ? `<span class="text-[11px] font-black ${
@@ -1572,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="min-w-0">
           <div class="flex items-center space-x-1.5">
-            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-rose-950/80 text-amber-200 border border-rose-400/50">Sold Out ➔ Released</span>
+            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-950/90 text-amber-200 border border-rose-400/60 font-mono">🚨 RELEASED!</span>
             <span class="font-extrabold text-white truncate">${trainName}</span>
           </div>
           <p class="text-[11px] text-amber-100 font-medium truncate mt-0.5">
@@ -2167,8 +2167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 🖥️ Send Urgent Desktop Notification
       sendDesktopNotification(
-        `🚨 [ALL SOLD OUT ➔ RELEASED] ${releasedTrainInfo.trainName} Has Seats!`,
-        `Urgent Alert: ${releasedTrainInfo.seats} seat(s) just released from All Sold Out on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Book immediately.`,
+        `🚨 [RELEASED!] ${releasedTrainInfo.trainName} Has Seats!`,
+        `Urgent Alert: ${releasedTrainInfo.seats} seat(s) just released on ${releasedTrainInfo.trainName} (${releasedTrainInfo.className}) for ${dojParam}! Book immediately.`,
         releasedTrainInfo.bookUrl
       );
 
@@ -2178,8 +2178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 📥 Store in Top Menu Notification Center with Bold Red/Amber Badge
       addStoredNotification({
-        title: `🚨 Sold Out ➔ Available (${releasedTrainInfo.trainName})`,
-        message: `⚡ ${releasedTrainInfo.seats} seat(s) just dropped from All Sold Out on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
+        title: `🚨 RELEASED! (${releasedTrainInfo.trainName})`,
+        message: `⚡ ${releasedTrainInfo.seats} seat(s) just dropped and released on ${releasedTrainInfo.trainName} (#${releasedTrainInfo.trainModel}) for ${releasedTrainInfo.className}!`,
         trainName: releasedTrainInfo.trainName,
         trainModel: releasedTrainInfo.trainModel,
         className: releasedTrainInfo.className,

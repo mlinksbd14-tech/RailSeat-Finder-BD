@@ -263,6 +263,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const popularRoutesContainer = document.getElementById('popularRoutesContainer');
   const saveCurrentRouteChipBtn = document.getElementById('saveCurrentRouteChipBtn');
   const managePopularRoutesBtn = document.getElementById('managePopularRoutesBtn');
+  const quickRoutesManagerDrawer = document.getElementById('quickRoutesManagerDrawer');
+  const closeRouteManagerBtn = document.getElementById('closeRouteManagerBtn');
   const profileSavedRoutesList = document.getElementById('profileSavedRoutesList');
   const savedRoutesCountBadge = document.getElementById('savedRoutesCountBadge');
   const addRouteFromInput = document.getElementById('addRouteFromInput');
@@ -2131,14 +2133,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (managePopularRoutesBtn) {
     managePopularRoutesBtn.addEventListener('click', () => {
-      if (settingsMenuBtn && settingsDropdown) {
-        settingsDropdown.classList.remove('hidden');
-        // Activate account tab
-        const accountTab = document.querySelector('.setting-cat-tab[data-cat="account"]');
-        if (accountTab) accountTab.click();
-        if (profileSavedRoutesList) {
-          profileSavedRoutesList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (quickRoutesManagerDrawer) {
+        const isClosed = quickRoutesManagerDrawer.classList.contains('hidden');
+        quickRoutesManagerDrawer.classList.toggle('hidden');
+        if (isClosed) {
+          renderProfilePopularRoutes();
+          if (addRouteFromInput) addRouteFromInput.focus();
         }
+      }
+    });
+  }
+
+  if (closeRouteManagerBtn) {
+    closeRouteManagerBtn.addEventListener('click', () => {
+      if (quickRoutesManagerDrawer) {
+        quickRoutesManagerDrawer.classList.add('hidden');
       }
     });
   }

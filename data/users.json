@@ -178,17 +178,34 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastIp": "27.147.149.234",
+      "lastIp": "::1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 151",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
       },
-      "lastLogin": "2026-08-29T03:46:23.030Z",
-      "loginCount": 20,
+      "lastLogin": "2026-08-29T04:25:07.753Z",
+      "loginCount": 21,
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-29T04:25:07.753Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-29T03:46:23.030Z",

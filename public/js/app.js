@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewGridBtn = document.getElementById('viewGridBtn');
   const viewTableBtn = document.getElementById('viewTableBtn');
   const viewMatrixBtn = document.getElementById('viewMatrixBtn');
+  const quickMatrixViewBtn = document.getElementById('quickMatrixViewBtn');
   const trainsGrid = document.getElementById('trainsGrid');
   const trainsTableView = document.getElementById('trainsTableView');
   const trainsMatrixView = document.getElementById('trainsMatrixView');
@@ -3149,13 +3150,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function activateMatrixView() {
+    state.viewMode = 'matrix';
+    if (viewMatrixBtn) viewMatrixBtn.className = 'px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition';
+    if (viewGridBtn) viewGridBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+    if (viewTableBtn) viewTableBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+    showMatrixReadyState();
+
+    // Auto-scroll to matrix view container
+    if (trainsMatrixView) {
+      trainsMatrixView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   if (viewMatrixBtn) {
-    viewMatrixBtn.addEventListener('click', () => {
-      state.viewMode = 'matrix';
-      viewMatrixBtn.className = 'px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition';
-      viewGridBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
-      viewTableBtn.className = 'px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
-      showMatrixReadyState();
+    viewMatrixBtn.addEventListener('click', activateMatrixView);
+  }
+
+  if (quickMatrixViewBtn) {
+    quickMatrixViewBtn.addEventListener('click', () => {
+      const rawFrom = fromStationInput.value.trim();
+      const rawTo = toStationInput.value.trim();
+      state.selectedFrom = getCanonicalStationName(rawFrom);
+      state.selectedTo = getCanonicalStationName(rawTo);
+      fromStationInput.value = state.selectedFrom;
+      toStationInput.value = state.selectedTo;
+
+      activateMatrixView();
+
+      // If valid route selected, trigger matrix scan
+      if (state.selectedFrom && state.selectedTo && state.selectedFrom.toLowerCase() !== state.selectedTo.toLowerCase() && state.isAuthenticated) {
+        fetchAndRenderMultiDayMatrix();
+      }
     });
   }
 

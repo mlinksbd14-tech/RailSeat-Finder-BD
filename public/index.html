@@ -681,9 +681,18 @@
       <!-- Quick Date Chips & Filter Row -->
       <div class="mt-4 pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
         
-        <!-- Day Shortcuts -->
-        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0" id="dateChipsContainer">
+        <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
           <span class="text-slate-400 font-bold text-[11px] whitespace-nowrap mr-1">Quick Date:</span>
+          <div class="flex items-center space-x-1" id="dateChipsContainer"></div>
+          
+          <!-- Calendar Matrix View Button right in Quick Date section -->
+          <button type="button" id="quickMatrixViewBtn" 
+            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
+            title="Switch to 10-Day Calendar Seat Matrix View">
+            <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
+            <span>10-Day Matrix</span>
+          </button>
         </div>
 
         <!-- Optional Train & Class Filters -->

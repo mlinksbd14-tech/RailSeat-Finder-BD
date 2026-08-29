@@ -1989,8 +1989,14 @@ app.get('/api/health', (req, res) => {
 // 6. Fixed Telegram Bot & Automated Deep-Link Pairing
 // ====================================================
 
-const FIXED_TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8600942866:AAHGLgJ2PfIeyi2vXaIIJyOGy0XJ5qKqmRQ';
-const FIXED_TELEGRAM_BOT_USERNAME = 'railseatfinderbdbot';
+const FIXED_TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const FIXED_TELEGRAM_BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || 'railseatfinderbdbot').trim();
+
+if (!FIXED_TELEGRAM_BOT_TOKEN) {
+  console.log('[Telegram Bot] ℹ️ TELEGRAM_BOT_TOKEN not configured in .env');
+} else {
+  console.log(`[Telegram Bot] 🔒 Bot Token securely loaded from environment (@${FIXED_TELEGRAM_BOT_USERNAME})`);
+}
 
 // In-memory pairing sessions (code -> { code, createdAt, status: 'pending'|'paired', chatId, username, firstName })
 const activePairings = new Map();
@@ -2286,7 +2292,7 @@ app.get('/api/telegram/info', (req, res) => {
     success: true,
     bot_username: FIXED_TELEGRAM_BOT_USERNAME,
     bot_name: 'RailSeat Finder BD',
-    has_fixed_token: true
+    has_fixed_token: !!FIXED_TELEGRAM_BOT_TOKEN
   });
 });
 

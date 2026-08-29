@@ -642,26 +642,38 @@
           <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
         </div>
 
-        <!-- Journey Date (3 cols) -->
-        <div class="lg:col-span-3">
+        <!-- Journey Date (2 cols) -->
+        <div class="lg:col-span-2">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> Journey Date
           </label>
           <div class="relative flex items-center">
             <input type="date" id="journeyDateInput" 
-              class="w-full h-12 pl-10 pr-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
+              class="w-full h-12 pl-10 pr-2 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
               required>
             <i class="fa-solid fa-calendar absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
           </div>
         </div>
 
-        <!-- Search CTA Button (2 cols) -->
-        <div class="sm:col-span-2 lg:col-span-2">
+        <!-- Search CTA Buttons (3 cols: Fast Direct Search + Deep Search) -->
+        <div class="sm:col-span-2 lg:col-span-3 flex items-center gap-2">
+          
+          <!-- Primary Find Trains Button (Fast Direct Search) -->
           <button type="submit" id="searchSubmitBtn" 
-            class="w-full h-12 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer">
-            <i class="fa-solid fa-magnifying-glass"></i>
+            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            title="Fast direct train seat search">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
             <span class="whitespace-nowrap">Find Trains</span>
           </button>
+
+          <!-- Deep Search Button (On-Demand Same-Train & Junction Routes) -->
+          <button type="button" id="deepSearchSubmitBtn" 
+            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
+            <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
+            <span class="whitespace-nowrap">Deep Search</span>
+          </button>
+
         </div>
 
       </form>

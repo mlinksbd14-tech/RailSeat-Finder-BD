@@ -4144,6 +4144,29 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    if (watchMultiDateGrid) {
+      watchMultiDateGrid.addEventListener('click', (e) => {
+        const chip = e.target.closest('.watch-date-chip');
+        if (!chip || !state.pendingWatchTarget) return;
+        const dStr = chip.dataset.date;
+        if (!dStr) return;
+
+        const currentSelected = state.pendingWatchTarget.dates || [];
+        if (currentSelected.includes(dStr)) {
+          if (currentSelected.length > 1) {
+            state.pendingWatchTarget.dates = currentSelected.filter(d => d !== dStr);
+          } else {
+            showToast('At least one travel date must remain selected.', 'warning');
+            return;
+          }
+        } else {
+          state.pendingWatchTarget.dates.push(dStr);
+          state.pendingWatchTarget.dates.sort();
+        }
+        renderWatchMultiDateGrid();
+      });
+    }
+
     if (watchSelectAllDatesBtn) {
       watchSelectAllDatesBtn.addEventListener('click', () => {
         if (state.pendingWatchTarget && state.pendingWatchTarget.availableDates) {
@@ -4167,8 +4190,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.pendingWatchTarget) return;
         const targetClass = watchTargetClassSelect ? watchTargetClassSelect.value : 'ANY';
         const tgConfig = getTelegramConfig();
-        const selectedDates = (state.pendingWatchTarget.dates && state.pendingWatchTarget.dates.length > 0)
-          ? state.pendingWatchTarget.dates
+        const selectedDates = (state.pendingWatchTarget.dates && Array.isArray(state.pendingWatchTarget.dates) && state.pendingWatchTarget.dates.length > 0)
+          ? [...state.pendingWatchTarget.dates]
           : [state.selectedDate || new Date().toISOString().split('T')[0]];
 
         const item = {
@@ -4190,8 +4213,9 @@ document.addEventListener('DOMContentLoaded', () => {
         state.watchlist.unshift(item);
         saveWatchlist();
         updateWatchlistUI();
+        renderWatchlistModal();
         if (setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
-        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className}) across ${selectedDates.length} date${selectedDates.length === 1 ? '' : 's'}! Background alerts will fire on seat availability.`, 'success');
+        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className}) for ${selectedDates.length} travel date${selectedDates.length === 1 ? '' : 's'}!`, 'success');
       });
     }
   }
@@ -4238,7 +4262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     watchlistItemsContainer.innerHTML = state.watchlist.map(item => {
       const datesList = Array.isArray(item.dates) && item.dates.length > 0 ? item.dates : [item.date];
       const datesBadges = datesList.map(d => `
-        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700">
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700 shadow-2xs">
           <i class="fa-regular fa-calendar text-[9px] mr-1 text-emerald-600 dark:text-emerald-400"></i>${formatShohozDoj(d)}
         </span>
       `).join(' ');
@@ -4266,7 +4290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="flex items-center space-x-1 shrink-0">
-            <button type="button" class="delete-watch-btn p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" data-id="${item.id}" title="Delete Watch Target">
+            <button type="button" class="delete-watch-btn p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer" data-id="${item.id}" title="Delete Watch Target">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
           </div>
@@ -4302,16 +4326,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderWatchMultiDateGrid() {
     if (!watchMultiDateGrid || !state.pendingWatchTarget || !state.pendingWatchTarget.availableDates) return;
     const selected = state.pendingWatchTarget.dates || [];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     watchMultiDateGrid.innerHTML = state.pendingWatchTarget.availableDates.map(dateStr => {
       const isSelected = selected.includes(dateStr);
-      const d = new Date(dateStr + 'T00:00:00');
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const parts = dateStr.split('-');
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const dayName = days[d.getDay()];
       const dayNum = d.getDate();
-      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+      const monthName = months[d.getMonth()];
 
       const activeClass = isSelected
-        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-bold'
+        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-bold ring-2 ring-emerald-400/40'
         : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-800 font-medium';
 
       return `
@@ -4327,37 +4354,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const count = selected.length;
       watchSelectedDatesCount.textContent = `Selected: ${count} date${count === 1 ? '' : 's'}`;
     }
-
-    watchMultiDateGrid.querySelectorAll('.watch-date-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const dStr = chip.dataset.date;
-        const currentSelected = state.pendingWatchTarget.dates || [];
-        if (currentSelected.includes(dStr)) {
-          if (currentSelected.length > 1) {
-            state.pendingWatchTarget.dates = currentSelected.filter(d => d !== dStr);
-          } else {
-            showToast('At least one travel date must remain selected.', 'warning');
-            return;
-          }
-        } else {
-          state.pendingWatchTarget.dates.push(dStr);
-          state.pendingWatchTarget.dates.sort();
-        }
-        renderWatchMultiDateGrid();
-      });
-    });
   }
 
   function openSetWatchModal(train) {
     if (!train) return;
     
-    // Generate next 10 booking days
+    // Generate next 10 booking days in local time
     const availableDates = [];
     const now = new Date();
     for (let i = 0; i < 10; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
-      availableDates.push(d.toISOString().split('T')[0]);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      availableDates.push(`${yyyy}-${mm}-${dd}`);
     }
 
     state.pendingWatchTarget = {

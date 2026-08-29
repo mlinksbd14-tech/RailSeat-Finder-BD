@@ -3674,7 +3674,12 @@ function loadRadarData() {
     if (raw && raw.trim()) {
       const data = JSON.parse(raw);
       data.settings = data.settings || { enabled: true, intervalSeconds: 25, lastRunAt: null };
-      data.targets = Array.isArray(data.targets) ? data.targets : [];
+      data.targets = Array.isArray(data.targets) ? data.targets.map(t => {
+        if (!t.dates || !Array.isArray(t.dates) || t.dates.length === 0) {
+          t.dates = t.date ? [t.date] : [];
+        }
+        return t;
+      }) : [];
       return data;
     }
   } catch (err) {

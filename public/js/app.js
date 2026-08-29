@@ -2289,54 +2289,28 @@ document.addEventListener('DOMContentLoaded', () => {
       trainsTableView.classList.remove('hidden');
     }
 
-    const totalDirectSeats = trains.reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
-
-    // If alternate routes are returned from Deep Search, render them
-    if (data.alternate_routes && data.alternate_routes.length > 0) {
-      renderAlternateRoutes(data.alternate_routes);
-    } else if (totalDirectSeats === 0 && !requestedAlternates) {
-      // Direct seats are sold out, present on-demand Deep Search CTA prompt
-      renderDeepSearchPrompt();
+    // If Deep Search was clicked, render the Available Same-Train Stoppage & Junction Split Routes
+    if (requestedAlternates) {
+      if (data.alternate_routes && data.alternate_routes.length > 0) {
+        renderAlternateRoutes(data.alternate_routes);
+      } else if (alternateRoutesContainer) {
+        alternateRoutesContainer.classList.remove('hidden');
+        alternateRoutesContainer.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2 text-center text-xs animate-fade-in shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm mx-auto">
+              <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </div>
+            <h4 class="font-extrabold text-sm text-white">No Same-Train Stoppage / Junction Seats Found</h4>
+            <p class="text-[11px] text-slate-400 max-w-md mx-auto">Deep search scanned intermediate stoppage quotas on the same train and junction connections, but all connecting legs are currently sold out for this date.</p>
+          </div>
+        `;
+      }
     } else {
+      // Default search: keep alternate routes container hidden
       if (alternateRoutesContainer) {
         alternateRoutesContainer.classList.add('hidden');
         alternateRoutesContainer.innerHTML = '';
       }
-    }
-  }
-
-  // ----------------------------------------------------
-  // On-Demand Deep Search Prompt Banner (When Direct is 0)
-  // ----------------------------------------------------
-  function renderDeepSearchPrompt() {
-    if (!alternateRoutesContainer) return;
-    alternateRoutesContainer.classList.remove('hidden');
-    alternateRoutesContainer.innerHTML = `
-      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/50 border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md animate-fade-in">
-        <div class="flex items-center space-x-3 min-w-0">
-          <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">
-            <i class="fa-solid fa-bolt text-amber-300"></i>
-          </div>
-          <div class="min-w-0">
-            <h4 class="font-extrabold text-sm text-white flex items-center space-x-2">
-              <span>Direct End-to-End Seats Are Sold Out</span>
-            </h4>
-            <p class="text-[11px] text-indigo-200/80">Scan intermediate stoppage quotas on the <b>SAME TRAIN</b> or junction connections to find available seats.</p>
-          </div>
-        </div>
-        <button type="button" id="triggerDeepSearchFromPromptBtn" 
-          class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/25 flex items-center space-x-1.5 transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0">
-          <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
-          <span>Run Deep Search ⚡</span>
-        </button>
-      </div>
-    `;
-
-    const promptBtn = document.getElementById('triggerDeepSearchFromPromptBtn');
-    if (promptBtn) {
-      promptBtn.addEventListener('click', () => {
-        executeSearch(false, true);
-      });
     }
   }
 

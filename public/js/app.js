@@ -2033,7 +2033,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       detectSeatChanges(data.trains);
       state.lastSearchData = data;
-      renderResults(data, checkAlternates);
+      renderResults(data, checkAlternates, isSilent);
       updateTrackerBar(data);
 
     } catch (err) {
@@ -2226,7 +2226,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Rendering Live Results
   // ----------------------------------------------------
-  function renderResults(data, requestedAlternates = false) {
+  function renderResults(data, requestedAlternates = false, isSilent = false) {
     const trains = data.trains || [];
 
     // Filter by Train if selected
@@ -2270,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.selectedClass = 'ALL';
           trainFilterSelect.value = 'ALL';
           classFilterSelect.value = 'ALL';
-          renderResults(data, requestedAlternates);
+          renderResults(data, requestedAlternates, isSilent);
         });
       }
       return;
@@ -2289,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', () => {
       trainsTableView.classList.remove('hidden');
     }
 
-    // If Deep Search was clicked, render the Available Same-Train Stoppage & Junction Split Routes
+    // If Deep Search was explicitly clicked, render the Available Same-Train Stoppage & Junction Split Routes
     if (requestedAlternates) {
       if (data.alternate_routes && data.alternate_routes.length > 0) {
         renderAlternateRoutes(data.alternate_routes);
@@ -2305,13 +2305,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
       }
-    } else {
-      // Default search: keep alternate routes container hidden
+    } else if (!isSilent) {
+      // Manual default search: keep alternate routes container hidden
       if (alternateRoutesContainer) {
         alternateRoutesContainer.classList.add('hidden');
         alternateRoutesContainer.innerHTML = '';
       }
     }
+    // Note: When isSilent === true (auto-refresh from monitor ticker), do NOT touch alternateRoutesContainer at all
   }
 
   // ----------------------------------------------------

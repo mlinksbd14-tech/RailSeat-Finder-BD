@@ -4486,7 +4486,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       renderStationDropdowns();
-      await fetchAndRenderStationMatrix();
+
+      // Do NOT auto-query live seats upon opening. Wait for user to click Search button.
+      if (stationMatrixContent) {
+        stationMatrixContent.innerHTML = `
+          <div class="py-12 px-4 text-center space-y-3.5 animate-fade-in">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shadow-xs">
+              <i class="fa-solid fa-table-cells"></i>
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-extrabold text-sm text-slate-900 dark:text-white">Route Stoppages Loaded (${stoppages.length} Stations)</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                Customize your Boarding & Destination stations above, then click <b>Search</b> to query real-time vacancy for each segment.
+              </p>
+            </div>
+            <div class="pt-1">
+              <button type="button" id="matrixInitialSearchBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md shadow-emerald-600/25 inline-flex items-center space-x-2 transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                <span>Search Live Stoppage Seats</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const initialSearchBtn = document.getElementById('matrixInitialSearchBtn');
+        if (initialSearchBtn) {
+          initialSearchBtn.addEventListener('click', () => {
+            closeStationDropdowns();
+            fetchAndRenderStationMatrix();
+          });
+        }
+      }
 
     } catch (e) {
       console.error('Error loading route in matrix:', e);
@@ -4520,6 +4550,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fromCount = currentStationMatrixTarget.selectedFroms.size;
     const toCount = currentStationMatrixTarget.selectedTos.size;
+
+    if (matrixExecuteQueryBtn) {
+      matrixExecuteQueryBtn.disabled = true;
+      matrixExecuteQueryBtn.classList.add('opacity-70');
+    }
+    if (matrixExecuteQueryBtnText) {
+      matrixExecuteQueryBtnText.textContent = 'Searching...';
+    }
 
     stationMatrixContent.innerHTML = `
       <div class="py-10 text-center text-slate-400 space-y-3">
@@ -4558,6 +4596,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <p class="text-xs">Failed to fetch station matrix. Please try again.</p>
         </div>
       `;
+    } finally {
+      if (matrixExecuteQueryBtn) {
+        matrixExecuteQueryBtn.disabled = false;
+        matrixExecuteQueryBtn.classList.remove('opacity-70');
+      }
+      updateMatrixSummary();
     }
   }
 

@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const { exec, execFile } = require('child_process');
+const webPush = require('web-push');
 require('dotenv').config();
 
 // Dynamic Safe Firebase Admin SDK Loader (Prevents crashes in serverless bundling)
@@ -3698,6 +3699,66 @@ function saveRadarData(data) {
   }
 }
 
+// Web Push (VAPID) Persistent Key Manager
+const VAPID_KEYS_FILE = path.join(DATA_DIR, 'vapid_keys.json');
+const SEED_VAPID_KEYS_FILE = path.join(SEED_DATA_DIR, 'vapid_keys.json');
+const PUSH_SUBS_FILE = path.join(DATA_DIR, 'push_subscriptions.json');
+
+function getVapidKeys() {
+  try {
+    let raw = null;
+    if (fs.existsSync(VAPID_KEYS_FILE)) {
+      raw = fs.readFileSync(VAPID_KEYS_FILE, 'utf8');
+    } else if (fs.existsSync(SEED_VAPID_KEYS_FILE)) {
+      raw = fs.readFileSync(SEED_VAPID_KEYS_FILE, 'utf8');
+    }
+    if (raw && raw.trim()) {
+      const keys = JSON.parse(raw);
+      if (keys.publicKey && keys.privateKey) return keys;
+    }
+  } catch (e) {}
+
+  const newKeys = webPush.generateVAPIDKeys();
+  try {
+    const dir = path.dirname(VAPID_KEYS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(VAPID_KEYS_FILE, JSON.stringify(newKeys, null, 2), 'utf8');
+  } catch (e) {}
+  return newKeys;
+}
+
+const vapidKeys = getVapidKeys();
+try {
+  webPush.setVapidDetails(
+    'mailto:support@railseatbd.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+} catch (e) {
+  console.warn('[WebPush] VAPID setup warning:', e.message);
+}
+
+function loadPushSubscriptions() {
+  try {
+    if (fs.existsSync(PUSH_SUBS_FILE)) {
+      const raw = fs.readFileSync(PUSH_SUBS_FILE, 'utf8');
+      if (raw && raw.trim()) {
+        const data = JSON.parse(raw);
+        return Array.isArray(data) ? data : [];
+      }
+    }
+  } catch (e) {}
+  return [];
+}
+
+function savePushSubscriptions(subs) {
+  try {
+    const dir = path.dirname(PUSH_SUBS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(PUSH_SUBS_FILE, JSON.stringify(subs, null, 2), 'utf8');
+  } catch (e) {}
+}
+
 // Find best Shohoz token for background scanning
 function getRadarShohozSession(targetUserId) {
   const usersData = loadUsersData();
@@ -3867,6 +3928,35 @@ async function runBackgroundRadarCycle() {
                     } catch (tgErr) {
                       console.warn('[Radar] ❌ Telegram send error:', tgErr.response?.data?.description || tgErr.message);
                     }
+                  }
+
+                  // 📲 Closed-Browser Web Push Notification Dispatch (Wakes up closed browsers via Service Worker!)
+                  try {
+                    const pushSubs = loadPushSubscriptions();
+                    if (pushSubs.length > 0) {
+                      const pushPayload = JSON.stringify({
+                        title: wasSoldOut ? '🚨 [RELEASED!]' : '🎯 Watchlist Radar Hit!',
+                        body: `${train.train_name} (#${train.train_model}) on ${dateOfJourney}: ${availableSeats} seat(s) available in ${st.display_name || st.type}!`,
+                        icon: '/favicon.ico',
+                        badge: '/favicon.ico',
+                        bookUrl: bookUrl,
+                        url: '/'
+                      });
+
+                      pushSubs.forEach(subObj => {
+                        const sub = subObj.subscription || subObj;
+                        if (!target.userId || !subObj.userId || subObj.userId === target.userId) {
+                          webPush.sendNotification(sub, pushPayload).catch(err => {
+                            if (err.statusCode === 404 || err.statusCode === 410) {
+                              const remaining = loadPushSubscriptions().filter(s => (s.subscription?.endpoint || s.endpoint) !== sub.endpoint);
+                              savePushSubscriptions(remaining);
+                            }
+                          });
+                        }
+                      });
+                    }
+                  } catch (pushErr) {
+                    console.warn('[Radar] WebPush dispatch warning:', pushErr.message);
                   }
                 }
               } else if (availableSeats === 0 && (lastNotified || 0) > 0) {
@@ -4166,6 +4256,64 @@ app.get('/api/radar/alerts', (req, res) => {
     success: true,
     alerts: alerts.slice(-30),
     serverTime: Date.now()
+  });
+});
+
+// ====================================================
+// 9. 📲 Web Push (Service Worker Closed-Browser Alerts) Endpoints
+// ====================================================
+
+// Get VAPID Public Key for client-side subscription
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({
+    success: true,
+    publicKey: vapidKeys.publicKey
+  });
+});
+
+// Register / Save Web Push Subscription
+app.post('/api/push/subscribe', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const { subscription } = req.body;
+
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, error: 'Valid subscription object required.' });
+  }
+
+  const subs = loadPushSubscriptions();
+  // Filter out existing matching endpoint
+  const filtered = subs.filter(s => (s.subscription?.endpoint || s.endpoint) !== subscription.endpoint);
+  
+  filtered.push({
+    id: 'sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    userId: session ? session.userId : null,
+    username: session ? session.username : 'guest',
+    subscription: subscription,
+    createdAt: new Date().toISOString()
+  });
+
+  savePushSubscriptions(filtered);
+
+  console.log(`[WebPush] 📲 Registered push subscription for ${session ? session.username : 'guest'} (Total: ${filtered.length})`);
+
+  res.json({
+    success: true,
+    message: 'Web Push subscription registered successfully. You will receive alerts even when your browser is closed.'
+  });
+});
+
+// Unregister Web Push Subscription
+app.post('/api/push/unsubscribe', (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) return res.status(400).json({ success: false, error: 'Endpoint required.' });
+
+  const subs = loadPushSubscriptions();
+  const filtered = subs.filter(s => (s.subscription?.endpoint || s.endpoint) !== endpoint);
+  savePushSubscriptions(filtered);
+
+  res.json({
+    success: true,
+    message: 'Web Push subscription removed.'
   });
 });
 

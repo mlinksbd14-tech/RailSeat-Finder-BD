@@ -640,8 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           const perm = await Notification.requestPermission();
           if (perm === 'granted') {
-            showToast('🎉 Desktop notifications enabled!', 'success');
-            sendDesktopNotification('🔔 Bangladesh Railway Alert Active', 'You will receive instant alerts here when seats are available to buy.', null);
+            showToast('🎉 Closed-browser & desktop notifications enabled!', 'success');
+            subscribeToClosedBrowserPush();
+            sendDesktopNotification('🔔 Bangladesh Railway Alert Active', 'You will receive instant alerts here even when your browser is closed.', null);
           } else {
             settingDesktopNotifToggle.checked = false;
             showToast('Desktop notifications were not allowed. Check browser site permissions.', 'info');
@@ -4214,8 +4215,9 @@ document.addEventListener('DOMContentLoaded', () => {
         saveWatchlist();
         updateWatchlistUI();
         renderWatchlistModal();
+        subscribeToClosedBrowserPush();
         if (setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
-        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className}) for ${selectedDates.length} travel date${selectedDates.length === 1 ? '' : 's'}!`, 'success');
+        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className}) for ${selectedDates.length} travel date${selectedDates.length === 1 ? '' : 's'}! Background alerts active.`, 'success');
       });
     }
   }
@@ -6722,16 +6724,75 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ----------------------------------------------------
-  // Progressive Web App (PWA) & Web Push Engine
-  // ----------------------------------------------------
-  let deferredPwaPrompt = null;
+  // Helper: Convert VAPID base64 public key to Uint8Array
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  let swRegistrationInstance = null;
+  async function subscribeToClosedBrowserPush() {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      const reg = swRegistrationInstance || await navigator.serviceWorker.ready;
+      if (!reg || !reg.pushManager) return;
+
+      if (Notification.permission !== 'granted') {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+      }
+
+      const res = await fetch('/api/push/vapid-public-key');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success || !data.publicKey) return;
+
+      const convertedVapidKey = urlBase64ToUint8Array(data.publicKey);
+      let subscription = await reg.pushManager.getSubscription();
+
+      if (!subscription) {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey
+        });
+      }
+
+      if (subscription) {
+        const token = getAuthToken();
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            subscription: subscription.toJSON()
+          })
+        });
+        console.log('[WebPush] 🚀 Closed-browser Web Push subscription active!');
+      }
+    } catch (e) {
+      console.warn('[WebPush] Push subscription warning:', e.message);
+    }
+  }
 
   function initPwaServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
+        navigator.serviceWorker.register('/sw.js').then(async reg => {
+          swRegistrationInstance = reg;
           console.log('[PWA] 🚀 Service Worker registered successfully, scope:', reg.scope);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            subscribeToClosedBrowserPush();
+          }
         }).catch(err => {
           console.warn('[PWA] Service Worker registration failed:', err.message);
         });

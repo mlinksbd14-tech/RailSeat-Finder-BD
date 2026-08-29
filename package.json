@@ -27,6 +27,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase": "^12.18.0",
-    "firebase-admin": "^14.3.0"
+    "firebase-admin": "^14.3.0",
+    "web-push": "^3.6.7"
   }
 }

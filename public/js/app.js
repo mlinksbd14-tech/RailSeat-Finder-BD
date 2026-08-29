@@ -2885,7 +2885,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </button>
             </div>
 
-            <!-- Right: 1-Click Shohoz Booking Button -->
+            <!-- Right: Direct Book Now Button -->
             <div>
               <a href="${bookUrl}" target="_blank" rel="noopener" 
                 class="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
@@ -2893,7 +2893,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs border border-emerald-500 active:scale-95' 
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 cursor-not-allowed opacity-60'
                 }">
-                <span>Book on Shohoz</span>
+                <span>Book Now</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
               </a>
             </div>
@@ -3896,7 +3896,7 @@ document.addEventListener('DOMContentLoaded', () => {
 📅 <b>Date:</b> ${date}
 ━━━━━━━━━━━━━━━━━━━
 ⚡ <i>Book immediately before seats sell out!</i>
-🔗 <a href="${bookUrl}">📲 Click to Book on Bangladesh Railway</a>`
+🔗 <a href="${bookUrl}">🎟️ Click to Book Now on Railway</a>`
 :
 `🚆 <b>SEAT RELEASED ON ROUTE</b>
 ━━━━━━━━━━━━━━━━━━━
@@ -3907,7 +3907,7 @@ document.addEventListener('DOMContentLoaded', () => {
 📍 <b>Route:</b> ${fromCity} ➔ ${toCity}
 📅 <b>Date:</b> ${date}
 ━━━━━━━━━━━━━━━━━━━
-🔗 <a href="${bookUrl}">📲 Book on Bangladesh Railway</a>`;
+🔗 <a href="${bookUrl}">🎟️ Book Now on Railway</a>`;
 
     try {
       await fetch('/api/telegram/send-alert', {

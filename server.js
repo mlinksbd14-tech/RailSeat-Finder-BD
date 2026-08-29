@@ -1445,6 +1445,43 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
   };
 }
 
+// Canonical Bangladesh Railway / Shohoz Date & Booking URL Generators
+function formatShohozDoj(dateStr) {
+  if (!dateStr) return '';
+  const clean = String(dateStr).trim();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (clean.includes('-')) {
+    const parts = clean.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        const y = parts[0];
+        const mIdx = parseInt(parts[1], 10) - 1;
+        const d = parts[2].padStart(2, '0');
+        if (mIdx >= 0 && mIdx < 12) {
+          return `${d}-${months[mIdx]}-${y}`;
+        }
+      }
+      if (parts[2].length === 4) {
+        return clean;
+      }
+    }
+  }
+  const dateObj = new Date(dateStr);
+  if (isNaN(dateObj.getTime())) return dateStr;
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function buildShohozBookingUrl(fromCity, toCity, dateStr, seatClass) {
+  const cleanFrom = (fromCity || 'DHAKA').trim().toUpperCase().replace(/\s+/g, '_');
+  const cleanTo = (toCity || 'CHATTOGRAM').trim().toUpperCase().replace(/\s+/g, '_');
+  const doj = formatShohozDoj(dateStr || new Date().toISOString().split('T')[0]);
+  const cls = (seatClass && seatClass !== 'ANY' && seatClass !== 'ALL') ? seatClass.trim() : 'S_CHAIR';
+  return `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(cleanFrom)}&tocity=${encodeURIComponent(cleanTo)}&doj=${encodeURIComponent(doj)}&class=${encodeURIComponent(cls)}`;
+}
+
 // Major Railway Junction Hubs and Corridor Stoppage Networks
 const ROUTE_CORRIDOR_JUNCTIONS = {
   'dhaka_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Brahmanbaria', 'Akhaura', 'Bhairab_Bazar'],
@@ -2445,14 +2482,15 @@ async function pollTelegramBotUpdates() {
             replyMsg += `\n`;
 
             if (hasSeats && bookButtons.length < 3) {
-              const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromStation)}&tocity=${encodeURIComponent(toStation)}&doj=${encodeURIComponent(dateIsoStr)}&seatclass=ALL`;
-              bookButtons.push([{ text: `🎟️ Book ${t.train_name}`, url: bookUrl }]);
+              const bookClass = t.seat_types?.find(st => ((st.seats_available || 0) + (st.counter_seats_available || 0)) > 0)?.type || 'S_CHAIR';
+              const bookUrl = buildShohozBookingUrl(fromStation, toStation, dateIsoStr, bookClass);
+              bookButtons.push([{ text: `🎟️ Book Now (${t.train_name})`, url: bookUrl }]);
             }
           });
 
-          const directUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromStation)}&tocity=${encodeURIComponent(toStation)}&doj=${encodeURIComponent(dateIsoStr)}&seatclass=ALL`;
+          const directUrl = buildShohozBookingUrl(fromStation, toStation, dateIsoStr, 'S_CHAIR');
           if (bookButtons.length === 0) {
-            bookButtons.push([{ text: `🎟️ View on Shohoz Railway`, url: directUrl }]);
+            bookButtons.push([{ text: `🎟️ Book Now`, url: directUrl }]);
           }
 
           await axios.post(replyUrl, {
@@ -3860,7 +3898,7 @@ async function runBackgroundRadarCycle() {
                   target.lastNotifiedSeats = availableSeats;
                   target.lastNotifiedAt = new Date().toISOString();
 
-                  const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
+                  const bookUrl = buildShohozBookingUrl(fromCity, toCity, dateOfJourney, st.type);
 
                   // 📥 Record Radar Alert for Connected Web Dashboard Notification Center
                   const alertRecord = {
@@ -3898,20 +3936,20 @@ async function runBackgroundRadarCycle() {
                       `🚨 <b>[RELEASED!]</b>\n\n` +
                       `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
                       `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
-                      `📅 <b>Date:</b> ${dateOfJourney}\n` +
+                      `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
                       `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
                       `🔥 <b>Available Seats:</b> <b>${availableSeats}</b> (Online: ${st.seats_available}, Counter: ${st.counter_seats_available})\n\n` +
                       `⚡ <i>This train was previously SOLD OUT and new seats just dropped! Book immediately before they are gone!</i>\n` +
-                      `🔗 <a href="${bookUrl}">Click here to Book on Railway</a>`
+                      `🔗 <a href="${bookUrl}">Click here to Book Now on Railway</a>`
                       :
                       `🎯 <b>WATCHLIST RADAR HIT!</b>\n\n` +
                       `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
                       `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
-                      `📅 <b>Date:</b> ${dateOfJourney}\n` +
+                      `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
                       `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
                       `🟢 <b>Available Seats:</b> <b>${availableSeats}</b> (Online: ${st.seats_available}, Counter: ${st.counter_seats_available})\n\n` +
                       `⚡ <i>Book immediately on Bangladesh Railway!</i>\n` +
-                      `🔗 <a href="${bookUrl}">Click here to Book on Railway</a>`;
+                      `🔗 <a href="${bookUrl}">Click here to Book Now on Railway</a>`;
 
                     try {
                       await axios.post(`https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -3921,7 +3959,7 @@ async function runBackgroundRadarCycle() {
                         disable_web_page_preview: false,
                         reply_markup: {
                           inline_keyboard: [
-                            [{ text: '🎟️ 1-Click Book on Shohoz', url: bookUrl }]
+                            [{ text: '🎟️ Book Now', url: bookUrl }]
                           ]
                         }
                       });

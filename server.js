@@ -1444,43 +1444,89 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
   };
 }
 
-// Major Railway Junction Hubs in Bangladesh Railway Network
-const JUNCTION_HUBS = [
-  'Akhaura', 'Tongi', 'Ishwardi', 'Bhairab Bazar', 'Santahar', 'Parbatipur', 'Laksam', 'Abdulpur', 'Joydebpur', 'Kulaura'
+// Major Railway Junction Hubs and Corridor Stoppage Networks
+const ROUTE_CORRIDOR_JUNCTIONS = {
+  'dhaka_chattogram': ['Feni', 'Cumilla', 'Brahmanbaria', 'Akhaura', 'Bhairab_Bazar', 'Laksam'],
+  'chattogram_dhaka': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
+  'dhaka_sylhet': ['Brahmanbaria', 'Bhairab_Bazar', 'Akhaura', 'Sreemangal', 'Kulaura', 'Shaistaganj'],
+  'sylhet_dhaka': ['Kulaura', 'Sreemangal', 'Shaistaganj', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
+  'dhaka_rajshahi': ['Joydebpur', 'Tongi', 'Tangail', 'Ullapara', 'Ishwardi', 'Abdulpur'],
+  'rajshahi_dhaka': ['Abdulpur', 'Ishwardi', 'Ullapara', 'Tangail', 'Joydebpur', 'Tongi'],
+  'dhaka_khulna': ['Joydebpur', 'Ishwardi', 'Poradah', 'Kushtia_Court', 'Chuadanga', 'Jessore'],
+  'khulna_dhaka': ['Jessore', 'Chuadanga', 'Kushtia_Court', 'Poradah', 'Ishwardi', 'Joydebpur'],
+  'dhaka_rangpur': ['Joydebpur', 'Natore', 'Santahar', 'Bogura', 'Parbatipur'],
+  'rangpur_dhaka': ['Parbatipur', 'Bogura', 'Santahar', 'Natore', 'Joydebpur'],
+  'dhaka_dinajpur': ['Joydebpur', 'Santahar', 'Parbatipur', 'Fulbari'],
+  'dinajpur_dhaka': ['Fulbari', 'Parbatipur', 'Santahar', 'Joydebpur'],
+  'dhaka_cox\'s_bazar': ['Feni', 'Cumilla', 'Brahmanbaria', 'Chattogram', 'Dohazari', 'Lohagara'],
+  'cox\'s_bazar_dhaka': ['Lohagara', 'Dohazari', 'Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
+  'chattogram_sylhet': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Sreemangal', 'Kulaura'],
+  'sylhet_chattogram': ['Kulaura', 'Sreemangal', 'Akhaura', 'Laksam', 'Cumilla', 'Feni']
+};
+
+const GENERAL_JUNCTION_HUBS = [
+  'Akhaura', 'Brahmanbaria', 'Feni', 'Cumilla', 'Bhairab_Bazar', 'Ishwardi', 'Santahar', 'Parbatipur', 'Laksam', 'Tongi', 'Joydebpur', 'Kulaura', 'Sreemangal'
 ];
 
-async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session) {
+async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
   const cleanFrom = (fromCity || '').trim().toLowerCase();
   const cleanTo = (toCity || '').trim().toLowerCase();
-  const candidates = JUNCTION_HUBS.filter(h => {
-    const cleanHub = h.toLowerCase();
-    return cleanHub !== cleanFrom && cleanHub !== cleanTo;
-  });
+  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
+  
+  // Prioritize corridor intermediate stoppage stations first, then general junction hubs
+  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
+  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
+  
+  const candidates = [];
+  const seen = new Set();
+  for (const h of candidatePool) {
+    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
+    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
+      seen.add(norm);
+      candidates.push(h);
+    }
+  }
 
-  const alternateRoutes = [];
+  const sameTrainOptions = [];
+  const transferOptions = [];
 
-  // Evaluate candidate junctions (top 2 to stay fast and avoid rate limits)
-  for (const hub of candidates.slice(0, 2)) {
+  // Evaluate candidate intermediate hubs (top 4 to stay fast and avoid rate limits)
+  for (const hub of candidates.slice(0, 4)) {
     try {
-      // Query Leg 1: fromCity -> Hub
-      const leg1Res = await querySingleShohozTrip(fromCity, hub, dateStr, session);
-      const leg1AvailableTrains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg1AvailableTrains.length === 0) continue;
+      const cleanHubName = hub.replace(/_/g, ' ');
 
-      // Query Leg 2: Hub -> toCity
-      const leg2Res = await querySingleShohozTrip(hub, toCity, dateStr, session);
-      const leg2AvailableTrains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg2AvailableTrains.length === 0) continue;
+      // Query Leg 1: fromCity -> Intermediate Hub
+      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
+      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg1Trains.length === 0) continue;
 
-      for (const t1 of leg1AvailableTrains.slice(0, 2)) {
-        for (const t2 of leg2AvailableTrains.slice(0, 2)) {
-          alternateRoutes.push({
-            via_hub: hub,
+      // Query Leg 2: Intermediate Hub -> toCity
+      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
+      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg2Trains.length === 0) continue;
+
+      // 1. First priority: Check for SAME TRAIN on both legs
+      for (const t1 of leg1Trains) {
+        const matchingT2 = leg2Trains.find(t2 => {
+          const m1 = String(t1.train_model || '').trim();
+          const m2 = String(t2.train_model || '').trim();
+          const n1 = (t1.train_name || '').toLowerCase().trim();
+          const n2 = (t2.train_name || '').toLowerCase().trim();
+          return (m1 && m2 && m1 === m2) || (n1 && n2 && n1 === n2);
+        });
+
+        if (matchingT2) {
+          sameTrainOptions.push({
+            is_same_train: true,
+            via_hub: cleanHubName,
+            train_name: t1.train_name,
+            train_model: t1.train_model,
+            total_seats_min: Math.min(t1.total_combined_seats || 0, matchingT2.total_combined_seats || 0),
             leg1: {
               train_name: t1.train_name,
               train_model: t1.train_model,
               from: fromCity,
-              to: hub,
+              to: cleanHubName,
               departure_time: t1.departure_time,
               arrival_time: t1.arrival_time,
               seats: t1.total_combined_seats || 0,
@@ -1488,26 +1534,65 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session) {
               seat_types: t1.seat_types || []
             },
             leg2: {
-              train_name: t2.train_name,
-              train_model: t2.train_model,
-              from: hub,
+              train_name: matchingT2.train_name,
+              train_model: matchingT2.train_model,
+              from: cleanHubName,
               to: toCity,
-              departure_time: t2.departure_time,
-              arrival_time: t2.arrival_time,
-              seats: t2.total_combined_seats || 0,
-              online_seats: t2.total_online_seats || 0,
-              seat_types: t2.seat_types || []
+              departure_time: matchingT2.departure_time,
+              arrival_time: matchingT2.arrival_time,
+              seats: matchingT2.total_combined_seats || 0,
+              online_seats: matchingT2.total_online_seats || 0,
+              seat_types: matchingT2.seat_types || []
             }
           });
-          if (alternateRoutes.length >= 3) break;
+          if (sameTrainOptions.length >= 4) break;
         }
-        if (alternateRoutes.length >= 3) break;
       }
+
+      // 2. Secondary: If needed, collect transfer options as fallback
+      if (sameTrainOptions.length < 2) {
+        for (const t1 of leg1Trains.slice(0, 2)) {
+          for (const t2 of leg2Trains.slice(0, 2)) {
+            if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
+              transferOptions.push({
+                is_same_train: false,
+                via_hub: cleanHubName,
+                leg1: {
+                  train_name: t1.train_name,
+                  train_model: t1.train_model,
+                  from: fromCity,
+                  to: cleanHubName,
+                  departure_time: t1.departure_time,
+                  arrival_time: t1.arrival_time,
+                  seats: t1.total_combined_seats || 0,
+                  online_seats: t1.total_online_seats || 0,
+                  seat_types: t1.seat_types || []
+                },
+                leg2: {
+                  train_name: t2.train_name,
+                  train_model: t2.train_model,
+                  from: cleanHubName,
+                  to: toCity,
+                  departure_time: t2.departure_time,
+                  arrival_time: t2.arrival_time,
+                  seats: t2.total_combined_seats || 0,
+                  online_seats: t2.total_online_seats || 0,
+                  seat_types: t2.seat_types || []
+                }
+              });
+              if (transferOptions.length >= 2) break;
+            }
+          }
+          if (transferOptions.length >= 2) break;
+        }
+      }
+
+      if (sameTrainOptions.length >= 4) break;
     } catch (e) {}
-    if (alternateRoutes.length >= 3) break;
   }
 
-  return alternateRoutes;
+  // Return SAME TRAIN options first! If none found, return transfer options
+  return sameTrainOptions.length > 0 ? sameTrainOptions : transferOptions;
 }
 
 // 2. Search Available Trains & Seats for Single Date
@@ -1524,11 +1609,11 @@ app.get('/api/search', async (req, res) => {
   const session = getUserShohozSession(req);
   const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
 
-  // If direct trains are completely sold out, check for alternate connecting routes
+  // If direct trains are completely sold out, check for same-train intermediate stoppage & junction split routes
   const totalDirectSeats = (result.trains || []).reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
   if (result.success && totalDirectSeats === 0 && check_alternates !== 'false') {
     try {
-      result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session);
+      result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session, result.trains || []);
     } catch (altErr) {
       result.alternate_routes = [];
     }

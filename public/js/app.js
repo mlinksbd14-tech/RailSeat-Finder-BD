@@ -2247,6 +2247,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Render Smart Alternate Junction & Split-Journey Routes
   // ----------------------------------------------------
+  // ----------------------------------------------------
+  // Render Smart Alternate Junction & Same-Train Split Routes
+  // ----------------------------------------------------
   function renderAlternateRoutes(alternateRoutes) {
     if (!alternateRoutesContainer) return;
 
@@ -2256,58 +2259,85 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const sameTrainCount = alternateRoutes.filter(r => r.is_same_train).length;
+
     alternateRoutesContainer.classList.remove('hidden');
     alternateRoutesContainer.innerHTML = `
-      <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-slate-900/60 border border-indigo-500/30 backdrop-blur-sm space-y-3.5 shadow-lg animate-fade-in">
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-teal-950/40 border border-emerald-500/30 space-y-3 shadow-md animate-fade-in">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm">
-              <i class="fa-solid fa-shuffle"></i>
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+              <i class="fa-solid fa-train-subway"></i>
             </div>
             <div>
-              <h4 class="font-extrabold text-sm text-white flex items-center space-x-2">
-                <span>⚡ Smart Alternate Junction Routes Available</span>
-                <span class="px-2 py-0.2 rounded-full text-[10px] bg-indigo-500 text-white font-black">${alternateRoutes.length} Found</span>
+              <h4 class="font-black text-sm text-white flex items-center space-x-2">
+                <span>⚡ Available Same-Train Stoppage & Junction Split Routes</span>
+                <span class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${alternateRoutes.length} Found</span>
               </h4>
-              <p class="text-[11px] text-indigo-200/80">Direct trains are sold out. You can split your journey at a major junction hub with available seats!</p>
+              <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out, but you can book on the <b>SAME TRAIN</b> via intermediate stoppage quotas and stay onboard for the entire trip!</p>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-0.5">
           ${alternateRoutes.map((alt, idx) => {
             const leg1Book = buildShohozBookingUrl(alt.leg1.from, alt.leg1.to, state.selectedDate, 'ALL');
             const leg2Book = buildShohozBookingUrl(alt.leg2.from, alt.leg2.to, state.selectedDate, 'ALL');
+            const isSameTrain = !!alt.is_same_train;
+
             return `
-              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-indigo-500/20 space-y-2.5 text-xs">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <span class="font-bold text-indigo-400 font-mono text-[11px]">Option ${idx + 1}: Via ${alt.via_hub} Junction</span>
-                  <span class="px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 font-bold text-[10px] border border-emerald-800/40">🟢 Seats Available</span>
-                </div>
+              <div class="p-3 rounded-xl bg-slate-900/90 border ${isSameTrain ? 'border-emerald-500/40' : 'border-slate-700/60'} space-y-2 text-xs relative overflow-hidden">
                 
-                <!-- Leg 1 -->
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-bold text-white">1. ${alt.leg1.train_name}</span>
-                    <span class="text-slate-400 text-[10px]">${alt.leg1.departure_time || ''} ➔ ${alt.leg1.arrival_time || ''}</span>
+                <!-- Option Header -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 flex-wrap gap-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="font-extrabold text-white text-xs">${isSameTrain ? alt.train_name : `Option ${idx + 1}`}</span>
+                    ${isSameTrain ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono font-bold">#${alt.train_model}</span>` : ''}
                   </div>
-                  <div class="flex items-center justify-between text-[10px] text-slate-400">
-                    <span>${alt.leg1.from} ➔ ${alt.leg1.to} (${alt.leg1.seats} seats)</span>
-                    <a href="${leg1Book}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 font-bold">Book Leg 1 &rarr;</a>
+                  
+                  <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-black ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-300'}">
+                    <i class="fa-solid ${isSameTrain ? 'fa-train-circle-check text-emerald-400' : 'fa-shuffle text-slate-400'} text-[9px]"></i>
+                    <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `Transfer Via ${alt.via_hub}`}</span>
+                  </span>
+                </div>
+
+                ${isSameTrain ? `
+                  <div class="text-[10px] text-emerald-300/90 bg-emerald-950/40 px-2 py-1 rounded-lg border border-emerald-800/30 flex items-center space-x-1">
+                    <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i>
+                    <span>No train change needed! Board <b>${alt.train_name}</b> and remain onboard throughout.</span>
+                  </div>
+                ` : ''}
+                
+                <!-- Leg 1 Breakdown -->
+                <div class="space-y-0.5 bg-slate-800/40 p-2 rounded-lg border border-slate-800/60">
+                  <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-extrabold text-slate-200">Leg 1: ${alt.leg1.from} ➔ ${alt.leg1.to}</span>
+                    <span class="text-[10px] font-bold text-emerald-400">🟢 ${alt.leg1.seats} Seats</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                    <span>${alt.leg1.train_name} (${alt.leg1.departure_time || ''} - ${alt.leg1.arrival_time || ''})</span>
+                    <a href="${leg1Book}" target="_blank" rel="noopener" class="text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center space-x-1">
+                      <span>Book Leg 1</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                    </a>
                   </div>
                 </div>
 
-                <!-- Leg 2 -->
-                <div class="space-y-1 pt-1 border-t border-slate-800/60">
+                <!-- Leg 2 Breakdown -->
+                <div class="space-y-0.5 bg-slate-800/40 p-2 rounded-lg border border-slate-800/60">
                   <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-bold text-white">2. ${alt.leg2.train_name}</span>
-                    <span class="text-slate-400 text-[10px]">${alt.leg2.departure_time || ''} ➔ ${alt.leg2.arrival_time || ''}</span>
+                    <span class="font-extrabold text-slate-200">Leg 2: ${alt.leg2.from} ➔ ${alt.leg2.to}</span>
+                    <span class="text-[10px] font-bold text-emerald-400">🟢 ${alt.leg2.seats} Seats</span>
                   </div>
-                  <div class="flex items-center justify-between text-[10px] text-slate-400">
-                    <span>${alt.leg2.from} ➔ ${alt.leg2.to} (${alt.leg2.seats} seats)</span>
-                    <a href="${leg2Book}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 font-bold">Book Leg 2 &rarr;</a>
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                    <span>${alt.leg2.train_name} (${alt.leg2.departure_time || ''} - ${alt.leg2.arrival_time || ''})</span>
+                    <a href="${leg2Book}" target="_blank" rel="noopener" class="text-emerald-400 hover:text-emerald-300 font-extrabold flex items-center space-x-1">
+                      <span>Book Leg 2</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
+                    </a>
                   </div>
                 </div>
+
               </div>
             `;
           }).join('')}

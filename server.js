@@ -1446,64 +1446,27 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
 
 // Major Railway Junction Hubs and Corridor Stoppage Networks
 const ROUTE_CORRIDOR_JUNCTIONS = {
-  'dhaka_chattogram': ['Feni', 'Cumilla', 'Brahmanbaria', 'Akhaura', 'Bhairab_Bazar', 'Laksam'],
-  'chattogram_dhaka': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
-  'dhaka_sylhet': ['Brahmanbaria', 'Bhairab_Bazar', 'Akhaura', 'Sreemangal', 'Kulaura', 'Shaistaganj'],
-  'sylhet_dhaka': ['Kulaura', 'Sreemangal', 'Shaistaganj', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
-  'dhaka_rajshahi': ['Joydebpur', 'Tongi', 'Tangail', 'Ullapara', 'Ishwardi', 'Abdulpur'],
-  'rajshahi_dhaka': ['Abdulpur', 'Ishwardi', 'Ullapara', 'Tangail', 'Joydebpur', 'Tongi'],
-  'dhaka_khulna': ['Joydebpur', 'Ishwardi', 'Poradah', 'Kushtia_Court', 'Chuadanga', 'Jessore'],
-  'khulna_dhaka': ['Jessore', 'Chuadanga', 'Kushtia_Court', 'Poradah', 'Ishwardi', 'Joydebpur'],
-  'dhaka_rangpur': ['Joydebpur', 'Natore', 'Santahar', 'Bogura', 'Parbatipur'],
-  'rangpur_dhaka': ['Parbatipur', 'Bogura', 'Santahar', 'Natore', 'Joydebpur'],
-  'dhaka_dinajpur': ['Joydebpur', 'Santahar', 'Parbatipur', 'Fulbari'],
-  'dinajpur_dhaka': ['Fulbari', 'Parbatipur', 'Santahar', 'Joydebpur'],
-  'dhaka_cox\'s_bazar': ['Feni', 'Cumilla', 'Brahmanbaria', 'Chattogram', 'Dohazari', 'Lohagara'],
-  'cox\'s_bazar_dhaka': ['Lohagara', 'Dohazari', 'Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
-  'chattogram_sylhet': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Sreemangal', 'Kulaura'],
-  'sylhet_chattogram': ['Kulaura', 'Sreemangal', 'Akhaura', 'Laksam', 'Cumilla', 'Feni']
+  'dhaka_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Brahmanbaria', 'Akhaura', 'Bhairab_Bazar'],
+  'chattogram_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Laksam', 'Cumilla', 'Feni'],
+  'dhaka_sylhet': ['Kulaura', 'Sreemangal', 'Shaistaganj', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
+  'sylhet_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Shaistaganj', 'Sreemangal', 'Kulaura'],
+  'dhaka_rajshahi': ['Abdulpur', 'Ishwardi', 'Ullapara', 'Tangail', 'Joydebpur'],
+  'rajshahi_dhaka': ['Joydebpur', 'Tangail', 'Ullapara', 'Ishwardi', 'Abdulpur'],
+  'dhaka_khulna': ['Jessore', 'Chuadanga', 'Kushtia_Court', 'Poradah', 'Ishwardi', 'Joydebpur'],
+  'khulna_dhaka': ['Joydebpur', 'Ishwardi', 'Poradah', 'Kushtia_Court', 'Chuadanga', 'Jessore'],
+  'dhaka_rangpur': ['Parbatipur', 'Bogura', 'Santahar', 'Natore', 'Joydebpur'],
+  'rangpur_dhaka': ['Joydebpur', 'Natore', 'Santahar', 'Bogura', 'Parbatipur'],
+  'dhaka_dinajpur': ['Parbatipur', 'Santahar', 'Fulbari', 'Joydebpur'],
+  'dinajpur_dhaka': ['Joydebpur', 'Santahar', 'Parbatipur', 'Fulbari'],
+  'dhaka_cox\'s_bazar': ['Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
+  'cox\'s_bazar_dhaka': ['Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
+  'chattogram_sylhet': ['Kulaura', 'Sreemangal', 'Akhaura', 'Laksam', 'Cumilla', 'Feni'],
+  'sylhet_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Sreemangal', 'Kulaura']
 };
 
 const GENERAL_JUNCTION_HUBS = [
   'Akhaura', 'Brahmanbaria', 'Feni', 'Cumilla', 'Bhairab_Bazar', 'Ishwardi', 'Santahar', 'Parbatipur', 'Laksam', 'Tongi', 'Joydebpur', 'Kulaura', 'Sreemangal'
 ];
-
-async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
-  const cleanFrom = (fromCity || '').trim().toLowerCase();
-  const cleanTo = (toCity || '').trim().toLowerCase();
-  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
-  
-  // Prioritize corridor intermediate stoppage stations first, then general junction hubs
-  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
-  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
-  
-  const candidates = [];
-  const seen = new Set();
-  for (const h of candidatePool) {
-    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
-    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
-      seen.add(norm);
-      candidates.push(h);
-    }
-  }
-
-  const sameTrainOptions = [];
-  const transferOptions = [];
-
-  // Evaluate candidate intermediate hubs (top 4 to stay fast and avoid rate limits)
-  for (const hub of candidates.slice(0, 4)) {
-    try {
-      const cleanHubName = hub.replace(/_/g, ' ');
-
-      // Query Leg 1: fromCity -> Intermediate Hub
-      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
-      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg1Trains.length === 0) continue;
-
-      // Query Leg 2: Intermediate Hub -> toCity
-      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
-      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg2Trains.length === 0) continue;
 
 // Utility to parse train time strings ("06:30 AM", "18:45", etc.) into minutes from midnight
 function parseTimeToMinutes(timeStr) {
@@ -1522,7 +1485,46 @@ function parseTimeToMinutes(timeStr) {
   return (hours * 60) + minutes;
 }
 
-      // 1. First priority: Check for SAME TRAIN on both legs
+async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
+  const cleanFrom = (fromCity || '').trim().toLowerCase();
+  const cleanTo = (toCity || '').trim().toLowerCase();
+  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
+  
+  // Prioritize corridor intermediate stoppage stations first (furthest first = longest reach), then general junction hubs
+  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
+  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
+  
+  const candidates = [];
+  const seen = new Set();
+  for (const h of candidatePool) {
+    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
+    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
+      seen.add(norm);
+      candidates.push(h);
+    }
+  }
+
+  const sameTrainOptions = [];
+  const longestReachTransferOptions = [];
+
+  // Evaluate candidate intermediate hubs (top 5 to stay fast and avoid rate limits)
+  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 5); hubIndex++) {
+    const hub = candidates[hubIndex];
+    try {
+      const cleanHubName = hub.replace(/_/g, ' ');
+
+      // Query Leg 1: fromCity -> Intermediate Hub (Longest available destination search)
+      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
+      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg1Trains.length === 0) continue;
+
+      // Query Leg 2: Intermediate Hub -> toCity (Next train connection to destination)
+      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
+      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg2Trains.length === 0) continue;
+
+      // 1. RULE 1: SAME-TRAIN STOPPAGE QUOTA
+      // Direct A ➔ B is sold out, but the SAME train has seats for A ➔ Hub AND Hub ➔ B
       for (const t1 of leg1Trains) {
         const matchingT2 = leg2Trains.find(t2 => {
           const m1 = String(t1.train_model || '').trim();
@@ -1533,18 +1535,17 @@ function parseTimeToMinutes(timeStr) {
         });
 
         if (matchingT2) {
-          // Chronological check: ensure Leg 2 departure is forward in time relative to Leg 1 departure
           const t1Dep = parseTimeToMinutes(t1.departure_time);
           const t2Dep = parseTimeToMinutes(matchingT2.departure_time);
           if (t1Dep !== null && t2Dep !== null) {
             if (t2Dep < t1Dep && (t2Dep + 1440 - t1Dep) > 720) {
-              // Reversed daytime schedule
               continue;
             }
           }
 
           sameTrainOptions.push({
             is_same_train: true,
+            route_type: 'SAME_TRAIN_STOPPAGE',
             via_hub: cleanHubName,
             train_name: t1.train_name,
             train_model: t1.train_model,
@@ -1576,31 +1577,37 @@ function parseTimeToMinutes(timeStr) {
         }
       }
 
-      // 2. Secondary: If needed, collect transfer options with STRICT CHRONOLOGICAL SEQUENCE
-      if (sameTrainOptions.length < 2) {
-        for (const t1 of leg1Trains) {
-          for (const t2 of leg2Trains) {
-            if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
-              const t1Dep = parseTimeToMinutes(t1.departure_time);
-              const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
-              const t2Dep = parseTimeToMinutes(t2.departure_time);
+      // 2. RULE 2: LONGEST DESTINATION REACH + CONNECTING NEXT TRAIN
+      // Passenger rides Train 1 as far as possible towards destination (cleanHubName),
+      // then at cleanHubName connects to the NEXT train (Train 2) to toCity!
+      for (const t1 of leg1Trains) {
+        for (const t2 of leg2Trains) {
+          if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
+            const t1Dep = parseTimeToMinutes(t1.departure_time);
+            const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
+            const t2Dep = parseTimeToMinutes(t2.departure_time);
 
-              // STRICT TIME VALIDATION:
-              // Train 2 start time at the junction MUST be AFTER Train 1 arrives & departs!
-              // Don't show trains that depart before or simultaneously with the previous train.
-              if (t1Arr !== null && t2Dep !== null) {
-                if (t2Dep <= t1Arr || (t1Dep !== null && t2Dep <= t1Dep)) {
-                  continue; // Train 2 starts before Train 1 arrives!
-                }
-                const layover = t2Dep - t1Arr;
-                if (layover < 15 || layover > 360) {
-                  continue; // Less than 15 mins (impossible connection) or over 6 hours
-                }
+            // STRICT CHRONOLOGICAL SEQUENCE:
+            // Train 2 at the transfer station MUST depart AFTER Train 1 arrives!
+            if (t1Arr !== null && t2Dep !== null) {
+              let layover = t2Dep - t1Arr;
+              if (layover < 0) layover += 1440; // Cross-midnight connection
+
+              if (layover < 15 || layover > 360) {
+                continue; // Layover too tight (<15 min) or too long (>6 hours)
               }
 
-              transferOptions.push({
+              const layoverHours = Math.floor(layover / 60);
+              const layoverMins = layover % 60;
+              const layoverLabel = layoverHours > 0 ? `${layoverHours}h ${layoverMins}m` : `${layoverMins}m`;
+
+              longestReachTransferOptions.push({
                 is_same_train: false,
+                is_longest_reach: hubIndex === 0, // First candidate in corridor is the longest reach
+                route_type: 'LONGEST_DESTINATION_TRANSFER',
                 via_hub: cleanHubName,
+                layover_minutes: layover,
+                layover_text: layoverLabel,
                 leg1: {
                   train_name: t1.train_name,
                   train_model: t1.train_model,
@@ -1624,19 +1631,20 @@ function parseTimeToMinutes(timeStr) {
                   seat_types: t2.seat_types || []
                 }
               });
-              if (transferOptions.length >= 2) break;
+              if (longestReachTransferOptions.length >= 4) break;
             }
           }
-          if (transferOptions.length >= 2) break;
         }
+        if (longestReachTransferOptions.length >= 4) break;
       }
 
-      if (sameTrainOptions.length >= 4) break;
+      if (sameTrainOptions.length >= 3 && longestReachTransferOptions.length >= 3) break;
     } catch (e) {}
   }
 
-  // Return SAME TRAIN options first! If none found, return transfer options
-  return sameTrainOptions.length > 0 ? sameTrainOptions : transferOptions;
+  // Combine both: Same-Train options first, followed by Longest Reach Next-Train connections!
+  const combined = [...sameTrainOptions, ...longestReachTransferOptions];
+  return combined.slice(0, 6);
 }
 
 // 2. Search Available Trains & Seats for Single Date

@@ -2646,18 +2646,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     alternateRoutesContainer.classList.remove('hidden');
     alternateRoutesContainer.innerHTML = `
-      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-teal-950/40 border border-emerald-500/30 space-y-3 shadow-md animate-fade-in">
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/40 border-2 border-emerald-500/40 space-y-3 shadow-md animate-fade-in">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div class="flex items-center space-x-2.5">
             <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
-              <i class="fa-solid fa-train-subway"></i>
+              <i class="fa-solid fa-route"></i>
             </div>
             <div>
               <h4 class="font-black text-sm text-white flex items-center space-x-2">
-                <span>⚡ Available Same-Train Stoppage & Junction Split Routes</span>
+                <span>⚡ Smart Alternate Stoppage & Junction Split Routes</span>
                 <span class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${validRoutes.length} Found</span>
               </h4>
-              <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out, but you can book on the <b>SAME TRAIN</b> via intermediate stoppage quotas and stay onboard for the entire trip!</p>
+              <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out. Book via <b>Same-Train Quota</b> or ride the <b>Longest Available Leg</b> and transfer to the next connecting train!</p>
             </div>
           </div>
         </div>
@@ -2667,35 +2667,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const leg1Book = buildShohozBookingUrl(alt.leg1.from, alt.leg1.to, state.selectedDate, 'ALL');
             const leg2Book = buildShohozBookingUrl(alt.leg2.from, alt.leg2.to, state.selectedDate, 'ALL');
             const isSameTrain = !!alt.is_same_train;
+            const layoverStr = alt.layover_text || 'Transfer';
 
             return `
-              <div class="p-3.5 rounded-2xl bg-slate-900/95 border-2 ${isSameTrain ? 'border-emerald-500/60 shadow-md' : 'border-slate-700'} space-y-2.5 text-xs relative overflow-hidden">
+              <div class="p-3.5 rounded-2xl bg-slate-900/95 border-2 ${isSameTrain ? 'border-emerald-500/60 shadow-md' : 'border-indigo-500/50 shadow-sm'} space-y-2.5 text-xs relative overflow-hidden">
                 
                 <!-- Option Header -->
                 <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 flex-wrap gap-1">
-                  <div class="flex items-center space-x-1.5">
-                    <span class="font-extrabold text-white text-xs sm:text-sm">${isSameTrain ? alt.train_name : `Option ${idx + 1}`}</span>
+                  <div class="flex items-center space-x-1.5 min-w-0">
+                    <span class="font-extrabold text-white text-xs sm:text-sm truncate">
+                      ${isSameTrain ? alt.train_name : `Option ${idx + 1}: ${alt.leg1.train_name} ➔ ${alt.leg2.train_name}`}
+                    </span>
                     ${isSameTrain ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono font-bold border border-slate-700">#${alt.train_model}</span>` : ''}
                   </div>
                   
-                  <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[10px] font-black ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border-2 border-emerald-500/50' : 'bg-slate-800 text-slate-300 border border-slate-700'}">
-                    <i class="fa-solid ${isSameTrain ? 'fa-train-circle-check text-emerald-400' : 'fa-shuffle text-slate-400'} text-[9px]"></i>
-                    <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `Transfer Via ${alt.via_hub}`}</span>
+                  <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0 ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border-2 border-emerald-500/50' : 'bg-indigo-500/20 text-indigo-300 border-2 border-indigo-500/50'}">
+                    <i class="fa-solid ${isSameTrain ? 'fa-train-circle-check text-emerald-400' : 'fa-train-subway text-indigo-400'} text-[9px]"></i>
+                    <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `🚀 Longest Ride + Next Train`}</span>
                   </span>
                 </div>
 
                 ${isSameTrain ? `
                   <div class="text-[11px] text-emerald-300/95 bg-emerald-950/60 px-2.5 py-1.5 rounded-xl border-2 border-emerald-800/40 flex items-center space-x-1.5 font-medium">
-                    <i class="fa-solid fa-circle-info text-xs text-emerald-400"></i>
-                    <span>No train change needed! Board <b>${alt.train_name}</b> and remain onboard throughout.</span>
+                    <i class="fa-solid fa-circle-info text-xs text-emerald-400 shrink-0"></i>
+                    <span>No train change needed! Board <b>${alt.train_name}</b> and remain onboard for the entire journey.</span>
                   </div>
-                ` : ''}
+                ` : `
+                  <div class="text-[11px] text-indigo-200 bg-indigo-950/60 px-2.5 py-1.5 rounded-xl border-2 border-indigo-800/40 flex items-center space-x-1.5 font-medium">
+                    <i class="fa-solid fa-shuffle text-xs text-indigo-400 shrink-0"></i>
+                    <span>Ride <b>${alt.leg1.train_name}</b> to ${alt.via_hub}, then switch to <b>${alt.leg2.train_name}</b> (⏱️ ${layoverStr} transfer wait).</span>
+                  </div>
+                `}
                 
-                <!-- Leg 1 Breakdown -->
+                <!-- Leg 1 Breakdown (Longest First Leg) -->
                 <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
                     <span class="font-extrabold text-slate-100">Leg 1: ${alt.leg1.from} ➔ ${alt.leg1.to}</span>
-                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60">🟢 ${alt.leg1.seats} Seats</span>
+                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60 font-mono">🟢 ${alt.leg1.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                     <span>${alt.leg1.train_name} (${alt.leg1.departure_time || ''} - ${alt.leg1.arrival_time || ''})</span>
@@ -2706,11 +2714,20 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
 
-                <!-- Leg 2 Breakdown -->
+                <!-- Transfer Connector Bar (If switching trains) -->
+                ${!isSameTrain ? `
+                  <div class="flex items-center justify-center space-x-2 py-0.5 text-[10px] font-bold text-amber-300">
+                    <i class="fa-solid fa-arrow-down text-[9px]"></i>
+                    <span>Transfer at ${alt.via_hub} (Layover: ${layoverStr})</span>
+                    <i class="fa-solid fa-arrow-down text-[9px]"></i>
+                  </div>
+                ` : ''}
+
+                <!-- Leg 2 Breakdown (Next Train Connection) -->
                 <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
                     <span class="font-extrabold text-slate-100">Leg 2: ${alt.leg2.from} ➔ ${alt.leg2.to}</span>
-                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60">🟢 ${alt.leg2.seats} Seats</span>
+                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60 font-mono">🟢 ${alt.leg2.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                     <span>${alt.leg2.train_name} (${alt.leg2.departure_time || ''} - ${alt.leg2.arrival_time || ''})</span>

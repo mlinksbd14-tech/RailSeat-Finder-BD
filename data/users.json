@@ -119,51 +119,6 @@
       }
     },
     {
-      "role": "viewer",
-      "lastIp": "::1",
-      "canViewDashboard": true,
-      "ips": [
-        "::1"
-      ],
-      "authProvider": "password",
-      "createdAt": "2026-08-27T11:29:45.316Z",
-      "emailVerified": true,
-      "firebaseUid": null,
-      "password": "scrypt$16384$8$1$17c45e8846aa6e6e2d2051022d96bc82$cee1baadc8e365054ce0e7adf5d46f634f6f9a5ccd14c5d8d766343128c427ca5cca59bc3261bdd6cfefff047bc973bc2aba29fbddbc5516416a1e8ef18839bd",
-      "lastUserAgent": "",
-      "name": "Instant User",
-      "id": "usr_1787830185279_pb4j",
-      "email": "auto_user_mtbfxjqz@example.com",
-      "status": "active",
-      "username": "auto_user_mtbfxjqz",
-      "lastDevice": {
-        "os": "Unknown OS",
-        "browser": "Unknown Browser",
-        "raw": "",
-        "device": "Desktop"
-      },
-      "lastLogin": "2026-08-27T11:29:48.008Z",
-      "activityHistory": [
-        {
-          "action": "login",
-          "timestamp": "2026-08-27T11:29:48.008Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Unknown OS",
-          "browser": "Unknown Browser"
-        },
-        {
-          "action": "register",
-          "timestamp": "2026-08-27T11:29:45.317Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Unknown OS",
-          "browser": "Unknown Browser"
-        }
-      ],
-      "loginCount": 1
-    },
-    {
       "id": "usr_admin_001",
       "username": "admin",
       "password": "scrypt$16384$8$1$3c17f6d0a04ef5ae69f4d1e840a40374$67342c9cdab8c8ed963cdc8b24cd9984f263f74177dd339e83f5dadd572a28c944fbda51451177cb0c4c2d278dd6288d64b581baebf62474a18f4833a4d4ef27",

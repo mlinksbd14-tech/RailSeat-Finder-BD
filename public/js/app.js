@@ -4400,6 +4400,93 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
+  // Real-Time Server-Side Radar Alert Listener
+  // ----------------------------------------------------
+  let lastRadarAlertPollTime = Date.now() - 30000;
+  let isRadarAlertPolling = false;
+
+  async function pollServerRadarAlerts() {
+    if (isRadarAlertPolling) return;
+    isRadarAlertPolling = true;
+
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/radar/alerts?since=${lastRadarAlertPollTime}`, {
+        headers: {
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.alerts) && data.alerts.length > 0) {
+          data.alerts.forEach(alert => {
+            // Avoid duplicate notifications in this session
+            const alreadyExists = state.notifications.some(n => 
+              (n.id === alert.id) || 
+              (n.trainModel === alert.trainModel && n.date === alert.date && n.className === alert.className && n.seats === alert.seats && Math.abs((n.timestamp || 0) - alert.timestamp) < 15000)
+            );
+
+            if (!alreadyExists) {
+              const isReleased = (alert.type === 'SOLD_OUT_RELEASED');
+
+              // 1. Add to Top Menu Notification Center
+              addStoredNotification({
+                id: alert.id,
+                title: alert.title || (isReleased ? '🚨 RELEASED!' : '🎯 Watchlist Radar Hit!'),
+                message: alert.message || `${alert.seats} seat(s) available on ${alert.trainName}`,
+                trainName: alert.trainName,
+                trainModel: alert.trainModel,
+                className: alert.className,
+                seats: alert.seats,
+                fromCity: alert.fromCity,
+                toCity: alert.toCity,
+                date: alert.date,
+                bookUrl: alert.bookUrl,
+                timestamp: alert.timestamp || Date.now(),
+                type: isReleased ? 'SEAT_RELEASED' : 'RADAR_HIT'
+              });
+
+              // 2. Play Audio Sound Alert
+              if (isReleased) {
+                playUrgentAlertChime();
+              } else {
+                playRadarHitSound();
+              }
+
+              // 3. Display High-Priority Floating Toast
+              if (isReleased) {
+                showSoldOutReleasedToast(alert.trainName, alert.className, alert.seats, alert.bookUrl);
+              } else {
+                showRadarHitToast(alert.trainName, alert.className, alert.seats, alert.bookUrl);
+              }
+
+              // 4. Send Desktop OS Alert (even when browser tab is minimized)
+              sendDesktopNotification(
+                alert.title || (isReleased ? '🚨 RELEASED!' : '🎯 Watchlist Radar Hit!'),
+                `${alert.trainName} (${alert.className}): ${alert.seats} seat(s) available on ${formatShohozDoj(alert.date)} for ${alert.fromCity} ➔ ${alert.toCity}`,
+                alert.bookUrl
+              );
+            }
+          });
+        }
+
+        if (data.serverTime) {
+          lastRadarAlertPollTime = data.serverTime;
+        }
+      }
+    } catch (e) {
+      // Silent error in background polling
+    } finally {
+      isRadarAlertPolling = false;
+    }
+  }
+
+  // Poll server radar alerts every 4 seconds in the open dashboard
+  setInterval(pollServerRadarAlerts, 4000);
+  setTimeout(pollServerRadarAlerts, 1500);
+
+  // ----------------------------------------------------
   // Live Auto-Monitor Countdown & Pause/Resume
   // ----------------------------------------------------
   function startMonitorCountdownTicker() {

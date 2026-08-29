@@ -3799,12 +3799,40 @@ async function runBackgroundRadarCycle() {
                   target.lastNotifiedSeats = availableSeats;
                   target.lastNotifiedAt = new Date().toISOString();
 
+                  const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
+
+                  // 📥 Record Radar Alert for Connected Web Dashboard Notification Center
+                  const alertRecord = {
+                    id: 'radar_alert_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                    targetId: target.id,
+                    userId: target.userId || null,
+                    type: wasSoldOut ? 'SOLD_OUT_RELEASED' : 'RADAR_HIT',
+                    title: wasSoldOut ? '🚨 RELEASED!' : '🎯 Watchlist Radar Hit!',
+                    message: `${availableSeats} seat(s) available on ${train.train_name} in ${st.display_name || st.type}!`,
+                    trainName: train.train_name,
+                    trainModel: train.train_model,
+                    fromCity: fromCity,
+                    toCity: toCity,
+                    date: dateOfJourney,
+                    className: st.display_name || st.type,
+                    seats: availableSeats,
+                    onlineSeats: st.seats_available,
+                    counterSeats: st.counter_seats_available,
+                    bookUrl: bookUrl,
+                    timestamp: Date.now(),
+                    createdAt: new Date().toISOString()
+                  };
+
+                  radarData.recentAlerts = Array.isArray(radarData.recentAlerts) ? radarData.recentAlerts : [];
+                  radarData.recentAlerts.push(alertRecord);
+                  if (radarData.recentAlerts.length > 50) {
+                    radarData.recentAlerts = radarData.recentAlerts.slice(-50);
+                  }
+
                   const chatId = target.telegramChatId;
                   if (chatId && FIXED_TELEGRAM_BOT_TOKEN) {
                     console.log(`[Radar 24/7] 🎯 ALERT (${wasSoldOut ? 'SOLD_OUT_RELEASED' : 'RADAR_HIT'}): ${train.train_name} on ${dateOfJourney} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
 
-                    const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
-                    
                     const msgText = wasSoldOut ?
                       `🚨 <b>[RELEASED!]</b>\n\n` +
                       `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
@@ -4112,7 +4140,33 @@ app.post('/api/radar/watchlist/delete', (req, res) => {
   }
 
   saveRadarData(radarData);
-  res.json({ success: true, message: 'Target removed from 24/7 Radar.' });
+
+  res.json({
+    success: true,
+    message: 'Target deleted from watchlist.'
+  });
+});
+
+// 7. Get Recent Background Radar Alerts for Web Dashboard Notification Center
+app.get('/api/radar/alerts', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const since = parseInt(req.query.since || '0', 10);
+  const radarData = loadRadarData();
+  let alerts = radarData.recentAlerts || [];
+
+  if (session && session.role !== 'admin') {
+    alerts = alerts.filter(a => !a.userId || a.userId === session.userId);
+  }
+
+  if (since > 0) {
+    alerts = alerts.filter(a => a.timestamp > since);
+  }
+
+  res.json({
+    success: true,
+    alerts: alerts.slice(-30),
+    serverTime: Date.now()
+  });
 });
 
 // Dedicated User Manual Documentation Route

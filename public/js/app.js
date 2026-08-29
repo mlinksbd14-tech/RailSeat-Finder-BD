@@ -2259,7 +2259,24 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const sameTrainCount = alternateRoutes.filter(r => r.is_same_train).length;
+    // Filter out any connection where Leg 2 start time is before Leg 1 arrival/departure
+    const validRoutes = alternateRoutes.filter(alt => {
+      if (alt.is_same_train) return true;
+      const t1Arr = parseTimeToMinutes(alt.leg1?.arrival_time) || parseTimeToMinutes(alt.leg1?.departure_time);
+      const t2Dep = parseTimeToMinutes(alt.leg2?.departure_time);
+      if (t1Arr !== null && t2Dep !== null) {
+        return t2Dep > t1Arr; // Train 2 MUST depart AFTER Train 1 arrives
+      }
+      return true;
+    });
+
+    if (validRoutes.length === 0) {
+      alternateRoutesContainer.classList.add('hidden');
+      alternateRoutesContainer.innerHTML = '';
+      return;
+    }
+
+    const sameTrainCount = validRoutes.filter(r => r.is_same_train).length;
 
     alternateRoutesContainer.classList.remove('hidden');
     alternateRoutesContainer.innerHTML = `
@@ -2272,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div>
               <h4 class="font-black text-sm text-white flex items-center space-x-2">
                 <span>⚡ Available Same-Train Stoppage & Junction Split Routes</span>
-                <span class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${alternateRoutes.length} Found</span>
+                <span class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${validRoutes.length} Found</span>
               </h4>
               <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out, but you can book on the <b>SAME TRAIN</b> via intermediate stoppage quotas and stay onboard for the entire trip!</p>
             </div>
@@ -2280,7 +2297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-0.5">
-          ${alternateRoutes.map((alt, idx) => {
+          ${validRoutes.map((alt, idx) => {
             const leg1Book = buildShohozBookingUrl(alt.leg1.from, alt.leg1.to, state.selectedDate, 'ALL');
             const leg2Book = buildShohozBookingUrl(alt.leg2.from, alt.leg2.to, state.selectedDate, 'ALL');
             const isSameTrain = !!alt.is_same_train;

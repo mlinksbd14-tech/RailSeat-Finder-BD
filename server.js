@@ -1505,6 +1505,23 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
       const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
       if (leg2Trains.length === 0) continue;
 
+// Utility to parse train time strings ("06:30 AM", "18:45", etc.) into minutes from midnight
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const clean = timeStr.trim().toUpperCase();
+  const match = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+  if (!match) return null;
+  
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3];
+
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  return (hours * 60) + minutes;
+}
+
       // 1. First priority: Check for SAME TRAIN on both legs
       for (const t1 of leg1Trains) {
         const matchingT2 = leg2Trains.find(t2 => {
@@ -1516,6 +1533,16 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
         });
 
         if (matchingT2) {
+          // Chronological check: ensure Leg 2 departure is forward in time relative to Leg 1 departure
+          const t1Dep = parseTimeToMinutes(t1.departure_time);
+          const t2Dep = parseTimeToMinutes(matchingT2.departure_time);
+          if (t1Dep !== null && t2Dep !== null) {
+            if (t2Dep < t1Dep && (t2Dep + 1440 - t1Dep) > 720) {
+              // Reversed daytime schedule
+              continue;
+            }
+          }
+
           sameTrainOptions.push({
             is_same_train: true,
             via_hub: cleanHubName,
@@ -1549,11 +1576,28 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
         }
       }
 
-      // 2. Secondary: If needed, collect transfer options as fallback
+      // 2. Secondary: If needed, collect transfer options with STRICT CHRONOLOGICAL SEQUENCE
       if (sameTrainOptions.length < 2) {
-        for (const t1 of leg1Trains.slice(0, 2)) {
-          for (const t2 of leg2Trains.slice(0, 2)) {
+        for (const t1 of leg1Trains) {
+          for (const t2 of leg2Trains) {
             if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
+              const t1Dep = parseTimeToMinutes(t1.departure_time);
+              const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
+              const t2Dep = parseTimeToMinutes(t2.departure_time);
+
+              // STRICT TIME VALIDATION:
+              // Train 2 start time at the junction MUST be AFTER Train 1 arrives & departs!
+              // Don't show trains that depart before or simultaneously with the previous train.
+              if (t1Arr !== null && t2Dep !== null) {
+                if (t2Dep <= t1Arr || (t1Dep !== null && t2Dep <= t1Dep)) {
+                  continue; // Train 2 starts before Train 1 arrives!
+                }
+                const layover = t2Dep - t1Arr;
+                if (layover < 15 || layover > 360) {
+                  continue; // Less than 15 mins (impossible connection) or over 6 hours
+                }
+              }
+
               transferOptions.push({
                 is_same_train: false,
                 via_hub: cleanHubName,

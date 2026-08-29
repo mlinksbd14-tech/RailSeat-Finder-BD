@@ -604,12 +604,12 @@
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> From Station
           </label>
-          <div class="relative">
+          <div class="relative flex items-center">
             <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" 
-              class="w-full pl-9 pr-8 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
+              class="w-full h-12 pl-10 pr-9 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
-            <i class="fa-solid fa-train absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <button type="button" id="clearFromBtn" class="hidden absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+            <i class="fa-solid fa-train absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+            <button type="button" id="clearFromBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
               <i class="fa-solid fa-circle-xmark"></i>
             </button>
           </div>
@@ -618,8 +618,8 @@
         </div>
 
         <!-- Swap Button (1 col) -->
-        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center pb-1">
-          <button type="button" id="swapStationsBtn" class="w-10 h-10 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-slate-300 hover:text-emerald-600 shadow-sm hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-95" title="Swap Stations">
+        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center">
+          <button type="button" id="swapStationsBtn" class="w-12 h-12 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-slate-300 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0" title="Swap Stations">
             <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
           </button>
         </div>
@@ -629,12 +629,12 @@
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> Destination
           </label>
-          <div class="relative">
+          <div class="relative flex items-center">
             <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" 
-              class="w-full pl-9 pr-8 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
+              class="w-full h-12 pl-10 pr-9 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
-            <i class="fa-solid fa-location-crosshairs absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <button type="button" id="clearToBtn" class="hidden absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+            <i class="fa-solid fa-location-crosshairs absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+            <button type="button" id="clearToBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
               <i class="fa-solid fa-circle-xmark"></i>
             </button>
           </div>
@@ -642,25 +642,25 @@
           <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
         </div>
 
-        <!-- Journey Date (2.5 cols) -->
-        <div class="lg:col-span-2.5">
+        <!-- Journey Date (3 cols) -->
+        <div class="lg:col-span-3">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
             <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> Journey Date
           </label>
-          <div class="relative">
+          <div class="relative flex items-center">
             <input type="date" id="journeyDateInput" 
-              class="w-full pl-9 pr-3 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
+              class="w-full h-12 pl-10 pr-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
               required>
-            <i class="fa-solid fa-calendar absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+            <i class="fa-solid fa-calendar absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
           </div>
         </div>
 
-        <!-- Search CTA Button (2.5 cols) -->
-        <div class="lg:col-span-2.5">
+        <!-- Search CTA Button (2 cols) -->
+        <div class="sm:col-span-2 lg:col-span-2">
           <button type="submit" id="searchSubmitBtn" 
-            class="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer">
+            class="w-full h-12 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <span>Find Trains</span>
+            <span class="whitespace-nowrap">Find Trains</span>
           </button>
         </div>
 

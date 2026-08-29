@@ -2006,6 +2006,17 @@ app.get('/api/train-station-matrix', async (req, res) => {
     }
   }
 
+  // Format date of journey for Shohoz cleanly (without timezone shifting)
+  let dojStr = date_of_journey;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date_of_journey)) {
+    const parts = date_of_journey.split('-');
+    const year = parts[0];
+    const monthNum = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    dojStr = `${String(day).padStart(2, '0')}-${months[monthNum]}-${year}`;
+  }
+
   if (targetPairs.length === 0) {
     return res.json({
       success: true,
@@ -2019,15 +2030,10 @@ app.get('/api/train-station-matrix', async (req, res) => {
     });
   }
 
-  // Format date of journey for Shohoz
-  let dojStr = date_of_journey;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(date_of_journey)) {
-    const d = new Date(date_of_journey);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    dojStr = `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
-  }
+  const cleanModelDigits = String(cleanModel).replace(/\D/g, '').trim();
+  const cleanTargetName = String(routeData.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-  // Execute in smooth batches of 2 requests with queue spacing
+  // Execute in smooth batches of 2 requests with session passing
   const segments = [];
   const batchSize = 2;
 
@@ -2035,22 +2041,35 @@ app.get('/api/train-station-matrix', async (req, res) => {
     const batch = targetPairs.slice(i, i + batchSize);
     const batchResults = await Promise.all(batch.map(async (pair) => {
       try {
-        const queryRes = await querySingleShohozTrip(pair.from, pair.to, dojStr);
-        const trains = queryRes.trains || [];
-        const matchingTrain = trains.find(t => 
-          String(t.train_model) === cleanModel || 
-          (t.train_name && routeData.train_name && t.train_name.toLowerCase().trim() === routeData.train_name.toLowerCase().trim())
-        );
-
         const canonicalFrom = getCanonicalStationName(pair.from);
         const canonicalTo = getCanonicalStationName(pair.to);
+        
+        // Query live Shohoz trip with active user session
+        const queryRes = await querySingleShohozTrip(canonicalFrom, canonicalTo, dojStr, session);
+        const trains = queryRes.trains || [];
+        
+        const matchingTrain = trains.find(t => {
+          const tModelDigits = String(t.train_model || '').replace(/\D/g, '').trim();
+          if (tModelDigits && cleanModelDigits && tModelDigits === cleanModelDigits) return true;
+
+          const tName = String(t.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (tName && cleanTargetName && (tName.includes(cleanTargetName) || cleanTargetName.includes(tName))) return true;
+
+          return false;
+        });
 
         if (matchingTrain) {
+          const totalOnline = Number(matchingTrain.total_online_seats || 0);
+          const totalOffline = Number(matchingTrain.total_offline_seats || 0);
           const totalSeats = matchingTrain.total_combined_seats !== undefined 
-            ? matchingTrain.total_combined_seats 
-            : (matchingTrain.seat_types || []).reduce((sum, st) => sum + Number(st.seats_available || 0) + Number(st.counter_seats_available || 0), 0);
+            ? Number(matchingTrain.total_combined_seats) 
+            : (totalOnline + totalOffline);
 
-          const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=${encodeURIComponent(matchingTrain.seat_types?.[0]?.type || 'S_CHAIR')}`;
+          const bookClass = (matchingTrain.seat_types && matchingTrain.seat_types.length > 0)
+            ? (matchingTrain.seat_types.find(st => (Number(st.seats_available || 0) + Number(st.counter_seats_available || 0)) > 0)?.type || matchingTrain.seat_types[0].type)
+            : 'S_CHAIR';
+
+          const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=${encodeURIComponent(bookClass)}`;
 
           return {
             from: pair.fromClean,
@@ -2059,6 +2078,8 @@ app.get('/api/train-station-matrix', async (req, res) => {
             arrival_time: matchingTrain.arrival_time || pair.toArr,
             travel_time: matchingTrain.travel_time || '',
             total_seats: totalSeats,
+            online_seats: totalOnline,
+            offline_seats: totalOffline,
             has_seats: totalSeats > 0,
             seat_types: matchingTrain.seat_types || [],
             book_url: bookUrl
@@ -2071,6 +2092,8 @@ app.get('/api/train-station-matrix', async (req, res) => {
             arrival_time: pair.toArr || '--',
             travel_time: '',
             total_seats: 0,
+            online_seats: 0,
+            offline_seats: 0,
             has_seats: false,
             seat_types: [],
             book_url: `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=S_CHAIR`
@@ -2086,6 +2109,8 @@ app.get('/api/train-station-matrix', async (req, res) => {
           arrival_time: pair.toArr || '--',
           travel_time: '',
           total_seats: 0,
+          online_seats: 0,
+          offline_seats: 0,
           has_seats: false,
           seat_types: [],
           book_url: `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(dojStr)}&class=S_CHAIR`
@@ -2094,6 +2119,9 @@ app.get('/api/train-station-matrix', async (req, res) => {
     }));
 
     segments.push(...batchResults);
+    if (i + batchSize < targetPairs.length) {
+      await new Promise(r => setTimeout(r, 60));
+    }
   }
 
   return res.json({
@@ -2101,7 +2129,7 @@ app.get('/api/train-station-matrix', async (req, res) => {
     train_name: routeData.train_name || `Train #${cleanModel}`,
     train_model: cleanModel,
     date: date_of_journey,
-    display_date: dojStr,
+    display_date: formatShohozDate(date_of_journey),
     off_day: routeData.off_day || 'None',
     stoppages: stops,
     segments: segments

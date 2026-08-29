@@ -49,19 +49,29 @@
         },
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc4MTI5MDMsImV4cCI6MTc4Nzg1NjEwMywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImNkY2UyNjFlLWRiZjctNDVlZC1iZDk0LTFiMmJlOGViZjUyNCIsImF1dGhfdGltZSI6MTc4NzgxMjkwMywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTY3OTE0NTI1NyIsImVtYWlsIjoic3JzaGF3b240MjFAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTY3OTE0NTI1NyIsImRpc3BsYXlfbmFtZSI6Ik1EIFNBSURVUiBSQUhBTUFOIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiNTU1NzExNjQ4OSIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.OixVCNfXcQ7dhQZ1bjS2As6sgYLQx96SHSLReS24ynOIwaVF4abDsGyBYlCfVv37FxVpAhVtwK8XhQYWn-M0y9nfCUS1txqXGMITBD1jUCeFmmce9g4f2QrOD2CL-XzpJU36d4QbGzy9zbK3sIrBQnch56gGMWs-k1NHTmmNQD_OoCEKctVGrMn5b_vL2vZFXzlJpjfWYGIDYAl9B5QT6KTyRiDQbrlb6mAMs1grY6IMNhPrlXdvwFSFzjJ9ejrX732P8x_XxjoNlhPjfWRSLON8wRsn4NHQG75EadS9idVrw6NTPOqrIOuk_LV2Tas5Vo3hTBXhMIvrkPMET353oA"
       },
-      "lastIp": "103.177.220.164",
+      "lastIp": "::1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
       "ips": [
+        "::1",
         "103.177.220.164"
       ],
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 151",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
       },
-      "lastLogin": "2026-08-27T12:00:11.612Z",
+      "lastLogin": "2026-08-29T07:14:19.737Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-29T07:14:19.737Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151",
+          "location": null
+        },
         {
           "action": "login",
           "timestamp": "2026-08-27T12:00:11.612Z",
@@ -80,7 +90,7 @@
           "browser": "Edge 151"
         }
       ],
-      "loginCount": 2
+      "loginCount": 3
     },
     {
       "createdAt": "2026-08-27T09:53:19.298Z",

@@ -1989,7 +1989,7 @@ app.get('/api/health', (req, res) => {
 // 6. Fixed Telegram Bot & Automated Deep-Link Pairing
 // ====================================================
 
-const FIXED_TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8600942866:AAEH3-rsOq24r55Y4iNb7tJqklmhn0ni3a0';
+const FIXED_TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8600942866:AAHGLgJ2PfIeyi2vXaIIJyOGy0XJ5qKqmRQ';
 const FIXED_TELEGRAM_BOT_USERNAME = 'railseatfinderbdbot';
 
 // In-memory pairing sessions (code -> { code, createdAt, status: 'pending'|'paired', chatId, username, firstName })

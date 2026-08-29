@@ -700,6 +700,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (notifDropdown) notifDropdown.classList.add('hidden');
         if (isHidden) {
           settingsDropdown.classList.remove('hidden');
+          const isAdmin = !!(state.currentUser && state.currentUser.role === 'admin');
+          if (settingAdminTabBtn) settingAdminTabBtn.classList.toggle('hidden', !isAdmin);
+          if (settingAdminSection) settingAdminSection.classList.toggle('hidden', !isAdmin);
           if (settingSoundToggle) settingSoundToggle.checked = state.isSoundEnabled;
           if (settingDarkThemeToggle) settingDarkThemeToggle.checked = document.documentElement.classList.contains('dark');
           if (settingDesktopNotifToggle) settingDesktopNotifToggle.checked = ('Notification' in window && Notification.permission === 'granted');

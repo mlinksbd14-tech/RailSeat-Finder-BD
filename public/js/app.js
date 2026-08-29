@@ -2481,6 +2481,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>Stops</span>
               </button>
 
+              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 transition cursor-pointer"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="View Single-Day All-Station Blank Seat Matrix">
+                <i class="fa-solid fa-table-cells text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
+                <span>Stops Matrix</span>
+              </button>
+
               <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"

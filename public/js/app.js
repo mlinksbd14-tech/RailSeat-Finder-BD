@@ -234,6 +234,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingOpenUserMgmtBtn = document.getElementById('settingOpenUserMgmtBtn');
   const settingAccountStatusLabel = document.getElementById('settingAccountStatusLabel');
   const settingAccountUserLabel = document.getElementById('settingAccountUserLabel');
+  const settingAccountRoleBadge = document.getElementById('settingAccountRoleBadge');
+  const settingAccountAvatar = document.getElementById('settingAccountAvatar');
+  const settingAdminLockedNotice = document.getElementById('settingAdminLockedNotice');
+  const settingAdminControlsContainer = document.getElementById('settingAdminControlsContainer');
+  const settingAdminTabBtn = document.getElementById('settingAdminTabBtn');
   const settingAuthActionBtn = document.getElementById('settingAuthActionBtn');
 
   // User Management, Auth & Account Elements
@@ -4874,13 +4879,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.toggle('hidden', !isAdmin);
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.toggle('hidden', !isAdmin);
         if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = !isAdmin;
+        if (settingRequireApprovalToggle) settingRequireApprovalToggle.disabled = !isAdmin;
+        if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.disabled = !isAdmin;
+        if (settingAdminLockedNotice) settingAdminLockedNotice.classList.toggle('hidden', isAdmin);
+        if (settingAdminControlsContainer) {
+          settingAdminControlsContainer.classList.toggle('opacity-50', !isAdmin);
+          settingAdminControlsContainer.classList.toggle('pointer-events-none', !isAdmin);
+        }
 
-        // Update Settings Category 5 Account Card
+        // Update Settings Category 5 Account Card & Role Badge
         if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = `Signed in as ${data.user.name || data.user.username}`;
         if (settingAccountUserLabel) settingAccountUserLabel.textContent = `@${data.user.username} (${isAdmin ? 'Administrator' : 'Viewer'})`;
+        if (settingAccountRoleBadge) {
+          settingAccountRoleBadge.textContent = isAdmin ? 'Administrator' : 'Viewer';
+          settingAccountRoleBadge.className = isAdmin 
+            ? 'text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' 
+            : 'text-[10px] px-2 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300';
+        }
+        if (settingAccountAvatar) {
+          const letter = (data.user.name || data.user.username || 'U').charAt(0).toUpperCase();
+          settingAccountAvatar.innerHTML = `<span>${letter}</span>`;
+        }
         if (settingAuthActionBtn) {
           settingAuthActionBtn.textContent = 'Sign Out';
-          settingAuthActionBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border border-rose-300 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0';
+          settingAuthActionBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border border-rose-300 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0';
         }
 
         // Load user-wise 24/7 background radar targets
@@ -4896,13 +4918,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.add('hidden');
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.add('hidden');
         if (settingRequireLoginToggle) settingRequireLoginToggle.disabled = true;
+        if (settingRequireApprovalToggle) settingRequireApprovalToggle.disabled = true;
+        if (settingRequireEmailVerificationToggle) settingRequireEmailVerificationToggle.disabled = true;
+        if (settingAdminLockedNotice) settingAdminLockedNotice.classList.remove('hidden');
+        if (settingAdminControlsContainer) {
+          settingAdminControlsContainer.classList.add('opacity-50', 'pointer-events-none');
+        }
 
         // Update Settings Category 5 Account Card
         if (settingAccountStatusLabel) settingAccountStatusLabel.textContent = 'Not Signed In';
         if (settingAccountUserLabel) settingAccountUserLabel.textContent = 'Public Visitor';
+        if (settingAccountRoleBadge) {
+          settingAccountRoleBadge.textContent = 'Public Visitor';
+          settingAccountRoleBadge.className = 'text-[10px] px-2 py-0.2 rounded-full font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+        }
+        if (settingAccountAvatar) {
+          settingAccountAvatar.innerHTML = '<i class="fa-solid fa-user"></i>';
+        }
         if (settingAuthActionBtn) {
           settingAuthActionBtn.textContent = 'Sign In';
-          settingAuthActionBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-purple-600 text-white hover:bg-purple-700 shrink-0';
+          settingAuthActionBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs shrink-0';
         }
 
         // If requireLogin is active and user is not logged in, prompt login modal

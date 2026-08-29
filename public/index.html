@@ -227,7 +227,8 @@
               <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="monitor">⏱️ Monitor</button>
               <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="telegram">✈️ Telegram</button>
               <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="appearance">🎨 Theme</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="users">👥 Users</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="account">👤 Account</button>
+              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white hover:bg-purple-100 dark:hover:bg-purple-950/60 cursor-pointer shrink-0 border border-purple-300 dark:border-purple-800" data-cat="admin" id="settingAdminTabBtn">🛡️ Admin</button>
             </div>
 
             <!-- Settings Content Container -->
@@ -472,83 +473,129 @@
               </div>
 
               <!-- ============================================== -->
-              <!-- CATEGORY 5: 👥 USER ACCESS & MANAGEMENT -->
+              <!-- CATEGORY 5: 👤 MY ACCOUNT & PROFILE (USER PREFERENCES) -->
               <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="users">
+              <div class="setting-cat-section space-y-2.5" data-cat="account">
                 <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                    <i class="fa-solid fa-users text-xs"></i>
-                    <span>User Management</span>
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    <i class="fa-solid fa-user text-xs"></i>
+                    <span>My Account & Profile</span>
                   </div>
-                  <span id="settingUserCountBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">1 User</span>
+                  <span id="settingAccountRoleBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Public Visitor</span>
                 </div>
 
-                <div class="p-3 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/40 dark:bg-purple-950/20 space-y-2.5">
-                  
+                <div class="p-3.5 rounded-2xl border-2 border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3">
                   <!-- Current Account Card with Login / Logout -->
-                  <div class="flex items-center justify-between p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-purple-100 dark:border-purple-900/50">
-                    <div class="space-y-0.5 min-w-0 pr-2">
-                      <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 block truncate" id="settingAccountStatusLabel">Not Signed In</span>
-                      <span class="text-[10px] text-slate-400 block font-mono truncate" id="settingAccountUserLabel">Public Visitor</span>
+                  <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-800/50 shadow-2xs">
+                    <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+                      <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0" id="settingAccountAvatar">
+                        <i class="fa-solid fa-user"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <span class="text-xs font-black text-slate-900 dark:text-white block truncate" id="settingAccountStatusLabel">Not Signed In</span>
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate" id="settingAccountUserLabel">Public Visitor</span>
+                      </div>
                     </div>
-                    <button type="button" id="settingAuthActionBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-purple-600 text-white hover:bg-purple-700 shrink-0">
+                    <button type="button" id="settingAuthActionBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs shrink-0">
                       Sign In
                     </button>
                   </div>
 
-                  <div class="flex items-center justify-between">
-                    <div class="space-y-0.5">
-                      <span class="font-bold text-slate-900 dark:text-white block text-xs">Dashboard Access Control</span>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">Manage authorized users who can view the dashboard</p>
+                  <!-- User Feature Overview -->
+                  <div class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
+                    <div class="flex items-center space-x-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                      <span>Your Traveler Features:</span>
                     </div>
+                    <ul class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 pl-4 list-disc">
+                      <li>Live Railway direct & stoppage vacancy lookup</li>
+                      <li>Custom 24/7 background seat monitoring & audio chimes</li>
+                      <li>Telegram automated seat release notifications</li>
+                      <li>Multi-day & all-stations availability matrix</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- CATEGORY 6: 🛡️ SYSTEM & ACCESS CONTROLS (ADMIN ONLY) -->
+              <!-- ============================================== -->
+              <div class="setting-cat-section space-y-2.5" data-cat="admin" id="settingAdminSection">
+                <div class="flex items-center justify-between px-1">
+                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                    <i class="fa-solid fa-shield-halved text-xs"></i>
+                    <span>Admin & Security Controls</span>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.2 rounded-full font-black bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-800">
+                    👑 Admin Only
+                  </span>
+                </div>
+
+                <!-- Admin Controls Box -->
+                <div class="p-3.5 rounded-2xl border-2 border-purple-300 dark:border-purple-800/80 bg-purple-50/40 dark:bg-purple-950/30 space-y-3">
+                  
+                  <!-- Locked banner when visitor/viewer -->
+                  <div id="settingAdminLockedNotice" class="hidden p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-amber-600 text-xs shrink-0"></i>
+                    <span>These settings require administrator privileges. Sign in with an admin account to configure.</span>
                   </div>
 
-                  <!-- Require Login Switch in Settings -->
-                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-200 dark:border-purple-900/60 shadow-xs">
-                    <div>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
-                      <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireLoginToggle">
-                      <input type="checkbox" id="settingRequireLoginToggle" class="sr-only" checked>
-                      <div class="custom-toggle-track toggle-purple">
-                        <div class="custom-toggle-thumb"></div>
+                  <div class="space-y-2.5" id="settingAdminControlsContainer">
+                    <div class="flex items-center justify-between">
+                      <div class="space-y-0.5">
+                        <span class="font-bold text-slate-900 dark:text-white block text-xs">Dashboard Access Control</span>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Manage security policies and authorized access</p>
                       </div>
-                    </label>
-                  </div>
-
-                  <!-- Admin Approval Switch in Settings -->
-                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-900/60 shadow-xs">
-                    <div>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
-                      <span class="text-[10px] text-slate-400">Require admin approval for new users</span>
+                      <span id="settingUserCountBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">1 User</span>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireApprovalToggle">
-                      <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only">
-                      <div class="custom-toggle-track toggle-emerald">
-                        <div class="custom-toggle-thumb"></div>
-                      </div>
-                    </label>
-                  </div>
 
-                  <!-- Email Verification Switch in Settings -->
-                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-900/60 shadow-xs">
-                    <div>
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
-                      <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
+                    <!-- Require Login Switch in Settings -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-900/60 shadow-xs">
+                      <div>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
+                        <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireLoginToggle">
+                        <input type="checkbox" id="settingRequireLoginToggle" class="sr-only" checked>
+                        <div class="custom-toggle-track toggle-purple">
+                          <div class="custom-toggle-thumb"></div>
+                        </div>
+                      </label>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireEmailVerificationToggle">
-                      <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only">
-                      <div class="custom-toggle-track toggle-blue">
-                        <div class="custom-toggle-thumb"></div>
-                      </div>
-                    </label>
-                  </div>
 
-                  <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-user-gear text-xs"></i>
-                    <span>Open User Management Panel</span>
-                  </button>
+                    <!-- Admin Approval Switch in Settings -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/60 shadow-xs">
+                      <div>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
+                        <span class="text-[10px] text-slate-400">Require admin approval for new user signups</span>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireApprovalToggle">
+                        <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only">
+                        <div class="custom-toggle-track toggle-emerald">
+                          <div class="custom-toggle-thumb"></div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <!-- Email Verification Switch in Settings -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/60 shadow-xs">
+                      <div>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
+                        <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireEmailVerificationToggle">
+                        <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only">
+                        <div class="custom-toggle-track toggle-blue">
+                          <div class="custom-toggle-thumb"></div>
+                        </div>
+                      </label>
+                    </div>
+
+                    <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-purple-600/20 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                      <i class="fa-solid fa-user-gear text-xs"></i>
+                      <span>Open User Management Panel</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

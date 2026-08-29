@@ -3204,6 +3204,54 @@ app.post('/api/user-auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 
+// 4.1. Get User Favorite / Popular Routes
+app.get('/api/user-auth/popular-routes', (req, res) => {
+  const defaultRoutes = [
+    { from: 'Dhaka', to: 'Chattogram', label: 'Dhaka ⇄ Ctg' },
+    { from: 'Dhaka', to: "Cox's Bazar", label: "Dhaka ⇄ Cox's Bazar" },
+    { from: 'Dhaka', to: 'Sylhet', label: 'Dhaka ⇄ Sylhet' },
+    { from: 'Dhaka', to: 'Rajshahi', label: 'Dhaka ⇄ Rajshahi' },
+    { from: 'Dhaka', to: 'Khulna', label: 'Dhaka ⇄ Khulna' },
+    { from: 'Dhaka', to: 'Rangpur', label: 'Dhaka ⇄ Rangpur' }
+  ];
+
+  const session = getAuthenticatedUser(req);
+  if (session) {
+    const data = loadUsersData();
+    const user = data.users.find(u => u.id === session.userId);
+    if (user && Array.isArray(user.popular_routes) && user.popular_routes.length > 0) {
+      return res.json({ success: true, routes: user.popular_routes });
+    }
+  }
+  res.json({ success: true, routes: defaultRoutes });
+});
+
+// 4.2. Update User Favorite / Popular Routes
+app.post('/api/user-auth/popular-routes', (req, res) => {
+  const { routes } = req.body;
+  if (!Array.isArray(routes)) {
+    return res.status(400).json({ success: false, error: 'Routes array is required.' });
+  }
+
+  const cleanRoutes = routes.slice(0, 30).map(r => ({
+    from: String(r.from || '').trim(),
+    to: String(r.to || '').trim(),
+    label: String(r.label || `${r.from} ⇄ ${r.to}`).trim()
+  })).filter(r => r.from && r.to);
+
+  const session = getAuthenticatedUser(req);
+  if (session) {
+    const data = loadUsersData();
+    const user = data.users.find(u => u.id === session.userId);
+    if (user) {
+      user.popular_routes = cleanRoutes;
+      saveUsersData(data);
+    }
+  }
+
+  res.json({ success: true, routes: cleanRoutes });
+});
+
 // Middleware to enforce Admin-only role for User Management
 function requireAdmin(req, res, next) {
   const session = getAuthenticatedUser(req);

@@ -39,8 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
     requireEmailVerification: false,
     allowRegistration: true,
     authNotice: '',
-    authNoticeEnabled: true
+    authNoticeEnabled: true,
+    popularRoutes: [
+      { from: 'Dhaka', to: 'Chattogram', label: 'Dhaka ⇄ Ctg' },
+      { from: 'Dhaka', to: "Cox's Bazar", label: "Dhaka ⇄ Cox's Bazar" },
+      { from: 'Dhaka', to: 'Sylhet', label: 'Dhaka ⇄ Sylhet' },
+      { from: 'Dhaka', to: 'Rajshahi', label: 'Dhaka ⇄ Rajshahi' },
+      { from: 'Dhaka', to: 'Khulna', label: 'Dhaka ⇄ Khulna' },
+      { from: 'Dhaka', to: 'Rangpur', label: 'Dhaka ⇄ Rangpur' }
+    ]
   };
+
+  // Load stored custom popular routes from localStorage
+  try {
+    const savedRoutes = localStorage.getItem('rail_custom_popular_routes');
+    if (savedRoutes) {
+      const parsed = JSON.parse(savedRoutes);
+      if (Array.isArray(parsed) && parsed.length > 0) state.popularRoutes = parsed;
+    }
+  } catch (e) {}
 
   // Load stored alert notifications from localStorage
   try {
@@ -241,6 +258,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingAdminTabBtn = document.getElementById('settingAdminTabBtn');
   const settingAdminSection = document.getElementById('settingAdminSection');
   const settingAuthActionBtn = document.getElementById('settingAuthActionBtn');
+
+  // Custom Popular Routes Elements
+  const popularRoutesContainer = document.getElementById('popularRoutesContainer');
+  const saveCurrentRouteChipBtn = document.getElementById('saveCurrentRouteChipBtn');
+  const managePopularRoutesBtn = document.getElementById('managePopularRoutesBtn');
+  const profileSavedRoutesList = document.getElementById('profileSavedRoutesList');
+  const savedRoutesCountBadge = document.getElementById('savedRoutesCountBadge');
+  const addRouteFromInput = document.getElementById('addRouteFromInput');
+  const addRouteFromSuggest = document.getElementById('addRouteFromSuggest');
+  const addRouteToInput = document.getElementById('addRouteToInput');
+  const addRouteToSuggest = document.getElementById('addRouteToSuggest');
+  const addNewCustomRouteBtn = document.getElementById('addNewCustomRouteBtn');
+  const resetDefaultRoutesBtn = document.getElementById('resetDefaultRoutesBtn');
 
   // User Management, Auth & Account Elements
   const headerSignInBtn = document.getElementById('headerSignInBtn');
@@ -520,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStations();
   fetchTrainsCatalog();
   checkRailwaySessionStatus();
+  loadPopularRoutesFromServer();
   setupEventListeners();
 
   // ----------------------------------------------------
@@ -1848,26 +1879,269 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.querySelectorAll('.quick-route-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const from = chip.dataset.from;
-      const to = chip.dataset.to;
-      fromStationInput.value = from;
-      toStationInput.value = to;
-      state.selectedFrom = from;
-      state.selectedTo = to;
-      clearFromBtn.classList.remove('hidden');
-      clearToBtn.classList.remove('hidden');
-
-      // Highlight active selected chip
-      document.querySelectorAll('.quick-route-chip').forEach(c => {
-        c.className = 'quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition shadow-2xs';
+  // ----------------------------------------------------
+  // Popular / Custom Quick Routes System
+  // ----------------------------------------------------
+  async function loadPopularRoutesFromServer() {
+    try {
+      const res = await fetch('/api/user-auth/popular-routes', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('railway_auth_token') || ''}` }
       });
-      chip.className = 'quick-route-chip px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white border border-emerald-500 shadow-xs transition';
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.routes) && data.routes.length > 0) {
+          state.popularRoutes = data.routes;
+          localStorage.setItem('rail_custom_popular_routes', JSON.stringify(state.popularRoutes));
+        }
+      }
+    } catch (e) {
+      console.warn('[PopularRoutes] Failed to sync from server:', e.message);
+    }
+    renderPopularRoutes();
+    renderProfilePopularRoutes();
+  }
 
-      executeSearch();
+  async function savePopularRoutes(routes) {
+    state.popularRoutes = routes;
+    try {
+      localStorage.setItem('rail_custom_popular_routes', JSON.stringify(routes));
+    } catch (e) {}
+
+    renderPopularRoutes();
+    renderProfilePopularRoutes();
+
+    if (state.currentUser) {
+      try {
+        await fetch('/api/user-auth/popular-routes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('railway_auth_token') || ''}`
+          },
+          body: JSON.stringify({ routes })
+        });
+      } catch (e) {
+        console.warn('[PopularRoutes] Failed to save to server:', e.message);
+      }
+    }
+  }
+
+  function renderPopularRoutes() {
+    if (!popularRoutesContainer) return;
+    if (!state.popularRoutes || state.popularRoutes.length === 0) {
+      popularRoutesContainer.innerHTML = `<span class="text-[10px] text-slate-400 italic">No quick routes saved.</span>`;
+      return;
+    }
+
+    popularRoutesContainer.innerHTML = state.popularRoutes.map(r => {
+      const isSelected = (state.selectedFrom && state.selectedTo && 
+        state.selectedFrom.toLowerCase() === r.from.toLowerCase() && 
+        state.selectedTo.toLowerCase() === r.to.toLowerCase());
+
+      const activeClass = isSelected
+        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700';
+
+      return `
+        <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold border-2 transition cursor-pointer shrink-0 ${activeClass}" 
+          data-from="${r.from}" data-to="${r.to}">
+          ${r.label || `${r.from} ⇄ ${r.to}`}
+        </button>
+      `;
+    }).join('');
+
+    popularRoutesContainer.querySelectorAll('.quick-route-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const from = chip.dataset.from;
+        const to = chip.dataset.to;
+        fromStationInput.value = from;
+        toStationInput.value = to;
+        state.selectedFrom = from;
+        state.selectedTo = to;
+        clearFromBtn.classList.remove('hidden');
+        clearToBtn.classList.remove('hidden');
+
+        renderPopularRoutes();
+        executeSearch();
+      });
     });
-  });
+  }
+
+  function renderProfilePopularRoutes() {
+    if (!profileSavedRoutesList) return;
+    if (savedRoutesCountBadge) {
+      savedRoutesCountBadge.textContent = `${state.popularRoutes.length} route${state.popularRoutes.length === 1 ? '' : 's'}`;
+    }
+
+    if (!state.popularRoutes || state.popularRoutes.length === 0) {
+      profileSavedRoutesList.innerHTML = `<p class="text-[11px] text-slate-400 p-2 italic w-full text-center">No saved routes yet. Add your frequent stations below.</p>`;
+      return;
+    }
+
+    profileSavedRoutesList.innerHTML = state.popularRoutes.map((r, idx) => `
+      <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold shadow-2xs">
+        <span class="text-slate-800 dark:text-slate-200 font-mono">${r.from} ➔ ${r.to}</span>
+        <button type="button" class="delete-popular-route-btn text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 p-0.5 rounded-full transition cursor-pointer ml-1" data-idx="${idx}" title="Delete ${r.from} ➔ ${r.to}">
+          <i class="fa-solid fa-xmark text-[10px]"></i>
+        </button>
+      </div>
+    `).join('');
+
+    profileSavedRoutesList.querySelectorAll('.delete-popular-route-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < state.popularRoutes.length) {
+          const removed = state.popularRoutes[idx];
+          const newRoutes = state.popularRoutes.filter((_, i) => i !== idx);
+          savePopularRoutes(newRoutes);
+          showToast(`Deleted ${removed.from} ⇄ ${removed.to} from Quick Select.`, 'info');
+        }
+      });
+    });
+  }
+
+  function setupProfileStationSuggest(inputEl, dropdownEl) {
+    if (!inputEl || !dropdownEl) return;
+    inputEl.addEventListener('input', () => {
+      const query = inputEl.value.trim().toLowerCase();
+      if (!query) {
+        dropdownEl.classList.add('hidden');
+        dropdownEl.innerHTML = '';
+        return;
+      }
+      let aliasMatches = [];
+      if (STATION_ALIASES[query]) {
+        const canonical = STATION_ALIASES[query];
+        const sObj = state.stations.find(s => s.name.toLowerCase() === canonical.toLowerCase());
+        if (sObj) aliasMatches.push(sObj);
+      }
+      const otherMatches = state.stations.filter(s =>
+        s.name.toLowerCase().includes(query) ||
+        (s.display_name && s.display_name.toLowerCase().includes(query))
+      );
+      const matches = Array.from(new Set([...aliasMatches, ...otherMatches])).slice(0, 8);
+      if (matches.length === 0) {
+        dropdownEl.classList.add('hidden');
+        return;
+      }
+      dropdownEl.innerHTML = matches.map(s => `
+        <div class="px-2.5 py-1.5 cursor-pointer hover:bg-indigo-50 dark:hover:bg-slate-800 flex items-center justify-between text-xs transition" data-name="${s.name}">
+          <span class="font-bold text-slate-800 dark:text-slate-100">${s.name}</span>
+          <span class="text-[10px] text-slate-400 font-mono">${s.display_name || ''}</span>
+        </div>
+      `).join('');
+      dropdownEl.classList.remove('hidden');
+      dropdownEl.querySelectorAll('div[data-name]').forEach(item => {
+        item.addEventListener('click', () => {
+          inputEl.value = item.dataset.name;
+          dropdownEl.classList.add('hidden');
+        });
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+        dropdownEl.classList.add('hidden');
+      }
+    });
+  }
+
+  setupProfileStationSuggest(addRouteFromInput, addRouteFromSuggest);
+  setupProfileStationSuggest(addRouteToInput, addRouteToSuggest);
+
+  if (addNewCustomRouteBtn) {
+    addNewCustomRouteBtn.addEventListener('click', () => {
+      const rawFrom = addRouteFromInput ? addRouteFromInput.value.trim() : '';
+      const rawTo = addRouteToInput ? addRouteToInput.value.trim() : '';
+      const from = getCanonicalStationName(rawFrom);
+      const to = getCanonicalStationName(rawTo);
+
+      if (!from || !to) {
+        showToast('Please specify both From and To stations.', 'error');
+        return;
+      }
+      if (from.toLowerCase() === to.toLowerCase()) {
+        showToast('Departure and destination stations cannot be identical.', 'error');
+        return;
+      }
+
+      const exists = state.popularRoutes.some(r => 
+        r.from.toLowerCase() === from.toLowerCase() && r.to.toLowerCase() === to.toLowerCase()
+      );
+      if (exists) {
+        showToast(`Route ${from} ⇄ ${to} is already in your Quick Select list.`, 'warning');
+        return;
+      }
+
+      const newRoute = { from, to, label: `${from} ⇄ ${to}` };
+      const newRoutes = [...state.popularRoutes, newRoute];
+      savePopularRoutes(newRoutes);
+
+      if (addRouteFromInput) addRouteFromInput.value = '';
+      if (addRouteToInput) addRouteToInput.value = '';
+      showToast(`Added ${from} ⇄ ${to} to Quick Select!`, 'success');
+    });
+  }
+
+  if (resetDefaultRoutesBtn) {
+    resetDefaultRoutesBtn.addEventListener('click', () => {
+      const defaultRoutes = [
+        { from: 'Dhaka', to: 'Chattogram', label: 'Dhaka ⇄ Ctg' },
+        { from: 'Dhaka', to: "Cox's Bazar", label: "Dhaka ⇄ Cox's Bazar" },
+        { from: 'Dhaka', to: 'Sylhet', label: 'Dhaka ⇄ Sylhet' },
+        { from: 'Dhaka', to: 'Rajshahi', label: 'Dhaka ⇄ Rajshahi' },
+        { from: 'Dhaka', to: 'Khulna', label: 'Dhaka ⇄ Khulna' },
+        { from: 'Dhaka', to: 'Rangpur', label: 'Dhaka ⇄ Rangpur' }
+      ];
+      savePopularRoutes(defaultRoutes);
+      showToast('Restored default Bangladesh popular routes.', 'info');
+    });
+  }
+
+  if (saveCurrentRouteChipBtn) {
+    saveCurrentRouteChipBtn.addEventListener('click', () => {
+      const rawFrom = fromStationInput ? fromStationInput.value.trim() : '';
+      const rawTo = toStationInput ? toStationInput.value.trim() : '';
+      const from = state.selectedFrom || getCanonicalStationName(rawFrom);
+      const to = state.selectedTo || getCanonicalStationName(rawTo);
+
+      if (!from || !to) {
+        showToast('Please select From and To stations on the search card first.', 'warning');
+        return;
+      }
+      if (from.toLowerCase() === to.toLowerCase()) {
+        showToast('Departure and destination stations cannot be identical.', 'error');
+        return;
+      }
+
+      const exists = state.popularRoutes.some(r => 
+        r.from.toLowerCase() === from.toLowerCase() && r.to.toLowerCase() === to.toLowerCase()
+      );
+      if (exists) {
+        showToast(`Route ${from} ⇄ ${to} is already in your Quick Select list.`, 'info');
+        return;
+      }
+
+      const newRoute = { from, to, label: `${from} ⇄ ${to}` };
+      const newRoutes = [...state.popularRoutes, newRoute];
+      savePopularRoutes(newRoutes);
+      showToast(`Saved ${from} ⇄ ${to} to Quick Select!`, 'success');
+    });
+  }
+
+  if (managePopularRoutesBtn) {
+    managePopularRoutesBtn.addEventListener('click', () => {
+      if (settingsMenuBtn && settingsDropdown) {
+        settingsDropdown.classList.remove('hidden');
+        // Activate account tab
+        const accountTab = document.querySelector('.setting-cat-tab[data-cat="account"]');
+        if (accountTab) accountTab.click();
+        if (profileSavedRoutesList) {
+          profileSavedRoutesList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+  }
 
   // ----------------------------------------------------
   // Search & API Execution (Fast Direct Search by Default, On-Demand Deep Search)
@@ -4911,8 +5185,9 @@ document.addEventListener('DOMContentLoaded', () => {
           settingAuthActionBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border border-rose-300 dark:border-rose-800 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 shrink-0';
         }
 
-        // Load user-wise 24/7 background radar targets
+        // Load user-wise 24/7 background radar targets & popular routes
         loadUserWatchlistFromServer();
+        loadPopularRoutesFromServer();
       } else {
         state.currentUser = null;
 

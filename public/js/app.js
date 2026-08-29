@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const trainFilterSelect = document.getElementById('trainFilterSelect');
   const classFilterSelect = document.getElementById('classFilterSelect');
   const searchSubmitBtn = document.getElementById('searchSubmitBtn');
+  const deepSearchSubmitBtn = document.getElementById('deepSearchSubmitBtn');
   
   const trackerBar = document.getElementById('trackerBar');
   const activeFromBadge = document.getElementById('activeFromBadge');
@@ -1854,7 +1855,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ----------------------------------------------------
-  // Search & API Execution (Strictly Live Shohoz)
+  // Search & API Execution (Fast Direct Search by Default, On-Demand Deep Search)
   // ----------------------------------------------------
   searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -1876,18 +1877,45 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    executeSearch();
+    // Default fast direct search (checkAlternates = false to reduce server API queries)
+    executeSearch(false, false);
   });
+
+  // Deep Search Button (Explicitly queries Same-Train Stoppages & Junction Alternate Routes)
+  if (deepSearchSubmitBtn) {
+    deepSearchSubmitBtn.addEventListener('click', () => {
+      const rawFrom = fromStationInput.value.trim();
+      const rawTo = toStationInput.value.trim();
+      state.selectedFrom = getCanonicalStationName(rawFrom);
+      state.selectedTo = getCanonicalStationName(rawTo);
+      fromStationInput.value = state.selectedFrom;
+      toStationInput.value = state.selectedTo;
+      state.selectedDate = journeyDateInput.value;
+
+      if (!state.selectedFrom || !state.selectedTo) {
+        showToast('Please select both departure and destination stations.', 'error');
+        return;
+      }
+
+      if (state.selectedFrom.toLowerCase() === state.selectedTo.toLowerCase()) {
+        showToast('Departure and Destination stations cannot be the same.', 'error');
+        return;
+      }
+
+      // Explicit Deep Search request
+      executeSearch(false, true);
+    });
+  }
 
   manualRefreshBtn.addEventListener('click', () => {
     if (!state.selectedFrom || !state.selectedTo) return;
     refreshIcon.classList.add('animate-spin-fast');
-    executeSearch().finally(() => {
+    executeSearch(false, false).finally(() => {
       setTimeout(() => refreshIcon.classList.remove('animate-spin-fast'), 600);
     });
   });
 
-  async function executeSearch(isSilent = false) {
+  async function executeSearch(isSilent = false, checkAlternates = false) {
     if (state.isLoading) return;
 
     if (!state.isAuthenticated) {
@@ -1903,13 +1931,25 @@ document.addEventListener('DOMContentLoaded', () => {
       loadingIndicator.classList.remove('hidden');
       trainsGrid.innerHTML = '';
       trainsTableView.classList.add('hidden');
-      searchSubmitBtn.disabled = true;
-      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>Finding Train...</span>';
+      if (alternateRoutesContainer) {
+        alternateRoutesContainer.classList.add('hidden');
+        alternateRoutesContainer.innerHTML = '';
+      }
+
+      if (checkAlternates && deepSearchSubmitBtn) {
+        deepSearchSubmitBtn.disabled = true;
+        deepSearchSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-xs"></i><span class="whitespace-nowrap">Deep Scanning...</span>';
+        searchSubmitBtn.disabled = true;
+      } else {
+        searchSubmitBtn.disabled = true;
+        searchSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-xs"></i><span class="whitespace-nowrap">Finding Train...</span>';
+        if (deepSearchSubmitBtn) deepSearchSubmitBtn.disabled = true;
+      }
     }
 
     try {
       const token = getAuthToken();
-      const url = `/api/search?from_city=${encodeURIComponent(state.selectedFrom)}&to_city=${encodeURIComponent(state.selectedTo)}&date_of_journey=${encodeURIComponent(state.selectedDate)}`;
+      const url = `/api/search?from_city=${encodeURIComponent(state.selectedFrom)}&to_city=${encodeURIComponent(state.selectedTo)}&date_of_journey=${encodeURIComponent(state.selectedDate)}&check_alternates=${checkAlternates ? 'true' : 'false'}`;
       const res = await fetch(url, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
@@ -1917,7 +1957,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       loadingIndicator.classList.add('hidden');
       searchSubmitBtn.disabled = false;
-      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Find Trains</span>';
+      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass text-xs"></i><span class="whitespace-nowrap">Find Trains</span>';
+      if (deepSearchSubmitBtn) {
+        deepSearchSubmitBtn.disabled = false;
+        deepSearchSubmitBtn.innerHTML = '<i class="fa-solid fa-bolt text-amber-300 text-xs"></i><span class="whitespace-nowrap">Deep Search</span>';
+      }
       state.isLoading = false;
 
       // Handle Session Expiration / Authentication Failure
@@ -1989,14 +2033,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       detectSeatChanges(data.trains);
       state.lastSearchData = data;
-      renderResults(data);
+      renderResults(data, checkAlternates);
       updateTrackerBar(data);
 
     } catch (err) {
       console.error('Live search error:', err);
       loadingIndicator.classList.add('hidden');
       searchSubmitBtn.disabled = false;
-      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><span>Find Trains</span>';
+      searchSubmitBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass text-xs"></i><span class="whitespace-nowrap">Find Trains</span>';
+      if (deepSearchSubmitBtn) {
+        deepSearchSubmitBtn.disabled = false;
+        deepSearchSubmitBtn.innerHTML = '<i class="fa-solid fa-bolt text-amber-300 text-xs"></i><span class="whitespace-nowrap">Deep Search</span>';
+      }
       state.isLoading = false;
       showToast('Network error while querying live Bangladesh Railway servers.', 'error');
     }
@@ -2178,7 +2226,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Rendering Live Results
   // ----------------------------------------------------
-  function renderResults(data) {
+  function renderResults(data, requestedAlternates = false) {
     const trains = data.trains || [];
 
     // Filter by Train if selected
@@ -2222,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', () => {
           state.selectedClass = 'ALL';
           trainFilterSelect.value = 'ALL';
           classFilterSelect.value = 'ALL';
-          renderResults(data);
+          renderResults(data, requestedAlternates);
         });
       }
       return;
@@ -2241,12 +2289,57 @@ document.addEventListener('DOMContentLoaded', () => {
       trainsTableView.classList.remove('hidden');
     }
 
-    renderAlternateRoutes(data.alternate_routes);
+    const totalDirectSeats = trains.reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
+
+    // If alternate routes are returned from Deep Search, render them
+    if (data.alternate_routes && data.alternate_routes.length > 0) {
+      renderAlternateRoutes(data.alternate_routes);
+    } else if (totalDirectSeats === 0 && !requestedAlternates) {
+      // Direct seats are sold out, present on-demand Deep Search CTA prompt
+      renderDeepSearchPrompt();
+    } else {
+      if (alternateRoutesContainer) {
+        alternateRoutesContainer.classList.add('hidden');
+        alternateRoutesContainer.innerHTML = '';
+      }
+    }
   }
 
   // ----------------------------------------------------
-  // Render Smart Alternate Junction & Split-Journey Routes
+  // On-Demand Deep Search Prompt Banner (When Direct is 0)
   // ----------------------------------------------------
+  function renderDeepSearchPrompt() {
+    if (!alternateRoutesContainer) return;
+    alternateRoutesContainer.classList.remove('hidden');
+    alternateRoutesContainer.innerHTML = `
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-purple-950/50 border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md animate-fade-in">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">
+            <i class="fa-solid fa-bolt text-amber-300"></i>
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-extrabold text-sm text-white flex items-center space-x-2">
+              <span>Direct End-to-End Seats Are Sold Out</span>
+            </h4>
+            <p class="text-[11px] text-indigo-200/80">Scan intermediate stoppage quotas on the <b>SAME TRAIN</b> or junction connections to find available seats.</p>
+          </div>
+        </div>
+        <button type="button" id="triggerDeepSearchFromPromptBtn" 
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/25 flex items-center space-x-1.5 transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0">
+          <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
+          <span>Run Deep Search ⚡</span>
+        </button>
+      </div>
+    `;
+
+    const promptBtn = document.getElementById('triggerDeepSearchFromPromptBtn');
+    if (promptBtn) {
+      promptBtn.addEventListener('click', () => {
+        executeSearch(false, true);
+      });
+    }
+  }
+
   // ----------------------------------------------------
   // Render Smart Alternate Junction & Same-Train Split Routes
   // ----------------------------------------------------

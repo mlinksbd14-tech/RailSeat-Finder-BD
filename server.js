@@ -1653,17 +1653,46 @@ app.get('/api/search', async (req, res) => {
   const session = getUserShohozSession(req);
   const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
 
-  // If direct trains are completely sold out, check for same-train intermediate stoppage & junction split routes
-  const totalDirectSeats = (result.trains || []).reduce((sum, t) => sum + (t.total_combined_seats || 0), 0);
-  if (result.success && totalDirectSeats === 0 && check_alternates !== 'false') {
+  // Smart Alternate Junction Routes are only queried when explicitly requested via Deep Search (check_alternates=true)
+  if (result.success && check_alternates === 'true') {
     try {
       result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session, result.trains || []);
     } catch (altErr) {
       result.alternate_routes = [];
     }
+  } else {
+    result.alternate_routes = [];
   }
 
   return res.json(result);
+});
+
+// Dedicated On-Demand Alternate Junction & Same-Train Split Routes Endpoint
+app.get('/api/alternate-routes', async (req, res) => {
+  const { from_city, to_city, date_of_journey } = req.query;
+
+  if (!from_city || !to_city || !date_of_journey) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters: from_city, to_city, date_of_journey are required.'
+    });
+  }
+
+  const session = getUserShohozSession(req);
+  try {
+    const alternateRoutes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session);
+    return res.json({
+      success: true,
+      route: { from: from_city, to: to_city, date: date_of_journey },
+      alternate_routes: alternateRoutes
+    });
+  } catch (err) {
+    return res.json({
+      success: false,
+      error: err.message,
+      alternate_routes: []
+    });
+  }
 });
 
 // 3. Dynamic Next 10-Days Matrix Search (Multi-Date Batch Engine)

@@ -2544,9 +2544,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
-                title="View Train Stops & Schedule">
+                title="View Train Route & Schedule">
                 <i class="fa-solid fa-route text-emerald-500 text-[10px]"></i>
-                <span>Stops</span>
+                <span>Routes</span>
               </button>
 
               <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 transition cursor-pointer"

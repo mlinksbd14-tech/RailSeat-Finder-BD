@@ -4237,7 +4237,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     watchlistItemsContainer.innerHTML = state.watchlist.map(item => {
       const datesList = Array.isArray(item.dates) && item.dates.length > 0 ? item.dates : [item.date];
-      const datesBadges = datesList.map(d => formatShohozDoj(d)).join(', ');
+      const datesBadges = datesList.map(d => `
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700">
+          <i class="fa-regular fa-calendar text-[9px] mr-1 text-emerald-600 dark:text-emerald-400"></i>${formatShohozDoj(d)}
+        </span>
+      `).join(' ');
 
       return `
         <div class="py-3 flex items-center justify-between gap-2">
@@ -4245,17 +4249,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="toggle-watch-btn w-6 h-6 rounded-full flex items-center justify-center text-xs transition ${item.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" data-id="${item.id}" title="${item.active ? 'Active (Click to Pause)' : 'Paused (Click to Resume)'}">
               <i class="fa-solid ${item.active ? 'fa-check' : 'fa-pause'} text-[10px]"></i>
             </button>
-            <div class="min-w-0">
-              <div class="flex items-center space-x-1.5 flex-wrap">
+            <div class="min-w-0 space-y-1">
+              <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                 <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${item.trainName}</h5>
                 <span class="text-[10px] font-mono text-slate-400 font-bold">#${item.trainModel}</span>
                 <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${item.className === 'ANY' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}">${item.className}</span>
                 <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">≥ ${item.minSeats} seats</span>
-                ${datesList.length > 1 ? `<span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-mono">${datesList.length} Dates</span>` : ''}
+                ${datesList.length > 1 ? `<span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-mono">${datesList.length} Dates Monitored</span>` : ''}
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                ${item.fromCity} ➔ ${item.toCity} &bull; <span class="text-slate-700 dark:text-slate-300">${datesBadges}</span>
-              </p>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                <span>${item.fromCity} ➔ ${item.toCity}</span>
+              </div>
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                ${datesBadges}
+              </div>
             </div>
           </div>
           <div class="flex items-center space-x-1 shrink-0">

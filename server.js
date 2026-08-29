@@ -3972,10 +3972,11 @@ app.get('/api/radar/watchlist', (req, res) => {
 // 3. Add or Update Radar Target
 app.post('/api/radar/watchlist/add', (req, res) => {
   const session = getAuthenticatedUser(req);
-  const { fromCity, toCity, date, trainName, trainModel, className, minSeats, telegramChatId, telegramUsername } = req.body;
+  const { fromCity, toCity, date, dates, trainName, trainModel, className, minSeats, telegramChatId, telegramUsername } = req.body;
 
-  if (!fromCity || !toCity || !date) {
-    return res.json({ success: false, error: 'fromCity, toCity, and date are required.' });
+  const targetDates = Array.isArray(dates) && dates.length > 0 ? dates : (date ? [date] : []);
+  if (!fromCity || !toCity || targetDates.length === 0) {
+    return res.json({ success: false, error: 'fromCity, toCity, and at least one travel date are required.' });
   }
 
   const radarData = loadRadarData();
@@ -3985,7 +3986,8 @@ app.post('/api/radar/watchlist/add', (req, res) => {
     username: session ? session.username : 'guest',
     fromCity: fromCity.trim().toUpperCase(),
     toCity: toCity.trim().toUpperCase(),
-    date: date.trim(),
+    date: targetDates[0].trim(),
+    dates: targetDates.map(d => String(d).trim()),
     trainName: (trainName || 'ALL').trim(),
     trainModel: trainModel || null,
     className: className || 'ANY',
@@ -3994,6 +3996,7 @@ app.post('/api/radar/watchlist/add', (req, res) => {
     telegramUsername: telegramUsername || null,
     active: true,
     lastNotifiedSeats: 0,
+    notifiedSeatsByDate: {},
     lastCheckedAt: null,
     createdAt: new Date().toISOString()
   };
@@ -4001,7 +4004,7 @@ app.post('/api/radar/watchlist/add', (req, res) => {
   radarData.targets.push(newTarget);
   saveRadarData(radarData);
 
-  console.log(`[Radar] ➕ Added target: ${newTarget.trainName} on ${newTarget.fromCity} ➔ ${newTarget.toCity} (${newTarget.date})`);
+  console.log(`[Radar] ➕ Added target: ${newTarget.trainName} on ${newTarget.fromCity} ➔ ${newTarget.toCity} (${newTarget.dates.join(', ')})`);
 
   // Trigger instant scan cycle
   setTimeout(runBackgroundRadarCycle, 500);
@@ -4032,14 +4035,19 @@ app.post('/api/radar/watchlist/sync', (req, res) => {
   }
 
   for (const t of targets) {
-    if (!t.fromCity || !t.toCity || !t.date) continue;
+    const targetDates = Array.isArray(t.dates) && t.dates.length > 0 
+      ? t.dates 
+      : (t.date ? [t.date] : []);
+    if (!t.fromCity || !t.toCity || targetDates.length === 0) continue;
+
     radarData.targets.push({
       id: t.id || ('radar_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
       userId: session ? session.userId : null,
       username: session ? session.username : 'guest',
       fromCity: (t.fromCity || '').trim().toUpperCase(),
       toCity: (t.toCity || '').trim().toUpperCase(),
-      date: (t.date || '').trim(),
+      date: targetDates[0].trim(),
+      dates: targetDates.map(d => String(d).trim()),
       trainName: (t.trainName || 'ALL').trim(),
       trainModel: t.trainModel || null,
       className: t.className || 'ANY',
@@ -4048,7 +4056,8 @@ app.post('/api/radar/watchlist/sync', (req, res) => {
       telegramUsername: t.telegramUsername || telegramUsername || null,
       active: t.active !== false,
       lastNotifiedSeats: t.lastNotifiedSeats || 0,
-      lastCheckedAt: null,
+      notifiedSeatsByDate: t.notifiedSeatsByDate || {},
+      lastCheckedAt: t.lastCheckedAt || null,
       createdAt: t.createdAt || new Date().toISOString()
     });
   }

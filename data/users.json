@@ -182,8 +182,25 @@
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODc5NzgyNjgsImV4cCI6MTc4ODAyMTQ2OCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4Nzk3ODI2OCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.if_MjHM5tfqr_Y0dL9g8XBCAUl4gy1fPTtFyEhb4NIiEeI53JlQXlRsaZPN8LwQJjXWTczRdOGpUSXpBfEGTMMGAcapiE84Lie-IG5vE9NFBNHsNGHyLpMUWjiPFfj4Y2qMLG4Zyg5gaRVzmPiJv7etYBRNE8fCJP3Lri5X_Xzk2waw_XyXWR2tm8e5CMxf1LU11Mwv77MFnh56GNndcMhDzjIMIcuS2Z-E3dUHbgK2cY90WdUPvdWvfjjPT79mq4Yk-vR7HfCdxf58Ob9iScFF84qWjcUICKX43dsiOvYQ9JZbxS8fXrN76JUxdX2SSNszH1oRfKdGGSgcyf4Db1Q"
       },
       "lastIp": "::1",
-      "lastLogin": "2026-08-29T05:27:28.792Z",
+      "lastLogin": "2026-08-29T07:23:01.310Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-29T07:23:01.310Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 151",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-29T05:27:28.792Z",
@@ -538,17 +555,9 @@
           "device": "Desktop",
           "os": "Unknown OS",
           "browser": "Unknown Browser"
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-27T11:32:57.090Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 151"
         }
       ],
-      "loginCount": 27
+      "loginCount": 28
     }
   ]
 }

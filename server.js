@@ -3729,15 +3729,24 @@ async function runBackgroundRadarCycle() {
   radarData.settings.lastRunAt = new Date().toISOString();
 
   try {
-    // Group active targets by unique route (fromCity, toCity, date)
+    // Group active targets by unique route (fromCity, toCity, date) supporting multi-date targets
     const routeGroups = new Map();
     for (const target of activeTargets) {
-      if (!target.fromCity || !target.toCity || !target.date) continue;
-      const key = `${target.fromCity.toUpperCase().trim()}___${target.toCity.toUpperCase().trim()}___${target.date.trim()}`;
-      if (!routeGroups.has(key)) {
-        routeGroups.set(key, []);
+      if (!target.fromCity || !target.toCity) continue;
+      const targetDates = Array.isArray(target.dates) && target.dates.length > 0
+        ? target.dates
+        : (target.date ? [target.date] : []);
+
+      if (targetDates.length === 0) continue;
+
+      for (const d of targetDates) {
+        if (!d) continue;
+        const key = `${target.fromCity.toUpperCase().trim()}___${target.toCity.toUpperCase().trim()}___${d.trim()}`;
+        if (!routeGroups.has(key)) {
+          routeGroups.set(key, []);
+        }
+        routeGroups.get(key).push(target);
       }
-      routeGroups.get(key).push(target);
     }
 
     for (const [routeKey, targets] of routeGroups.entries()) {
@@ -3756,6 +3765,7 @@ async function runBackgroundRadarCycle() {
 
         for (const target of targets) {
           target.lastCheckedAt = new Date().toISOString();
+          target.notifiedSeatsByDate = target.notifiedSeatsByDate || {};
 
           // Match train
           const matchingTrains = trains.filter(t => {
@@ -3772,17 +3782,21 @@ async function runBackgroundRadarCycle() {
 
               const availableSeats = Number(st.seats_available || 0) + Number(st.counter_seats_available || 0);
               const minSeats = Number(target.minSeats) || 1;
+              const lastNotified = target.notifiedSeatsByDate[dateOfJourney] !== undefined
+                ? target.notifiedSeatsByDate[dateOfJourney]
+                : target.lastNotifiedSeats;
 
               if (availableSeats >= minSeats) {
-                // Check if already notified for this exact seat count
-                if (target.lastNotifiedSeats !== availableSeats) {
-                  const wasSoldOut = (target.lastNotifiedSeats === 0 || target.lastNotifiedSeats === undefined);
+                // Check if already notified for this exact seat count on this journey date
+                if (lastNotified !== availableSeats) {
+                  const wasSoldOut = (lastNotified === 0 || lastNotified === undefined);
+                  target.notifiedSeatsByDate[dateOfJourney] = availableSeats;
                   target.lastNotifiedSeats = availableSeats;
                   target.lastNotifiedAt = new Date().toISOString();
 
                   const chatId = target.telegramChatId;
                   if (chatId && FIXED_TELEGRAM_BOT_TOKEN) {
-                    console.log(`[Radar 24/7] 🎯 ALERT (${wasSoldOut ? 'SOLD_OUT_RELEASED' : 'RADAR_HIT'}): ${train.train_name} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
+                    console.log(`[Radar 24/7] 🎯 ALERT (${wasSoldOut ? 'SOLD_OUT_RELEASED' : 'RADAR_HIT'}): ${train.train_name} on ${dateOfJourney} has ${availableSeats} seat(s) in ${st.display_name}! Sending to Telegram chat ${chatId}`);
 
                     const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dateOfJourney)}&seatclass=${encodeURIComponent(st.type)}`;
                     
@@ -3822,9 +3836,9 @@ async function runBackgroundRadarCycle() {
                     }
                   }
                 }
-              } else if (availableSeats === 0 && (target.lastNotifiedSeats || 0) > 0) {
-                // Reset so when seats release again, alert fires immediately
-                target.lastNotifiedSeats = 0;
+              } else if (availableSeats === 0 && (lastNotified || 0) > 0) {
+                // Reset for this journey date so when seats release again, alert fires immediately
+                target.notifiedSeatsByDate[dateOfJourney] = 0;
               }
             }
           }

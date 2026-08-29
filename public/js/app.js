@@ -180,6 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const watchTargetTrainName = document.getElementById('watchTargetTrainName');
   const watchTargetRouteDate = document.getElementById('watchTargetRouteDate');
   const watchTargetClassSelect = document.getElementById('watchTargetClassSelect');
+  const watchMultiDateGrid = document.getElementById('watchMultiDateGrid');
+  const watchSelectedDatesCount = document.getElementById('watchSelectedDatesCount');
+  const watchSelectAllDatesBtn = document.getElementById('watchSelectAllDatesBtn');
+  const watchResetTodayDateBtn = document.getElementById('watchResetTodayDateBtn');
   const saveWatchTargetBtn = document.getElementById('saveWatchTargetBtn');
 
   // Intermediate Stoppage Calculator Elements
@@ -4140,18 +4144,41 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    if (watchSelectAllDatesBtn) {
+      watchSelectAllDatesBtn.addEventListener('click', () => {
+        if (state.pendingWatchTarget && state.pendingWatchTarget.availableDates) {
+          state.pendingWatchTarget.dates = [...state.pendingWatchTarget.availableDates];
+          renderWatchMultiDateGrid();
+        }
+      });
+    }
+
+    if (watchResetTodayDateBtn) {
+      watchResetTodayDateBtn.addEventListener('click', () => {
+        if (state.pendingWatchTarget && state.pendingWatchTarget.availableDates) {
+          state.pendingWatchTarget.dates = [state.selectedDate || state.pendingWatchTarget.availableDates[0]];
+          renderWatchMultiDateGrid();
+        }
+      });
+    }
+
     if (saveWatchTargetBtn) {
       saveWatchTargetBtn.addEventListener('click', () => {
         if (!state.pendingWatchTarget) return;
         const targetClass = watchTargetClassSelect ? watchTargetClassSelect.value : 'ANY';
         const tgConfig = getTelegramConfig();
+        const selectedDates = (state.pendingWatchTarget.dates && state.pendingWatchTarget.dates.length > 0)
+          ? state.pendingWatchTarget.dates
+          : [state.selectedDate || new Date().toISOString().split('T')[0]];
+
         const item = {
           id: 'watch_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
           trainName: state.pendingWatchTarget.trainName,
           trainModel: state.pendingWatchTarget.trainModel,
           fromCity: state.selectedFrom || 'Dhaka',
           toCity: state.selectedTo || 'Chattogram',
-          date: state.selectedDate || new Date().toISOString().split('T')[0],
+          date: selectedDates[0],
+          dates: selectedDates,
           className: targetClass,
           minSeats: state.pendingWatchTarget.minSeats || 1,
           telegramChatId: tgConfig ? tgConfig.chat_id : null,
@@ -4164,7 +4191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveWatchlist();
         updateWatchlistUI();
         if (setWatchTargetModal) setWatchTargetModal.classList.add('hidden');
-        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className})! Alerts will be sent to Telegram even when browser is closed.`, 'success');
+        showToast(`🛰️ 24/7 Radar: Added ${item.trainName} (${item.className}) across ${selectedDates.length} date${selectedDates.length === 1 ? '' : 's'}! Background alerts will fire on seat availability.`, 'success');
       });
     }
   }
@@ -4208,31 +4235,37 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    watchlistItemsContainer.innerHTML = state.watchlist.map(item => `
-      <div class="py-3 flex items-center justify-between gap-2">
-        <div class="flex items-center space-x-2.5 min-w-0 flex-1">
-          <button type="button" class="toggle-watch-btn w-6 h-6 rounded-full flex items-center justify-center text-xs transition ${item.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" data-id="${item.id}" title="${item.active ? 'Active (Click to Pause)' : 'Paused (Click to Resume)'}">
-            <i class="fa-solid ${item.active ? 'fa-check' : 'fa-pause'} text-[10px]"></i>
-          </button>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-1.5 flex-wrap">
-              <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${item.trainName}</h5>
-              <span class="text-[10px] font-mono text-slate-400 font-bold">#${item.trainModel}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${item.className === 'ANY' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}">${item.className}</span>
-              <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">≥ ${item.minSeats} seats</span>
+    watchlistItemsContainer.innerHTML = state.watchlist.map(item => {
+      const datesList = Array.isArray(item.dates) && item.dates.length > 0 ? item.dates : [item.date];
+      const datesBadges = datesList.map(d => formatShohozDoj(d)).join(', ');
+
+      return `
+        <div class="py-3 flex items-center justify-between gap-2">
+          <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+            <button type="button" class="toggle-watch-btn w-6 h-6 rounded-full flex items-center justify-center text-xs transition ${item.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'}" data-id="${item.id}" title="${item.active ? 'Active (Click to Pause)' : 'Paused (Click to Resume)'}">
+              <i class="fa-solid ${item.active ? 'fa-check' : 'fa-pause'} text-[10px]"></i>
+            </button>
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1.5 flex-wrap">
+                <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">${item.trainName}</h5>
+                <span class="text-[10px] font-mono text-slate-400 font-bold">#${item.trainModel}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded font-bold ${item.className === 'ANY' ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'}">${item.className}</span>
+                <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">≥ ${item.minSeats} seats</span>
+                ${datesList.length > 1 ? `<span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-mono">${datesList.length} Dates</span>` : ''}
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                ${item.fromCity} ➔ ${item.toCity} &bull; <span class="text-slate-700 dark:text-slate-300">${datesBadges}</span>
+              </p>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              ${item.fromCity} ➔ ${item.toCity} &bull; ${formatShohozDoj(item.date)}
-            </p>
+          </div>
+          <div class="flex items-center space-x-1 shrink-0">
+            <button type="button" class="delete-watch-btn p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" data-id="${item.id}" title="Delete Watch Target">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
           </div>
         </div>
-        <div class="flex items-center space-x-1 shrink-0">
-          <button type="button" class="delete-watch-btn p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" data-id="${item.id}" title="Delete Watch Target">
-            <i class="fa-solid fa-trash-can text-xs"></i>
-          </button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     watchlistItemsContainer.querySelectorAll('.toggle-watch-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -4259,19 +4292,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function renderWatchMultiDateGrid() {
+    if (!watchMultiDateGrid || !state.pendingWatchTarget || !state.pendingWatchTarget.availableDates) return;
+    const selected = state.pendingWatchTarget.dates || [];
+
+    watchMultiDateGrid.innerHTML = state.pendingWatchTarget.availableDates.map(dateStr => {
+      const isSelected = selected.includes(dateStr);
+      const d = new Date(dateStr + 'T00:00:00');
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNum = d.getDate();
+      const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+
+      const activeClass = isSelected
+        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-bold'
+        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-800 font-medium';
+
+      return `
+        <button type="button" class="watch-date-chip flex flex-col items-center justify-center p-1.5 rounded-xl border text-center transition cursor-pointer select-none ${activeClass}" data-date="${dateStr}">
+          <span class="text-[9px] uppercase tracking-wider opacity-80">${dayName}</span>
+          <span class="text-xs font-black">${dayNum}</span>
+          <span class="text-[9px] opacity-80">${monthName}</span>
+        </button>
+      `;
+    }).join('');
+
+    if (watchSelectedDatesCount) {
+      const count = selected.length;
+      watchSelectedDatesCount.textContent = `Selected: ${count} date${count === 1 ? '' : 's'}`;
+    }
+
+    watchMultiDateGrid.querySelectorAll('.watch-date-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const dStr = chip.dataset.date;
+        const currentSelected = state.pendingWatchTarget.dates || [];
+        if (currentSelected.includes(dStr)) {
+          if (currentSelected.length > 1) {
+            state.pendingWatchTarget.dates = currentSelected.filter(d => d !== dStr);
+          } else {
+            showToast('At least one travel date must remain selected.', 'warning');
+            return;
+          }
+        } else {
+          state.pendingWatchTarget.dates.push(dStr);
+          state.pendingWatchTarget.dates.sort();
+        }
+        renderWatchMultiDateGrid();
+      });
+    });
+  }
+
   function openSetWatchModal(train) {
     if (!train) return;
+    
+    // Generate next 10 booking days
+    const availableDates = [];
+    const now = new Date();
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + i);
+      availableDates.push(d.toISOString().split('T')[0]);
+    }
+
     state.pendingWatchTarget = {
       trainName: train.train_name,
       trainModel: train.train_model,
-      minSeats: 1
+      minSeats: 1,
+      availableDates: availableDates,
+      dates: [state.selectedDate || availableDates[0]]
     };
 
     if (watchTargetTrainName) {
       watchTargetTrainName.textContent = `${train.train_name} (#${train.train_model})`;
     }
     if (watchTargetRouteDate) {
-      watchTargetRouteDate.textContent = `${state.selectedFrom || 'Origin'} ➔ ${state.selectedTo || 'Destination'} • ${formatShohozDoj(state.selectedDate)}`;
+      watchTargetRouteDate.textContent = `${state.selectedFrom || 'Origin'} ➔ ${state.selectedTo || 'Destination'}`;
     }
 
     document.querySelectorAll('.watch-min-seat-btn').forEach((b, idx) => {
@@ -4281,6 +4375,8 @@ document.addEventListener('DOMContentLoaded', () => {
         b.className = 'watch-min-seat-btn py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs';
       }
     });
+
+    renderWatchMultiDateGrid();
 
     if (setWatchTargetModal) setWatchTargetModal.classList.remove('hidden');
   }

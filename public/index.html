@@ -573,12 +573,12 @@
   </header>
 
   <!-- Main Content Container -->
-  <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 py-3.5 space-y-3">
+  <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 py-3.5 space-y-3.5">
 
     <!-- ============================================== -->
     <!-- MODERN TRAVEL HERO SEARCH CARD -->
     <!-- ============================================== -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 relative overflow-hidden">
+    <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative overflow-hidden">
       
       <!-- Subtle Decorative Top Gradient Line -->
       <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"></div>
@@ -588,7 +588,7 @@
         <div>
           <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <span>Find Bangladesh Railway Seats</span>
-            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800" id="searchModeBadge">
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border-2 border-emerald-300 dark:border-emerald-700" id="searchModeBadge">
               Live Gateway
             </span>
           </h1>
@@ -601,12 +601,12 @@
         
         <!-- From Station (3 cols) -->
         <div class="lg:col-span-3 relative">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> From Station
           </label>
           <div class="relative flex items-center">
             <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" 
-              class="w-full h-12 pl-10 pr-9 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
+              class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
             <i class="fa-solid fa-train absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
             <button type="button" id="clearFromBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
@@ -614,24 +614,24 @@
             </button>
           </div>
           <!-- Autocomplete Dropdown -->
-          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
         </div>
 
         <!-- Swap Button (1 col) -->
         <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center">
-          <button type="button" id="swapStationsBtn" class="w-12 h-12 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-slate-300 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0" title="Swap Stations">
+          <button type="button" id="swapStationsBtn" class="w-12 h-12 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-200 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0" title="Swap Stations">
             <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
           </button>
         </div>
 
         <!-- To Station (3 cols) -->
         <div class="lg:col-span-3 relative">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> Destination
           </label>
           <div class="relative flex items-center">
             <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" 
-              class="w-full h-12 pl-10 pr-9 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
+              class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
             <i class="fa-solid fa-location-crosshairs absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
             <button type="button" id="clearToBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
@@ -639,17 +639,17 @@
             </button>
           </div>
           <!-- Autocomplete Dropdown -->
-          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
         </div>
 
         <!-- Journey Date (2 cols) -->
         <div class="lg:col-span-2">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> Journey Date
           </label>
           <div class="relative flex items-center">
             <input type="date" id="journeyDateInput" 
-              class="w-full h-12 pl-10 pr-2 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
+              class="w-full h-12 pl-10 pr-2 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
               required>
             <i class="fa-solid fa-calendar absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
           </div>
@@ -660,7 +660,7 @@
           
           <!-- Primary Find Trains Button (Fast Direct Search) -->
           <button type="submit" id="searchSubmitBtn" 
-            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 border border-emerald-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
             title="Fast direct train seat search">
             <i class="fa-solid fa-magnifying-glass text-xs"></i>
             <span class="whitespace-nowrap">Find Trains</span>
@@ -668,7 +668,7 @@
 
           <!-- Deep Search Button (On-Demand Same-Train & Junction Routes) -->
           <button type="button" id="deepSearchSubmitBtn" 
-            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 border border-indigo-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
             title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
             <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
             <span class="whitespace-nowrap">Deep Search</span>
@@ -679,16 +679,16 @@
       </form>
 
       <!-- Quick Date Chips & Filter Row -->
-      <div class="mt-4 pt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+      <div class="mt-4 pt-4 flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-200 dark:border-slate-700 text-xs">
         
         <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
         <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <span class="text-slate-400 font-bold text-[11px] whitespace-nowrap mr-1">Quick Date:</span>
+          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1">Quick Date:</span>
           <div class="flex items-center space-x-1" id="dateChipsContainer"></div>
           
           <!-- Calendar Matrix View Button right in Quick Date section -->
           <button type="button" id="quickMatrixViewBtn" 
-            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
+            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
             title="Switch to 10-Day Calendar Seat Matrix View">
             <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
             <span>10-Day Matrix</span>
@@ -698,14 +698,14 @@
         <!-- Optional Train & Class Filters -->
         <div class="flex flex-wrap items-center gap-2.5 text-xs">
           <div class="flex items-center space-x-1.5">
-            <span class="text-slate-400 font-medium">Train:</span>
-            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-700 dark:text-slate-300 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[170px] truncate">
+            <span class="text-slate-500 dark:text-slate-400 font-bold">Train:</span>
+            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[170px] truncate">
               <option value="ALL">All Trains</option>
             </select>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-slate-400 font-medium">Class:</span>
-            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-700 dark:text-slate-300 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            <span class="text-slate-500 dark:text-slate-400 font-bold">Class:</span>
+            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
               <option value="ALL">All Classes</option>
               <option value="S_CHAIR">Shovon Chair (S_CHAIR)</option>
               <option value="SNIGDHA">Snigdha AC (SNIGDHA)</option>
@@ -722,25 +722,25 @@
       </div>
 
       <!-- Popular Routes Quick Bar (Sleek Horizontal Scroll) -->
-      <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center space-x-2 overflow-x-auto text-[11px]">
-        <span class="text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0">Popular:</span>
+      <div class="mt-3 pt-3 border-t-2 border-slate-200 dark:border-slate-700 flex items-center space-x-2 overflow-x-auto text-[11px]">
+        <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase tracking-wider shrink-0">Popular:</span>
         <div class="flex items-center space-x-1.5 shrink-0">
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition cursor-pointer" data-from="Dhaka" data-to="Chattogram">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 transition cursor-pointer" data-from="Dhaka" data-to="Chattogram">
             Dhaka ⇄ Ctg
           </button>
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Cox's Bazar">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Cox's Bazar">
             Dhaka ⇄ Cox's Bazar
           </button>
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Sylhet">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Sylhet">
             Dhaka ⇄ Sylhet
           </button>
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Rajshahi">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Rajshahi">
             Dhaka ⇄ Rajshahi
           </button>
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Khulna">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Khulna">
             Dhaka ⇄ Khulna
           </button>
-          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Rangpur">
+          <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition cursor-pointer" data-from="Dhaka" data-to="Rangpur">
             Dhaka ⇄ Rangpur
           </button>
         </div>
@@ -749,7 +749,7 @@
     </div>
 
     <!-- Active Tracker & Controls Bar -->
-    <div id="trackerBar" class="hidden bg-white dark:bg-slate-900 rounded-xl px-5 py-3.5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <div id="trackerBar" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-2xl px-5 py-3.5 border-2 border-slate-300 dark:border-slate-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
       
       <!-- Current Route & Refresh Details -->
       <div class="flex items-center space-x-3">
@@ -757,7 +757,7 @@
           <span id="activeFromBadge">Dhaka</span>
           <i class="fa-solid fa-arrow-right text-emerald-500 text-xs"></i>
           <span id="activeToBadge">Chattogram</span>
-          <span class="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-normal" id="activeDateBadge">28-Aug-2026</span>
+          <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold" id="activeDateBadge">28-Aug-2026</span>
         </div>
         <span class="text-slate-300 dark:text-slate-700">|</span>
         <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
@@ -770,7 +770,7 @@
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         
         <!-- Live Countdown Ticker & Pause/Resume -->
-        <div id="monitorTickerContainer" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300">
+        <div id="monitorTickerContainer" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-700 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
           <span id="monitorCountdownLabel" class="font-mono font-bold text-[11px]">28s</span>
           <div class="w-12 h-1.5 bg-emerald-200 dark:bg-emerald-800 rounded-full overflow-hidden">
@@ -783,7 +783,7 @@
 
         <!-- Auto Polling Dropdown -->
         <div class="flex items-center space-x-1.5">
-          <select id="pollingIntervalSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <select id="pollingIntervalSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
             <option value="0">Monitor: Off</option>
             <option value="15">Monitor: 15s</option>
             <option value="30" selected>Monitor: 30s</option>
@@ -792,26 +792,26 @@
         </div>
 
         <!-- 1-Click Share Button -->
-        <button id="shareResultsBtn" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition flex items-center space-x-1" title="Share Availability via WhatsApp or Copy Summary">
+        <button id="shareResultsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border-2 border-slate-300 dark:border-slate-600 text-xs font-bold transition flex items-center space-x-1" title="Share Availability via WhatsApp or Copy Summary">
           <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
           <span>Share</span>
         </button>
 
         <!-- View Switcher (Cards / Table / 10-Day Matrix) -->
-        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-          <button id="viewGridBtn" class="px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition" title="Card Grid View">
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border-2 border-slate-300 dark:border-slate-600">
+          <button id="viewGridBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition" title="Card Grid View">
             <i class="fa-solid fa-table-cells-large mr-0.5"></i> Cards
           </button>
-          <button id="viewTableBtn" class="px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Compact Table View">
+          <button id="viewTableBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Compact Table View">
             <i class="fa-solid fa-table-list mr-0.5"></i> Table
           </button>
-          <button id="viewMatrixBtn" class="px-2 py-1 rounded-md text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Customizable Calendar Matrix View">
+          <button id="viewMatrixBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Customizable Calendar Matrix View">
             <i class="fa-solid fa-calendar-days mr-0.5 text-emerald-600 dark:text-emerald-400"></i> Matrix
           </button>
         </div>
 
         <!-- Manual Refresh Button -->
-        <button id="manualRefreshBtn" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border border-slate-200 dark:border-slate-700 transition" title="Refresh Now">
+        <button id="manualRefreshBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border-2 border-slate-300 dark:border-slate-600 transition" title="Refresh Now">
           <i class="fa-solid fa-rotate text-xs" id="refreshIcon"></i>
         </button>
       </div>
@@ -819,17 +819,17 @@
     </div>
 
     <!-- Released / Available Seat High-Priority Alert Banner (Single Aligned Line) -->
-    <div id="releasedSeatAlertBanner" class="hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-xl px-4 py-2.5 shadow-lg border border-emerald-400/50 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
+    <div id="releasedSeatAlertBanner" class="hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-2xl px-4 py-2.5 shadow-lg border-2 border-emerald-400 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
       <div class="flex items-center space-x-2.5 min-w-0 flex-1">
         <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs shadow-2xs shrink-0">
           <i class="fa-solid fa-bell animate-bounce text-amber-300 text-xs"></i>
         </div>
-        <div id="releasedSeatText" class="flex-1 min-w-0">
+        <div id="releasedSeatText" class="flex-1 min-w-0 font-bold">
           <!-- Dynamic single line content rendered by JS -->
         </div>
       </div>
       <div class="flex items-center space-x-2 shrink-0 w-full sm:w-auto justify-end">
-        <a id="releasedSeatBookBtn" href="#" target="_blank" rel="noopener" class="px-4 py-1.5 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs shadow-md transition text-center inline-flex items-center space-x-1.5 shrink-0">
+        <a id="releasedSeatBookBtn" href="#" target="_blank" rel="noopener" class="px-4 py-1.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs shadow-md transition text-center inline-flex items-center space-x-1.5 shrink-0">
           <span>Book Now</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-emerald-600"></i>
         </a>
@@ -843,19 +843,19 @@
     <div id="statsRibbon" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       
       <!-- Total Trains -->
-      <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200/80 dark:border-slate-800 flex items-center space-x-3.5 shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shadow-sm">
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-300 dark:border-slate-700 flex items-center space-x-3.5 shadow-sm">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xl shadow-sm">
           <i class="fa-solid fa-train"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total Running Trains</p>
-          <p id="statTotalTrains" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">0</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">Total Running Trains</p>
+          <p id="statTotalTrains" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">0</p>
         </div>
       </div>
 
       <!-- Total Available Seats (Sum of Online + Counter) -->
-      <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200/80 dark:border-slate-800 flex items-center space-x-3.5 shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shadow-sm">
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-300 dark:border-slate-700 flex items-center space-x-3.5 shadow-sm">
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xl shadow-sm">
           <i class="fa-solid fa-chair"></i>
         </div>
         <div>
@@ -882,13 +882,13 @@
     <div id="resultsContainer" class="space-y-4">
       
       <!-- Initial State Welcome Card -->
-      <div id="initialStateCard" class="bg-white dark:bg-slate-900 rounded-2xl p-10 sm:p-14 border border-dashed border-slate-300 dark:border-slate-800 text-center space-y-4 shadow-sm">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">
+      <div id="initialStateCard" class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-10 sm:p-14 border-2 border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4 shadow-sm">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-2xl mx-auto">
           <i class="fa-solid fa-magnifying-glass-location"></i>
         </div>
         <div class="max-w-md mx-auto space-y-1.5">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ready to Check Train Availability</h3>
-          <p class="text-sm text-slate-500 dark:text-slate-400">
+          <h3 class="text-lg font-black text-slate-900 dark:text-white">Ready to Check Train Availability</h3>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
             Pick your departure station, arrival destination, and journey date above. The dashboard will query Shohoz to list all trains, departure times, fares, and class-wise vacant seats.
           </p>
         </div>
@@ -896,7 +896,7 @@
 
       <!-- Loading Skeleton Indicator -->
       <div id="loadingIndicator" class="hidden space-y-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 animate-pulse space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border-2 border-slate-300 dark:border-slate-700 animate-pulse space-y-4">
           <div class="flex justify-between items-center">
             <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
             <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/6"></div>
@@ -917,15 +917,15 @@
       </div>
 
       <!-- Train Cards Grid (Rendered by JS) -->
-      <div id="trainsGrid" class="space-y-2.5"></div>
+      <div id="trainsGrid" class="space-y-3"></div>
 
       <!-- Table Matrix View (Rendered by JS) -->
-      <div id="trainsTableView" class="hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-fade-in">
+      <div id="trainsTableView" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden animate-fade-in">
         <div class="table-responsive-wrapper overflow-x-auto">
           <table class="w-full text-left text-xs min-w-[680px]">
-            <thead class="bg-slate-50 dark:bg-slate-800/90 text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 tracking-wider">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-black text-slate-600 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700 tracking-wider">
               <tr>
-                <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-50 dark:bg-slate-800 z-20 sticky-column-shadow border-r border-slate-200 dark:border-slate-800">Train & Model</th>
+                <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train & Model</th>
                 <th class="px-3 py-2.5 whitespace-nowrap">Departure</th>
                 <th class="px-3 py-2.5 whitespace-nowrap">Arrival</th>
                 <th class="px-3 py-2.5">Available Classes (Live Seats & Fare)</th>
@@ -933,20 +933,20 @@
                 <th class="px-3 py-2.5 text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-            <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300"></tbody>
+            <tbody id="tableBody" class="divide-y-2 divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-medium"></tbody>
           </table>
         </div>
       </div>
 
       <!-- Customizable Multi-Day Calendar Matrix View (Rendered by JS) -->
-      <div id="trainsMatrixView" class="hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-fade-in">
+      <div id="trainsMatrixView" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden animate-fade-in">
         
         <!-- Matrix Top Controls Strip -->
-        <div class="p-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 bg-slate-50/90 dark:bg-slate-800/60">
+        <div class="p-3.5 border-b-2 border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2.5 bg-slate-50/90 dark:bg-slate-800/80">
           
           <!-- Title & Start Date -->
           <div class="flex items-center space-x-2.5 flex-wrap gap-y-1">
-            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-900 dark:text-white">
+            <div class="flex items-center space-x-1.5 text-xs font-black text-slate-900 dark:text-white">
               <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400"></i>
               <span id="calendarMatrixTitle">Multi-Day Availability Matrix</span>
             </div>

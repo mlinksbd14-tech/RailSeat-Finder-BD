@@ -2372,33 +2372,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSameTrain = !!alt.is_same_train;
 
             return `
-              <div class="p-3 rounded-xl bg-slate-900/90 border ${isSameTrain ? 'border-emerald-500/40' : 'border-slate-700/60'} space-y-2 text-xs relative overflow-hidden">
+              <div class="p-3.5 rounded-2xl bg-slate-900/95 border-2 ${isSameTrain ? 'border-emerald-500/60 shadow-md' : 'border-slate-700'} space-y-2.5 text-xs relative overflow-hidden">
                 
                 <!-- Option Header -->
-                <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 flex-wrap gap-1">
+                <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 flex-wrap gap-1">
                   <div class="flex items-center space-x-1.5">
-                    <span class="font-extrabold text-white text-xs">${isSameTrain ? alt.train_name : `Option ${idx + 1}`}</span>
-                    ${isSameTrain ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono font-bold">#${alt.train_model}</span>` : ''}
+                    <span class="font-extrabold text-white text-xs sm:text-sm">${isSameTrain ? alt.train_name : `Option ${idx + 1}`}</span>
+                    ${isSameTrain ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono font-bold border border-slate-700">#${alt.train_model}</span>` : ''}
                   </div>
                   
-                  <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-black ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-300'}">
+                  <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[10px] font-black ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border-2 border-emerald-500/50' : 'bg-slate-800 text-slate-300 border border-slate-700'}">
                     <i class="fa-solid ${isSameTrain ? 'fa-train-circle-check text-emerald-400' : 'fa-shuffle text-slate-400'} text-[9px]"></i>
                     <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `Transfer Via ${alt.via_hub}`}</span>
                   </span>
                 </div>
 
                 ${isSameTrain ? `
-                  <div class="text-[10px] text-emerald-300/90 bg-emerald-950/40 px-2 py-1 rounded-lg border border-emerald-800/30 flex items-center space-x-1">
-                    <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i>
+                  <div class="text-[11px] text-emerald-300/95 bg-emerald-950/60 px-2.5 py-1.5 rounded-xl border-2 border-emerald-800/40 flex items-center space-x-1.5 font-medium">
+                    <i class="fa-solid fa-circle-info text-xs text-emerald-400"></i>
                     <span>No train change needed! Board <b>${alt.train_name}</b> and remain onboard throughout.</span>
                   </div>
                 ` : ''}
                 
                 <!-- Leg 1 Breakdown -->
-                <div class="space-y-0.5 bg-slate-800/40 p-2 rounded-lg border border-slate-800/60">
+                <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-extrabold text-slate-200">Leg 1: ${alt.leg1.from} ➔ ${alt.leg1.to}</span>
-                    <span class="text-[10px] font-bold text-emerald-400">🟢 ${alt.leg1.seats} Seats</span>
+                    <span class="font-extrabold text-slate-100">Leg 1: ${alt.leg1.from} ➔ ${alt.leg1.to}</span>
+                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60">🟢 ${alt.leg1.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                     <span>${alt.leg1.train_name} (${alt.leg1.departure_time || ''} - ${alt.leg1.arrival_time || ''})</span>
@@ -2410,10 +2410,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <!-- Leg 2 Breakdown -->
-                <div class="space-y-0.5 bg-slate-800/40 p-2 rounded-lg border border-slate-800/60">
+                <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-extrabold text-slate-200">Leg 2: ${alt.leg2.from} ➔ ${alt.leg2.to}</span>
-                    <span class="text-[10px] font-bold text-emerald-400">🟢 ${alt.leg2.seats} Seats</span>
+                    <span class="font-extrabold text-slate-100">Leg 2: ${alt.leg2.from} ➔ ${alt.leg2.to}</span>
+                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60">🟢 ${alt.leg2.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                     <span>${alt.leg2.train_name} (${alt.leg2.departure_time || ''} - ${alt.leg2.arrival_time || ''})</span>
@@ -2463,7 +2463,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // ----------------------------------------------------
   // Compact & Modern Train Card Grid View Renderer
   // ----------------------------------------------------
   function renderGridView(trains) {
@@ -2480,20 +2479,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
 
       return `
-        <div class="travel-card bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-slate-800 shadow-xs transition space-y-2.5">
+        <div class="travel-card bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-4 border-2 border-slate-300 dark:border-slate-700/90 shadow-sm transition space-y-3">
           
           <!-- TOP HEADER: Train Identity & Timetable Ribbon -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b-2 border-slate-100 dark:border-slate-800">
             
             <!-- Train Identity -->
             <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-8 h-8 rounded-xl ${hasAnySeats ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+              <div class="w-8 h-8 rounded-xl ${hasAnySeats ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700'} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                 <i class="fa-solid fa-train"></i>
               </div>
               <div class="min-w-0">
                 <div class="flex items-center space-x-1.5 flex-wrap">
-                  <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
-                  <span class="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold">#${train.train_model}</span>
+                  <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-300 dark:border-slate-700">#${train.train_model}</span>
                 </div>
                 <p class="text-[11px] text-slate-400">
                   Off: <span class="font-bold text-slate-600 dark:text-slate-300">${train.off_day || 'None'}</span>
@@ -2502,47 +2501,47 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Route Timings (Departure ➔ Duration ➔ Arrival) -->
-            <div class="flex items-center justify-between sm:justify-end space-x-3 bg-slate-50/90 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-700/50 text-xs self-start sm:self-auto">
+            <div class="flex items-center justify-between sm:justify-end space-x-3 bg-slate-50/90 dark:bg-slate-800/70 px-3 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs self-start sm:self-auto">
               <div class="text-left">
                 <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.departure_time}</div>
-                <div class="text-[10px] text-slate-400 truncate max-w-[90px]">${train.departure_station}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] font-medium">${train.departure_station}</div>
               </div>
 
               <div class="flex flex-col items-center px-1">
-                <span class="text-[9px] font-bold text-slate-400">${train.travel_time || 'Express'}</span>
-                <div class="w-10 h-0.5 bg-slate-300 dark:bg-slate-700 my-0.5 relative">
+                <span class="text-[9px] font-extrabold text-slate-400">${train.travel_time || 'Express'}</span>
+                <div class="w-10 h-0.5 bg-slate-300 dark:bg-slate-600 my-0.5 relative">
                   <i class="fa-solid fa-chevron-right text-[7px] text-emerald-500 absolute -right-1 -top-1"></i>
                 </div>
               </div>
 
               <div class="text-right">
                 <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.arrival_time}</div>
-                <div class="text-[10px] text-slate-400 truncate max-w-[90px]">${train.arrival_station}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] font-medium">${train.arrival_station}</div>
               </div>
             </div>
 
           </div>
 
-          <!-- SEAT CLASSES MATRIX (Compact Grid with Decreased Gap) -->
+          <!-- SEAT CLASSES MATRIX (Compact Grid with Bold Borders) -->
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2">
             ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
           </div>
 
           <!-- BOTTOM ACTION FOOTER -->
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div class="pt-2 border-t-2 border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
             
             <!-- Left: Total Status & Quick Tools -->
             <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold ${
+              <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-black ${
                 hasAnySeats 
-                  ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
-                  : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700' 
+                  : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-2 border-rose-300 dark:border-rose-800'
               }">
                 <i class="fa-solid ${hasAnySeats ? 'fa-chair text-emerald-500' : 'fa-circle-xmark text-rose-500'} text-[10px]"></i>
                 <span>${hasAnySeats ? `${grandTotal} Available` : 'SOLD OUT'}</span>
               </span>
 
-              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="View Train Stops & Schedule">
@@ -2550,7 +2549,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>Stops</span>
               </button>
 
-              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 transition cursor-pointer"
+              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="View Single-Day All-Station Blank Seat Matrix">
@@ -2558,7 +2557,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>Stops Matrix</span>
               </button>
 
-              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer"
+              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="Set 24/7 seat drop alert">
@@ -2572,8 +2571,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <a href="${bookUrl}" target="_blank" rel="noopener" 
                 class="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
                   hasAnySeats 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs active:scale-95' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs border border-emerald-500 active:scale-95' 
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 cursor-not-allowed opacity-60'
                 }">
                 <span>Book on Shohoz</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
@@ -2608,16 +2607,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let countBadge = '';
 
     if (isAvail) {
-      cardBorder = 'border-emerald-300/80 dark:border-emerald-700/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500';
-      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-emerald-600 text-white font-extrabold text-[11px] text-center shadow-2xs">🟢 ${totalSeatCount} Seats</div>`;
+      cardBorder = 'border-2 border-emerald-400 dark:border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 shadow-2xs';
+      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-emerald-600 text-white font-black text-[11px] text-center shadow-2xs">🟢 ${totalSeatCount} Seats</div>`;
     } else {
-      cardBorder = 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-400 opacity-60';
-      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-slate-200 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 font-bold text-[10px] text-center">Sold Out</div>`;
+      cardBorder = 'border-2 border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 text-slate-400 opacity-60';
+      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-slate-200 dark:bg-slate-700/90 text-slate-500 dark:text-slate-400 font-bold text-[10px] text-center">Sold Out</div>`;
     }
 
     return `
       <a href="${bookUrl}" target="_blank" rel="noopener"
-        class="seat-pill block p-2 sm:p-2.5 rounded-xl border ${cardBorder} flex flex-col justify-between space-y-1.5 transition ${isAvail ? 'cursor-pointer' : 'cursor-not-allowed'}"
+        class="seat-pill block p-2 sm:p-2.5 rounded-xl border-2 ${cardBorder} flex flex-col justify-between space-y-1.5 transition ${isAvail ? 'cursor-pointer' : 'cursor-not-allowed'}"
         title="${isAvail ? `Book ${seat.display_name} (${totalSeatCount} available)` : `${seat.display_name} (Sold Out)`}"
         ${!isAvail ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : ''}>
         
@@ -2630,9 +2629,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ${countBadge}
         </div>
 
-        <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
-          <span class="font-extrabold text-xs text-slate-900 dark:text-white">৳${totalFare}</span>
-          <span class="text-[9px] text-slate-400">fare</span>
+        <div class="pt-1 border-t-2 border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs">
+          <span class="font-black text-xs text-slate-900 dark:text-white">৳${totalFare}</span>
+          <span class="text-[9px] text-slate-500 dark:text-slate-400 font-bold">fare</span>
         </div>
       </a>
     `;
@@ -3369,27 +3368,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let tableHtml = `
       <table class="w-full text-left text-xs border-collapse min-w-[650px]">
         <thead>
-          <tr class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
-            <th class="p-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r border-slate-200 dark:border-slate-700">Train</th>
+          <tr class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold border-b-2 border-slate-200 dark:border-slate-700">
+            <th class="p-3 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train</th>
             ${matrixDays.map(d => `
-              <th class="p-2 text-center whitespace-nowrap cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition matrix-header-date" data-date="${d.date}" title="Switch to this date">
+              <th class="p-2.5 text-center whitespace-nowrap cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition matrix-header-date border-r border-slate-200 dark:border-slate-800" data-date="${d.date}" title="Switch to this date">
                 <div class="text-[10px] text-slate-400 font-mono">${d.day_name}</div>
                 <div class="text-xs font-black text-slate-900 dark:text-white">${d.display_date}</div>
-                <div class="text-[9px] font-bold ${d.total_available_seats > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}">
+                <div class="text-[9px] font-black ${d.total_available_seats > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}">
                   ${d.total_available_seats > 0 ? `🟢 ${d.total_available_seats}` : '🔴 0'}
                 </div>
               </th>
             `).join('')}
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        <tbody class="divide-y-2 divide-slate-100 dark:divide-slate-800 font-medium">
     `;
 
     uniqueTrains.forEach(train => {
       tableHtml += `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="p-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r border-slate-200/80 dark:border-slate-800">
-            <div class="text-xs font-extrabold">${train.name}</div>
+          <td class="p-3 font-bold text-slate-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">
+            <div class="text-xs font-black">${train.name}</div>
             <div class="text-[10px] text-slate-400 font-normal">#${train.model} &bull; ${train.departure_time} &bull; Off: ${train.off_day || 'None'}</div>
           </td>
       `;
@@ -3398,7 +3397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const trainOnDay = (d.trains || []).find(t => t.train_model === train.model);
         if (!trainOnDay) {
           tableHtml += `
-            <td class="p-2 text-center text-[10px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/20 font-medium">
+            <td class="p-2 text-center text-[10px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/20 font-medium border-r border-slate-100 dark:border-slate-800/60">
               Off Day
             </td>
           `;
@@ -3408,21 +3407,21 @@ document.addEventListener('DOMContentLoaded', () => {
           let badgeText = '';
 
           if (totalSeats > 10) {
-            cellBg = 'bg-emerald-50/80 hover:bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60';
+            cellBg = 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-950/60 dark:text-emerald-200 border-2 border-emerald-400 dark:border-emerald-700';
             badgeText = `🟢 ${totalSeats}`;
           } else if (totalSeats > 0) {
-            cellBg = 'bg-amber-50/80 hover:bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60';
+            cellBg = 'bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-950/60 dark:text-amber-200 border-2 border-amber-400 dark:border-amber-700';
             badgeText = `🟡 ${totalSeats}`;
           } else {
-            cellBg = 'bg-rose-50/60 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40';
+            cellBg = 'bg-rose-50/60 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-900/60';
             badgeText = '🔴 0';
           }
 
           const classBreakdown = (trainOnDay.seat_types || []).map(st => `${st.display_name}: ${st.total_seats} (৳${st.total_fare})`).join('\n');
 
           tableHtml += `
-            <td class="p-1.5 text-center cursor-pointer matrix-cell-click" data-date="${d.date}" data-train-model="${train.model}" title="${classBreakdown}">
-              <div class="px-1.5 py-1 rounded-lg text-[11px] font-extrabold shadow-2xs transition ${cellBg}">
+            <td class="p-1.5 text-center cursor-pointer matrix-cell-click border-r border-slate-100 dark:border-slate-800/60" data-date="${d.date}" data-train-model="${train.model}" title="${classBreakdown}">
+              <div class="px-2 py-1 rounded-lg text-[11px] font-black shadow-2xs transition ${cellBg}">
                 ${badgeText}
               </div>
             </td>
@@ -4655,38 +4654,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let html = `
       <!-- Summary Banner -->
-      <div class="p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between gap-2 text-xs">
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-2 border-emerald-300 dark:border-emerald-700 flex items-center justify-between gap-2 text-xs">
         <div class="flex items-center space-x-2">
-          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">
+          <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
             <i class="fa-solid fa-bolt"></i>
           </div>
           <div>
-            <span class="font-extrabold text-slate-900 dark:text-white">${data.train_name} (#${data.train_model})</span>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">${data.display_date} &bull; ${segments.filter(s => s.has_seats).length} segment(s) with vacant seats</p>
+            <span class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${data.train_name} (#${data.train_model})</span>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${data.display_date} &bull; ${segments.filter(s => s.has_seats).length} segment(s) with vacant seats</p>
           </div>
         </div>
         <div class="text-right">
-          <span class="text-[11px] text-slate-400 uppercase font-semibold">Total Segments Checked</span>
-          <p class="font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">${segments.length}</p>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold">Total Segments</span>
+          <p class="font-black text-emerald-700 dark:text-emerald-300 text-base">${segments.length}</p>
         </div>
       </div>
     `;
 
     grouped.forEach((segList, boardingCity) => {
       html += `
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs space-y-2.5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 p-4 shadow-xs space-y-3">
           <!-- Boarding City Header -->
-          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center justify-between pb-2.5 border-b-2 border-slate-100 dark:border-slate-800">
             <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">
-                <i class="fa-solid fa-location-dot text-[10px]"></i>
+              <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-xs font-bold">
+                <i class="fa-solid fa-location-dot text-xs"></i>
               </span>
               <div>
-                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">From ${boardingCity}</h4>
+                <h4 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white">From ${boardingCity}</h4>
                 <span class="text-[10px] text-slate-400">Departure: ${segList[0]?.departure_time || '--'}</span>
               </div>
             </div>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
               ${segList.length} Destinations
             </span>
           </div>
@@ -4698,11 +4697,11 @@ document.addEventListener('DOMContentLoaded', () => {
               const totalSeats = seg.total_seats || 0;
 
               return `
-                <div class="p-2.5 rounded-xl border ${
+                <div class="p-3 rounded-xl border-2 ${
                   isAvail 
-                    ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/90 dark:border-emerald-800/60' 
-                    : 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800'
-                } flex flex-col justify-between space-y-2 transition hover:shadow-xs">
+                    ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-700 shadow-2xs' 
+                    : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
+                } flex flex-col justify-between space-y-2.5 transition hover:shadow-xs">
                   
                   <!-- Top: Destination & Seat Count Badge -->
                   <div class="flex items-center justify-between gap-1">

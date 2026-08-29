@@ -84,20 +84,27 @@ body {
   animation: bounceSubtle 2s ease-in-out infinite;
 }
 
-/* Modern Card Glow & Elevation */
+/* Modern Card Glow & High-Contrast Bold Elevation */
 .travel-card {
+  border-width: 2px !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .travel-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
 }
 .dark .travel-card:hover {
-  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(16, 185, 129, 0.35);
 }
 
-/* Class Seat Pills */
+/* Bold Dashboard Block Outlines */
+.dashboard-block {
+  border-width: 2px !important;
+}
+
+/* Class Seat Pills (Crisp Bold Borders) */
 .seat-pill {
+  border-width: 2px !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
 }

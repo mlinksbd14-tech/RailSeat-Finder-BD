@@ -2340,10 +2340,41 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     fullNextStopName = 'Destination';
   }
 
+  const trainState = initialTrain?.status || initialDerived?.state || 'running';
+  let accurateNextStop = fullNextStopName;
+  let accurateNextEta = nextEta;
+
+  if (trainState === 'scheduled') {
+    accurateNextStop = (stoppages.length > 1 ? stoppages[1].station_name : stoppages[0]?.station_name) || initialTrain?.from || 'Origin';
+    accurateNextEta = initialTrain?.depart ? `Departs ${initialTrain.depart}` : (stoppages[0]?.scheduled_time || 'Scheduled');
+  } else if (trainState === 'arrived' || trainState === 'completed') {
+    accurateNextStop = (stoppages.length > 0 ? stoppages[stoppages.length - 1].station_name : initialTrain?.to) || 'Destination';
+    accurateNextEta = 'Arrived';
+  } else if (trainState === 'offday') {
+    accurateNextStop = 'Off Day Today';
+    accurateNextEta = '—';
+  }
+
   const prevStopObj = afterStopIdx >= 0 && afterStopIdx < stoppages.length ? stoppages[afterStopIdx] : null;
-  const prevStopName = prevStopObj ? prevStopObj.station_name : (stoppages[0]?.station_name || '');
-  const coveredSincePrevStopKm = initialDerived?.coveredSincePrevStopKm ? Math.round(initialDerived.coveredSincePrevStopKm * 10) / 10 : null;
+  const prevStopName = prevStopObj ? prevStopObj.station_name : (stoppages[0]?.station_name || initialTrain?.from || 'Origin');
+  const coveredSincePrevStopKm = initialDerived?.coveredSincePrevStopKm ? Math.round(initialDerived.coveredSincePrevStopKm * 10) / 10 : (trainState === 'running' && afterStopIdx >= 0 ? 0 : null);
   const segmentProgressPct = initialDerived?.trainSegmentPosition?.pct ? Math.round(initialDerived.trainSegmentPosition.pct) : (initialDerived?.currentSegmentProgressPct ? Math.round(initialDerived.currentSegmentProgressPct) : null);
+
+  let nearestStationName = initialDerived?.nearestStationName || '';
+  let nearestDistanceKm = initialDerived?.nearestStationDistanceKm ? Math.round(initialDerived.nearestStationDistanceKm * 10) / 10 : null;
+
+  if (!nearestStationName) {
+    if (trainState === 'scheduled') {
+      nearestStationName = stoppages[0]?.station_name || initialTrain?.from || 'Origin Station';
+      nearestDistanceKm = 0;
+    } else if (trainState === 'arrived' || trainState === 'completed') {
+      nearestStationName = stoppages[stoppages.length - 1]?.station_name || initialTrain?.to || 'Destination Station';
+      nearestDistanceKm = 0;
+    } else if (prevStopName) {
+      nearestStationName = prevStopName;
+      nearestDistanceKm = coveredSincePrevStopKm || 0;
+    }
+  }
 
   let lastUpdatedText = '0s ago';
   if (initialDerived?.lastUpdateAt) {
@@ -2379,19 +2410,19 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     duration: initialTrain?.duration || '',
     speed: initialTrain?.speed || 0,
     delay_minutes: initialTrain?.delay || initialDerived?.delay || 0,
-    progress_pct: initialDerived?.pct || 0,
-    status: initialTrain?.status || initialDerived?.state || 'scheduled',
+    progress_pct: initialDerived?.pct || (trainState === 'arrived' ? 100 : (trainState === 'scheduled' ? 0 : 0)),
+    status: trainState,
     coaches: initialTrain?.coaches || 16,
-    next_stop: fullNextStopName,
+    next_stop: accurateNextStop,
     next_stop_code: nextStopCode,
-    next_eta: initialTrain?.nextEta || '',
+    next_eta: accurateNextEta,
     prev_stop: prevStopName,
     prev_stop_idx: afterStopIdx,
     covered_since_prev_stop_km: coveredSincePrevStopKm,
     segment_progress_pct: segmentProgressPct,
     km_to_next: initialDerived?.kmToNext || 0,
-    nearest_station: initialDerived?.nearestStationName || '',
-    nearest_distance_km: initialDerived?.nearestStationDistanceKm ? Math.round(initialDerived.nearestStationDistanceKm * 10) / 10 : null,
+    nearest_station: nearestStationName,
+    nearest_distance_km: nearestDistanceKm,
     covered_distance_km: initialDerived?.coveredDistanceKm ? Math.round(initialDerived.coveredDistanceKm) : 0,
     last_updated: lastUpdatedText,
     off_day: initialTrain?.offDay || 'None',
@@ -2469,25 +2500,58 @@ app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
     const stream = extractNextJsStreamText(html);
     const detail = parseTrainDetailStream(stream, trainNo);
 
-    liveTrackerCache.set(cacheKey, {
-      timestamp: Date.now(),
-      data: detail
-    });
-
-    return res.json(detail);
+    if (detail && detail.train_name) {
+      liveTrackerCache.set(cacheKey, {
+        timestamp: Date.now(),
+        data: detail
+      });
+      return res.json(detail);
+    }
   } catch (err) {
     console.warn(`[LiveTracker] Upstream train #${trainNo} fetch warning:`, err.message);
-    if (cached) {
-      return res.json({
-        ...cached.data,
-        cached_fallback: true
-      });
-    }
-    return res.status(200).json({
-      success: false,
-      error: `Live tracking feed for train #${trainNo} is currently updating.`
+  }
+
+  if (cached) {
+    return res.json({
+      ...cached.data,
+      cached_fallback: true
     });
   }
+
+  // Graceful fallback from running_trains cache
+  const runningCached = liveTrackerCache.get('running_trains');
+  const runningTrain = runningCached?.data?.trains?.find(t => String(t.train_no) === String(trainNo));
+  if (runningTrain) {
+    const fallbackDetail = {
+      success: true,
+      train_no: String(trainNo),
+      train_name: runningTrain.train_name || `Train ${trainNo}`,
+      from: runningTrain.from || '',
+      to: runningTrain.to || '',
+      departure_time: runningTrain.departure_time || '',
+      arrival_time: runningTrain.arrival_time || '',
+      duration: runningTrain.duration || '',
+      delay_minutes: runningTrain.delay_minutes || 0,
+      progress_pct: runningTrain.progress_pct || 0,
+      status: runningTrain.status || 'running',
+      next_stop: runningTrain.to || 'Destination',
+      next_eta: runningTrain.arrival_time || '',
+      prev_stop: runningTrain.from || 'Origin',
+      nearest_station: runningTrain.from || '',
+      nearest_distance_km: null,
+      last_updated: runningTrain.last_updated || 'Just now',
+      stoppages: [
+        { station_name: runningTrain.from || 'Origin', scheduled_time: runningTrain.departure_time || '--:--', actual_time: runningTrain.departure_time || '--:--', status: 'passed' },
+        { station_name: runningTrain.to || 'Destination', scheduled_time: runningTrain.arrival_time || '--:--', actual_time: runningTrain.arrival_time || '--:--', status: 'next' }
+      ]
+    };
+    return res.json(fallbackDetail);
+  }
+
+  return res.status(200).json({
+    success: false,
+    error: `Live tracking feed for train #${trainNo} is currently updating.`
+  });
 });
 
 

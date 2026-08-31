@@ -7467,18 +7467,34 @@ document.addEventListener('DOMContentLoaded', () => {
         liveModalNextStationTitle.textContent = data.next_stop || 'Destination';
       }
       if (liveModalNextStationSubtitle) {
-        const passedFromPrev = data.covered_since_prev_stop_km ? `${data.covered_since_prev_stop_km} km from ${data.prev_stop || 'prev stop'}` : '';
-        const kmAhead = data.km_to_next ? `${data.km_to_next} km ahead` : 'En Route';
-        const etaText = data.next_eta ? `ETA ${data.next_eta}` : '';
-        const parts = [passedFromPrev, kmAhead, etaText].filter(Boolean);
-        liveModalNextStationSubtitle.textContent = parts.join(' • ');
+        if (data.status === 'scheduled') {
+          liveModalNextStationSubtitle.textContent = `Scheduled departure • ${data.next_eta || 'Today'}`;
+        } else if (data.status === 'arrived' || data.status === 'completed') {
+          liveModalNextStationSubtitle.textContent = `Journey completed at destination`;
+        } else if (data.status === 'offday') {
+          liveModalNextStationSubtitle.textContent = `Train off-day today`;
+        } else {
+          const passedFromPrev = (data.covered_since_prev_stop_km !== null && data.covered_since_prev_stop_km !== undefined) ? `${data.covered_since_prev_stop_km} km from ${data.prev_stop || 'prev stop'}` : '';
+          const kmAhead = data.km_to_next ? `${data.km_to_next} km ahead` : 'En Route';
+          const etaText = data.next_eta ? `ETA ${data.next_eta}` : '';
+          const parts = [passedFromPrev, kmAhead, etaText].filter(Boolean);
+          liveModalNextStationSubtitle.textContent = parts.join(' • ') || 'En Route';
+        }
       }
 
       if (liveModalNearestTitle) {
         liveModalNearestTitle.textContent = data.nearest_station || data.next_stop || 'Tracking Route';
       }
       if (liveModalNearestSubtitle) {
-        liveModalNearestSubtitle.textContent = data.nearest_distance_km ? `${data.nearest_distance_km} km away` : 'Nearby';
+        if (data.status === 'scheduled') {
+          liveModalNearestSubtitle.textContent = 'At Origin Station';
+        } else if (data.status === 'arrived' || data.status === 'completed') {
+          liveModalNearestSubtitle.textContent = 'At Destination Station';
+        } else if (data.nearest_distance_km !== null && data.nearest_distance_km !== undefined) {
+          liveModalNearestSubtitle.textContent = `${data.nearest_distance_km} km away`;
+        } else {
+          liveModalNearestSubtitle.textContent = 'Near Route';
+        }
       }
 
       // Quick Stats Pills

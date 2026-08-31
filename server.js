@@ -2310,6 +2310,71 @@ app.get('/api/train-station-matrix', async (req, res) => {
     }
   }
 
+  // Compute Ghost Combinations (Same-Train 2-Leg Back-to-Back Splits)
+  const ghostCombinations = [];
+  for (const seg1 of segments) {
+    if (!seg1.has_seats) continue;
+    const intermediate = seg1.to;
+
+    for (const seg2 of segments) {
+      if (!seg2.has_seats || seg2.from !== intermediate) continue;
+      if (seg2.to === seg1.from) continue;
+
+      const minSeats = Math.min(seg1.total_seats, seg2.total_seats);
+      const matchedClasses = [];
+
+      for (const c1 of (seg1.seat_types || [])) {
+        const avail1 = Number(c1.seats_available || 0) + Number(c1.counter_seats_available || 0);
+        if (avail1 > 0) {
+          const c2 = (seg2.seat_types || []).find(x => x.type === c1.type);
+          const avail2 = c2 ? (Number(c2.seats_available || 0) + Number(c2.counter_seats_available || 0)) : 0;
+          if (avail2 > 0) {
+            matchedClasses.push({
+              class_type: c1.type,
+              display_name: c1.display_name || c1.type,
+              min_available: Math.min(avail1, avail2),
+              leg1_fare: Number(c1.fare || 0),
+              leg2_fare: Number(c2.fare || 0),
+              total_fare: Number(c1.fare || 0) + Number(c2.fare || 0)
+            });
+          }
+        }
+      }
+
+      ghostCombinations.push({
+        train_name: routeData.train_name || `Train #${cleanModel}`,
+        train_model: cleanModel,
+        origin: seg1.from,
+        destination: seg2.to,
+        via_station: intermediate,
+        available_seats: minSeats,
+        departure_time: seg1.departure_time,
+        arrival_time: seg2.arrival_time,
+        matched_classes: matchedClasses,
+        leg1: {
+          from: seg1.from,
+          to: seg1.to,
+          departure_time: seg1.departure_time,
+          arrival_time: seg1.arrival_time,
+          seats: seg1.total_seats,
+          online_seats: seg1.online_seats,
+          book_url: seg1.book_url,
+          seat_types: seg1.seat_types
+        },
+        leg2: {
+          from: seg2.from,
+          to: seg2.to,
+          departure_time: seg2.departure_time,
+          arrival_time: seg2.arrival_time,
+          seats: seg2.total_seats,
+          online_seats: seg2.online_seats,
+          book_url: seg2.book_url,
+          seat_types: seg2.seat_types
+        }
+      });
+    }
+  }
+
   return res.json({
     success: true,
     train_name: routeData.train_name || `Train #${cleanModel}`,
@@ -2318,7 +2383,8 @@ app.get('/api/train-station-matrix', async (req, res) => {
     display_date: formatShohozDate(date_of_journey),
     off_day: routeData.off_day || 'None',
     stoppages: stops,
-    segments: segments
+    segments: segments,
+    ghost_combinations: ghostCombinations
   });
 });
 

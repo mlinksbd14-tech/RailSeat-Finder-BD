@@ -3586,30 +3586,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openGhostSeatModal(trainModel, trainName = '') {
-    if (!ghostSeatModal) return;
-    ghostSeatModal.classList.remove('hidden');
-    
-    const fromCity = state.selectedFrom || 'Dhaka';
-    const toCity = state.selectedTo || 'Chattogram';
-    const journeyDate = state.selectedDate || new Date().toISOString().split('T')[0];
-
-    if (ghostModalSubTitle) {
-      ghostModalSubTitle.textContent = `${fromCity} ➔ ${toCity} on ${formatShohozDoj(journeyDate)} (${trainName || `Train #${trainModel}`})`;
-    }
-
-    if (ghostSeatModalBody) {
-      ghostSeatModalBody.innerHTML = `
-        <div class="py-12 text-center space-y-3">
-          <div class="w-12 h-12 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-xl animate-spin">
-            <i class="fa-solid fa-circle-notch"></i>
-          </div>
-          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Scanning all intermediate stoppage quotas on ${trainName || `Train #${trainModel}`}...</p>
-          <p class="text-[11px] text-slate-400">Finding same-train back-to-back tickets so you don't have to switch trains</p>
-        </div>
-      `;
-    }
-
-    fetchGhostSeatsForTrain(fromCity, toCity, journeyDate, trainModel, trainName);
+    openStationMatrixModal(trainModel, trainName);
   }
 
   function closeGhostSeatModal() {
@@ -5413,6 +5390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderStationMatrixResults(data) {
     const segments = data.segments || [];
+    const ghostCombos = data.ghost_combinations || [];
 
     if (segments.length === 0) {
       stationMatrixContent.innerHTML = `
@@ -5435,20 +5413,105 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let html = `
       <!-- Summary Banner -->
-      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border-2 border-emerald-300 dark:border-emerald-700 flex items-center justify-between gap-2 text-xs">
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-purple-50 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-purple-950/30 border-2 border-emerald-300 dark:border-emerald-700 flex items-center justify-between gap-2 text-xs">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
-            <i class="fa-solid fa-bolt"></i>
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-purple-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
+            <i class="fa-solid fa-ghost"></i>
           </div>
           <div>
             <span class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${data.train_name} (#${data.train_model})</span>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${data.display_date} &bull; ${segments.filter(s => s.has_seats).length} segment(s) with vacant seats</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${data.display_date} &bull; ${ghostCombos.length} Ghost Seat combination(s) &bull; ${segments.filter(s => s.has_seats).length} vacant segment(s)</p>
           </div>
         </div>
         <div class="text-right">
-          <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold">Total Segments</span>
-          <p class="font-black text-emerald-700 dark:text-emerald-300 text-base">${segments.length}</p>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-extrabold">Total Stops</span>
+          <p class="font-black text-emerald-700 dark:text-emerald-300 text-base">${(data.stoppages || []).length}</p>
         </div>
+      </div>
+    `;
+
+    // 1. TOP SECTION: GHOST SEAT COMBINATIONS (SAME-TRAIN 2-TICKET SPLIT)
+    if (ghostCombos.length > 0) {
+      html += `
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/30 via-slate-900 to-indigo-950/30 border-2 border-purple-500/50 space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center space-x-2">
+              <span class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shadow-md animate-pulse">
+                <i class="fa-solid fa-ghost"></i>
+              </span>
+              <div>
+                <h4 class="font-black text-sm text-white flex items-center space-x-2">
+                  <span>👻 Ghost Seats Available (Same-Train Split)</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-500 text-white font-black">${ghostCombos.length} Found</span>
+                </h4>
+                <p class="text-[11px] text-purple-200/80">Stay on <b>${data.train_name}</b> without switching trains by buying these 2 connected tickets!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            ${ghostCombos.map((ghost, idx) => {
+              const leg1Book = ghost.leg1?.book_url || '#';
+              const leg2Book = ghost.leg2?.book_url || '#';
+              const classes = ghost.matched_classes || [];
+
+              return `
+                <div class="p-3.5 rounded-2xl bg-slate-900 border-2 border-purple-400/60 space-y-2.5 text-xs shadow-md">
+                  
+                  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="font-black text-white text-xs">Option ${idx + 1}: Via ${ghost.via_station}</span>
+                    <span class="px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/50">
+                      🟢 ${ghost.available_seats} Min Seats
+                    </span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="p-2 rounded-xl bg-slate-800/90 border border-slate-700 space-y-1">
+                      <div class="font-bold text-emerald-400">🎟️ Ticket 1</div>
+                      <div class="font-extrabold text-white truncate">${ghost.leg1.from} ➔ ${ghost.leg1.to}</div>
+                      <div class="text-slate-400 text-[10px]">Dep: ${ghost.leg1.departure_time} &bull; ${ghost.leg1.seats} seats</div>
+                      <a href="${leg1Book}" target="_blank" rel="noopener" class="mt-1 block py-1 px-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center text-[10px]">
+                        Book Leg 1 &rarr;
+                      </a>
+                    </div>
+
+                    <div class="p-2 rounded-xl bg-slate-800/90 border border-slate-700 space-y-1">
+                      <div class="font-bold text-indigo-400">🎟️ Ticket 2</div>
+                      <div class="font-extrabold text-white truncate">${ghost.leg2.from} ➔ ${ghost.leg2.to}</div>
+                      <div class="text-slate-400 text-[10px]">Arr: ${ghost.leg2.arrival_time} &bull; ${ghost.leg2.seats} seats</div>
+                      <a href="${leg2Book}" target="_blank" rel="noopener" class="mt-1 block py-1 px-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center text-[10px]">
+                        Book Leg 2 &rarr;
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between pt-1 border-t border-slate-800">
+                    <span class="text-[10px] text-slate-400 truncate">
+                      ${classes.length > 0 ? `৳${classes[0].total_fare} (${classes[0].display_name})` : 'Same Train Split'}
+                    </span>
+                    <button type="button" class="open-dual-tabs-btn px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-[10px] flex items-center space-x-1 transition cursor-pointer"
+                      data-leg1="${encodeURIComponent(leg1Book)}"
+                      data-leg2="${encodeURIComponent(leg2Book)}">
+                      <i class="fa-solid fa-bolt text-amber-300 text-[9px]"></i>
+                      <span>Open Both Tabs</span>
+                    </button>
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. BOTTOM SECTION: ALL-STATION SEGMENT MATRIX
+    html += `
+      <div class="pt-2 space-y-3">
+        <h4 class="font-extrabold text-xs text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-cells text-emerald-500"></i>
+          <span>All Intermediate Station-to-Station Segments</span>
+        </h4>
       </div>
     `;
 
@@ -5547,6 +5610,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     stationMatrixContent.innerHTML = html;
+
+    // Bind Dual Tabs Opener for Ghost Seats
+    stationMatrixContent.querySelectorAll('.open-dual-tabs-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const leg1Url = decodeURIComponent(btn.dataset.leg1 || '');
+        const leg2Url = decodeURIComponent(btn.dataset.leg2 || '');
+        if (leg1Url && leg1Url !== '#') window.open(leg1Url, '_blank', 'noopener');
+        if (leg2Url && leg2Url !== '#') window.open(leg2Url, '_blank', 'noopener');
+        showToast('🚀 Opened both Ticket 1 and Ticket 2 in separate tabs!', 'success');
+      });
+    });
   }
 
   // ----------------------------------------------------

@@ -7823,58 +7823,67 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       return `
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-cyan-500/60 dark:hover:border-cyan-500/60 transition-all flex flex-col justify-between space-y-3.5 group">
+        <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-cyan-500/50 dark:hover:border-cyan-500/50 transition-all flex flex-col justify-between space-y-3 group relative overflow-hidden">
           
-          <!-- Top Row: Train Name & Delay Badge -->
-          <div class="flex items-start justify-between gap-2">
+          <!-- Card Header: Train ID Pill, Name, Route Duration & Status Badge -->
+          <div class="flex items-start justify-between gap-2 pt-0.5">
             <div class="min-w-0">
               <div class="flex items-center space-x-1.5 flex-wrap">
-                <h3 class="font-extrabold text-sm text-slate-900 dark:text-white truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">${escapeHtml(t.train_name)}</h3>
-                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">#${t.train_no}</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 font-black border border-slate-200/80 dark:border-slate-700/80">#${t.train_no}</span>
+                <h3 class="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">${escapeHtml(t.train_name)}</h3>
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">${t.duration || 'Intercity'}</p>
+              <p class="text-[10px] text-slate-400 font-semibold mt-0.5 flex items-center gap-1">
+                <span>${t.duration || 'Intercity Express'}</span>
+                <span>•</span>
+                <span>${t.total_distance_km ? `${t.total_distance_km} km` : 'Active Run'}</span>
+              </p>
             </div>
             <div class="flex flex-col items-end shrink-0">
-              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${delayBadgeClass}">
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${delayBadgeClass}">
                 ${delayText}
               </span>
-              <span class="text-[9px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
-                <i class="fa-solid fa-clock-rotate-left text-[8px]"></i>
-                <span>${t.last_updated ? (t.last_updated.toLowerCase().includes('ago') || t.last_updated.toLowerCase().includes('now') ? t.last_updated : `Updated ${t.last_updated}`) : 'Live GPS'}</span>
+              <span class="text-[9px] text-slate-400 mt-1 flex items-center gap-1 font-mono font-medium">
+                <i class="fa-solid fa-satellite text-[8px] text-cyan-500"></i>
+                <span>${t.last_updated ? (t.last_updated.toLowerCase().includes('ago') || t.last_updated.toLowerCase().includes('now') ? t.last_updated : `Sync ${t.last_updated}`) : 'Live GPS'}</span>
               </span>
             </div>
           </div>
 
-          <!-- Middle Row: Route Times & Station Names (Full Station Names) -->
-          <div class="flex items-center justify-between text-xs pt-1">
-            <div class="text-left min-w-0 pr-2">
-              <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.departure_time || '--:--'}</div>
-              <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-tight">${escapeHtml(t.from || 'Origin')}</div>
-            </div>
-
-            <!-- Animated Route Track with Moving Indicator -->
-            <div class="flex-1 mx-2 flex flex-col items-center shrink-0 min-w-[80px]">
-              <span class="text-[9px] font-mono font-bold text-cyan-600 dark:text-cyan-400 mb-1">${progress}%</span>
-              <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: ${progress}%"></div>
+          <!-- Corridor Progress HUD (Origin ➔ Progress ➔ Destination) -->
+          <div class="p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <div class="min-w-0 pr-1 text-left">
+                <div class="font-mono text-xs font-black text-slate-900 dark:text-white">${t.departure_time || '--:--'}</div>
+                <div class="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold truncate max-w-[90px]">${escapeHtml(t.from || 'Origin')}</div>
               </div>
-            </div>
 
-            <div class="text-right min-w-0 pl-2">
-              <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.arrival_time || '--:--'}</div>
-              <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-tight">${escapeHtml(t.to || 'Destination')}</div>
+              <!-- Sleek Progress HUD Bar -->
+              <div class="flex-1 mx-2 flex flex-col items-center shrink-0 min-w-[75px]">
+                <div class="flex items-center space-x-1 text-[9px] font-mono font-black text-cyan-600 dark:text-cyan-400">
+                  <span>${progress}%</span>
+                  ${t.speed ? `<span class="text-slate-400">•</span><span>${t.speed} km/h</span>` : ''}
+                </div>
+                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700/80 rounded-full overflow-hidden relative mt-0.5">
+                  <div class="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                </div>
+              </div>
+
+              <div class="min-w-0 pl-1 text-right">
+                <div class="font-mono text-xs font-black text-slate-900 dark:text-white">${t.arrival_time || '--:--'}</div>
+                <div class="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold truncate max-w-[90px]">${escapeHtml(t.to || 'Destination')}</div>
+              </div>
             </div>
           </div>
 
-          <!-- Bottom Action Button -->
-          <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
-              <span>GPS Tracking</span>
-            </span>
-            <button type="button" class="view-live-train-btn px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 hover:bg-cyan-600 text-cyan-700 dark:text-cyan-300 hover:text-white border border-cyan-200 dark:border-cyan-800 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer" data-train-no="${t.train_no}">
-              <i class="fa-solid fa-route text-[10px]"></i>
-              <span>Live Stoppages</span>
+          <!-- Real-Time Telemetry Bar & Action Trigger -->
+          <div class="pt-1 flex items-center justify-between gap-2 text-[11px]">
+            <div class="min-w-0 flex items-center space-x-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate">
+              <i class="fa-solid fa-location-crosshairs text-cyan-500 text-[9px] shrink-0"></i>
+              <span class="truncate">${t.next_station ? `Next: <strong class="text-slate-700 dark:text-slate-200">${escapeHtml(t.next_station)}</strong>` : 'Full Route Tracking'}</span>
+            </div>
+            <button type="button" class="view-live-train-btn px-2.5 py-1 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-600 text-cyan-700 dark:text-cyan-300 hover:text-white border border-cyan-200/80 dark:border-cyan-800 text-[11px] font-black transition flex items-center space-x-1 shrink-0 cursor-pointer shadow-2xs" data-train-no="${t.train_no}">
+              <i class="fa-solid fa-route text-[9px]"></i>
+              <span>Telemetry</span>
             </button>
           </div>
 
@@ -8026,46 +8035,46 @@ document.addEventListener('DOMContentLoaded', () => {
             let statusBadge = '';
 
             if (isPassed) {
-              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-check text-[10px]"></i></div>`;
+              nodeIcon = `<div class="relative z-10 w-6 h-6 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[9px] shadow-2xs shrink-0"><i class="fa-solid fa-check"></i></div>`;
               textClass = 'text-slate-500 dark:text-slate-400';
               statusBadge = `<span class="text-[9px] font-bold text-slate-400">Passed</span>`;
             } else if (isNextStop) {
-              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20"><i class="fa-solid fa-location-crosshairs text-[10px]"></i></div>`;
+              nodeIcon = `<div class="relative z-10 w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-[9px] shadow-sm shadow-cyan-500/40 ring-2 ring-cyan-500/30 animate-pulse shrink-0"><i class="fa-solid fa-location-crosshairs"></i></div>`;
               textClass = 'text-cyan-600 dark:text-cyan-400 font-black';
-              statusBadge = `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800">Next Stop</span>`;
+              statusBadge = `<span class="text-[9px] font-black px-2 py-0.2 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800">NEXT STOP</span>`;
             } else {
-              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 flex items-center justify-center text-[10px] font-mono font-bold">${idx + 1}</div>`;
-              textClass = 'text-slate-800 dark:text-slate-200';
+              nodeIcon = `<div class="relative z-10 w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 flex items-center justify-center text-[9px] font-mono font-bold shrink-0">${idx + 1}</div>`;
+              textClass = 'text-slate-800 dark:text-slate-200 font-bold';
               statusBadge = `<span class="text-[9px] font-semibold text-slate-400">Upcoming</span>`;
             }
 
-            const stationBn = stop.station_bn && stop.station_bn !== stop.station_name ? ` <span class="text-[11px] font-normal text-slate-400">(${escapeHtml(stop.station_bn)})</span>` : '';
+            const stationBn = stop.station_bn && stop.station_bn !== stop.station_name ? ` <span class="text-[10px] font-normal text-slate-400">(${escapeHtml(stop.station_bn)})</span>` : '';
 
             // Display Scheduled Time vs Actual / Stoppage ETA Beside It
             let timeBadge = '';
             if (isPassed) {
               timeBadge = `
-                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                <div class="flex items-center space-x-1 font-mono text-[11px]">
                   <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
                   <span class="text-slate-300 dark:text-slate-600">·</span>
-                  <span class="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/70 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800" title="Actual Departed Time">Act: ${stop.actual_time || stop.scheduled_time}</span>
+                  <span class="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/70 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800" title="Actual Departed Time">Act: ${stop.actual_time || stop.scheduled_time}</span>
                 </div>
               `;
             } else if (isNextStop) {
               timeBadge = `
-                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                <div class="flex items-center space-x-1 font-mono text-[11px]">
                   <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
                   <span class="text-slate-300 dark:text-slate-600">·</span>
-                  <span class="font-extrabold text-cyan-600 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/80 px-1.5 py-0.2 rounded border border-cyan-300 dark:border-cyan-800 animate-pulse" title="Next Stop ETA">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
+                  <span class="font-black text-cyan-600 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/80 px-1.5 py-0.2 rounded border border-cyan-300 dark:border-cyan-800 animate-pulse" title="Next Stop ETA">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
                 </div>
               `;
             } else {
               const hasDelay = delayMin > 0;
               timeBadge = `
-                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                <div class="flex items-center space-x-1 font-mono text-[11px]">
                   <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
                   <span class="text-slate-300 dark:text-slate-600">·</span>
-                  <span class="font-extrabold ${hasDelay ? 'text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border-amber-300 dark:border-amber-800' : 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'} px-1.5 py-0.2 rounded border" title="Estimated Arrival Time">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
+                  <span class="font-black ${hasDelay ? 'text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border-amber-300 dark:border-amber-800' : 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'} px-1.5 py-0.2 rounded border" title="Estimated Arrival Time">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
                 </div>
               `;
             }
@@ -8075,12 +8084,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activePrevIdx >= 0 && idx === activePrevIdx && idx < stoppages.length - 1) {
               const segmentPct = data.segment_progress_pct || 50;
               inTransitRoadmapBlock = `
-                <div class="my-2 ml-2 sm:ml-3 pl-4 sm:pl-5 pr-2 py-2 rounded-xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 border border-cyan-500/40 relative shadow-2xs">
+                <div class="my-2 ml-2 sm:ml-3 pl-3.5 sm:pl-4.5 pr-2.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500/10 via-teal-500/10 to-indigo-500/10 border border-cyan-500/30 relative shadow-2xs">
                   <!-- Vertical road track continuous connector -->
                   <div class="absolute -left-[1px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-cyan-500 to-slate-300 dark:to-slate-700"></div>
                   
                   <!-- Moving Train Icon Beacon at Exact Relative Position -->
-                  <div class="absolute -left-[11px] top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-[10px] shadow-md shadow-cyan-500/40 ring-2 ring-cyan-500/30 animate-pulse">
+                  <div class="absolute -left-[10px] top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-[9px] shadow-sm shadow-cyan-500/40 ring-2 ring-cyan-500/30 animate-pulse">
                     <i class="fa-solid fa-train"></i>
                   </div>
 
@@ -8098,7 +8107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       <span class="text-[9px] font-mono text-slate-400 font-bold">Updated ${data.last_updated || '0s ago'}</span>
                     </div>
 
-                    <p class="text-[11px] font-bold text-slate-900 dark:text-white flex items-center gap-1 flex-wrap">
+                    <p class="text-[10px] sm:text-[11px] font-black text-slate-900 dark:text-white flex items-center gap-1 flex-wrap">
                       <span>${data.covered_since_prev_stop_km ? `${data.covered_since_prev_stop_km} km passed from ${escapeHtml(stop.station_name)}` : 'In transit'}</span>
                       <span class="text-cyan-500 font-bold">➔</span>
                       <span>${data.km_to_next ? `${data.km_to_next} km to ${escapeHtml(data.next_stop)}` : ''}</span>
@@ -8106,7 +8115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <!-- Segment Progress Bar -->
                     <div class="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-full" style="width: ${segmentPct}%"></div>
+                      <div class="h-full bg-gradient-to-r from-cyan-500 via-teal-500 to-indigo-500 rounded-full" style="width: ${segmentPct}%"></div>
                     </div>
                   </div>
                 </div>
@@ -8114,7 +8123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             return `
-              <div class="flex items-start space-x-2.5 pb-3 sm:pb-4 last:pb-0.5 relative group">
+              <div class="flex items-start space-x-2.5 pb-2.5 sm:pb-3 last:pb-0.5 relative group">
                 ${nodeIcon}
                 <div class="flex-1 min-w-0 pt-0.5">
                   <div class="flex items-center justify-between gap-1.5 flex-wrap">
@@ -8126,9 +8135,9 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${statusBadge}
                     </div>
                   </div>
-                  <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400 pt-0.5">
+                  <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                     <span>${stop.station_code ? stop.station_code + ' • ' : ''}${stop.distance_km} km</span>
-                    <span class="font-mono text-[9px] sm:text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${stop.platform && stop.platform !== '—' ? stop.platform : 'PF --'}</span>
+                    <span class="font-mono text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">${stop.platform && stop.platform !== '—' ? stop.platform : 'PF --'}</span>
                   </div>
                 </div>
               </div>

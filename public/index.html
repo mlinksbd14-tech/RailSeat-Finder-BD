@@ -140,7 +140,7 @@
             </button>
 
             <!-- User Dropdown Menu -->
-            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
+            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
               <!-- User Info Card -->
               <div class="p-3 bg-purple-50/50 dark:bg-purple-950/30">
                 <p class="font-extrabold text-xs text-slate-900 dark:text-white truncate" id="dropdownUserFullName">System Administrator</p>
@@ -181,7 +181,7 @@
           </button>
 
           <!-- Notification Dropdown Panel -->
-          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in">
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in">
             <!-- Dropdown Header -->
             <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
               <div class="flex items-center space-x-2">
@@ -216,7 +216,7 @@
           </button>
 
           <!-- Settings Dropdown Panel (Category-Wise) -->
-          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden animate-fade-in flex flex-col">
+          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in flex flex-col">
             
             <!-- Header -->
             <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
@@ -641,10 +641,10 @@
       <!-- ============================================== -->
       <!-- MODERN TRAVEL HERO SEARCH CARD -->
       <!-- ============================================== -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative overflow-hidden">
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative z-20">
       
       <!-- Subtle Decorative Top Gradient Line -->
-      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-t-2xl"></div>
 
       <!-- Hero Header & Value Proposition -->
       <div class="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -663,7 +663,7 @@
       <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-3.5 items-end">
         
         <!-- From Station (3 cols) -->
-        <div class="lg:col-span-3 relative">
+        <div class="lg:col-span-3 relative z-30">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> From Station
           </label>
@@ -677,7 +677,7 @@
             </button>
           </div>
           <!-- Autocomplete Dropdown -->
-          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
         </div>
 
         <!-- Swap Button (1 col) -->
@@ -688,7 +688,7 @@
         </div>
 
         <!-- To Station (3 cols) -->
-        <div class="lg:col-span-3 relative">
+        <div class="lg:col-span-3 relative z-30">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> Destination
           </label>
@@ -702,7 +702,7 @@
             </button>
           </div>
           <!-- Autocomplete Dropdown -->
-          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50"></div>
+          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
         </div>
 
         <!-- Journey Date (2 cols) -->
@@ -1113,8 +1113,8 @@
     <div id="liveTrackerSection" class="hidden space-y-4 animate-fade-in">
       
       <!-- Hero Tracker Header Card -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"></div>
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative z-20">
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-t-2xl"></div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div class="space-y-1">
@@ -1174,7 +1174,7 @@
           </div>
 
           <!-- Mode 1: By Train Input Field & Dropdown -->
-          <div id="liveSearchByTrainContainer" class="relative max-w-md">
+          <div id="liveSearchByTrainContainer" class="relative z-30 max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
             <input type="text" id="liveTrackerSearchInput" autocomplete="off" placeholder="Search by train name or model (e.g. Subarna, 701, Kalni)..." class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
             <button type="button" id="clearLiveTrackerSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
@@ -1182,14 +1182,14 @@
             </button>
             
             <!-- Floating Autocomplete Dropdown for By Train -->
-            <div id="liveTrackerSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+            <div id="liveTrackerSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
           </div>
 
           <!-- Mode 2: By Route Input Fields & Dropdowns (From & To) -->
-          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl relative">
+          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl relative z-30">
             
             <!-- From Station Input + Dropdown -->
-            <div class="relative">
+            <div class="relative z-30">
               <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 text-xs pointer-events-none"></i>
               <input type="text" id="liveRouteFromInput" autocomplete="off" placeholder="From Station (e.g. Dhaka)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteFromBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
@@ -1197,11 +1197,11 @@
               </button>
               
               <!-- Floating Autocomplete Dropdown for From Station -->
-              <div id="liveRouteFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+              <div id="liveRouteFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
 
             <!-- To Station Input + Dropdown -->
-            <div class="relative">
+            <div class="relative z-30">
               <i class="fa-solid fa-location-crosshairs absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-500 text-xs pointer-events-none"></i>
               <input type="text" id="liveRouteToInput" autocomplete="off" placeholder="To Station (e.g. Chattogram)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteToBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
@@ -1209,7 +1209,7 @@
               </button>
 
               <!-- Floating Autocomplete Dropdown for To Station -->
-              <div id="liveRouteToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+              <div id="liveRouteToDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
 
           </div>
@@ -1534,7 +1534,7 @@
         </div>
 
         <!-- Dynamic Train Search Suggestions Dropdown -->
-        <div id="routeSearchDropdown" class="hidden absolute left-5 right-5 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
+        <div id="routeSearchDropdown" class="hidden absolute left-5 right-5 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60 custom-scrollbar">
         </div>
       </div>
 
@@ -1643,7 +1643,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
           
           <!-- Boarding Station (From) Dropdown -->
-          <div class="sm:col-span-4 relative">
+          <div class="sm:col-span-4 relative z-30">
             <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
               <span class="flex items-center space-x-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -1657,7 +1657,7 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div id="matrixFromDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
+            <div id="matrixFromDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-[80] bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
               <div class="p-1.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <button id="matrixFromSelectAllBtn" type="button" class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Select All</button>
                 <button id="matrixFromClearBtn" type="button" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>
@@ -1669,7 +1669,7 @@
           </div>
 
           <!-- Destination Station (To) Dropdown -->
-          <div class="sm:col-span-4 relative">
+          <div class="sm:col-span-4 relative z-30">
             <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
               <span class="flex items-center space-x-1">
                 <span class="w-2 h-2 rounded-full bg-teal-500"></span>
@@ -1683,7 +1683,7 @@
             </button>
 
             <!-- Dropdown Menu -->
-            <div id="matrixToDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-30 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
+            <div id="matrixToDropdownMenu" class="hidden absolute left-0 right-0 top-full mt-1 z-[80] bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-fade-in text-xs max-h-60 flex flex-col">
               <div class="p-1.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <button id="matrixToSelectAllBtn" type="button" class="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline">Select All Downstream</button>
                 <button id="matrixToClearBtn" type="button" class="text-[11px] font-bold text-slate-500 hover:underline">Clear</button>

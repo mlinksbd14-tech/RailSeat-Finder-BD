@@ -177,13 +177,30 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
-      "lastLogin": "2026-08-31T05:58:11.041Z",
+      "lastLogin": "2026-08-31T06:03:48.536Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T06:03:48.536Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::ffff:127.0.0.1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T05:58:11.041Z",
@@ -591,26 +608,9 @@
             "query": "27.147.149.234",
             "region": "Dhaka Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T08:39:12.746Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Tangail",
-            "region": "Dhaka Division",
-            "country": "Bangladesh",
-            "countryCode": "BD",
-            "flag": "🇧🇩",
-            "isp": "Link3 Technologies Limited",
-            "query": "27.147.149.234"
-          }
         }
       ],
-      "lastIp": "::ffff:127.0.0.1",
+      "lastIp": "::1",
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -620,7 +620,7 @@
         "region": "Local Network",
         "query": "::ffff:127.0.0.1"
       },
-      "loginCount": 69
+      "loginCount": 70
     }
   ]
 }

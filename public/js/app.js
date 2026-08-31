@@ -7430,15 +7430,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let liveModalLeafletMap = null;
   let liveModalMapLayerGroup = null;
 
-  const CARTO_API_KEY = 'cb1_2mah_1_4779a1668bc1f9532f862187';
-
-  function getMapTileUrl() {
-    const isDark = document.documentElement.classList.contains('dark');
-    return isDark
-      ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`
-      : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`;
-  }
-
   function toggleElementFullscreen(el, iconEl, mapInstance) {
     if (!el) return;
     const isFull = document.fullscreenElement === el || el.classList.contains('fixed-map-fullscreen');
@@ -7504,18 +7495,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // 1. Basemap Layer (Carto / OpenStreetMap)
-      L.tileLayer(getMapTileUrl(), {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-      }).addTo(liveNetworkLeafletMap);
-
-      // 2. OpenRailwayMap Specialized Railway Tracks Layer
+      // Dedicated OpenRailwayMap Live Rail Route Layer
       L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
         maxZoom: 19,
         subdomains: 'abc',
-        opacity: 0.9,
         attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
       }).addTo(liveNetworkLeafletMap);
 
@@ -7699,18 +7682,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // 1. Basemap Layer
-      L.tileLayer(getMapTileUrl(), {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-      }).addTo(liveModalLeafletMap);
-
-      // 2. OpenRailwayMap Railway Tracks Layer
+      // Dedicated OpenRailwayMap Live Rail Route Layer
       L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
         maxZoom: 19,
         subdomains: 'abc',
-        opacity: 0.9,
         attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
       }).addTo(liveModalLeafletMap);
 

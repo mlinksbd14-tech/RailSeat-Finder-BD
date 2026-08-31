@@ -177,10 +177,10 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
       "lastIp": "::1",
       "lastLocation": {
@@ -192,8 +192,25 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-08-31T06:23:14.325Z",
+      "lastLogin": "2026-08-31T06:44:08.411Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T06:44:08.411Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T06:23:14.325Z",
@@ -601,26 +618,9 @@
             "query": "27.147.149.234",
             "region": "Dhaka Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T10:30:04.332Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Tangail",
-            "isp": "Link3 Technologies Limited",
-            "query": "27.147.149.234",
-            "region": "Dhaka Division"
-          }
         }
       ],
-      "loginCount": 72
+      "loginCount": 73
     }
   ]
 }

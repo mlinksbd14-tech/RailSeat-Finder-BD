@@ -60,54 +60,54 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased">
 
-  <!-- Top Navigation Header -->
+  <!-- Top Navigation Header (2-Row on Mobile, 1-Row on Desktop) -->
   <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs transition-all">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-16 py-2 flex items-center justify-between gap-3">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:min-h-16 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 md:gap-3">
       
-      <!-- Brand Logo & Live Status -->
-      <div class="flex items-center space-x-3 min-w-0">
+      <!-- Brand Logo & Live Status (Row 1 Left on Mobile, Left on Desktop) -->
+      <div class="flex items-center space-x-2.5 min-w-0 order-1">
         <a href="/" class="flex items-center space-x-2.5 group">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
-            <i class="fa-solid fa-train text-base sm:text-lg"></i>
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
+            <i class="fa-solid fa-train text-sm sm:text-lg"></i>
           </div>
           <div class="min-w-0">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
               <span class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent truncate">
                 RailSeat BD
               </span>
-              <span id="liveBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+              <span id="liveBadge" class="text-[10px] px-2 py-0.2 sm:py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800/60 shrink-0">
                 ● Live
               </span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden sm:block">Bangladesh Railway Seat Availability & Radar</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate hidden lg:block">Bangladesh Railway Seat Availability & Radar</p>
           </div>
         </a>
       </div>
 
-      <!-- Quick Feature Navigation (Mobile, Tablet & Desktop) -->
-      <nav class="flex items-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold">
-        <button type="button" id="navSeatFinderBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer" title="Seat Finder">
+      <!-- Quick Feature Navigation (Row 2 Full-Width on Mobile, Center on Desktop) -->
+      <nav class="w-full md:w-auto order-3 md:order-2 flex items-center justify-between sm:justify-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold shrink-0">
+        <button type="button" id="navSeatFinderBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Finder">
           <i class="fa-solid fa-chair text-emerald-500"></i>
-          <span class="hidden sm:inline">Seat Finder</span>
+          <span>Seat Finder</span>
         </button>
-        <button type="button" id="navLiveTrackerBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
+        <button type="button" id="navLiveTrackerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
-          <span class="hidden sm:inline">Live Radar</span>
-          <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+          <span>Live Radar</span>
+          <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-cyan-500 animate-pulse"></span>
         </button>
-        <button type="button" id="openRouteExplorerBtn" class="hidden md:flex px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition items-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
+        <button type="button" id="openRouteExplorerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
           <i class="fa-solid fa-route text-emerald-500"></i>
-          <span class="hidden lg:inline">Routes</span>
+          <span>Routes</span>
         </button>
-        <button type="button" id="openWatchlistBtn" class="hidden md:flex relative px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition items-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
+        <button type="button" id="openWatchlistBtn" class="flex-1 md:flex-initial relative px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
           <i class="fa-solid fa-crosshairs text-amber-500"></i>
-          <span class="hidden lg:inline">Watchlist</span>
+          <span>Watchlist</span>
           <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0</span>
         </button>
       </nav>
 
-      <!-- Header Action Controls -->
-      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+      <!-- Header Action Controls (Row 1 Right on Mobile, Right on Desktop) -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0 order-2 md:order-3">
         
         <!-- Live API Auth Connection Button -->
         <button id="authModalOpenBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white cursor-pointer" title="Manage Live Shohoz Session">

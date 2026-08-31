@@ -7359,10 +7359,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveTrackerSection) liveTrackerSection.classList.remove('hidden');
 
       if (navSeatFinderBtn) {
-        navSeatFinderBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+        navSeatFinderBtn.className = 'flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer';
       }
       if (navLiveTrackerBtn) {
-        navLiveTrackerBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        navLiveTrackerBtn.className = 'flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer';
       }
 
       // Default to Grid View when opening Live Radar
@@ -7382,10 +7382,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (seatFinderSection) seatFinderSection.classList.remove('hidden');
 
       if (navSeatFinderBtn) {
-        navSeatFinderBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        navSeatFinderBtn.className = 'flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer';
       }
       if (navLiveTrackerBtn) {
-        navLiveTrackerBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+        navLiveTrackerBtn.className = 'flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer';
       }
     }
   }

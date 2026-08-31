@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveRouteFrom: '',
     liveRouteTo: '',
     liveTrackerTimer: null,
-    activeMainTab: 'seats',
+    activeMainTab: 'tracker',
     authNotice: '',
     authNoticeEnabled: true,
     popularRoutes: [
@@ -7292,6 +7292,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (trainNo) openLiveTrainModal(trainNo);
       }
     });
+
+    // Default start in Live Train GPS & Delay Radar Grid View
+    switchMainTab('tracker');
   }
 
   function switchMainTab(tab) {

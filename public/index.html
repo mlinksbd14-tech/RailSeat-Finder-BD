@@ -86,14 +86,14 @@
 
       <!-- Quick Feature Navigation (Mobile, Tablet & Desktop) -->
       <nav class="flex items-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold">
-        <button type="button" id="navSeatFinderBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer" title="Seat Finder">
+        <button type="button" id="navLiveTrackerBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
+          <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
+          <span class="hidden sm:inline">Live Radar</span>
+          <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+        </button>
+        <button type="button" id="navSeatFinderBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer" title="Seat Finder">
           <i class="fa-solid fa-chair text-emerald-500"></i>
           <span class="hidden sm:inline">Seat Finder</span>
-        </button>
-        <button type="button" id="navLiveTrackerBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
-          <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
-          <span class="hidden sm:inline">Live Tracker</span>
-          <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
         </button>
         <button type="button" id="openRouteExplorerBtn" class="hidden md:flex px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition items-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
           <i class="fa-solid fa-route text-emerald-500"></i>
@@ -638,7 +638,7 @@
     <!-- ============================================== -->
     <!-- 💺 SEAT FINDER SECTION (SEARCH, STATS, RESULTS) -->
     <!-- ============================================== -->
-    <div id="seatFinderSection" class="space-y-3.5">
+    <div id="seatFinderSection" class="hidden space-y-3.5">
 
       <!-- ============================================== -->
       <!-- MODERN TRAVEL HERO SEARCH CARD -->
@@ -1112,7 +1112,7 @@
     <!-- ============================================== -->
     <!-- 🛰️ LIVE TRAIN GPS & DELAY TRACKER SECTION -->
     <!-- ============================================== -->
-    <div id="liveTrackerSection" class="hidden space-y-4 animate-fade-in">
+    <div id="liveTrackerSection" class="space-y-4 animate-fade-in">
       
       <!-- Hero Tracker Header Card -->
       <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative z-20">

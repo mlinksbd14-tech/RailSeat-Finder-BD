@@ -1254,6 +1254,25 @@
       <!-- Live Bangladesh Railway Network Radar Map View -->
       <div id="liveTrackerNetworkMapContainer" class="hidden w-full h-[540px] sm:h-[640px] rounded-3xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-md relative bg-slate-100 dark:bg-slate-900 z-10">
         <div id="liveNetworkLeafletMap" class="w-full h-full"></div>
+
+        <!-- Floating In-Map Quick Controls Toolbar (Top Right) -->
+        <div class="absolute top-3.5 right-3.5 z-[500] flex flex-col space-y-1.5 pointer-events-auto">
+          <button type="button" id="liveNetworkFullscreenBtn" title="Toggle Fullscreen View" class="w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+            <i class="fa-solid fa-expand" id="liveNetworkFullscreenIcon"></i>
+          </button>
+          <button type="button" id="liveNetworkRecenterBtn" title="Fit Entire Railway Network" class="w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+            <i class="fa-solid fa-crosshairs"></i>
+          </button>
+          <div class="flex flex-col rounded-xl overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md divide-y divide-slate-100 dark:divide-slate-800">
+            <button type="button" id="liveNetworkZoomInBtn" title="Zoom In" class="w-8 h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button type="button" id="liveNetworkZoomOutBtn" title="Zoom Out" class="w-8 h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+          </div>
+        </div>
+
         <!-- Floating Map Legend Overlay -->
         <div class="absolute bottom-4 left-4 z-[500] p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg text-[11px] font-bold space-y-1.5 pointer-events-auto max-w-[200px]">
           <div class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 pb-1 border-b border-slate-100 dark:border-slate-800">
@@ -1919,6 +1938,24 @@
           <!-- Tab 2: Interactive Live Route Leaflet Map (Mobile-Compact) -->
           <div id="liveModalMapContainer" class="hidden w-full h-64 sm:h-80 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-900 shadow-inner z-10">
             <div id="liveModalLeafletMap" class="w-full h-full"></div>
+
+            <!-- Floating In-Map Quick Controls Toolbar (Top Right) -->
+            <div class="absolute top-2.5 right-2.5 z-[500] flex flex-col space-y-1 pointer-events-auto">
+              <button type="button" id="liveModalMapFullscreenBtn" title="Toggle Fullscreen View" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-expand" id="liveModalMapFullscreenIcon"></i>
+              </button>
+              <button type="button" id="liveModalMapCenterBtn" title="Focus Moving Train" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-crosshairs"></i>
+              </button>
+              <div class="flex flex-col rounded-lg overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md divide-y divide-slate-100 dark:divide-slate-800">
+                <button type="button" id="liveModalMapZoomInBtn" title="Zoom In" class="w-7 h-7 sm:w-8 sm:h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+                <button type="button" id="liveModalMapZoomOutBtn" title="Zoom Out" class="w-7 h-7 sm:w-8 sm:h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+                  <i class="fa-solid fa-minus"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

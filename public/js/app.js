@@ -7254,12 +7254,69 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (liveModalCenterTrainBtn) {
-      liveModalCenterTrainBtn.addEventListener('click', () => {
+    // In-Map Controls for Network Radar Map
+    const liveNetworkFullscreenBtn = document.getElementById('liveNetworkFullscreenBtn');
+    const liveNetworkFullscreenIcon = document.getElementById('liveNetworkFullscreenIcon');
+    const liveNetworkRecenterBtn = document.getElementById('liveNetworkRecenterBtn');
+    const liveNetworkZoomInBtn = document.getElementById('liveNetworkZoomInBtn');
+    const liveNetworkZoomOutBtn = document.getElementById('liveNetworkZoomOutBtn');
+
+    if (liveNetworkFullscreenBtn) {
+      liveNetworkFullscreenBtn.addEventListener('click', () => {
+        toggleElementFullscreen(liveTrackerNetworkMapContainer, liveNetworkFullscreenIcon, liveNetworkLeafletMap);
+      });
+    }
+    if (liveNetworkRecenterBtn) {
+      liveNetworkRecenterBtn.addEventListener('click', () => {
+        if (liveNetworkLeafletMap) {
+          if (liveNetworkMarkersGroup && liveNetworkMarkersGroup.getLayers().length > 0) {
+            const group = new L.featureGroup(liveNetworkMarkersGroup.getLayers());
+            liveNetworkLeafletMap.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 10 });
+          } else {
+            liveNetworkLeafletMap.setView([23.8103, 90.4125], 7, { animate: true });
+          }
+        }
+      });
+    }
+    if (liveNetworkZoomInBtn) {
+      liveNetworkZoomInBtn.addEventListener('click', () => {
+        if (liveNetworkLeafletMap) liveNetworkLeafletMap.zoomIn();
+      });
+    }
+    if (liveNetworkZoomOutBtn) {
+      liveNetworkZoomOutBtn.addEventListener('click', () => {
+        if (liveNetworkLeafletMap) liveNetworkLeafletMap.zoomOut();
+      });
+    }
+
+    // In-Map Controls for Modal Route Map
+    const liveModalMapFullscreenBtn = document.getElementById('liveModalMapFullscreenBtn');
+    const liveModalMapFullscreenIcon = document.getElementById('liveModalMapFullscreenIcon');
+    const liveModalMapCenterBtn = document.getElementById('liveModalMapCenterBtn');
+    const liveModalMapZoomInBtn = document.getElementById('liveModalMapZoomInBtn');
+    const liveModalMapZoomOutBtn = document.getElementById('liveModalMapZoomOutBtn');
+
+    if (liveModalMapFullscreenBtn) {
+      liveModalMapFullscreenBtn.addEventListener('click', () => {
+        toggleElementFullscreen(liveModalMapContainer, liveModalMapFullscreenIcon, liveModalLeafletMap);
+      });
+    }
+    if (liveModalMapCenterBtn) {
+      liveModalMapCenterBtn.addEventListener('click', () => {
         if (liveModalLeafletMap && state.currentModalTrainMarker) {
           liveModalLeafletMap.setView(state.currentModalTrainMarker.getLatLng(), 11, { animate: true });
           state.currentModalTrainMarker.openPopup();
         }
+      });
+    }
+    if (liveModalMapZoomInBtn) {
+      liveModalMapZoomInBtn.addEventListener('click', () => {
+        if (liveModalLeafletMap) liveModalLeafletMap.zoomIn();
+      });
+    }
+    if (liveModalMapZoomOutBtn) {
+      liveModalMapZoomOutBtn.addEventListener('click', () => {
+        if (liveModalLeafletMap) liveModalLeafletMap.zoomOut();
       });
     }
 
@@ -7382,6 +7439,58 @@ document.addEventListener('DOMContentLoaded', () => {
       : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`;
   }
 
+  function toggleElementFullscreen(el, iconEl, mapInstance) {
+    if (!el) return;
+    const isFull = document.fullscreenElement === el || el.classList.contains('fixed-map-fullscreen');
+
+    if (!isFull) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {
+          el.classList.add('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen', 'fixed-map-fullscreen');
+        });
+      } else {
+        el.classList.add('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen', 'fixed-map-fullscreen');
+      }
+      if (iconEl) {
+        iconEl.classList.remove('fa-expand');
+        iconEl.classList.add('fa-compress');
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      el.classList.remove('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen', 'fixed-map-fullscreen');
+      if (iconEl) {
+        iconEl.classList.remove('fa-compress');
+        iconEl.classList.add('fa-expand');
+      }
+    }
+
+    setTimeout(() => {
+      if (mapInstance) mapInstance.invalidateSize();
+    }, 250);
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      document.querySelectorAll('.fixed-map-fullscreen').forEach(el => {
+        el.classList.remove('fixed', 'inset-0', 'z-[9999]', 'w-screen', 'h-screen', 'fixed-map-fullscreen');
+      });
+      const netIcon = document.getElementById('liveNetworkFullscreenIcon');
+      if (netIcon) {
+        netIcon.classList.remove('fa-compress');
+        netIcon.classList.add('fa-expand');
+      }
+      const modalIcon = document.getElementById('liveModalMapFullscreenIcon');
+      if (modalIcon) {
+        modalIcon.classList.remove('fa-compress');
+        modalIcon.classList.add('fa-expand');
+      }
+      if (liveNetworkLeafletMap) liveNetworkLeafletMap.invalidateSize();
+      if (liveModalLeafletMap) liveModalLeafletMap.invalidateSize();
+    }
+  });
+
   function initOrUpdateNetworkMap(trains) {
     if (!window.L || !document.getElementById('liveNetworkLeafletMap')) return;
 
@@ -7391,7 +7500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zoom: 7,
         minZoom: 6,
         maxZoom: 18,
-        zoomControl: true,
+        zoomControl: false,
         attributionControl: true
       });
 
@@ -7488,7 +7597,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zoom: 8,
         minZoom: 6,
         maxZoom: 18,
-        zoomControl: true,
+        zoomControl: false,
         attributionControl: true
       });
 

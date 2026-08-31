@@ -884,6 +884,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Update Telegram UI State
           updateTelegramUI();
+
+          // Ensure active category tab displays properly
+          const activeTab = document.querySelector('.setting-cat-tab.bg-emerald-600') || document.querySelector('.setting-cat-tab[data-cat="all"]');
+          if (activeTab) activeTab.click();
         } else {
           settingsDropdown.classList.add('hidden');
         }

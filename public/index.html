@@ -175,468 +175,20 @@
           </div>
         </div>
 
-        <!-- Top Menu Notification Center (Stores All Alert Notifications) -->
+        <!-- Top Menu Notification Center Button -->
         <div class="relative shrink-0" id="notifCenterContainer">
           <button id="notifBellBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition flex items-center justify-center shrink-0 cursor-pointer" title="Alert Notification Center">
             <i class="fa-solid fa-bell text-xs sm:text-sm" id="notifBellIcon"></i>
             <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
           </button>
-
-          <!-- Notification Modal Panel -->
-          <div id="notifDropdown" class="hidden fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-            <!-- Modal Card (Bottom-sheet on mobile, centered modal on tablet/desktop) -->
-            <div id="notifModalCard" class="w-full sm:max-w-md max-h-[90vh] md:max-h-[85vh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
-              <!-- Dropdown Header -->
-              <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
-                <div class="flex items-center space-x-2">
-                  <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-bell"></i>
-                  </div>
-                  <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Notifications</h4>
-                  <span id="notifCountPill" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">0</span>
-                </div>
-                <div class="flex items-center space-x-2.5 text-[11px]">
-                  <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition cursor-pointer" title="Mark all as read">Mark Read</button>
-                  <span class="text-slate-300 dark:text-slate-700">&bull;</span>
-                  <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer" title="Clear all stored alerts">Clear</button>
-                  <button type="button" id="closeNotifModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer ml-1" title="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Notification Items Scrollable List -->
-              <div id="notifListContainer" class="max-h-[60vh] md:max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-1 flex-1">
-                <!-- Dynamic alert items -->
-              </div>
-
-              <!-- Dropdown Footer -->
-              <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
-                <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Local alert history</span>
-                <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer">Test Alert</button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- Settings Menu Dropdown (Seat Alert Sound, Desktop Alerts, Theme) -->
+        <!-- Settings Menu Button -->
         <div class="relative shrink-0" id="settingsDropdownContainer">
           <button id="settingsMenuBtn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center shrink-0 cursor-pointer" title="Settings & Preferences">
             <i class="fa-solid fa-gear text-xs sm:text-sm" id="settingsGearIcon"></i>
           </button>
-
-          <!-- Settings Modal Panel -->
-          <div id="settingsDropdown" class="hidden fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-            <!-- Modal Card (Bottom-sheet on mobile, centered modal on tablet/desktop) -->
-            <div id="settingsModalCard" class="w-full sm:max-w-md max-h-[92vh] md:max-h-[85vh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
-              
-              <!-- Header -->
-              <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
-                <div class="flex items-center space-x-2">
-                  <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-gear"></i>
-                  </div>
-                  <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Auto-saved</span>
-                  <button type="button" id="closeSettingsModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-              </div>
-
-            <!-- Category Filter Tabs -->
-            <div class="flex items-center space-x-1 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 overflow-x-auto shrink-0 text-[11px]" id="settingsCategoryTabs">
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer shrink-0" data-cat="all">All</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="alerts">🔔 Alerts</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="monitor">⏱️ Monitor</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="telegram">✈️ Telegram</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="appearance">🎨 Theme</button>
-              <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="account">👤 Account</button>
-              <button type="button" class="hidden setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white hover:bg-purple-100 dark:hover:bg-purple-950/60 cursor-pointer shrink-0 border border-purple-300 dark:border-purple-800" data-cat="admin" id="settingAdminTabBtn">🛡️ Admin</button>
-            </div>
-
-            <!-- Settings Content Container -->
-            <div class="p-3.5 space-y-3.5 overflow-y-auto flex-1 text-xs">
-              
-              <!-- ============================================== -->
-              <!-- CATEGORY 1: 🔔 ALERTS & NOTIFICATIONS -->
-              <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="alerts">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                    <i class="fa-solid fa-bell text-xs"></i>
-                    <span>Alerts & Notifications</span>
-                  </div>
-                  <span class="text-[10px] text-slate-400">Audio & OS</span>
-                </div>
-
-                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-3">
-                  
-                  <!-- Seat Sound Alert -->
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-0.5">
-                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
-                        <i class="fa-solid fa-volume-high text-emerald-600 dark:text-emerald-400 text-xs" id="settingSoundIcon"></i>
-                        <span>Seat Alert Chime</span>
-                      </div>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                        Play chime when booked seats are released
-                      </p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                      <input type="checkbox" id="settingSoundToggle" class="sr-only peer" checked>
-                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                    </label>
-                  </div>
-
-                  <!-- Test Sound Actions (Normal Chime, Sold Out -> Available Alert & Radar Alarm) -->
-                  <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between gap-2 flex-wrap">
-                    <span class="text-[10px] text-slate-400">Preview sounds:</span>
-                    <div class="flex items-center space-x-2 flex-wrap">
-                      <button type="button" id="settingTestSoundBtn" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test normal available seat chime">
-                        <i class="fa-solid fa-bell text-[8px]"></i>
-                        <span>Normal Seat</span>
-                      </button>
-                      <span class="text-slate-300 dark:text-slate-600">&bull;</span>
-                      <button type="button" id="settingTestSoldOutSoundBtn" class="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-extrabold inline-flex items-center space-x-1 cursor-pointer" title="Test urgent alert when seats release from All Sold Out">
-                        <i class="fa-solid fa-bolt text-[9px] text-rose-500"></i>
-                        <span>Sold Out ➔ Released</span>
-                      </button>
-                      <span class="text-slate-300 dark:text-slate-600">&bull;</span>
-                      <button type="button" id="settingTestRadarSoundBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test high-priority watchlist radar alarm">
-                        <i class="fa-solid fa-satellite-dish text-[9px]"></i>
-                        <span>Radar Alarm</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="border-t border-slate-200/60 dark:border-slate-700/50"></div>
-
-                  <!-- Desktop OS Notifications -->
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-0.5">
-                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
-                        <i class="fa-solid fa-desktop text-purple-600 dark:text-purple-400 text-xs"></i>
-                        <span>Desktop OS Alerts</span>
-                      </div>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                        Background OS notifications when browser is minimized
-                      </p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                      <input type="checkbox" id="settingDesktopNotifToggle" class="sr-only peer">
-                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
-                    </label>
-                  </div>
-
-                </div>
-              </div>
-
-              <!-- ============================================== -->
-              <!-- CATEGORY 2: ⏱️ AUTO-MONITORING RADAR -->
-              <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="monitor">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                    <span>Auto-Monitoring Radar</span>
-                  </div>
-                  <span id="settingMonitorActiveBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
-                    30s
-                  </span>
-                </div>
-
-                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-2.5">
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Automatic background refresh interval to catch released seats instantly:
-                  </p>
-
-                  <!-- Presets -->
-                  <div class="grid grid-cols-5 gap-1" id="monitorPresetBtnGroup">
-                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="0">Off</button>
-                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="15">15s</button>
-                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-500 bg-emerald-600 text-white shadow-xs transition" data-sec="30">30s</button>
-                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="60">60s</button>
-                    <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="120">2m</button>
-                  </div>
-
-                  <!-- Custom Interval Input -->
-                  <div class="flex items-center space-x-1.5 pt-0.5">
-                    <div class="relative flex-1">
-                      <input type="number" id="customMonitorSecondsInput" min="5" max="600" placeholder="Custom sec (5-600)" 
-                        class="w-full pl-2.5 pr-8 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-semibold">sec</span>
-                    </div>
-                    <button type="button" id="applyCustomMonitorBtn" class="px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition shrink-0">
-                      Set
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ============================================== -->
-              <!-- CATEGORY 3: ✈️ TELEGRAM INTEGRATION -->
-              <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="telegram">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                    <i class="fa-brands fa-telegram text-xs"></i>
-                    <span>Telegram Alerts</span>
-                  </div>
-                  <span id="telegramStatusBadge" class="hidden px-2 py-0.2 rounded-full bg-emerald-500 text-white text-[9px] font-extrabold">CONNECTED</span>
-                </div>
-
-                <div class="p-3 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/40 dark:bg-sky-950/20 space-y-3">
-                  
-                  <!-- DISCONNECTED STATE: 1-Click Login -->
-                  <div id="telegramDisconnectedCard" class="space-y-2.5">
-                    <div class="flex items-center space-x-2.5">
-                      <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
-                        <i class="fa-brands fa-telegram"></i>
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">@railseatfinderbdbot</h5>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Official Telegram Seat Radar Bot</p>
-                      </div>
-                    </div>
-
-                    <p class="text-[11px] text-slate-600 dark:text-slate-300">
-                      Connect your Telegram in 1-click to get instant seat availability alerts sent straight to your phone.
-                    </p>
-
-                    <!-- Big 1-Click Login with Telegram Button -->
-                    <a id="telegramLoginBtn" href="https://t.me/railseatfinderbdbot" target="_blank" rel="noopener" 
-                      class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center space-x-2 transition cursor-pointer">
-                      <i class="fa-brands fa-telegram text-base"></i>
-                      <span>Login with Telegram (1-Click)</span>
-                      <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
-
-                    <!-- Pairing Status Bar -->
-                    <div class="flex items-center justify-between text-[11px] bg-white/80 dark:bg-slate-900/80 p-2 rounded-lg border border-sky-100 dark:border-sky-900/50">
-                      <span class="text-slate-500 dark:text-slate-400 text-[10px]">Pairing Code: <strong id="telegramPairCodeDisplay" class="font-mono text-slate-900 dark:text-white font-bold">---</strong></span>
-                      <span id="telegramPairingSpinner" class="hidden text-[10px] text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-spinner fa-spin text-[10px]"></i> Waiting for /start...
-                      </span>
-                      <button id="telegramQuickCheckBtn" type="button" class="text-[10px] text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer">Check / Refresh</button>
-                    </div>
-
-                    <!-- Optional Manual Chat ID Toggle -->
-                    <details class="text-[10px] text-slate-500 dark:text-slate-400">
-                      <summary class="cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 font-semibold">Or enter custom Chat ID manually</summary>
-                      <div class="pt-1.5 space-y-1.5">
-                        <input type="text" id="telegramManualChatId" placeholder="e.g. 781705575 or -100group..." 
-                          class="w-full px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-1 focus:ring-sky-500 focus:outline-none">
-                        <button id="telegramManualSaveBtn" type="button" class="w-full py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold transition cursor-pointer">
-                          Save Chat ID Manually
-                        </button>
-                      </div>
-                    </details>
-                  </div>
-
-                  <!-- CONNECTED STATE -->
-                  <div id="telegramConnectedCard" class="hidden space-y-2.5">
-                    <div class="flex items-center justify-between p-2 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60">
-                      <div class="flex items-center space-x-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <div class="min-w-0">
-                          <span class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200 block truncate">Telegram Connected</span>
-                          <span id="telegramConnectedUserLabel" class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">@user</span>
-                        </div>
-                      </div>
-                      <span id="telegramConnectedChatIdBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-100">ID: ---</span>
-                    </div>
-
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                      Target seat releases matching your active watchlist will be sent directly to your Telegram chat.
-                    </p>
-
-                    <div class="flex items-center space-x-1.5 pt-0.5">
-                      <button id="telegramSendTestAlertBtn" type="button" class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-1 shadow-xs cursor-pointer">
-                        <i class="fa-solid fa-paper-plane text-[10px]"></i> Send Test Alert
-                      </button>
-                      <button id="telegramDisconnectBtn" type="button" class="px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition cursor-pointer">
-                        Disconnect
-                      </button>
-                    </div>
-                  </div>
-
-                  <p id="telegramSetupStatus" class="text-[10px] font-semibold text-center text-slate-500 min-h-[0.85rem]"></p>
-                </div>
-              </div>
-
-              <!-- ============================================== -->
-              <!-- CATEGORY 4: 🎨 APPEARANCE & THEME -->
-              <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="appearance">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    <i class="fa-solid fa-palette text-xs"></i>
-                    <span>Appearance & Theme</span>
-                  </div>
-                  <span class="text-[10px] text-slate-400">UI Display</span>
-                </div>
-
-                <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40">
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="space-y-0.5">
-                      <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
-                        <i class="fa-solid fa-moon text-indigo-600 dark:text-indigo-400 text-xs"></i>
-                        <span>Dark Theme</span>
-                      </div>
-                      <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                        Toggle between dark and light appearance
-                      </p>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                      <input type="checkbox" id="settingDarkThemeToggle" class="sr-only peer">
-                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ============================================== -->
-              <!-- CATEGORY 5: 👤 MY ACCOUNT & PROFILE (USER PREFERENCES) -->
-              <!-- ============================================== -->
-              <div class="setting-cat-section space-y-2.5" data-cat="account">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    <i class="fa-solid fa-user text-xs"></i>
-                    <span>My Account & Profile</span>
-                  </div>
-                  <span id="settingAccountRoleBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Public Visitor</span>
-                </div>
-
-                <div class="p-3.5 rounded-2xl border-2 border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3">
-                  <!-- Current Account Card with Login / Logout -->
-                  <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-800/50 shadow-2xs">
-                    <div class="flex items-center space-x-2.5 min-w-0 pr-2">
-                      <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0" id="settingAccountAvatar">
-                        <i class="fa-solid fa-user"></i>
-                      </div>
-                      <div class="min-w-0">
-                        <span class="text-xs font-black text-slate-900 dark:text-white block truncate" id="settingAccountStatusLabel">Not Signed In</span>
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate" id="settingAccountUserLabel">Public Visitor</span>
-                      </div>
-                    </div>
-                    <button type="button" id="settingAuthActionBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs shrink-0">
-                      Sign In
-                    </button>
-                  </div>
-
-
-
-                  <!-- User Feature Overview -->
-                  <div class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                    <div class="flex items-center space-x-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      <i class="fa-solid fa-circle-check text-emerald-500"></i>
-                      <span>Your Traveler Features:</span>
-                    </div>
-                    <ul class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 pl-4 list-disc">
-                      <li>Live Railway direct & stoppage vacancy lookup</li>
-                      <li>Custom 24/7 background seat monitoring & audio chimes</li>
-                      <li>Telegram automated seat release notifications</li>
-                      <li>Multi-day & all-stations availability matrix</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ============================================== -->
-              <!-- CATEGORY 6: 🛡️ SYSTEM & ACCESS CONTROLS (ADMIN ONLY) -->
-              <!-- ============================================== -->
-              <div class="hidden setting-cat-section space-y-2.5" data-cat="admin" id="settingAdminSection">
-                <div class="flex items-center justify-between px-1">
-                  <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                    <i class="fa-solid fa-shield-halved text-xs"></i>
-                    <span>Admin & Security Controls</span>
-                  </div>
-                  <span class="text-[10px] px-2 py-0.2 rounded-full font-black bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-800">
-                    👑 Admin Only
-                  </span>
-                </div>
-
-                <!-- Admin Controls Box -->
-                <div class="p-3.5 rounded-2xl border-2 border-purple-300 dark:border-purple-800/80 bg-purple-50/40 dark:bg-purple-950/30 space-y-3">
-                  
-                  <!-- Locked banner when visitor/viewer -->
-                  <div id="settingAdminLockedNotice" class="hidden p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] flex items-center space-x-2">
-                    <i class="fa-solid fa-lock text-amber-600 text-xs shrink-0"></i>
-                    <span>These settings require administrator privileges. Sign in with an admin account to configure.</span>
-                  </div>
-
-                  <div class="space-y-2.5" id="settingAdminControlsContainer">
-                    <div class="flex items-center justify-between">
-                      <div class="space-y-0.5">
-                        <span class="font-bold text-slate-900 dark:text-white block text-xs">Dashboard Access Control</span>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Manage security policies and authorized access</p>
-                      </div>
-                      <span id="settingUserCountBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">1 User</span>
-                    </div>
-
-                    <!-- Require Login Switch in Settings -->
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-900/60 shadow-xs">
-                      <div>
-                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
-                        <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireLoginToggle">
-                        <input type="checkbox" id="settingRequireLoginToggle" class="sr-only" checked>
-                        <div class="custom-toggle-track toggle-purple">
-                          <div class="custom-toggle-thumb"></div>
-                        </div>
-                      </label>
-                    </div>
-
-                    <!-- Admin Approval Switch in Settings -->
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/60 shadow-xs">
-                      <div>
-                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
-                        <span class="text-[10px] text-slate-400">Require admin approval for new user signups</span>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireApprovalToggle">
-                        <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only">
-                        <div class="custom-toggle-track toggle-emerald">
-                          <div class="custom-toggle-thumb"></div>
-                        </div>
-                      </label>
-                    </div>
-
-                    <!-- Email Verification Switch in Settings -->
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/60 shadow-xs">
-                      <div>
-                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
-                        <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireEmailVerificationToggle">
-                        <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only">
-                        <div class="custom-toggle-track toggle-blue">
-                          <div class="custom-toggle-thumb"></div>
-                        </div>
-                      </label>
-                    </div>
-
-                    <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-purple-600/20 transition flex items-center justify-center space-x-1.5 cursor-pointer">
-                      <i class="fa-solid fa-user-gear text-xs"></i>
-                      <span>Open User Management Panel</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Footer -->
-            <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 flex items-center justify-between shrink-0">
-              <span>All preferences stored locally</span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold">v2.5</span>
-            </div>
-          </div>
         </div>
-      </div>
 
         <!-- Official Link -->
         <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
@@ -1305,6 +857,458 @@
     </div>
 
   </main>
+
+  <!-- Notification Modal Panel -->
+  <div id="notifDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+    <!-- Modal Card -->
+    <div id="notifModalCard" class="w-full max-w-lg max-h-[85vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
+      <!-- Modal Header -->
+      <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xs shadow-md shrink-0">
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Alert Notifications</h4>
+            <p class="text-[10px] text-slate-400">Real-time seat release alerts</p>
+          </div>
+          <span id="notifCountPill" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold ml-1">0</span>
+        </div>
+        <div class="flex items-center space-x-2 text-xs">
+          <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition cursor-pointer" title="Mark all as read">Mark Read</button>
+          <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+          <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer" title="Clear all stored alerts">Clear</button>
+          <button type="button" id="closeNotifModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer ml-1" title="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification Items Scrollable List -->
+      <div id="notifListContainer" class="max-h-[60vh] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-2 flex-1 space-y-1">
+        <!-- Dynamic alert items -->
+      </div>
+
+      <!-- Dropdown Footer -->
+      <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
+        <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Local alert history</span>
+        <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer">Test Alert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings & Preferences Modal -->
+  <div id="settingsDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+    <!-- Modal Card -->
+    <div id="settingsModalCard" class="w-full max-w-lg max-h-[88vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
+      
+      <!-- Header -->
+      <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xs shadow-md shrink-0">
+            <i class="fa-solid fa-gear"></i>
+          </div>
+          <div>
+            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
+            <p class="text-[10px] text-slate-400">Configure alerts, monitor, theme & account</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Auto-saved</span>
+          <button type="button" id="closeSettingsModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex items-center space-x-1.5 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 overflow-x-auto no-scrollbar shrink-0 text-xs" id="settingsCategoryTabs">
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition bg-emerald-600 text-white shadow-2xs cursor-pointer shrink-0" data-cat="all">All</button>
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="alerts">🔔 Alerts</button>
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="monitor">⏱️ Monitor</button>
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="telegram">✈️ Telegram</button>
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="appearance">🎨 Theme</button>
+        <button type="button" class="setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 cursor-pointer shrink-0" data-cat="account">👤 Account</button>
+        <button type="button" class="hidden setting-cat-tab px-2.5 py-1 rounded-lg font-bold transition text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white hover:bg-purple-100 dark:hover:bg-purple-950/60 cursor-pointer shrink-0 border border-purple-300 dark:border-purple-800" data-cat="admin" id="settingAdminTabBtn">🛡️ Admin</button>
+      </div>
+
+      <!-- Settings Content Container -->
+      <div class="p-4 space-y-4 overflow-y-auto flex-1 text-xs">
+        
+        <!-- ============================================== -->
+        <!-- CATEGORY 1: 🔔 ALERTS & NOTIFICATIONS -->
+        <!-- ============================================== -->
+        <div class="setting-cat-section space-y-2.5" data-cat="alerts">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              <i class="fa-solid fa-bell text-xs"></i>
+              <span>Alerts & Notifications</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Audio & OS</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-3">
+            
+            <!-- Seat Sound Alert -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-0.5">
+                <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                  <i class="fa-solid fa-volume-high text-emerald-600 dark:text-emerald-400 text-xs" id="settingSoundIcon"></i>
+                  <span>Seat Alert Chime</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                  Play chime when booked seats are released
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                <input type="checkbox" id="settingSoundToggle" class="sr-only peer" checked>
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+
+            <!-- Test Sound Actions (Normal Chime, Sold Out -> Available Alert & Radar Alarm) -->
+            <div class="pt-1 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-[10px] text-slate-400">Preview sounds:</span>
+              <div class="flex items-center space-x-2 flex-wrap">
+                <button type="button" id="settingTestSoundBtn" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test normal available seat chime">
+                  <i class="fa-solid fa-bell text-[8px]"></i>
+                  <span>Normal Seat</span>
+                </button>
+                <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                <button type="button" id="settingTestSoldOutSoundBtn" class="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-extrabold inline-flex items-center space-x-1 cursor-pointer" title="Test urgent alert when seats release from All Sold Out">
+                  <i class="fa-solid fa-bolt text-[9px] text-rose-500"></i>
+                  <span>Sold Out ➔ Released</span>
+                </button>
+                <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                <button type="button" id="settingTestRadarSoundBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-bold inline-flex items-center space-x-1 cursor-pointer" title="Test high-priority watchlist radar alarm">
+                  <i class="fa-solid fa-satellite-dish text-[9px]"></i>
+                  <span>Radar Alarm</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-200/60 dark:border-slate-700/50"></div>
+
+            <!-- Desktop OS Notifications -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-0.5">
+                <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                  <i class="fa-solid fa-desktop text-purple-600 dark:text-purple-400 text-xs"></i>
+                  <span>Desktop OS Alerts</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                  Background OS notifications when browser is minimized
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                <input type="checkbox" id="settingDesktopNotifToggle" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- CATEGORY 2: ⏱️ AUTO-MONITORING RADAR -->
+        <!-- ============================================== -->
+        <div class="setting-cat-section space-y-2.5" data-cat="monitor">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+              <span>Auto-Monitoring Radar</span>
+            </div>
+            <span id="settingMonitorActiveBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">
+              30s
+            </span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-2.5">
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Automatic background refresh interval to catch released seats instantly:
+            </p>
+
+            <!-- Presets -->
+            <div class="grid grid-cols-5 gap-1" id="monitorPresetBtnGroup">
+              <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="0">Off</button>
+              <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="15">15s</button>
+              <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-emerald-500 bg-emerald-600 text-white shadow-xs transition" data-sec="30">30s</button>
+              <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="60">60s</button>
+              <button type="button" class="monitor-preset-btn px-1.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700 transition" data-sec="120">2m</button>
+            </div>
+
+            <!-- Custom Interval Input -->
+            <div class="flex items-center space-x-1.5 pt-0.5">
+              <div class="relative flex-1">
+                <input type="number" id="customMonitorSecondsInput" min="5" max="600" placeholder="Custom sec (5-600)" 
+                  class="w-full pl-2.5 pr-8 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-semibold">sec</span>
+              </div>
+              <button type="button" id="applyCustomMonitorBtn" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition shrink-0">
+                Set
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- CATEGORY 3: ✈️ TELEGRAM INTEGRATION -->
+        <!-- ============================================== -->
+        <div class="setting-cat-section space-y-2.5" data-cat="telegram">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-sky-600 dark:text-sky-400">
+              <i class="fa-brands fa-telegram text-xs"></i>
+              <span>Telegram Alerts</span>
+            </div>
+            <span id="telegramStatusBadge" class="hidden px-2 py-0.2 rounded-full bg-emerald-500 text-white text-[9px] font-extrabold">CONNECTED</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border border-sky-200 dark:border-sky-800/60 bg-sky-50/40 dark:bg-sky-950/20 space-y-3">
+            
+            <!-- DISCONNECTED STATE: 1-Click Login -->
+            <div id="telegramDisconnectedCard" class="space-y-2.5">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                  <i class="fa-brands fa-telegram"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h5 class="font-extrabold text-xs text-slate-900 dark:text-white truncate">@railseatfinderbdbot</h5>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400">Official Telegram Seat Radar Bot</p>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-600 dark:text-slate-300">
+                Connect your Telegram in 1-click to get instant seat availability alerts sent straight to your phone.
+              </p>
+
+              <!-- Big 1-Click Login with Telegram Button -->
+              <a id="telegramLoginBtn" href="https://t.me/railseatfinderbdbot" target="_blank" rel="noopener" 
+                class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold text-xs shadow-md shadow-sky-500/20 flex items-center justify-center space-x-2 transition cursor-pointer">
+                <i class="fa-brands fa-telegram text-base"></i>
+                <span>Login with Telegram (1-Click)</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </a>
+
+              <!-- Pairing Status Bar -->
+              <div class="flex items-center justify-between text-[11px] bg-white/80 dark:bg-slate-900/80 p-2 rounded-lg border border-sky-100 dark:border-sky-900/50">
+                <span class="text-slate-500 dark:text-slate-400 text-[10px]">Pairing Code: <strong id="telegramPairCodeDisplay" class="font-mono text-slate-900 dark:text-white font-bold">---</strong></span>
+                <span id="telegramPairingSpinner" class="hidden text-[10px] text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1">
+                  <i class="fa-solid fa-spinner fa-spin text-[10px]"></i> Waiting for /start...
+                </span>
+                <button id="telegramQuickCheckBtn" type="button" class="text-[10px] text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer">Check / Refresh</button>
+              </div>
+
+              <!-- Optional Manual Chat ID Toggle -->
+              <details class="text-[10px] text-slate-500 dark:text-slate-400">
+                <summary class="cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 font-semibold">Or enter custom Chat ID manually</summary>
+                <div class="pt-1.5 space-y-1.5">
+                  <input type="text" id="telegramManualChatId" placeholder="e.g. 781705575 or -100group..." 
+                    class="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-[11px] focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                  <button id="telegramManualSaveBtn" type="button" class="w-full py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-bold transition cursor-pointer">
+                    Save Chat ID Manually
+                  </button>
+                </div>
+              </details>
+            </div>
+
+            <!-- CONNECTED STATE -->
+            <div id="telegramConnectedCard" class="hidden space-y-2.5">
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60">
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <div class="min-w-0">
+                    <span class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200 block truncate">Telegram Connected</span>
+                    <span id="telegramConnectedUserLabel" class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">@user</span>
+                  </div>
+                </div>
+                <span id="telegramConnectedChatIdBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-100">ID: ---</span>
+              </div>
+
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">
+                Target seat releases matching your active watchlist will be sent directly to your Telegram chat.
+              </p>
+
+              <div class="flex items-center space-x-1.5 pt-0.5">
+                <button id="telegramSendTestAlertBtn" type="button" class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-1 shadow-xs cursor-pointer">
+                  <i class="fa-solid fa-paper-plane text-[10px]"></i> Send Test Alert
+                </button>
+                <button id="telegramDisconnectBtn" type="button" class="px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition cursor-pointer">
+                  Disconnect
+                </button>
+              </div>
+            </div>
+
+            <p id="telegramSetupStatus" class="text-[10px] font-semibold text-center text-slate-500 min-h-[0.85rem]"></p>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- CATEGORY 4: 🎨 APPEARANCE & THEME -->
+        <!-- ============================================== -->
+        <div class="setting-cat-section space-y-2.5" data-cat="appearance">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              <i class="fa-solid fa-palette text-xs"></i>
+              <span>Appearance & Theme</span>
+            </div>
+            <span class="text-[10px] text-slate-400">UI Display</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40">
+            <div class="flex items-center justify-between gap-3">
+              <div class="space-y-0.5">
+                <div class="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                  <i class="fa-solid fa-moon text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                  <span>Dark Theme</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                  Toggle between dark and light appearance
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input type="checkbox" id="settingDarkThemeToggle" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- CATEGORY 5: 👤 MY ACCOUNT & PROFILE (USER PREFERENCES) -->
+        <!-- ============================================== -->
+        <div class="setting-cat-section space-y-2.5" data-cat="account">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              <i class="fa-solid fa-user text-xs"></i>
+              <span>My Account & Profile</span>
+            </div>
+            <span id="settingAccountRoleBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">Public Visitor</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl border-2 border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3">
+            <!-- Current Account Card with Login / Logout -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-800/50 shadow-2xs">
+              <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+                <div class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0" id="settingAccountAvatar">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-xs font-black text-slate-900 dark:text-white block truncate" id="settingAccountStatusLabel">Not Signed In</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate" id="settingAccountUserLabel">Public Visitor</span>
+                </div>
+              </div>
+              <button type="button" id="settingAuthActionBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs shrink-0">
+                Sign In
+              </button>
+            </div>
+
+            <!-- User Feature Overview -->
+            <div class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <div class="flex items-center space-x-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                <span>Your Traveler Features:</span>
+              </div>
+              <ul class="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 pl-4 list-disc">
+                <li>Live Railway direct & stoppage vacancy lookup</li>
+                <li>Custom 24/7 background seat monitoring & audio chimes</li>
+                <li>Telegram automated seat release notifications</li>
+                <li>Multi-day & all-stations availability matrix</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- CATEGORY 6: 🛡️ SYSTEM & ACCESS CONTROLS (ADMIN ONLY) -->
+        <!-- ============================================== -->
+        <div class="hidden setting-cat-section space-y-2.5" data-cat="admin" id="settingAdminSection">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px] uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              <i class="fa-solid fa-shield-halved text-xs"></i>
+              <span>Admin & Security Controls</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.2 rounded-full font-black bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-200 border border-purple-300 dark:border-purple-800">
+              👑 Admin Only
+            </span>
+          </div>
+
+          <!-- Admin Controls Box -->
+          <div class="p-3.5 rounded-2xl border-2 border-purple-300 dark:border-purple-800/80 bg-purple-50/40 dark:bg-purple-950/30 space-y-3">
+            
+            <!-- Locked banner when visitor/viewer -->
+            <div id="settingAdminLockedNotice" class="hidden p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] flex items-center space-x-2">
+              <i class="fa-solid fa-lock text-amber-600 text-xs shrink-0"></i>
+              <span>These settings require administrator privileges. Sign in with an admin account to configure.</span>
+            </div>
+
+            <div class="space-y-2.5" id="settingAdminControlsContainer">
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <span class="font-bold text-slate-900 dark:text-white block text-xs">Dashboard Access Control</span>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400">Manage security policies and authorized access</p>
+                </div>
+                <span id="settingUserCountBadge" class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">1 User</span>
+              </div>
+
+              <!-- Require Login Switch in Settings -->
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-900/60 shadow-xs">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Require Login</span>
+                  <span class="text-[10px] text-slate-400">Restrict dashboard to authenticated users</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireLoginToggle">
+                  <input type="checkbox" id="settingRequireLoginToggle" class="sr-only" checked>
+                  <div class="custom-toggle-track toggle-purple">
+                    <div class="custom-toggle-thumb"></div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Admin Approval Switch in Settings -->
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/60 shadow-xs">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Admin Approval</span>
+                  <span class="text-[10px] text-slate-400">Require admin approval for new user signups</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireApprovalToggle">
+                  <input type="checkbox" id="settingRequireApprovalToggle" class="sr-only">
+                  <div class="custom-toggle-track toggle-emerald">
+                    <div class="custom-toggle-thumb"></div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Email Verification Switch in Settings -->
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/60 shadow-xs">
+                <div>
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Email Verification</span>
+                  <span class="text-[10px] text-slate-400">Require email inbox verification for signups</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer shrink-0" for="settingRequireEmailVerificationToggle">
+                  <input type="checkbox" id="settingRequireEmailVerificationToggle" class="sr-only">
+                  <div class="custom-toggle-track toggle-blue">
+                    <div class="custom-toggle-thumb"></div>
+                  </div>
+                </label>
+              </div>
+
+              <button type="button" id="settingOpenUserMgmtBtn" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-purple-600/20 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                <i class="fa-solid fa-user-gear text-xs"></i>
+                <span>Open User Management Panel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 flex items-center justify-between shrink-0">
+        <span>All preferences stored locally</span>
+        <span class="text-emerald-600 dark:text-emerald-400 font-bold">RailSeat BD v8.1</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Live API Authentication Modal -->
   <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">

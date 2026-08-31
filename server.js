@@ -2151,6 +2151,284 @@ app.get('/api/train-station-matrix', async (req, res) => {
   });
 });
 
+// ----------------------------------------------------
+// 5. Live Train GPS & Delay Tracker Relay Engine
+// ----------------------------------------------------
+const liveTrackerCache = new Map();
+const LIVE_TRACKER_CACHE_TTL = 30 * 1000; // 30 seconds
+
+async function fetchLiveTrackerHtml(url) {
+  const resp = await axios.get(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9'
+    },
+    timeout: 12000
+  });
+  return typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data);
+}
+
+function extractNextJsStreamText(html) {
+  const chunks = [];
+  const nextRegex = /self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g;
+  let m;
+  while ((m = nextRegex.exec(html)) !== null) {
+    try {
+      chunks.push(JSON.parse(`"${m[1]}"`));
+    } catch (e) {
+      chunks.push(m[1]);
+    }
+  }
+  return chunks.join('');
+}
+
+function parseRunningTrainsHtml(html) {
+  const trains = [];
+  const cardRegex = /<a[^>]*href="\/track\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
+  let match;
+  while ((match = cardRegex.exec(html)) !== null) {
+    const trainNo = match[1];
+    const cardHtml = match[2];
+
+    const nameMatch = cardHtml.match(/<div[^>]*class="[^"]*truncate[^"]*"[^>]*>([^<]+)<\/div>/i);
+    if (!nameMatch) continue;
+    const trainName = nameMatch[1].trim();
+
+    const durationMatch = cardHtml.match(/(\d+h\s*\d+m|\d+h|\d+m)/);
+    const duration = durationMatch ? durationMatch[1] : '';
+
+    const delayMatch = cardHtml.match(/(\+\d+m|On time|ON TIME)/i);
+    const delayText = delayMatch ? delayMatch[1] : 'On time';
+    let delayMinutes = 0;
+    if (delayText.startsWith('+')) {
+      delayMinutes = parseInt(delayText.replace(/[^\d]/g, ''), 10) || 0;
+    }
+
+    const updatedMatch = cardHtml.match(/(\d+m\s*ago|\d+s\s*ago|just\s*now)/i);
+    const lastUpdated = updatedMatch ? updatedMatch[1] : 'Just now';
+
+    const stationPairs = [];
+    const stationRegex = />(\d{1,2}:\d{2})<\/div>\s*<div[^>]*>([^<]+)<\/div>/g;
+    let sMatch;
+    while ((sMatch = stationRegex.exec(cardHtml)) !== null) {
+      stationPairs.push({ time: sMatch[1], station: sMatch[2].trim() });
+    }
+
+    const pctMatch = cardHtml.match(/(\d+)<!-- -->%/);
+    const progressPct = pctMatch ? parseInt(pctMatch[1], 10) : 0;
+
+    trains.push({
+      train_no: trainNo,
+      train_name: trainName,
+      from: stationPairs[0]?.station || '',
+      to: stationPairs[1]?.station || '',
+      departure_time: stationPairs[0]?.time || '',
+      arrival_time: stationPairs[1]?.time || '',
+      duration,
+      delay_text: delayText,
+      delay_minutes: delayMinutes,
+      progress_pct: progressPct,
+      last_updated: lastUpdated,
+      status: progressPct >= 100 ? 'arrived' : (progressPct > 0 ? 'running' : 'scheduled')
+    });
+  }
+
+  return trains;
+}
+
+function parseTrainDetailStream(stream, trainNo) {
+  let initialTrain = null;
+  let initialDerived = null;
+  let delayReport = null;
+
+  const trainIdx = stream.indexOf('"initialTrain":{');
+  if (trainIdx !== -1) {
+    const startObj = trainIdx + '"initialTrain":'.length;
+    let depth = 0;
+    let endObj = -1;
+    for (let i = startObj; i < stream.length; i++) {
+      if (stream[i] === '{') depth++;
+      else if (stream[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          endObj = i + 1;
+          break;
+        }
+      }
+    }
+    if (endObj !== -1) {
+      const rawJson = stream.slice(startObj, endObj);
+      try {
+        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
+        initialTrain = JSON.parse(sanitized);
+      } catch (e) {}
+    }
+  }
+
+  const derivedIdx = stream.indexOf('"initialDerived":{');
+  if (derivedIdx !== -1) {
+    const startObj = derivedIdx + '"initialDerived":'.length;
+    let depth = 0;
+    let endObj = -1;
+    for (let i = startObj; i < stream.length; i++) {
+      if (stream[i] === '{') depth++;
+      else if (stream[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          endObj = i + 1;
+          break;
+        }
+      }
+    }
+    if (endObj !== -1) {
+      const rawJson = stream.slice(startObj, endObj);
+      try {
+        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
+        initialDerived = JSON.parse(sanitized);
+      } catch (e) {}
+    }
+  }
+
+  const delayIdx = stream.indexOf('"delayReport":{');
+  if (delayIdx !== -1) {
+    const startObj = delayIdx + '"delayReport":'.length;
+    let depth = 0;
+    let endObj = -1;
+    for (let i = startObj; i < stream.length; i++) {
+      if (stream[i] === '{') depth++;
+      else if (stream[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          endObj = i + 1;
+          break;
+        }
+      }
+    }
+    if (endObj !== -1) {
+      const rawJson = stream.slice(startObj, endObj);
+      try {
+        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
+        delayReport = JSON.parse(sanitized);
+      } catch (e) {}
+    }
+  }
+
+  const stoppages = (initialTrain?.route || []).map(r => ({
+    station_name: r.name || '',
+    station_bn: r.bn || '',
+    station_code: r.code || '',
+    scheduled_time: r.sched || '—',
+    actual_time: r.act || '—',
+    platform: r.platform || '—',
+    distance_km: r.km || 0,
+    status: r.status || 'upcoming'
+  }));
+
+  const recentRuns = (delayReport?.runs || []).map(run => ({
+    date: run.run_date,
+    delay_minutes: run.delay_minutes
+  }));
+
+  return {
+    success: true,
+    train_no: String(initialTrain?.no || trainNo),
+    train_name: initialTrain?.name || `Train ${trainNo}`,
+    train_name_bn: initialTrain?.bn || '',
+    from: initialTrain?.from || '',
+    to: initialTrain?.to || '',
+    departure_time: initialTrain?.depart || '',
+    arrival_time: initialTrain?.arrive || '',
+    duration: initialTrain?.duration || '',
+    speed: initialTrain?.speed || 0,
+    delay_minutes: initialTrain?.delay || initialDerived?.delay || 0,
+    progress_pct: initialDerived?.pct || 0,
+    status: initialTrain?.status || initialDerived?.state || 'scheduled',
+    coaches: initialTrain?.coaches || 16,
+    next_stop: initialTrain?.nextStop || '',
+    next_eta: initialTrain?.nextEta || '',
+    stoppages,
+    delay_history: {
+      avg_delay_minutes: delayReport?.avg_delay_minutes || 0,
+      max_delay_minutes: delayReport?.max_delay_minutes || 0,
+      min_delay_minutes: delayReport?.min_delay_minutes || 0,
+      runs_analyzed: delayReport?.known_runs || recentRuns.length,
+      recent_runs: recentRuns
+    }
+  };
+}
+
+// 5.1. Get All Live Running Trains
+app.get('/api/live-tracker/running-trains', async (req, res) => {
+  const cached = liveTrackerCache.get('running_trains');
+  if (cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
+    return res.json(cached.data);
+  }
+
+  try {
+    const html = await fetchLiveTrackerHtml('https://trainkothai.com/trains');
+    const trains = parseRunningTrainsHtml(html);
+
+    const payload = {
+      success: true,
+      updated_at: new Date().toISOString(),
+      total_running: trains.length,
+      trains
+    };
+
+    liveTrackerCache.set('running_trains', {
+      timestamp: Date.now(),
+      data: payload
+    });
+
+    return res.json(payload);
+  } catch (err) {
+    if (cached) {
+      return res.json(cached.data);
+    }
+    return res.status(500).json({
+      success: false,
+      error: 'Unable to fetch live train tracker feeds at this moment.',
+      trains: []
+    });
+  }
+});
+
+// 5.2. Get Real-Time Live Status for Specific Train
+app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
+  const trainNo = String(req.params.trainNo || '').trim();
+  if (!trainNo) {
+    return res.status(400).json({ success: false, error: 'Train number is required.' });
+  }
+
+  const cacheKey = `train_${trainNo}`;
+  const cached = liveTrackerCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
+    return res.json(cached.data);
+  }
+
+  try {
+    const html = await fetchLiveTrackerHtml(`https://trainkothai.com/track/${encodeURIComponent(trainNo)}`);
+    const stream = extractNextJsStreamText(html);
+    const detail = parseTrainDetailStream(stream, trainNo);
+
+    liveTrackerCache.set(cacheKey, {
+      timestamp: Date.now(),
+      data: detail
+    });
+
+    return res.json(detail);
+  } catch (err) {
+    if (cached) {
+      return res.json(cached.data);
+    }
+    return res.status(500).json({
+      success: false,
+      error: `Could not retrieve live tracking data for train #${trainNo}.`
+    });
+  }
+});
+
 
 // 4. Get Intercity Trains Catalogue (For searching by Train Name / Model Code / Route)
 const trainsCatalogPath = path.join(__dirname, 'data', 'trains.json');

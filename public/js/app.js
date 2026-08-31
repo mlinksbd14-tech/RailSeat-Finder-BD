@@ -36,8 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     authUserData: null,
     requireLogin: true,
     requireAdminApproval: false,
-    requireEmailVerification: false,
     allowRegistration: true,
+    liveTrackerTrains: [],
+    liveTrackerFilter: 'all',
+    liveTrackerSearchQuery: '',
+    liveTrackerTimer: null,
+    activeMainTab: 'seats',
     authNotice: '',
     authNoticeEnabled: true,
     popularRoutes: [
@@ -379,6 +383,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const telemetryIsp = document.getElementById('telemetryIsp');
   const pwaInstallBtn = document.getElementById('pwaInstallBtn');
   const alternateRoutesContainer = document.getElementById('alternateRoutesContainer');
+
+  // Live Tracker DOM Elements
+  const seatFinderSection = document.getElementById('seatFinderSection');
+  const liveTrackerSection = document.getElementById('liveTrackerSection');
+  const navSeatFinderBtn = document.getElementById('navSeatFinderBtn');
+  const navLiveTrackerBtn = document.getElementById('navLiveTrackerBtn');
+  const liveTrackerCount = document.getElementById('liveTrackerCount');
+  const refreshLiveTrackerBtn = document.getElementById('refreshLiveTrackerBtn');
+  const refreshLiveTrackerIcon = document.getElementById('refreshLiveTrackerIcon');
+  const liveTrackerSearchInput = document.getElementById('liveTrackerSearchInput');
+  const clearLiveTrackerSearchBtn = document.getElementById('clearLiveTrackerSearchBtn');
+  const liveTrackerFilterChips = document.getElementById('liveTrackerFilterChips');
+  const liveTrackerLoadingState = document.getElementById('liveTrackerLoadingState');
+  const liveTrackerEmptyState = document.getElementById('liveTrackerEmptyState');
+  const liveTrackerGrid = document.getElementById('liveTrackerGrid');
+
+  // Live Train Detail Modal Elements
+  const liveTrainModal = document.getElementById('liveTrainModal');
+  const closeLiveTrainModalBtn = document.getElementById('closeLiveTrainModalBtn');
+  const liveTrainModalTitle = document.getElementById('liveTrainModalTitle');
+  const liveTrainModalNumber = document.getElementById('liveTrainModalNumber');
+  const liveTrainModalSubtitle = document.getElementById('liveTrainModalSubtitle');
+  const liveModalDelayVal = document.getElementById('liveModalDelayVal');
+  const liveModalSpeedVal = document.getElementById('liveModalSpeedVal');
+  const liveModalProgressVal = document.getElementById('liveModalProgressVal');
+  const liveModalCoachesVal = document.getElementById('liveModalCoachesVal');
+  const liveModalNextStopBox = document.getElementById('liveModalNextStopBox');
+  const liveModalNextStopText = document.getElementById('liveModalNextStopText');
+  const liveModalDurationText = document.getElementById('liveModalDurationText');
+  const liveModalTimelineContainer = document.getElementById('liveModalTimelineContainer');
+  const liveModalDelayHistorySection = document.getElementById('liveModalDelayHistorySection');
+  const liveModalAvgDelayBadge = document.getElementById('liveModalAvgDelayBadge');
+  const liveModalDelayBars = document.getElementById('liveModalDelayBars');
 
   const closeFirebaseConfigBtn = document.getElementById('closeFirebaseConfigBtn');
   const firebaseConfigForm = document.getElementById('firebaseConfigForm');
@@ -6839,6 +6876,391 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ----------------------------------------------------
+  // 14. Live Train GPS & Delay Radar Tracker Module
+  // ----------------------------------------------------
+  function initLiveTrackerModule() {
+    // Navigation Tabs Switching
+    if (navSeatFinderBtn) {
+      navSeatFinderBtn.addEventListener('click', () => switchMainTab('seats'));
+    }
+    if (navLiveTrackerBtn) {
+      navLiveTrackerBtn.addEventListener('click', () => switchMainTab('tracker'));
+    }
+
+    // Refresh Button
+    if (refreshLiveTrackerBtn) {
+      refreshLiveTrackerBtn.addEventListener('click', () => loadRunningTrains(true));
+    }
+
+    // Search Input
+    if (liveTrackerSearchInput) {
+      liveTrackerSearchInput.addEventListener('input', (e) => {
+        state.liveTrackerSearchQuery = e.target.value.trim().toLowerCase();
+        if (clearLiveTrackerSearchBtn) {
+          clearLiveTrackerSearchBtn.classList.toggle('hidden', !state.liveTrackerSearchQuery);
+        }
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    if (clearLiveTrackerSearchBtn) {
+      clearLiveTrackerSearchBtn.addEventListener('click', () => {
+        if (liveTrackerSearchInput) liveTrackerSearchInput.value = '';
+        state.liveTrackerSearchQuery = '';
+        clearLiveTrackerSearchBtn.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    // Filter Chips
+    if (liveTrackerFilterChips) {
+      liveTrackerFilterChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.live-filter-chip');
+        if (!chip) return;
+        const filter = chip.dataset.filter || 'all';
+        state.liveTrackerFilter = filter;
+
+        // Update active chip style
+        liveTrackerFilterChips.querySelectorAll('.live-filter-chip').forEach(btn => {
+          if (btn === chip) {
+            btn.className = 'live-filter-chip px-3 py-1 rounded-xl text-xs font-extrabold transition bg-cyan-600 text-white shadow-2xs cursor-pointer';
+          } else {
+            btn.className = 'live-filter-chip px-3 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer';
+          }
+        });
+
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    // Modal Close Handlers
+    if (closeLiveTrainModalBtn) {
+      closeLiveTrainModalBtn.addEventListener('click', () => {
+        if (liveTrainModal) liveTrainModal.classList.add('hidden');
+      });
+    }
+    if (liveTrainModal) {
+      liveTrainModal.addEventListener('click', (e) => {
+        if (e.target === liveTrainModal) {
+          liveTrainModal.classList.add('hidden');
+        }
+      });
+    }
+
+    // Delegate Click for Live Train Cards
+    document.addEventListener('click', (e) => {
+      const liveBtn = e.target.closest('.view-live-train-btn');
+      if (liveBtn) {
+        const trainNo = liveBtn.dataset.trainNo;
+        if (trainNo) openLiveTrainModal(trainNo);
+      }
+    });
+  }
+
+  function switchMainTab(tab) {
+    state.activeMainTab = tab;
+
+    if (tab === 'tracker') {
+      if (seatFinderSection) seatFinderSection.classList.add('hidden');
+      if (liveTrackerSection) liveTrackerSection.classList.remove('hidden');
+
+      if (navSeatFinderBtn) {
+        navSeatFinderBtn.className = 'px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+      }
+      if (navLiveTrackerBtn) {
+        navLiveTrackerBtn.className = 'px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+      }
+
+      loadRunningTrains(false);
+    } else {
+      if (liveTrackerSection) liveTrackerSection.classList.add('hidden');
+      if (seatFinderSection) seatFinderSection.classList.remove('hidden');
+
+      if (navSeatFinderBtn) {
+        navSeatFinderBtn.className = 'px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+      }
+      if (navLiveTrackerBtn) {
+        navLiveTrackerBtn.className = 'px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+      }
+    }
+  }
+
+  async function loadRunningTrains(forceRefresh = false) {
+    if (state.liveTrackerLoading) return;
+    state.liveTrackerLoading = true;
+
+    if (refreshLiveTrackerIcon) refreshLiveTrackerIcon.classList.add('fa-spin');
+    if (liveTrackerLoadingState && (!state.liveTrackerTrains || state.liveTrackerTrains.length === 0)) {
+      liveTrackerLoadingState.classList.remove('hidden');
+      if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
+      if (liveTrackerEmptyState) liveTrackerEmptyState.classList.add('hidden');
+    }
+
+    try {
+      const res = await fetch('/api/live-tracker/running-trains');
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.trains)) {
+        state.liveTrackerTrains = data.trains;
+        if (liveTrackerCount) liveTrackerCount.textContent = data.trains.length;
+        filterAndRenderLiveTrains();
+      } else {
+        if (!state.liveTrackerTrains || state.liveTrackerTrains.length === 0) {
+          if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
+          if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
+        }
+      }
+    } catch (err) {
+      showToast('Network error updating live train tracker feeds.', 'error');
+    } finally {
+      state.liveTrackerLoading = false;
+      if (refreshLiveTrackerIcon) refreshLiveTrackerIcon.classList.remove('fa-spin');
+      if (liveTrackerLoadingState) liveTrackerLoadingState.classList.add('hidden');
+    }
+  }
+
+  function filterAndRenderLiveTrains() {
+    if (!liveTrackerGrid) return;
+    let list = state.liveTrackerTrains || [];
+
+    // Filter by search query
+    if (state.liveTrackerSearchQuery) {
+      const q = state.liveTrackerSearchQuery;
+      list = list.filter(t => {
+        const name = (t.train_name || '').toLowerCase();
+        const no = String(t.train_no || '');
+        const from = (t.from || '').toLowerCase();
+        const to = (t.to || '').toLowerCase();
+        return name.includes(q) || no.includes(q) || from.includes(q) || to.includes(q);
+      });
+    }
+
+    // Filter by chips
+    if (state.liveTrackerFilter === 'ontime') {
+      list = list.filter(t => (t.delay_minutes || 0) <= 10);
+    } else if (state.liveTrackerFilter === 'delayed') {
+      list = list.filter(t => (t.delay_minutes || 0) > 10);
+    } else if (state.liveTrackerFilter === 'dhaka') {
+      list = list.filter(t => (t.from || '').toLowerCase().includes('dhaka') || (t.to || '').toLowerCase().includes('dhaka'));
+    } else if (state.liveTrackerFilter === 'ctg') {
+      list = list.filter(t => (t.from || '').toLowerCase().includes('chattogram') || (t.to || '').toLowerCase().includes('chattogram'));
+    }
+
+    if (list.length === 0) {
+      liveTrackerGrid.classList.add('hidden');
+      if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
+      return;
+    }
+
+    if (liveTrackerEmptyState) liveTrackerEmptyState.classList.add('hidden');
+    liveTrackerGrid.classList.remove('hidden');
+
+    liveTrackerGrid.innerHTML = list.map(t => {
+      const delayMin = t.delay_minutes || 0;
+      const isOntime = delayMin <= 10;
+      const delayBadgeClass = isOntime
+        ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+        : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+      const delayText = isOntime && delayMin === 0 ? '🟢 On Time' : `🟡 +${delayMin}m`;
+
+      const progress = Math.min(100, Math.max(0, t.progress_pct || 0));
+
+      return `
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-cyan-500/60 dark:hover:border-cyan-500/60 transition-all flex flex-col justify-between space-y-3.5 group">
+          
+          <!-- Top Row: Train Name & Delay Badge -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1.5 flex-wrap">
+                <h3 class="font-extrabold text-sm text-slate-900 dark:text-white truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">${escapeHtml(t.train_name)}</h3>
+                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">#${t.train_no}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">${t.duration || 'Intercity'}</p>
+            </div>
+            <div class="flex flex-col items-end shrink-0">
+              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${delayBadgeClass}">
+                ${delayText}
+              </span>
+              <span class="text-[9px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-clock-rotate-left text-[8px]"></i>
+                <span>${t.last_updated || 'Live'}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Middle Row: Route Times & Station Names -->
+          <div class="flex items-center justify-between text-xs pt-1">
+            <div class="text-left min-w-0">
+              <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.departure_time || '--:--'}</div>
+              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(t.from || 'Origin')}</div>
+            </div>
+
+            <!-- Animated Route Track with Moving Indicator -->
+            <div class="flex-1 mx-3 flex flex-col items-center">
+              <span class="text-[9px] font-mono font-bold text-cyan-600 dark:text-cyan-400 mb-1">${progress}%</span>
+              <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
+                <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: ${progress}%"></div>
+              </div>
+            </div>
+
+            <div class="text-right min-w-0">
+              <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.arrival_time || '--:--'}</div>
+              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(t.to || 'Destination')}</div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Button -->
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+              <span>GPS Tracking</span>
+            </span>
+            <button type="button" class="view-live-train-btn px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 hover:bg-cyan-600 text-cyan-700 dark:text-cyan-300 hover:text-white border border-cyan-200 dark:border-cyan-800 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer" data-train-no="${t.train_no}">
+              <i class="fa-solid fa-route text-[10px]"></i>
+              <span>Live Stoppages</span>
+            </button>
+          </div>
+
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function openLiveTrainModal(trainNo) {
+    if (!liveTrainModal) return;
+    liveTrainModal.classList.remove('hidden');
+
+    if (liveTrainModalTitle) liveTrainModalTitle.textContent = `Loading Train #${trainNo}...`;
+    if (liveTrainModalNumber) liveTrainModalNumber.textContent = `#${trainNo}`;
+    if (liveTrainModalSubtitle) liveTrainModalSubtitle.textContent = 'Fetching real-time GPS position & stoppages...';
+
+    if (liveModalTimelineContainer) {
+      liveModalTimelineContainer.innerHTML = `
+        <div class="p-8 text-center space-y-2">
+          <div class="w-8 h-8 rounded-full border-3 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto"></div>
+          <p class="text-xs text-slate-400">Loading stoppage schedule & delay history...</p>
+        </div>
+      `;
+    }
+
+    try {
+      const res = await fetch(`/api/live-tracker/train/${encodeURIComponent(trainNo)}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        if (liveModalTimelineContainer) {
+          liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-rose-500 font-bold">${data.error || 'Unable to load train tracker details.'}</div>`;
+        }
+        return;
+      }
+
+      // Populate Modal Headers & Metrics
+      if (liveTrainModalTitle) liveTrainModalTitle.textContent = data.train_name;
+      if (liveTrainModalNumber) liveTrainModalNumber.textContent = `#${data.train_no}`;
+      if (liveTrainModalSubtitle) liveTrainModalSubtitle.textContent = `${data.from} ➔ ${data.to} (${data.departure_time} - ${data.arrival_time})`;
+
+      const delayMin = data.delay_minutes || 0;
+      if (liveModalDelayVal) {
+        liveModalDelayVal.textContent = delayMin <= 10 && delayMin === 0 ? 'On Time' : `+${delayMin}m`;
+        liveModalDelayVal.className = `text-base font-black mt-0.5 ${delayMin <= 10 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`;
+      }
+
+      if (liveModalSpeedVal) {
+        liveModalSpeedVal.textContent = data.speed ? `${data.speed} km/h` : (data.status || 'Active');
+      }
+
+      if (liveModalProgressVal) {
+        liveModalProgressVal.textContent = `${data.progress_pct || 0}%`;
+      }
+
+      if (liveModalCoachesVal) {
+        liveModalCoachesVal.textContent = String(data.coaches || '16');
+      }
+
+      if (liveModalNextStopText) {
+        liveModalNextStopText.textContent = data.next_stop ? `${data.next_stop} (${data.next_eta || '--:--'})` : 'En Route';
+      }
+      if (liveModalDurationText) {
+        liveModalDurationText.textContent = data.duration || '';
+      }
+
+      // Render Vertical Stoppage Timeline
+      if (liveModalTimelineContainer) {
+        const stoppages = data.stoppages || [];
+        if (stoppages.length === 0) {
+          liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No stoppage timetable available for this train.</div>`;
+        } else {
+          liveModalTimelineContainer.innerHTML = stoppages.map((stop, idx) => {
+            const isPassed = stop.status === 'passed' || stop.status === 'departed';
+            const isCurrent = stop.status === 'current' || stop.status === 'next';
+
+            let nodeIcon = '';
+            let textClass = '';
+            if (isPassed) {
+              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-check text-[10px]"></i></div>`;
+              textClass = 'text-slate-500 dark:text-slate-400';
+            } else if (isCurrent) {
+              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20 animate-pulse"><i class="fa-solid fa-train text-[10px]"></i></div>`;
+              textClass = 'text-cyan-600 dark:text-cyan-400 font-black';
+            } else {
+              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 flex items-center justify-center text-[10px] font-mono">${idx + 1}</div>`;
+              textClass = 'text-slate-800 dark:text-slate-200';
+            }
+
+            return `
+              <div class="flex items-start space-x-3 pb-5 last:pb-1 relative">
+                ${nodeIcon}
+                <div class="flex-1 min-w-0 pt-0.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="font-extrabold text-xs sm:text-sm ${textClass} truncate">${escapeHtml(stop.station_name)}</div>
+                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white shrink-0">${stop.scheduled_time}</div>
+                  </div>
+                  <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                    <span>${stop.station_code ? stop.station_code + ' • ' : ''}${stop.distance_km} km</span>
+                    <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${stop.platform && stop.platform !== '—' ? stop.platform : 'PF --'}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render 7-Day Delay History Bar Chart
+      if (liveModalDelayBars && liveModalAvgDelayBadge) {
+        const history = data.delay_history || {};
+        const runs = history.recent_runs || [];
+        liveModalAvgDelayBadge.textContent = `Avg: ~${history.avg_delay_minutes || 0}m`;
+
+        if (runs.length === 0) {
+          liveModalDelayBars.innerHTML = `<div class="w-full text-center text-[11px] text-slate-400 py-3">No historical runs recorded for this train yet.</div>`;
+        } else {
+          const maxDelay = Math.max(...runs.map(r => r.delay_minutes || 0), 60);
+          liveModalDelayBars.innerHTML = runs.slice(-7).map(run => {
+            const delay = run.delay_minutes || 0;
+            const barHeightPct = Math.max(15, Math.min(100, Math.round((delay / maxDelay) * 100)));
+            const isLate = delay > 20;
+            const barColor = isLate ? 'bg-amber-500' : 'bg-emerald-500';
+
+            return `
+              <div class="flex-1 flex flex-col items-center justify-end h-full group/bar relative">
+                <span class="text-[9px] font-mono font-bold text-slate-500 mb-1">+${delay}m</span>
+                <div class="w-full max-w-[28px] rounded-t-md ${barColor} transition-all duration-300" style="height: ${barHeightPct}%"></div>
+                <span class="text-[9px] text-slate-400 font-semibold mt-1 truncate">${run.date ? run.date.split('-').slice(1).join('/') : ''}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+    } catch (e) {
+      if (liveModalTimelineContainer) {
+        liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-rose-500 font-bold">Network error loading train tracker data.</div>`;
+      }
+    }
+  }
+
   function initPwaServiceWorker() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -6900,6 +7322,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initShareModule();
     initStationMatrixModule();
     initMultiDayMatrixControls();
+    initLiveTrackerModule();
     initUserManagement();
     initPwaServiceWorker();
 

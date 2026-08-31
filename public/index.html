@@ -1173,31 +1173,45 @@
             </div>
           </div>
 
-          <!-- Mode 1: By Train Input Field -->
+          <!-- Mode 1: By Train Input Field & Dropdown -->
           <div id="liveSearchByTrainContainer" class="relative max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="text" id="liveTrackerSearchInput" placeholder="Search by train name or model (e.g. Subarna, 701, Kalni)..." class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+            <input type="text" id="liveTrackerSearchInput" autocomplete="off" placeholder="Search by train name or model (e.g. Subarna, 701, Kalni)..." class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
             <button type="button" id="clearLiveTrackerSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
               <i class="fa-solid fa-xmark"></i>
             </button>
+            
+            <!-- Floating Autocomplete Dropdown for By Train -->
+            <div id="liveTrackerSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
           </div>
 
-          <!-- Mode 2: By Route Input Fields (From & To) -->
-          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl">
+          <!-- Mode 2: By Route Input Fields & Dropdowns (From & To) -->
+          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl relative">
+            
+            <!-- From Station Input + Dropdown -->
             <div class="relative">
               <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 text-xs pointer-events-none"></i>
-              <input type="text" id="liveRouteFromInput" placeholder="From Station (e.g. Dhaka)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+              <input type="text" id="liveRouteFromInput" autocomplete="off" placeholder="From Station (e.g. Dhaka)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteFromBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
               </button>
+              
+              <!-- Floating Autocomplete Dropdown for From Station -->
+              <div id="liveRouteFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
+
+            <!-- To Station Input + Dropdown -->
             <div class="relative">
               <i class="fa-solid fa-location-crosshairs absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-500 text-xs pointer-events-none"></i>
-              <input type="text" id="liveRouteToInput" placeholder="To Station (e.g. Chattogram)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+              <input type="text" id="liveRouteToInput" autocomplete="off" placeholder="To Station (e.g. Chattogram)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteToBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
               </button>
+
+              <!-- Floating Autocomplete Dropdown for To Station -->
+              <div id="liveRouteToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
+
           </div>
 
         </div>

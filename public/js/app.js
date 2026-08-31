@@ -413,10 +413,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveSearchByRouteContainer = document.getElementById('liveSearchByRouteContainer');
   const liveTrackerSearchInput = document.getElementById('liveTrackerSearchInput');
   const clearLiveTrackerSearchBtn = document.getElementById('clearLiveTrackerSearchBtn');
+  const liveTrackerSearchDropdown = document.getElementById('liveTrackerSearchDropdown');
   const liveRouteFromInput = document.getElementById('liveRouteFromInput');
   const clearLiveRouteFromBtn = document.getElementById('clearLiveRouteFromBtn');
+  const liveRouteFromDropdown = document.getElementById('liveRouteFromDropdown');
   const liveRouteToInput = document.getElementById('liveRouteToInput');
   const clearLiveRouteToBtn = document.getElementById('clearLiveRouteToBtn');
+  const liveRouteToDropdown = document.getElementById('liveRouteToDropdown');
   const liveTrackerFilterChips = document.getElementById('liveTrackerFilterChips');
   const liveTrackerLoadingState = document.getElementById('liveTrackerLoadingState');
   const liveTrackerEmptyState = document.getElementById('liveTrackerEmptyState');
@@ -6916,6 +6919,209 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // 14. Live Train GPS & Delay Radar Tracker Module
   // ----------------------------------------------------
+  function setupLiveTrainAutocomplete() {
+    if (!liveTrackerSearchInput || !liveTrackerSearchDropdown) return;
+
+    function renderTrainDropdown() {
+      const q = (liveTrackerSearchInput.value || '').trim().toLowerCase();
+      const allTrains = state.liveTrackerTrains || [];
+
+      let matches = [];
+      if (!q) {
+        // Show initial prominent active trains
+        matches = allTrains.slice(0, 10);
+      } else {
+        matches = allTrains.filter(t => {
+          const name = (t.train_name || '').toLowerCase();
+          const no = String(t.train_no || '');
+          const from = (t.from || '').toLowerCase();
+          const to = (t.to || '').toLowerCase();
+          return name.includes(q) || no.includes(q) || from.includes(q) || to.includes(q);
+        }).slice(0, 12);
+      }
+
+      if (matches.length === 0) {
+        liveTrackerSearchDropdown.innerHTML = `
+          <div class="px-4 py-3 text-xs text-slate-400 text-center font-medium">
+            No matching running train found for "${escapeHtml(q)}"
+          </div>
+        `;
+        liveTrackerSearchDropdown.classList.remove('hidden');
+        return;
+      }
+
+      liveTrackerSearchDropdown.innerHTML = matches.map(t => {
+        const delayMin = t.delay_minutes || 0;
+        const isOntime = delayMin <= 10;
+        const delayClass = isOntime ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+        const delayText = isOntime && delayMin === 0 ? '🟢 On Time' : `🟡 +${delayMin}m`;
+
+        return `
+          <div class="live-train-auto-item px-3.5 py-2.5 hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40 cursor-pointer flex items-center justify-between gap-2 text-xs transition group" data-name="${escapeHtml(t.train_name)}" data-no="${t.train_no}">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-6 h-6 rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 flex items-center justify-center text-[10px] shrink-0">
+                <i class="fa-solid fa-train"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-extrabold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">${escapeHtml(t.train_name)}</span>
+                  <span class="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">#${t.train_no}</span>
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(t.from)} ➔ ${escapeHtml(t.to)} (${t.departure_time || '--:--'})</div>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-[10px] font-extrabold ${delayClass}">${delayText}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      liveTrackerSearchDropdown.querySelectorAll('.live-train-auto-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const name = item.dataset.name;
+          liveTrackerSearchInput.value = name;
+          state.liveTrackerSearchQuery = name.toLowerCase();
+          if (clearLiveTrackerSearchBtn) clearLiveTrackerSearchBtn.classList.remove('hidden');
+          liveTrackerSearchDropdown.classList.add('hidden');
+          filterAndRenderLiveTrains();
+        });
+      });
+
+      liveTrackerSearchDropdown.classList.remove('hidden');
+    }
+
+    liveTrackerSearchInput.addEventListener('input', (e) => {
+      state.liveTrackerSearchQuery = e.target.value.trim().toLowerCase();
+      if (clearLiveTrackerSearchBtn) clearLiveTrackerSearchBtn.classList.toggle('hidden', !state.liveTrackerSearchQuery);
+      renderTrainDropdown();
+      filterAndRenderLiveTrains();
+    });
+
+    liveTrackerSearchInput.addEventListener('focus', () => {
+      renderTrainDropdown();
+    });
+
+    if (clearLiveTrackerSearchBtn) {
+      clearLiveTrackerSearchBtn.addEventListener('click', () => {
+        liveTrackerSearchInput.value = '';
+        state.liveTrackerSearchQuery = '';
+        clearLiveTrackerSearchBtn.classList.add('hidden');
+        liveTrackerSearchDropdown.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!liveTrackerSearchInput.contains(e.target) && !liveTrackerSearchDropdown.contains(e.target)) {
+        liveTrackerSearchDropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  function setupLiveRouteStationAutocomplete(inputEl, dropdownEl, clearBtn, onSelect) {
+    if (!inputEl || !dropdownEl) return;
+
+    function renderStationDropdown() {
+      const q = (inputEl.value || '').trim().toLowerCase();
+      const stationList = state.stations || [];
+
+      let matches = [];
+      if (!q) {
+        // Show prominent junction stations by default
+        const topStations = ['Dhaka', 'Chattogram', 'Sylhet', 'Rajshahi', 'Cox\'s Bazar', 'Khulna', 'Biman_Bandar', 'Santahar', 'Cumilla', 'Mymensingh'];
+        matches = stationList.filter(s => topStations.some(ts => s.name.toLowerCase() === ts.toLowerCase())).slice(0, 10);
+        if (matches.length === 0) matches = stationList.slice(0, 10);
+      } else {
+        // Check aliases first
+        let aliasMatches = [];
+        if (typeof STATION_ALIASES !== 'undefined' && STATION_ALIASES[q]) {
+          const canonical = STATION_ALIASES[q];
+          const sObj = stationList.find(s => s.name.toLowerCase() === canonical.toLowerCase());
+          if (sObj) aliasMatches.push(sObj);
+        }
+
+        const otherMatches = stationList.filter(s =>
+          s.name.toLowerCase().includes(q) ||
+          (s.display_name && s.display_name.toLowerCase().includes(q)) ||
+          (s.bn_name && s.bn_name.includes(q)) ||
+          (s.alias && s.alias.toLowerCase().includes(q))
+        );
+
+        matches = Array.from(new Set([...aliasMatches, ...otherMatches])).slice(0, 12);
+      }
+
+      if (matches.length === 0) {
+        dropdownEl.innerHTML = `
+          <div class="px-4 py-3 text-xs text-slate-400 text-center font-medium">
+            No matching station found for "${escapeHtml(q)}"
+          </div>
+        `;
+        dropdownEl.classList.remove('hidden');
+        return;
+      }
+
+      dropdownEl.innerHTML = matches.map(s => {
+        const displayName = s.display_name || s.name.replace(/_/g, ' ');
+        const cleanVal = s.name.replace(/_/g, ' ');
+
+        return `
+          <div class="live-station-auto-item px-3.5 py-2.5 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/40 cursor-pointer flex items-center justify-between text-xs transition group" data-name="${escapeHtml(cleanVal)}">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <i class="fa-solid fa-location-dot text-emerald-500 text-xs shrink-0"></i>
+              <div class="min-w-0">
+                <span class="font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">${escapeHtml(displayName)}</span>
+                ${s.bn_name ? `<span class="text-slate-400 font-normal ml-1">(${escapeHtml(s.bn_name)})</span>` : ''}
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold">${escapeHtml(s.name)}</span>
+          </div>
+        `;
+      }).join('');
+
+      dropdownEl.querySelectorAll('.live-station-auto-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const name = item.dataset.name;
+          inputEl.value = name;
+          if (clearBtn) clearBtn.classList.remove('hidden');
+          dropdownEl.classList.add('hidden');
+          onSelect(name);
+          filterAndRenderLiveTrains();
+        });
+      });
+
+      dropdownEl.classList.remove('hidden');
+    }
+
+    inputEl.addEventListener('input', (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      if (clearBtn) clearBtn.classList.toggle('hidden', !val);
+      onSelect(val);
+      renderStationDropdown();
+      filterAndRenderLiveTrains();
+    });
+
+    inputEl.addEventListener('focus', () => {
+      renderStationDropdown();
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        inputEl.value = '';
+        clearBtn.classList.add('hidden');
+        dropdownEl.classList.add('hidden');
+        onSelect('');
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+        dropdownEl.classList.add('hidden');
+      }
+    });
+  }
+
   function initLiveTrackerModule() {
     // Navigation Tabs Switching
     if (navSeatFinderBtn) {
@@ -6951,58 +7157,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // By Train Search Input
-    if (liveTrackerSearchInput) {
-      liveTrackerSearchInput.addEventListener('input', (e) => {
-        state.liveTrackerSearchQuery = e.target.value.trim().toLowerCase();
-        if (clearLiveTrackerSearchBtn) {
-          clearLiveTrackerSearchBtn.classList.toggle('hidden', !state.liveTrackerSearchQuery);
-        }
-        filterAndRenderLiveTrains();
-      });
-    }
+    // Setup Live Train Autocomplete Dropdown ("By Train")
+    setupLiveTrainAutocomplete();
 
-    if (clearLiveTrackerSearchBtn) {
-      clearLiveTrackerSearchBtn.addEventListener('click', () => {
-        if (liveTrackerSearchInput) liveTrackerSearchInput.value = '';
-        state.liveTrackerSearchQuery = '';
-        clearLiveTrackerSearchBtn.classList.add('hidden');
-        filterAndRenderLiveTrains();
-      });
-    }
+    // Setup Live Station Autocomplete Dropdowns ("By Route")
+    setupLiveRouteStationAutocomplete(liveRouteFromInput, liveRouteFromDropdown, clearLiveRouteFromBtn, (name) => {
+      state.liveRouteFrom = name.toLowerCase();
+    });
 
-    // By Route Search Inputs (From & To)
-    if (liveRouteFromInput) {
-      liveRouteFromInput.addEventListener('input', (e) => {
-        state.liveRouteFrom = e.target.value.trim().toLowerCase();
-        if (clearLiveRouteFromBtn) clearLiveRouteFromBtn.classList.toggle('hidden', !state.liveRouteFrom);
-        filterAndRenderLiveTrains();
-      });
-    }
-    if (clearLiveRouteFromBtn) {
-      clearLiveRouteFromBtn.addEventListener('click', () => {
-        if (liveRouteFromInput) liveRouteFromInput.value = '';
-        state.liveRouteFrom = '';
-        clearLiveRouteFromBtn.classList.add('hidden');
-        filterAndRenderLiveTrains();
-      });
-    }
-
-    if (liveRouteToInput) {
-      liveRouteToInput.addEventListener('input', (e) => {
-        state.liveRouteTo = e.target.value.trim().toLowerCase();
-        if (clearLiveRouteToBtn) clearLiveRouteToBtn.classList.toggle('hidden', !state.liveRouteTo);
-        filterAndRenderLiveTrains();
-      });
-    }
-    if (clearLiveRouteToBtn) {
-      clearLiveRouteToBtn.addEventListener('click', () => {
-        if (liveRouteToInput) liveRouteToInput.value = '';
-        state.liveRouteTo = '';
-        clearLiveRouteToBtn.classList.add('hidden');
-        filterAndRenderLiveTrains();
-      });
-    }
+    setupLiveRouteStationAutocomplete(liveRouteToInput, liveRouteToDropdown, clearLiveRouteToBtn, (name) => {
+      state.liveRouteTo = name.toLowerCase();
+    });
 
     // Filter Chips
     if (liveTrackerFilterChips) {

@@ -2289,6 +2289,8 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
 
   const initialTrain = parseJsonObj(stream, 'initialTrain');
   const initialDerived = parseJsonObj(stream, 'initialDerived');
+  const delayReportObj = delayReport || parseJsonObj(stream, 'delayReport');
+  const nextStopCode = initialTrain?.nextStop || '';
 
   const delayMin = initialTrain?.delay || initialDerived?.delay || 0;
   const afterStopIdx = (initialDerived?.trainSegmentPosition?.afterStopIdx !== undefined && initialDerived?.trainSegmentPosition?.afterStopIdx !== null)
@@ -2393,7 +2395,7 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     }
   }
 
-  const recentRuns = (delayReport?.runs || []).map(run => ({
+  const recentRuns = (delayReportObj?.runs || []).map(run => ({
     date: run.run_date,
     delay_minutes: run.delay_minutes
   }));
@@ -2430,10 +2432,10 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     classes: initialTrain?.classes || [],
     stoppages,
     delay_history: {
-      avg_delay_minutes: delayReport?.avg_delay_minutes || 0,
-      max_delay_minutes: delayReport?.max_delay_minutes || 0,
-      min_delay_minutes: delayReport?.min_delay_minutes || 0,
-      runs_analyzed: delayReport?.known_runs || recentRuns.length,
+      avg_delay_minutes: delayReportObj?.avg_delay_minutes || 0,
+      max_delay_minutes: delayReportObj?.max_delay_minutes || 0,
+      min_delay_minutes: delayReportObj?.min_delay_minutes || 0,
+      runs_analyzed: delayReportObj?.known_runs || recentRuns.length,
       recent_runs: recentRuns
     }
   };

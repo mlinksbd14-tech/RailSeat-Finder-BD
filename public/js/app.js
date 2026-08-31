@@ -7373,8 +7373,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let liveModalLeafletMap = null;
   let liveModalMapLayerGroup = null;
 
+  const CARTO_API_KEY = 'cb1_2mah_1_4779a1668bc1f9532f862187';
+
   function getMapTileUrl() {
-    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const isDark = document.documentElement.classList.contains('dark');
+    return isDark
+      ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`
+      : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`;
   }
 
   function initOrUpdateNetworkMap(trains) {
@@ -7390,9 +7395,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer(getMapTileUrl(), {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       }).addTo(liveNetworkLeafletMap);
 
       liveNetworkMarkersGroup = L.layerGroup().addTo(liveNetworkLeafletMap);
@@ -7486,9 +7492,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer(getMapTileUrl(), {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       }).addTo(liveModalLeafletMap);
 
       liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);
@@ -7954,42 +7961,42 @@ document.addEventListener('DOMContentLoaded', () => {
               `;
             }
 
-            // Dynamic In-Transit Between-Station Indicator Box
+            // Dynamic In-Transit Between-Station Indicator Box (Mobile-Compact)
             let inTransitRoadmapBlock = '';
             if (activePrevIdx >= 0 && idx === activePrevIdx && idx < stoppages.length - 1) {
               const segmentPct = data.segment_progress_pct || 50;
               inTransitRoadmapBlock = `
-                <div class="my-3 ml-3.5 pl-6 pr-3 py-3 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-cyan-500/40 relative shadow-sm">
+                <div class="my-2 ml-2 sm:ml-3 pl-4 sm:pl-5 pr-2 py-2 rounded-xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 border border-cyan-500/40 relative shadow-2xs">
                   <!-- Vertical road track continuous connector -->
                   <div class="absolute -left-[1px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-cyan-500 to-slate-300 dark:to-slate-700"></div>
                   
                   <!-- Moving Train Icon Beacon at Exact Relative Position -->
-                  <div class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shadow-lg shadow-cyan-500/40 ring-4 ring-cyan-500/30 animate-pulse">
+                  <div class="absolute -left-[11px] top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-[10px] shadow-md shadow-cyan-500/40 ring-2 ring-cyan-500/30 animate-pulse">
                     <i class="fa-solid fa-train"></i>
                   </div>
 
-                  <div class="space-y-1.5 min-w-0">
-                    <div class="flex items-center justify-between gap-2 flex-wrap">
-                      <div class="flex items-center space-x-1.5">
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-1 shadow-2xs">
-                          <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                          <span>LIVE IN-TRANSIT (${segmentPct}%)</span>
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center justify-between gap-1.5 flex-wrap">
+                      <div class="flex items-center space-x-1">
+                        <span class="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-cyan-600 text-white flex items-center gap-1 shadow-2xs">
+                          <span class="w-1 h-1 rounded-full bg-white animate-ping"></span>
+                          <span>IN-TRANSIT (${segmentPct}%)</span>
                         </span>
-                        <span class="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-800 dark:text-cyan-200 border border-slate-200 dark:border-slate-700">
-                          <i class="fa-solid fa-gauge-high text-[9px] mr-1 text-cyan-600"></i>${data.speed ? data.speed + ' km/h' : 'Moving'}
+                        <span class="text-[9px] font-mono font-extrabold px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-cyan-800 dark:text-cyan-200 border border-slate-200 dark:border-slate-700">
+                          <i class="fa-solid fa-gauge-high text-[8px] mr-0.5 text-cyan-600"></i>${data.speed ? data.speed + ' km/h' : 'Moving'}
                         </span>
                       </div>
-                      <span class="text-[10px] font-mono text-slate-400 font-bold">Updated ${data.last_updated || '0s ago'}</span>
+                      <span class="text-[9px] font-mono text-slate-400 font-bold">Updated ${data.last_updated || '0s ago'}</span>
                     </div>
 
-                    <p class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1 flex-wrap">
+                    <p class="text-[11px] font-bold text-slate-900 dark:text-white flex items-center gap-1 flex-wrap">
                       <span>${data.covered_since_prev_stop_km ? `${data.covered_since_prev_stop_km} km passed from ${escapeHtml(stop.station_name)}` : 'In transit'}</span>
                       <span class="text-cyan-500 font-bold">➔</span>
                       <span>${data.km_to_next ? `${data.km_to_next} km to ${escapeHtml(data.next_stop)}` : ''}</span>
                     </p>
 
                     <!-- Segment Progress Bar -->
-                    <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div class="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-full" style="width: ${segmentPct}%"></div>
                     </div>
                   </div>
@@ -7998,21 +8005,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             return `
-              <div class="flex items-start space-x-3 pb-5 last:pb-1 relative group">
+              <div class="flex items-start space-x-2.5 pb-3 sm:pb-4 last:pb-0.5 relative group">
                 ${nodeIcon}
                 <div class="flex-1 min-w-0 pt-0.5">
-                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center justify-between gap-1.5 flex-wrap">
                     <div class="font-extrabold text-xs sm:text-sm ${textClass}">
                       ${escapeHtml(stop.station_name)}${stationBn}
                     </div>
-                    <div class="flex items-center space-x-2 shrink-0">
+                    <div class="flex items-center space-x-1.5 shrink-0">
                       ${timeBadge}
                       ${statusBadge}
                     </div>
                   </div>
-                  <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                  <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400 pt-0.5">
                     <span>${stop.station_code ? stop.station_code + ' • ' : ''}${stop.distance_km} km</span>
-                    <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${stop.platform && stop.platform !== '—' ? stop.platform : 'PF --'}</span>
+                    <span class="font-mono text-[9px] sm:text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${stop.platform && stop.platform !== '—' ? stop.platform : 'PF --'}</span>
                   </div>
                 </div>
               </div>

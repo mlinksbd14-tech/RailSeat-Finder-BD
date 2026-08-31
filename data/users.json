@@ -201,8 +201,25 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-08-31T11:31:49.082Z",
+      "lastLogin": "2026-08-31T11:32:52.260Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T11:32:52.260Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T11:31:49.082Z",
@@ -211,12 +228,12 @@
           "os": "Windows 10/11",
           "browser": "Edge 152",
           "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
             "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
             "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
         },
@@ -610,33 +627,16 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T08:32:19.391Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
-      "lastIp": "::1",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 105,
+      "lastIp": "27.147.149.234",
+      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+      "loginCount": 106,
       "lastDevice": {
-        "browser": "Edge 152",
-        "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+        "os": "Android 10",
+        "browser": "Chrome 152",
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+        "device": "Mobile"
       }
     }
   ]

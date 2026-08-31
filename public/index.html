@@ -183,31 +183,39 @@
             <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
           </button>
 
-          <!-- Notification Dropdown Panel -->
-          <div id="notifDropdown" class="hidden absolute -right-8 sm:right-0 mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in">
-            <!-- Dropdown Header -->
-            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
-              <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-bell text-emerald-600 dark:text-emerald-400 text-xs"></i>
-                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Alert Notifications</h4>
-                <span id="notifCountPill" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">0</span>
+          <!-- Notification Modal / Dropdown Panel -->
+          <div id="notifDropdown" class="hidden fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 md:static md:bg-transparent md:backdrop-blur-none md:p-0 md:z-auto md:block">
+            <!-- Modal Card (Bottom-sheet on mobile, centered modal on tablet, dropdown on desktop) -->
+            <div id="notifModalCard" class="w-full sm:max-w-md max-h-[90vh] md:max-h-[85vh] md:w-96 md:max-w-sm rounded-t-3xl sm:rounded-3xl md:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col md:absolute md:right-0 md:mt-2 animate-fade-in">
+              <!-- Dropdown Header -->
+              <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-bell"></i>
+                  </div>
+                  <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Notifications</h4>
+                  <span id="notifCountPill" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">0</span>
+                </div>
+                <div class="flex items-center space-x-2.5 text-[11px]">
+                  <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition cursor-pointer" title="Mark all as read">Mark Read</button>
+                  <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+                  <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer" title="Clear all stored alerts">Clear</button>
+                  <button type="button" id="closeNotifModalBtn" class="md:hidden w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer ml-1" title="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
               </div>
-              <div class="flex items-center space-x-2 text-[11px]">
-                <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition cursor-pointer" title="Mark all as read">Mark Read</button>
-                <span class="text-slate-300 dark:text-slate-700">&bull;</span>
-                <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer" title="Clear all stored alerts">Clear</button>
+
+              <!-- Notification Items Scrollable List -->
+              <div id="notifListContainer" class="max-h-[60vh] md:max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-1 flex-1">
+                <!-- Dynamic alert items -->
               </div>
-            </div>
 
-            <!-- Notification Items Scrollable List -->
-            <div id="notifListContainer" class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-1">
-              <!-- Dynamic alert items -->
-            </div>
-
-            <!-- Dropdown Footer -->
-            <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-              <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Stored in local history</span>
-              <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer">Test Alert</button>
+              <!-- Dropdown Footer -->
+              <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Local alert history</span>
+                <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer">Test Alert</button>
+              </div>
             </div>
           </div>
         </div>
@@ -218,19 +226,26 @@
             <i class="fa-solid fa-gear text-xs sm:text-sm" id="settingsGearIcon"></i>
           </button>
 
-          <!-- Settings Dropdown Panel (Category-Wise) -->
-          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in flex flex-col">
-            
-            <!-- Header -->
-            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
-              <div class="flex items-center space-x-2">
-                <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-gear"></i>
+          <!-- Settings Modal / Dropdown Panel -->
+          <div id="settingsDropdown" class="hidden fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 md:static md:bg-transparent md:backdrop-blur-none md:p-0 md:z-auto md:block">
+            <!-- Modal Card (Bottom-sheet on mobile, centered modal on tablet, dropdown on desktop) -->
+            <div id="settingsModalCard" class="w-full sm:max-w-md max-h-[92vh] md:max-h-[85vh] md:w-96 md:max-w-sm rounded-t-3xl sm:rounded-3xl md:rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col md:absolute md:right-0 md:mt-2 animate-fade-in">
+              
+              <!-- Header -->
+              <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
+                <div class="flex items-center space-x-2">
+                  <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-gear"></i>
+                  </div>
+                  <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
                 </div>
-                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
+                <div class="flex items-center space-x-2">
+                  <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Auto-saved</span>
+                  <button type="button" id="closeSettingsModalBtn" class="md:hidden w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
               </div>
-              <span class="text-[10px] text-slate-400 font-medium">Auto-saved</span>
-            </div>
 
             <!-- Category Filter Tabs -->
             <div class="flex items-center space-x-1 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 overflow-x-auto shrink-0 text-[11px]" id="settingsCategoryTabs">
@@ -622,6 +637,7 @@
             </div>
           </div>
         </div>
+      </div>
 
         <!-- Official Link -->
         <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">

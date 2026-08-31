@@ -866,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 7. Dropdown Toggle Handler
+    // 7. Dropdown / Modal Toggle Handler
     if (settingsMenuBtn) {
       settingsMenuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -890,15 +890,26 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (settingsDropdown) {
-      settingsDropdown.addEventListener('click', (e) => {
+    const closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+    if (closeSettingsModalBtn) {
+      closeSettingsModalBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (settingsDropdown) settingsDropdown.classList.add('hidden');
       });
     }
 
-    // Close on outside click
+    if (settingsDropdown) {
+      settingsDropdown.addEventListener('click', (e) => {
+        // If clicking directly on the mobile backdrop outside the card, close the modal
+        if (e.target === settingsDropdown) {
+          settingsDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close on outside click (for desktop dropdown mode)
     document.addEventListener('click', (e) => {
-      if (settingsDropdownContainer && !settingsDropdownContainer.contains(e.target)) {
+      if (settingsDropdownContainer && !settingsDropdownContainer.contains(e.target) && !settingsDropdown.contains(e.target)) {
         if (settingsDropdown) settingsDropdown.classList.add('hidden');
       }
     });
@@ -1358,6 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
       notifBellBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const isHidden = notifDropdown.classList.contains('hidden');
+        if (settingsDropdown) settingsDropdown.classList.add('hidden');
         if (isHidden) {
           notifDropdown.classList.remove('hidden');
           // Mark all notifications as read when opening
@@ -1370,9 +1382,26 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Close dropdown on outside click
+    const closeNotifModalBtn = document.getElementById('closeNotifModalBtn');
+    if (closeNotifModalBtn) {
+      closeNotifModalBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (notifDropdown) notifDropdown.classList.add('hidden');
+      });
+    }
+
+    if (notifDropdown) {
+      notifDropdown.addEventListener('click', (e) => {
+        // If clicking directly on the mobile backdrop outside the card, close the modal
+        if (e.target === notifDropdown) {
+          notifDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close dropdown on outside click (desktop mode)
     document.addEventListener('click', (e) => {
-      if (notifCenterContainer && !notifCenterContainer.contains(e.target)) {
+      if (notifCenterContainer && !notifCenterContainer.contains(e.target) && !notifDropdown.contains(e.target)) {
         if (notifDropdown) notifDropdown.classList.add('hidden');
       }
     });

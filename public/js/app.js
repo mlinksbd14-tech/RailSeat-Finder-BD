@@ -7553,8 +7553,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Quick Stats Pills
       if (liveModalSpeedPill) liveModalSpeedPill.textContent = data.speed ? `${data.speed} km/h` : 'Running';
-      if (liveModalCoachesPill) liveModalCoachesPill.textContent = String(data.coaches || 16);
-      if (liveModalOffDayPill) liveModalOffDayPill.textContent = data.off_day || 'None';
+      if (liveModalCoachesPill) {
+        const coaches = data.coaches || 16;
+        liveModalCoachesPill.textContent = `${coaches} Coaches`;
+      }
+      if (liveModalOffDayPill) {
+        const offDay = data.off_day || 'No Off Day';
+        liveModalOffDayPill.textContent = (offDay === '-1' || offDay.toLowerCase() === 'none') ? 'No Off Day' : offDay;
+      }
 
       // Render Vertical Stoppage Timeline & Road Map
       if (liveModalStopsHeader) {

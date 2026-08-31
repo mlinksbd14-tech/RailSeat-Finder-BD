@@ -2413,6 +2413,26 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     delay_minutes: run.delay_minutes
   }));
 
+  const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  let formattedOffDay = 'No Off Day';
+  if (initialTrain?.offDay !== undefined && initialTrain?.offDay !== null) {
+    if (typeof initialTrain.offDay === 'string' && isNaN(parseInt(initialTrain.offDay, 10))) {
+      formattedOffDay = initialTrain.offDay;
+    } else {
+      const offIdx = parseInt(initialTrain.offDay, 10);
+      if (offIdx >= 0 && offIdx < DAY_NAMES.length) {
+        formattedOffDay = DAY_NAMES[offIdx];
+      } else if (offIdx === -1) {
+        formattedOffDay = 'No Off Day';
+      }
+    }
+  }
+
+  let coachCount = initialTrain?.coaches;
+  if (!coachCount || isNaN(coachCount)) {
+    coachCount = 16;
+  }
+
   return {
     success: true,
     train_no: String(initialTrain?.no || trainNo),
@@ -2427,7 +2447,7 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     delay_minutes: initialTrain?.delay || initialDerived?.delay || 0,
     progress_pct: initialDerived?.pct || (trainState === 'arrived' ? 100 : (trainState === 'scheduled' ? 0 : 0)),
     status: trainState,
-    coaches: initialTrain?.coaches || 16,
+    coaches: coachCount,
     next_stop: accurateNextStop,
     next_stop_code: nextStopCode,
     next_eta: accurateNextEta,
@@ -2440,7 +2460,7 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     nearest_distance_km: nearestDistanceKm,
     covered_distance_km: initialDerived?.coveredDistanceKm ? Math.round(initialDerived.coveredDistanceKm) : 0,
     last_updated: lastUpdatedText,
-    off_day: initialTrain?.offDay || 'None',
+    off_day: formattedOffDay,
     operating_days: initialTrain?.days || [],
     classes: initialTrain?.classes || [],
     stoppages,

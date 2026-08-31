@@ -2231,6 +2231,19 @@ function parseRunningTrainsHtml(html) {
     const pctMatch = cardHtml.match(/(\d+)<!-- -->%/);
     const progressPct = pctMatch ? parseInt(pctMatch[1], 10) : 0;
 
+    const isNoData = cardHtml.includes('No data') || cardHtml.includes('NO DATA') || delayText.toLowerCase().includes('no data') || cardHtml.includes('No tracking');
+    const isCompleted = progressPct >= 100 || cardHtml.includes('Arrived') || cardHtml.includes('Completed');
+    const isScheduled = progressPct === 0 && !isNoData && !isCompleted;
+    const isDelayed = delayMinutes > 0 && !isCompleted && !isNoData && !isScheduled;
+    const isOntime = !isDelayed && !isNoData && !isScheduled && !isCompleted;
+
+    let trainStatus = 'running';
+    if (isNoData) trainStatus = 'nodata';
+    else if (isCompleted) trainStatus = 'completed';
+    else if (isScheduled) trainStatus = 'scheduled';
+    else if (isDelayed) trainStatus = 'delayed';
+    else if (isOntime) trainStatus = 'ontime';
+
     trains.push({
       train_no: trainNo,
       train_name: trainName,
@@ -2243,7 +2256,7 @@ function parseRunningTrainsHtml(html) {
       delay_minutes: delayMinutes,
       progress_pct: progressPct,
       last_updated: lastUpdated,
-      status: progressPct >= 100 ? 'arrived' : (progressPct > 0 ? 'running' : 'scheduled')
+      status: trainStatus
     });
   }
 

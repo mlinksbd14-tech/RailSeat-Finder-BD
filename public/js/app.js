@@ -7242,6 +7242,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function updateLiveTrackerFilterChipCounts(trains) {
+    if (!liveTrackerFilterChips) return;
+    const counts = {
+      all: trains.length,
+      ontime: 0,
+      delayed: 0,
+      scheduled: 0,
+      nodata: 0,
+      completed: 0
+    };
+    trains.forEach(t => {
+      const p = t.progress_pct || 0;
+      const s = t.status;
+      if (s === 'completed' || s === 'arrived' || p >= 100) counts.completed++;
+      else if (s === 'nodata' || (t.delay_text || '').toLowerCase().includes('no data')) counts.nodata++;
+      else if (s === 'scheduled' || p === 0) counts.scheduled++;
+      else if ((t.delay_minutes || 0) > 10) counts.delayed++;
+      else counts.ontime++;
+    });
+
+    const labels = {
+      all: `All (${counts.all})`,
+      ontime: `🟢 On time (${counts.ontime})`,
+      delayed: `🟡 Delayed (${counts.delayed})`,
+      scheduled: `⏱️ Scheduled (${counts.scheduled})`,
+      nodata: `⚪ No data (${counts.nodata})`,
+      completed: `🏁 Completed (${counts.completed})`
+    };
+
+    liveTrackerFilterChips.querySelectorAll('.live-filter-chip').forEach(btn => {
+      const f = btn.dataset.filter;
+      if (labels[f]) btn.textContent = labels[f];
+    });
+  }
+
   async function loadRunningTrains(forceRefresh = false) {
     if (state.liveTrackerLoading) return;
     state.liveTrackerLoading = true;
@@ -7260,9 +7295,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data && data.success && Array.isArray(data.trains) && data.trains.length > 0) {
         state.liveTrackerTrains = data.trains;
         if (liveTrackerCount) liveTrackerCount.textContent = data.trains.length;
+        updateLiveTrackerFilterChipCounts(data.trains);
         filterAndRenderLiveTrains();
       } else if (state.liveTrackerTrains && state.liveTrackerTrains.length > 0) {
         // Retain existing loaded trains if temporary sync occurs
+        updateLiveTrackerFilterChipCounts(state.liveTrackerTrains);
         filterAndRenderLiveTrains();
       } else {
         if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
@@ -7309,15 +7346,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Filter by chips
+    // Filter by chips (all, ontime, delayed, scheduled, nodata, completed)
     if (state.liveTrackerFilter === 'ontime') {
-      list = list.filter(t => (t.delay_minutes || 0) <= 10);
+      list = list.filter(t => t.status === 'ontime' || ((t.delay_minutes || 0) <= 10 && (t.progress_pct || 0) > 0 && (t.progress_pct || 0) < 100 && t.status !== 'nodata'));
     } else if (state.liveTrackerFilter === 'delayed') {
-      list = list.filter(t => (t.delay_minutes || 0) > 10);
-    } else if (state.liveTrackerFilter === 'dhaka') {
-      list = list.filter(t => (t.from || '').toLowerCase().includes('dhaka') || (t.to || '').toLowerCase().includes('dhaka'));
-    } else if (state.liveTrackerFilter === 'ctg') {
-      list = list.filter(t => (t.from || '').toLowerCase().includes('chattogram') || (t.to || '').toLowerCase().includes('chattogram'));
+      list = list.filter(t => t.status === 'delayed' || ((t.delay_minutes || 0) > 10 && (t.progress_pct || 0) < 100 && t.status !== 'nodata'));
+    } else if (state.liveTrackerFilter === 'scheduled') {
+      list = list.filter(t => t.status === 'scheduled' || ((t.progress_pct || 0) === 0 && t.status !== 'nodata' && t.status !== 'completed' && t.status !== 'arrived'));
+    } else if (state.liveTrackerFilter === 'nodata') {
+      list = list.filter(t => t.status === 'nodata' || (t.delay_text || '').toLowerCase().includes('no data') || (t.delay_text || '').toLowerCase().includes('no tracking') || t.status === 'offday');
+    } else if (state.liveTrackerFilter === 'completed') {
+      list = list.filter(t => t.status === 'completed' || t.status === 'arrived' || (t.progress_pct || 0) >= 100);
     }
 
     if (list.length === 0) {
@@ -7331,13 +7370,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     liveTrackerGrid.innerHTML = list.map(t => {
       const delayMin = t.delay_minutes || 0;
-      const isOntime = delayMin <= 10;
-      const delayBadgeClass = isOntime
-        ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-        : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800';
-      const delayText = isOntime && delayMin === 0 ? '🟢 On Time' : `🟡 +${delayMin}m`;
-
       const progress = Math.min(100, Math.max(0, t.progress_pct || 0));
+      const status = t.status || (progress >= 100 ? 'completed' : (progress > 0 ? 'running' : 'scheduled'));
+
+      let delayBadgeClass = '';
+      let delayText = '';
+
+      if (status === 'completed' || status === 'arrived' || progress >= 100) {
+        delayBadgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700';
+        delayText = '🏁 Completed';
+      } else if (status === 'nodata') {
+        delayBadgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700';
+        delayText = '⚪ No data';
+      } else if (status === 'scheduled' || progress === 0) {
+        delayBadgeClass = 'bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800';
+        delayText = '⏱️ Scheduled';
+      } else if (delayMin <= 10) {
+        delayBadgeClass = 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+        delayText = delayMin === 0 ? '🟢 On time' : `🟢 +${delayMin}m`;
+      } else {
+        delayBadgeClass = 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+        delayText = `🟡 +${delayMin}m`;
+      }
 
       return `
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-cyan-500/60 dark:hover:border-cyan-500/60 transition-all flex flex-col justify-between space-y-3.5 group">

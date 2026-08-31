@@ -199,7 +199,7 @@
         "device": "Desktop",
         "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
-      "lastIp": "::1",
+      "lastIp": "::ffff:127.0.0.1",
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -209,12 +209,12 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-08-31T10:57:03.190Z",
+      "lastLogin": "2026-08-31T11:01:03.427Z",
       "activityHistory": [
         {
           "action": "login",
-          "timestamp": "2026-08-31T10:57:03.190Z",
-          "ip": "::1",
+          "timestamp": "2026-08-31T11:01:03.427Z",
+          "ip": "::ffff:127.0.0.1",
           "device": "Desktop",
           "os": "Windows 10/11",
           "browser": "Edge 152",
@@ -225,6 +225,23 @@
             "city": "Localhost",
             "isp": "Internal Loopback / Dev",
             "region": "Local Network",
+            "query": "::1"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T10:57:03.190Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "city": "Localhost",
+            "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
         },
@@ -618,26 +635,9 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T06:03:48.536Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
-      "loginCount": 94
+      "loginCount": 95
     }
   ]
 }

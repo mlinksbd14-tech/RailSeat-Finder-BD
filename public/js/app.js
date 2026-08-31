@@ -7528,10 +7528,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // When a single train is selected, show only that selected train's origin and destination stations
+      // When a single train is selected, highlight its route line prominently
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
+
+        const routePoints = (t.current_coords && t.current_coords[0])
+          ? [t.from_coords, t.current_coords, t.to_coords]
+          : [t.from_coords, t.to_coords];
+
+        // Glowing Highlight Casing
+        const glowCasing = L.polyline(routePoints, {
+          color: '#06b6d4',
+          weight: 8,
+          opacity: 0.35,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+        liveNetworkMarkersGroup.addLayer(glowCasing);
+
+        // Core Highlighted Route Line
+        const coreHighlight = L.polyline(routePoints, {
+          color: '#0891b2',
+          weight: 4,
+          opacity: 0.95,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+        liveNetworkMarkersGroup.addLayer(coreHighlight);
 
         const fromDot = L.circleMarker(t.from_coords, {
           radius: 6,
@@ -7716,8 +7740,29 @@ document.addEventListener('DOMContentLoaded', () => {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
     }
 
-    // Fit map bounds to show full route along OpenRailwayMap tracks
-    if (validCoords.length > 0) {
+    // Highlight route line for the selected train across all its stoppage stations
+    if (validCoords.length > 1) {
+      // 1. Glowing Highlight Casing
+      const glowCasing = L.polyline(validCoords, {
+        color: '#06b6d4',
+        weight: 8,
+        opacity: 0.35,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      liveModalMapLayerGroup.addLayer(glowCasing);
+
+      // 2. Core Highlighted Route Line
+      const coreRoute = L.polyline(validCoords, {
+        color: '#0891b2',
+        weight: 4,
+        opacity: 0.95,
+        smoothFactor: 1,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      liveModalMapLayerGroup.addLayer(coreRoute);
+
       const routeBounds = L.latLngBounds(validCoords);
       if (trainCoord) routeBounds.extend(trainCoord);
       liveModalLeafletMap.fitBounds(routeBounds, { padding: [35, 35] });

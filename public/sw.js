@@ -1,5 +1,5 @@
 // RailSeat Finder BD - High Performance Service Worker & Web Push Engine
-const CACHE_NAME = 'railseat-finder-v7.1';
+const CACHE_NAME = 'railseat-finder-v7.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

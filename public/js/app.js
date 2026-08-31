@@ -7655,19 +7655,11 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // 1. OpenStreetMap Mapnik Style Basemap Layer
+      // Clean OpenStreetMap Mapnik Basemap (without other background railway routes)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         subdomains: 'abc',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
-      }).addTo(liveModalLeafletMap);
-
-      // 2. OpenRailwayMap Specialized Live Rail Route Layer
-      L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        subdomains: 'abc',
-        opacity: 0.9,
-        attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
       }).addTo(liveModalLeafletMap);
 
       liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);

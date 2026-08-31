@@ -194,13 +194,30 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
-      "lastLogin": "2026-08-31T09:55:52.417Z",
+      "lastLogin": "2026-08-31T10:01:42.454Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T10:01:42.454Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::ffff:127.0.0.1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T09:55:52.417Z",
@@ -608,26 +625,9 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T04:56:21.409Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
-      "lastIp": "::ffff:127.0.0.1",
+      "lastIp": "::1",
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -637,7 +637,7 @@
         "region": "Local Network",
         "query": "::ffff:127.0.0.1"
       },
-      "loginCount": 90
+      "loginCount": 91
     }
   ]
 }

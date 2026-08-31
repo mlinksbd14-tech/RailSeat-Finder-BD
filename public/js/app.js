@@ -7192,29 +7192,29 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
               <span class="text-[9px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
                 <i class="fa-solid fa-clock-rotate-left text-[8px]"></i>
-                <span>${t.last_updated || 'Live'}</span>
+                <span>${t.last_updated ? (t.last_updated.toLowerCase().includes('ago') || t.last_updated.toLowerCase().includes('now') ? t.last_updated : `Updated ${t.last_updated}`) : 'Live GPS'}</span>
               </span>
             </div>
           </div>
 
-          <!-- Middle Row: Route Times & Station Names -->
+          <!-- Middle Row: Route Times & Station Names (Full Station Names) -->
           <div class="flex items-center justify-between text-xs pt-1">
-            <div class="text-left min-w-0">
+            <div class="text-left min-w-0 pr-2">
               <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.departure_time || '--:--'}</div>
-              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(t.from || 'Origin')}</div>
+              <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-tight">${escapeHtml(t.from || 'Origin')}</div>
             </div>
 
             <!-- Animated Route Track with Moving Indicator -->
-            <div class="flex-1 mx-3 flex flex-col items-center">
+            <div class="flex-1 mx-2 flex flex-col items-center shrink-0 min-w-[80px]">
               <span class="text-[9px] font-mono font-bold text-cyan-600 dark:text-cyan-400 mb-1">${progress}%</span>
               <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden relative">
                 <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: ${progress}%"></div>
               </div>
             </div>
 
-            <div class="text-right min-w-0">
+            <div class="text-right min-w-0 pl-2">
               <div class="font-mono text-sm font-black text-slate-900 dark:text-white">${t.arrival_time || '--:--'}</div>
-              <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(t.to || 'Destination')}</div>
+              <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 leading-tight">${escapeHtml(t.to || 'Destination')}</div>
             </div>
           </div>
 
@@ -7280,7 +7280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveModalDurationSpan) liveModalDurationSpan.textContent = data.duration || 'Intercity';
       if (liveModalRouteSpan) liveModalRouteSpan.textContent = `${data.from} → ${data.to}`;
       if (liveModalSpeedSpan) liveModalSpeedSpan.textContent = data.speed ? `${data.speed} km/h` : (data.status || 'Active');
-      if (liveModalLastPingSpan) liveModalLastPingSpan.textContent = 'Live GPS: 0s ago';
+      if (liveModalLastPingSpan) liveModalLastPingSpan.textContent = `Live GPS: Updated ${data.last_updated || '0s ago'}`;
 
       // Route Progress Hero Card
       const progress = Math.min(100, Math.max(0, data.progress_pct || 0));
@@ -7297,21 +7297,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveModalCoveredKmText) liveModalCoveredKmText.textContent = `${coveredKm} km covered`;
       if (liveModalTotalKmText) liveModalTotalKmText.textContent = totalKm ? `${totalKm} km total` : '';
 
-      // Real-Time Next Station & Nearest Landmark Callouts
+      // Real-Time Next Station & Nearest Landmark Callouts (Full Station Names & Passed Distance)
       if (liveModalNextStationTitle) {
-        liveModalNextStationTitle.textContent = data.next_stop || (stoppages.find(s => s.status === 'next' || s.status === 'upcoming')?.station_name || 'Destination');
+        liveModalNextStationTitle.textContent = data.next_stop || 'Destination';
       }
       if (liveModalNextStationSubtitle) {
+        const passedFromPrev = data.covered_since_prev_stop_km ? `${data.covered_since_prev_stop_km} km from ${data.prev_stop || 'prev stop'}` : '';
         const kmAhead = data.km_to_next ? `${data.km_to_next} km ahead` : 'En Route';
-        const etaText = data.next_eta ? ` • ETA ${data.next_eta}` : '';
-        liveModalNextStationSubtitle.textContent = `${kmAhead}${etaText}`;
+        const etaText = data.next_eta ? `ETA ${data.next_eta}` : '';
+        const parts = [passedFromPrev, kmAhead, etaText].filter(Boolean);
+        liveModalNextStationSubtitle.textContent = parts.join(' • ');
       }
 
       if (liveModalNearestTitle) {
-        liveModalNearestTitle.textContent = data.nearest_station || (stoppages.find(s => s.status === 'current')?.station_name || data.next_stop || 'Tracking');
+        liveModalNearestTitle.textContent = data.nearest_station || data.next_stop || 'Tracking Route';
       }
       if (liveModalNearestSubtitle) {
-        liveModalNearestSubtitle.textContent = data.nearest_distance_km ? `${data.nearest_distance_km} km away` : 'In Transit';
+        liveModalNearestSubtitle.textContent = data.nearest_distance_km ? `${data.nearest_distance_km} km away` : 'Nearby';
       }
 
       // Quick Stats Pills
@@ -7319,7 +7321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveModalCoachesPill) liveModalCoachesPill.textContent = String(data.coaches || 16);
       if (liveModalOffDayPill) liveModalOffDayPill.textContent = data.off_day || 'None';
 
-      // Render Vertical Stoppage Timeline
+      // Render Vertical Stoppage Timeline & Road Map
       if (liveModalStopsHeader) {
         liveModalStopsHeader.textContent = `Route Timeline • ${stoppages.length} stops`;
       }
@@ -7328,9 +7330,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (stoppages.length === 0) {
           liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No stoppage timetable available for this train.</div>`;
         } else {
+          // Identify in-transit index between stations
+          let activePrevIdx = data.prev_stop_idx;
+          if (activePrevIdx < 0) {
+            // Find last passed index
+            for (let i = stoppages.length - 1; i >= 0; i--) {
+              if (stoppages[i].status === 'passed' || stoppages[i].status === 'departed') {
+                activePrevIdx = i;
+                break;
+              }
+            }
+          }
+
           liveModalTimelineContainer.innerHTML = stoppages.map((stop, idx) => {
-            const isPassed = stop.status === 'passed' || stop.status === 'departed';
-            const isCurrent = stop.status === 'current' || stop.status === 'next';
+            const isPassed = stop.status === 'passed' || stop.status === 'departed' || (activePrevIdx >= 0 && idx <= activePrevIdx);
+            const isNextStop = stop.station_name === data.next_stop || (activePrevIdx >= 0 && idx === activePrevIdx + 1);
 
             let nodeIcon = '';
             let textClass = '';
@@ -7340,10 +7354,10 @@ document.addEventListener('DOMContentLoaded', () => {
               nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-check text-[10px]"></i></div>`;
               textClass = 'text-slate-500 dark:text-slate-400';
               statusBadge = `<span class="text-[9px] font-bold text-slate-400">Passed</span>`;
-            } else if (isCurrent) {
-              nodeIcon = `<div class="relative z-10 w-8 h-8 -ml-0.5 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20 animate-pulse"><i class="fa-solid fa-train text-xs"></i></div>`;
+            } else if (isNextStop) {
+              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20"><i class="fa-solid fa-location-crosshairs text-[10px]"></i></div>`;
               textClass = 'text-cyan-600 dark:text-cyan-400 font-black';
-              statusBadge = `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 animate-pulse">● LIVE</span>`;
+              statusBadge = `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800">Next Stop</span>`;
             } else {
               nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 flex items-center justify-center text-[10px] font-mono font-bold">${idx + 1}</div>`;
               textClass = 'text-slate-800 dark:text-slate-200';
@@ -7352,12 +7366,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const stationBn = stop.station_bn && stop.station_bn !== stop.station_name ? ` <span class="text-[11px] font-normal text-slate-400">(${escapeHtml(stop.station_bn)})</span>` : '';
 
+            // Dynamic In-Transit Between-Station Indicator Box
+            let inTransitRoadmapBlock = '';
+            if (activePrevIdx >= 0 && idx === activePrevIdx && idx < stoppages.length - 1) {
+              const segmentPct = data.segment_progress_pct || 50;
+              inTransitRoadmapBlock = `
+                <div class="my-3 ml-3.5 pl-6 pr-3 py-3 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 border-2 border-cyan-500/40 relative shadow-sm">
+                  <!-- Vertical road track continuous connector -->
+                  <div class="absolute -left-[1px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-cyan-500 to-slate-300 dark:to-slate-700"></div>
+                  
+                  <!-- Moving Train Icon Beacon at Exact Relative Position -->
+                  <div class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shadow-lg shadow-cyan-500/40 ring-4 ring-cyan-500/30 animate-pulse">
+                    <i class="fa-solid fa-train"></i>
+                  </div>
+
+                  <div class="space-y-1.5 min-w-0">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <div class="flex items-center space-x-1.5">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-1 shadow-2xs">
+                          <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                          <span>LIVE IN-TRANSIT (${segmentPct}%)</span>
+                        </span>
+                        <span class="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-800 dark:text-cyan-200 border border-slate-200 dark:border-slate-700">
+                          <i class="fa-solid fa-gauge-high text-[9px] mr-1 text-cyan-600"></i>${data.speed ? data.speed + ' km/h' : 'Moving'}
+                        </span>
+                      </div>
+                      <span class="text-[10px] font-mono text-slate-400 font-bold">Updated ${data.last_updated || '0s ago'}</span>
+                    </div>
+
+                    <p class="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1 flex-wrap">
+                      <span>${data.covered_since_prev_stop_km ? `${data.covered_since_prev_stop_km} km passed from ${escapeHtml(stop.station_name)}` : 'In transit'}</span>
+                      <span class="text-cyan-500 font-bold">➔</span>
+                      <span>${data.km_to_next ? `${data.km_to_next} km to ${escapeHtml(data.next_stop)}` : ''}</span>
+                    </p>
+
+                    <!-- Segment Progress Bar -->
+                    <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-full" style="width: ${segmentPct}%"></div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
             return `
               <div class="flex items-start space-x-3 pb-5 last:pb-1 relative group">
                 ${nodeIcon}
                 <div class="flex-1 min-w-0 pt-0.5">
                   <div class="flex items-center justify-between gap-2">
-                    <div class="font-extrabold text-xs sm:text-sm ${textClass} truncate">
+                    <div class="font-extrabold text-xs sm:text-sm ${textClass}">
                       ${escapeHtml(stop.station_name)}${stationBn}
                     </div>
                     <div class="flex items-center space-x-1.5 shrink-0">
@@ -7371,6 +7428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
                 </div>
               </div>
+              ${inTransitRoadmapBlock}
             `;
           }).join('');
         }

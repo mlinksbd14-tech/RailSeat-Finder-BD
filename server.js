@@ -2338,6 +2338,33 @@ function parseTrainDetailStream(stream, trainNo) {
     status: r.status || 'upcoming'
   }));
 
+  const nextStopCode = initialTrain?.nextStop || '';
+  const nextStopObj = stoppages.find(s => s.station_code.toUpperCase() === nextStopCode.toUpperCase() || s.station_name.toLowerCase() === nextStopCode.toLowerCase());
+  const fullNextStopName = nextStopObj ? nextStopObj.station_name : (nextStopCode || 'Destination');
+
+  const afterStopIdx = initialDerived?.trainSegmentPosition?.afterStopIdx ?? -1;
+  const prevStopObj = afterStopIdx >= 0 && afterStopIdx < stoppages.length ? stoppages[afterStopIdx] : null;
+  const prevStopName = prevStopObj ? prevStopObj.station_name : (stoppages[0]?.station_name || '');
+  const coveredSincePrevStopKm = initialDerived?.coveredSincePrevStopKm ? Math.round(initialDerived.coveredSincePrevStopKm * 10) / 10 : null;
+  const segmentProgressPct = initialDerived?.trainSegmentPosition?.pct ? Math.round(initialDerived.trainSegmentPosition.pct) : (initialDerived?.currentSegmentProgressPct ? Math.round(initialDerived.currentSegmentProgressPct) : null);
+
+  let lastUpdatedText = '0s ago';
+  if (initialDerived?.lastUpdateAt) {
+    try {
+      const rawDate = String(initialDerived.lastUpdateAt).replace(/^\$D/, '');
+      const updateDate = new Date(rawDate);
+      const diffSeconds = Math.max(0, Math.floor((Date.now() - updateDate.getTime()) / 1000));
+      if (diffSeconds < 60) {
+        lastUpdatedText = `${diffSeconds}s ago`;
+      } else {
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        lastUpdatedText = `${diffMinutes}m ago`;
+      }
+    } catch (e) {
+      lastUpdatedText = '0s ago';
+    }
+  }
+
   const recentRuns = (delayReport?.runs || []).map(run => ({
     date: run.run_date,
     delay_minutes: run.delay_minutes
@@ -2358,12 +2385,18 @@ function parseTrainDetailStream(stream, trainNo) {
     progress_pct: initialDerived?.pct || 0,
     status: initialTrain?.status || initialDerived?.state || 'scheduled',
     coaches: initialTrain?.coaches || 16,
-    next_stop: initialTrain?.nextStop || '',
+    next_stop: fullNextStopName,
+    next_stop_code: nextStopCode,
     next_eta: initialTrain?.nextEta || '',
+    prev_stop: prevStopName,
+    prev_stop_idx: afterStopIdx,
+    covered_since_prev_stop_km: coveredSincePrevStopKm,
+    segment_progress_pct: segmentProgressPct,
     km_to_next: initialDerived?.kmToNext || 0,
     nearest_station: initialDerived?.nearestStationName || '',
     nearest_distance_km: initialDerived?.nearestStationDistanceKm ? Math.round(initialDerived.nearestStationDistanceKm * 10) / 10 : null,
     covered_distance_km: initialDerived?.coveredDistanceKm ? Math.round(initialDerived.coveredDistanceKm) : 0,
+    last_updated: lastUpdatedText,
     off_day: initialTrain?.offDay || 'None',
     operating_days: initialTrain?.days || [],
     classes: initialTrain?.classes || [],

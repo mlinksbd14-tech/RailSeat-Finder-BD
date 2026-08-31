@@ -1733,86 +1733,145 @@
   </div>
 
   <!-- Live Train Detail & Stoppage Timeline Modal -->
-  <div id="liveTrainModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col border-2 border-slate-300 dark:border-slate-700 shadow-2xl overflow-hidden">
+  <div id="liveTrainModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[94vh] flex flex-col border-2 border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
       
-      <!-- Modal Header -->
-      <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-50 to-cyan-50/30 dark:from-slate-800/80 dark:to-cyan-950/30">
-        <div class="flex items-center space-x-3 min-w-0">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-base shadow-sm shrink-0">
+      <!-- Top Modal Header Bar -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-start justify-between gap-3 bg-gradient-to-r from-slate-50 via-cyan-50/20 to-blue-50/20 dark:from-slate-800/80 dark:via-cyan-950/30 dark:to-slate-900 shrink-0">
+        <div class="flex items-start space-x-3 min-w-0">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-600 via-teal-500 to-emerald-500 text-white flex items-center justify-center text-lg shadow-md shadow-cyan-500/20 shrink-0 mt-0.5">
             <i class="fa-solid fa-train"></i>
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 space-y-1">
             <div class="flex items-center space-x-2 flex-wrap">
-              <h3 id="liveTrainModalTitle" class="font-black text-base sm:text-lg text-slate-900 dark:text-white truncate">Subarna Express</h3>
-              <span id="liveTrainModalNumber" class="text-xs px-2 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-mono font-extrabold border border-cyan-300 dark:border-cyan-800">#701</span>
+              <h3 id="liveTrainModalTitle" class="font-black text-base sm:text-xl text-slate-900 dark:text-white tracking-tight truncate">Mohanagar Provati</h3>
+              <span id="liveTrainModalNumber" class="text-xs px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-700 dark:text-cyan-300 font-mono font-black border border-slate-200 dark:border-slate-700">#704</span>
+              <span id="liveModalDelayBadge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800">
+                Delayed · +46m
+              </span>
             </div>
-            <p id="liveTrainModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">Chattogram ➔ Dhaka (07:00 - 11:55)</p>
+            <p id="liveTrainModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 flex-wrap">
+              <span id="liveModalDurationSpan">5h 50m</span>
+              <span>•</span>
+              <span id="liveModalRouteSpan">Dhaka → Chattogram</span>
+              <span>•</span>
+              <span id="liveModalSpeedSpan" class="text-cyan-600 dark:text-cyan-400 font-bold">45 km/h</span>
+              <span>•</span>
+              <span id="liveModalLastPingSpan" class="text-slate-400 font-medium">0s ago</span>
+            </p>
           </div>
         </div>
-        <button id="closeLiveTrainModalBtn" type="button" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button id="closeLiveTrainModalBtn" type="button" class="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition shrink-0 cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
         </button>
       </div>
 
-      <!-- Modal Body -->
-      <div class="p-4 sm:p-5 overflow-y-auto space-y-4" id="liveTrainModalBody">
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar" id="liveTrainModalBody">
         
-        <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div class="text-[10px] font-extrabold uppercase text-slate-400">Delay Status</div>
-            <div id="liveModalDelayVal" class="text-base font-black text-amber-600 dark:text-amber-400 mt-0.5">+0m</div>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div class="text-[10px] font-extrabold uppercase text-slate-400">Speed / State</div>
-            <div id="liveModalSpeedVal" class="text-base font-black text-cyan-600 dark:text-cyan-400 mt-0.5">Running</div>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div class="text-[10px] font-extrabold uppercase text-slate-400">Route Progress</div>
-            <div id="liveModalProgressVal" class="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">0%</div>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-center">
-            <div class="text-[10px] font-extrabold uppercase text-slate-400">Total Coaches</div>
-            <div id="liveModalCoachesVal" class="text-base font-black text-purple-600 dark:text-purple-400 mt-0.5">18</div>
-          </div>
-        </div>
-
-        <!-- Next Stoppage Alert Box -->
-        <div id="liveModalNextStopBox" class="p-3 rounded-xl bg-cyan-50/80 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800/60 flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-location-crosshairs text-cyan-600 dark:text-cyan-400"></i>
-            <div>
-              <span class="text-[10px] font-extrabold text-cyan-700 dark:text-cyan-300 uppercase">Next Station ETA</span>
-              <div id="liveModalNextStopText" class="text-xs font-black text-slate-900 dark:text-white">Dhaka Airport (11:24)</div>
+        <!-- Live Route Progress Hero Card -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-cyan-50/40 dark:from-slate-800/70 dark:to-cyan-950/20 border-2 border-slate-200/80 dark:border-slate-700/80 space-y-3">
+          
+          <div class="flex items-center justify-between text-xs font-bold">
+            <div class="flex items-center space-x-2 min-w-0">
+              <span id="liveModalOriginName" class="font-extrabold text-slate-900 dark:text-white truncate">Dhaka</span>
+              <span id="liveModalOriginTime" class="font-mono text-slate-500 dark:text-slate-400">07:45</span>
+            </div>
+            <div class="text-center px-2">
+              <span id="liveModalProgressPctText" class="text-xs font-black text-cyan-600 dark:text-cyan-400">61% Complete</span>
+            </div>
+            <div class="flex items-center space-x-2 min-w-0 justify-end">
+              <span id="liveModalDestTime" class="font-mono text-slate-500 dark:text-slate-400">13:35</span>
+              <span id="liveModalDestName" class="font-extrabold text-slate-900 dark:text-white truncate">Chattogram</span>
             </div>
           </div>
-          <span id="liveModalDurationText" class="text-[11px] font-mono font-bold text-cyan-800 dark:text-cyan-200">4h 55m</span>
+
+          <!-- Animated High-Precision Progress Track -->
+          <div class="relative w-full h-2.5 bg-slate-200 dark:bg-slate-700/80 rounded-full overflow-hidden">
+            <div id="liveModalProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-full transition-all duration-500" style="width: 61%"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold pt-0.5">
+            <span id="liveModalCoveredKmText">194 km covered</span>
+            <span id="liveModalTotalKmText">320 km total</span>
+          </div>
+
         </div>
 
-        <!-- Station Stoppages Vertical Timeline -->
-        <div class="space-y-2">
-          <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-route text-cyan-500"></i>
-            <span>Live Stoppage Timeline & Platform Info</span>
-          </h4>
-          <div id="liveModalTimelineContainer" class="space-y-0 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-cyan-500/30 p-1">
+        <!-- Real-Time Next Station & Nearest Landmark Callouts -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          
+          <!-- Next Station Card -->
+          <div class="p-3.5 rounded-2xl bg-cyan-50/70 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-900/60 flex items-start space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-600 text-white flex items-center justify-center text-sm shadow-xs shrink-0 mt-0.5">
+              <i class="fa-solid fa-location-crosshairs"></i>
+            </div>
+            <div class="min-w-0 flex-1 space-y-0.5">
+              <div class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Next Station & ETA</div>
+              <div id="liveModalNextStationTitle" class="text-sm font-black text-slate-900 dark:text-white truncate">Gunabati</div>
+              <div id="liveModalNextStationSubtitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">23 km ahead • ETA 12:29</div>
+            </div>
+          </div>
+
+          <!-- Nearest Landmark / Station Card -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-start space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm shrink-0 mt-0.5">
+              <i class="fa-solid fa-map-pin"></i>
+            </div>
+            <div class="min-w-0 flex-1 space-y-0.5">
+              <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Nearest Station</div>
+              <div id="liveModalNearestTitle" class="text-sm font-black text-slate-900 dark:text-white truncate">Doulatganj</div>
+              <div id="liveModalNearestSubtitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">2 km away</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3-Col Quick Stats Pill Grid -->
+        <div class="grid grid-cols-3 gap-2.5 text-center">
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+            <div class="text-[10px] font-bold uppercase text-slate-400">Speed</div>
+            <div id="liveModalSpeedPill" class="text-sm font-black text-cyan-600 dark:text-cyan-400 mt-0.5">58 km/h</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+            <div class="text-[10px] font-bold uppercase text-slate-400">Coaches</div>
+            <div id="liveModalCoachesPill" class="text-sm font-black text-purple-600 dark:text-purple-400 mt-0.5">16</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+            <div class="text-[10px] font-bold uppercase text-slate-400">Off Day</div>
+            <div id="liveModalOffDayPill" class="text-sm font-black text-slate-700 dark:text-slate-300 mt-0.5">None</div>
+          </div>
+        </div>
+
+        <!-- Vertical Route Timeline (Exact Stoppage Track) -->
+        <div class="space-y-3 pt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-route text-cyan-500"></i>
+              <span id="liveModalStopsHeader">Route Timeline • 11 stops</span>
+            </h4>
+            <span class="text-[10px] font-extrabold text-slate-400">Live GPS Timetable</span>
+          </div>
+
+          <div id="liveModalTimelineContainer" class="space-y-0 relative before:absolute before:inset-0 before:left-4 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-700 p-1">
             <!-- Timeline items rendered by JS -->
           </div>
         </div>
 
         <!-- 7-Day Delay History Bar Chart -->
-        <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800" id="liveModalDelayHistorySection">
+        <div class="space-y-2.5 pt-3 border-t border-slate-100 dark:border-slate-800" id="liveModalDelayHistorySection">
           <div class="flex items-center justify-between">
-            <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
               <i class="fa-solid fa-chart-column text-amber-500"></i>
-              <span>Recent Delay History (Last Runs)</span>
+              <span>Recent Run Delays (Last 14 Days)</span>
             </h4>
-            <span id="liveModalAvgDelayBadge" class="text-[10px] font-mono font-extrabold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
-              Avg: ~34m
-            </span>
+            <div class="flex items-center space-x-1.5">
+              <span id="liveModalAvgDelayBadge" class="text-[10px] font-mono font-extrabold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                Avg: ~42m
+              </span>
+            </div>
           </div>
-          <div id="liveModalDelayBars" class="flex items-end gap-2 h-24 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/60 overflow-x-auto">
+          <div id="liveModalDelayBars" class="flex items-end gap-2 h-24 p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-x-auto">
             <!-- Bars rendered by JS -->
           </div>
         </div>

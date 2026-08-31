@@ -427,14 +427,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeLiveTrainModalBtn = document.getElementById('closeLiveTrainModalBtn');
   const liveTrainModalTitle = document.getElementById('liveTrainModalTitle');
   const liveTrainModalNumber = document.getElementById('liveTrainModalNumber');
+  const liveModalDelayBadge = document.getElementById('liveModalDelayBadge');
   const liveTrainModalSubtitle = document.getElementById('liveTrainModalSubtitle');
-  const liveModalDelayVal = document.getElementById('liveModalDelayVal');
-  const liveModalSpeedVal = document.getElementById('liveModalSpeedVal');
-  const liveModalProgressVal = document.getElementById('liveModalProgressVal');
-  const liveModalCoachesVal = document.getElementById('liveModalCoachesVal');
-  const liveModalNextStopBox = document.getElementById('liveModalNextStopBox');
-  const liveModalNextStopText = document.getElementById('liveModalNextStopText');
-  const liveModalDurationText = document.getElementById('liveModalDurationText');
+  const liveModalDurationSpan = document.getElementById('liveModalDurationSpan');
+  const liveModalRouteSpan = document.getElementById('liveModalRouteSpan');
+  const liveModalSpeedSpan = document.getElementById('liveModalSpeedSpan');
+  const liveModalLastPingSpan = document.getElementById('liveModalLastPingSpan');
+  const liveModalOriginName = document.getElementById('liveModalOriginName');
+  const liveModalOriginTime = document.getElementById('liveModalOriginTime');
+  const liveModalProgressPctText = document.getElementById('liveModalProgressPctText');
+  const liveModalDestTime = document.getElementById('liveModalDestTime');
+  const liveModalDestName = document.getElementById('liveModalDestName');
+  const liveModalProgressBar = document.getElementById('liveModalProgressBar');
+  const liveModalCoveredKmText = document.getElementById('liveModalCoveredKmText');
+  const liveModalTotalKmText = document.getElementById('liveModalTotalKmText');
+  const liveModalNextStationTitle = document.getElementById('liveModalNextStationTitle');
+  const liveModalNextStationSubtitle = document.getElementById('liveModalNextStationSubtitle');
+  const liveModalNearestTitle = document.getElementById('liveModalNearestTitle');
+  const liveModalNearestSubtitle = document.getElementById('liveModalNearestSubtitle');
+  const liveModalSpeedPill = document.getElementById('liveModalSpeedPill');
+  const liveModalCoachesPill = document.getElementById('liveModalCoachesPill');
+  const liveModalOffDayPill = document.getElementById('liveModalOffDayPill');
+  const liveModalStopsHeader = document.getElementById('liveModalStopsHeader');
   const liveModalTimelineContainer = document.getElementById('liveModalTimelineContainer');
   const liveModalDelayHistorySection = document.getElementById('liveModalDelayHistorySection');
   const liveModalAvgDelayBadge = document.getElementById('liveModalAvgDelayBadge');
@@ -7249,39 +7263,68 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Populate Modal Headers & Metrics
-      if (liveTrainModalTitle) liveTrainModalTitle.textContent = data.train_name;
+      // Populate Modal Headers & Badges
+      const displayName = data.train_name_bn && data.train_name_bn !== data.train_name
+        ? `${data.train_name} (${data.train_name_bn})`
+        : data.train_name;
+      if (liveTrainModalTitle) liveTrainModalTitle.textContent = displayName;
       if (liveTrainModalNumber) liveTrainModalNumber.textContent = `#${data.train_no}`;
-      if (liveTrainModalSubtitle) liveTrainModalSubtitle.textContent = `${data.from} ➔ ${data.to} (${data.departure_time} - ${data.arrival_time})`;
-
+      
       const delayMin = data.delay_minutes || 0;
-      if (liveModalDelayVal) {
-        liveModalDelayVal.textContent = delayMin <= 10 && delayMin === 0 ? 'On Time' : `+${delayMin}m`;
-        liveModalDelayVal.className = `text-base font-black mt-0.5 ${delayMin <= 10 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`;
+      const isOntime = delayMin <= 10;
+      if (liveModalDelayBadge) {
+        liveModalDelayBadge.textContent = isOntime && delayMin === 0 ? '🟢 On Time' : `🟡 Delayed · +${delayMin}m`;
+        liveModalDelayBadge.className = `text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${isOntime ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'}`;
       }
 
-      if (liveModalSpeedVal) {
-        liveModalSpeedVal.textContent = data.speed ? `${data.speed} km/h` : (data.status || 'Active');
+      if (liveModalDurationSpan) liveModalDurationSpan.textContent = data.duration || 'Intercity';
+      if (liveModalRouteSpan) liveModalRouteSpan.textContent = `${data.from} → ${data.to}`;
+      if (liveModalSpeedSpan) liveModalSpeedSpan.textContent = data.speed ? `${data.speed} km/h` : (data.status || 'Active');
+      if (liveModalLastPingSpan) liveModalLastPingSpan.textContent = 'Live GPS: 0s ago';
+
+      // Route Progress Hero Card
+      const progress = Math.min(100, Math.max(0, data.progress_pct || 0));
+      if (liveModalOriginName) liveModalOriginName.textContent = data.from || 'Origin';
+      if (liveModalOriginTime) liveModalOriginTime.textContent = data.departure_time || '--:--';
+      if (liveModalProgressPctText) liveModalProgressPctText.textContent = `${progress}% Complete`;
+      if (liveModalDestName) liveModalDestName.textContent = data.to || 'Destination';
+      if (liveModalDestTime) liveModalDestTime.textContent = data.arrival_time || '--:--';
+      if (liveModalProgressBar) liveModalProgressBar.style.width = `${progress}%`;
+
+      const coveredKm = data.covered_distance_km || 0;
+      const stoppages = data.stoppages || [];
+      const totalKm = stoppages.length > 0 ? (stoppages[stoppages.length - 1].distance_km || 0) : 0;
+      if (liveModalCoveredKmText) liveModalCoveredKmText.textContent = `${coveredKm} km covered`;
+      if (liveModalTotalKmText) liveModalTotalKmText.textContent = totalKm ? `${totalKm} km total` : '';
+
+      // Real-Time Next Station & Nearest Landmark Callouts
+      if (liveModalNextStationTitle) {
+        liveModalNextStationTitle.textContent = data.next_stop || (stoppages.find(s => s.status === 'next' || s.status === 'upcoming')?.station_name || 'Destination');
+      }
+      if (liveModalNextStationSubtitle) {
+        const kmAhead = data.km_to_next ? `${data.km_to_next} km ahead` : 'En Route';
+        const etaText = data.next_eta ? ` • ETA ${data.next_eta}` : '';
+        liveModalNextStationSubtitle.textContent = `${kmAhead}${etaText}`;
       }
 
-      if (liveModalProgressVal) {
-        liveModalProgressVal.textContent = `${data.progress_pct || 0}%`;
+      if (liveModalNearestTitle) {
+        liveModalNearestTitle.textContent = data.nearest_station || (stoppages.find(s => s.status === 'current')?.station_name || data.next_stop || 'Tracking');
+      }
+      if (liveModalNearestSubtitle) {
+        liveModalNearestSubtitle.textContent = data.nearest_distance_km ? `${data.nearest_distance_km} km away` : 'In Transit';
       }
 
-      if (liveModalCoachesVal) {
-        liveModalCoachesVal.textContent = String(data.coaches || '16');
-      }
-
-      if (liveModalNextStopText) {
-        liveModalNextStopText.textContent = data.next_stop ? `${data.next_stop} (${data.next_eta || '--:--'})` : 'En Route';
-      }
-      if (liveModalDurationText) {
-        liveModalDurationText.textContent = data.duration || '';
-      }
+      // Quick Stats Pills
+      if (liveModalSpeedPill) liveModalSpeedPill.textContent = data.speed ? `${data.speed} km/h` : 'Running';
+      if (liveModalCoachesPill) liveModalCoachesPill.textContent = String(data.coaches || 16);
+      if (liveModalOffDayPill) liveModalOffDayPill.textContent = data.off_day || 'None';
 
       // Render Vertical Stoppage Timeline
+      if (liveModalStopsHeader) {
+        liveModalStopsHeader.textContent = `Route Timeline • ${stoppages.length} stops`;
+      }
+
       if (liveModalTimelineContainer) {
-        const stoppages = data.stoppages || [];
         if (stoppages.length === 0) {
           liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No stoppage timetable available for this train.</div>`;
         } else {
@@ -7291,24 +7334,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let nodeIcon = '';
             let textClass = '';
+            let statusBadge = '';
+
             if (isPassed) {
               nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-xs"><i class="fa-solid fa-check text-[10px]"></i></div>`;
               textClass = 'text-slate-500 dark:text-slate-400';
+              statusBadge = `<span class="text-[9px] font-bold text-slate-400">Passed</span>`;
             } else if (isCurrent) {
-              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20 animate-pulse"><i class="fa-solid fa-train text-[10px]"></i></div>`;
+              nodeIcon = `<div class="relative z-10 w-8 h-8 -ml-0.5 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 text-white flex items-center justify-center text-xs shadow-md ring-4 ring-cyan-500/20 animate-pulse"><i class="fa-solid fa-train text-xs"></i></div>`;
               textClass = 'text-cyan-600 dark:text-cyan-400 font-black';
+              statusBadge = `<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 animate-pulse">● LIVE</span>`;
             } else {
-              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 flex items-center justify-center text-[10px] font-mono">${idx + 1}</div>`;
+              nodeIcon = `<div class="relative z-10 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-400 flex items-center justify-center text-[10px] font-mono font-bold">${idx + 1}</div>`;
               textClass = 'text-slate-800 dark:text-slate-200';
+              statusBadge = `<span class="text-[9px] font-semibold text-slate-400">Upcoming</span>`;
             }
 
+            const stationBn = stop.station_bn && stop.station_bn !== stop.station_name ? ` <span class="text-[11px] font-normal text-slate-400">(${escapeHtml(stop.station_bn)})</span>` : '';
+
             return `
-              <div class="flex items-start space-x-3 pb-5 last:pb-1 relative">
+              <div class="flex items-start space-x-3 pb-5 last:pb-1 relative group">
                 ${nodeIcon}
                 <div class="flex-1 min-w-0 pt-0.5">
                   <div class="flex items-center justify-between gap-2">
-                    <div class="font-extrabold text-xs sm:text-sm ${textClass} truncate">${escapeHtml(stop.station_name)}</div>
-                    <div class="font-mono text-xs font-bold text-slate-900 dark:text-white shrink-0">${stop.scheduled_time}</div>
+                    <div class="font-extrabold text-xs sm:text-sm ${textClass} truncate">
+                      ${escapeHtml(stop.station_name)}${stationBn}
+                    </div>
+                    <div class="flex items-center space-x-1.5 shrink-0">
+                      <div class="font-mono text-xs font-bold text-slate-900 dark:text-white">${stop.scheduled_time}</div>
+                      ${statusBadge}
+                    </div>
                   </div>
                   <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
                     <span>${stop.station_code ? stop.station_code + ' • ' : ''}${stop.distance_km} km</span>
@@ -7331,16 +7386,16 @@ document.addEventListener('DOMContentLoaded', () => {
           liveModalDelayBars.innerHTML = `<div class="w-full text-center text-[11px] text-slate-400 py-3">No historical runs recorded for this train yet.</div>`;
         } else {
           const maxDelay = Math.max(...runs.map(r => r.delay_minutes || 0), 60);
-          liveModalDelayBars.innerHTML = runs.slice(-7).map(run => {
+          liveModalDelayBars.innerHTML = runs.slice(-14).map(run => {
             const delay = run.delay_minutes || 0;
             const barHeightPct = Math.max(15, Math.min(100, Math.round((delay / maxDelay) * 100)));
             const isLate = delay > 20;
-            const barColor = isLate ? 'bg-amber-500' : 'bg-emerald-500';
+            const barColor = isLate ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600';
 
             return `
-              <div class="flex-1 flex flex-col items-center justify-end h-full group/bar relative">
+              <div class="flex-1 flex flex-col items-center justify-end h-full group/bar relative cursor-pointer" title="${run.date}: +${delay}m delay">
                 <span class="text-[9px] font-mono font-bold text-slate-500 mb-1">+${delay}m</span>
-                <div class="w-full max-w-[28px] rounded-t-md ${barColor} transition-all duration-300" style="height: ${barHeightPct}%"></div>
+                <div class="w-full max-w-[28px] rounded-t-lg ${barColor} transition-all duration-300" style="height: ${barHeightPct}%"></div>
                 <span class="text-[9px] text-slate-400 font-semibold mt-1 truncate">${run.date ? run.date.split('-').slice(1).join('/') : ''}</span>
               </div>
             `;

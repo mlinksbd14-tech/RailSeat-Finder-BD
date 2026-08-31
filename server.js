@@ -2360,6 +2360,13 @@ function parseTrainDetailStream(stream, trainNo) {
     coaches: initialTrain?.coaches || 16,
     next_stop: initialTrain?.nextStop || '',
     next_eta: initialTrain?.nextEta || '',
+    km_to_next: initialDerived?.kmToNext || 0,
+    nearest_station: initialDerived?.nearestStationName || '',
+    nearest_distance_km: initialDerived?.nearestStationDistanceKm ? Math.round(initialDerived.nearestStationDistanceKm * 10) / 10 : null,
+    covered_distance_km: initialDerived?.coveredDistanceKm ? Math.round(initialDerived.coveredDistanceKm) : 0,
+    off_day: initialTrain?.offDay || 'None',
+    operating_days: initialTrain?.days || [],
+    classes: initialTrain?.classes || [],
     stoppages,
     delay_history: {
       avg_delay_minutes: delayReport?.avg_delay_minutes || 0,

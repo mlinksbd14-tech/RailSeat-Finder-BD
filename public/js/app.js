@@ -455,6 +455,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveModalOffDayPill = document.getElementById('liveModalOffDayPill');
   const liveModalStopsHeader = document.getElementById('liveModalStopsHeader');
   const liveModalTimelineContainer = document.getElementById('liveModalTimelineContainer');
+  const liveModalTimelineTab = document.getElementById('liveModalTimelineTab');
+  const liveModalMapTab = document.getElementById('liveModalMapTab');
+  const liveModalMapContainer = document.getElementById('liveModalMapContainer');
+  const liveModalCenterTrainBtn = document.getElementById('liveModalCenterTrainBtn');
+  const liveTrackerGridTab = document.getElementById('liveTrackerGridTab');
+  const liveTrackerMapTab = document.getElementById('liveTrackerMapTab');
+  const liveTrackerNetworkMapContainer = document.getElementById('liveTrackerNetworkMapContainer');
   const liveModalDelayHistorySection = document.getElementById('liveModalDelayHistorySection');
   const liveModalAvgDelayBadge = document.getElementById('liveModalAvgDelayBadge');
   const liveModalDelayBars = document.getElementById('liveModalDelayBars');
@@ -7192,6 +7199,70 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Main Live Tracker View Toggle (Grid vs Radar Map)
+    if (liveTrackerGridTab && liveTrackerMapTab) {
+      liveTrackerGridTab.addEventListener('click', () => {
+        state.liveTrackerView = 'grid';
+        liveTrackerGridTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveTrackerMapTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveTrackerGrid) liveTrackerGrid.classList.remove('hidden');
+        if (liveTrackerNetworkMapContainer) liveTrackerNetworkMapContainer.classList.add('hidden');
+      });
+
+      liveTrackerMapTab.addEventListener('click', () => {
+        state.liveTrackerView = 'map';
+        liveTrackerMapTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveTrackerGridTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
+        if (liveTrackerEmptyState) liveTrackerEmptyState.classList.add('hidden');
+        if (liveTrackerNetworkMapContainer) {
+          liveTrackerNetworkMapContainer.classList.remove('hidden');
+          initOrUpdateNetworkMap(state.liveTrackerTrains || []);
+          setTimeout(() => {
+            if (liveNetworkLeafletMap) liveNetworkLeafletMap.invalidateSize();
+          }, 150);
+        }
+      });
+    }
+
+    // Modal View Toggle (Timeline vs Live Route Map)
+    if (liveModalTimelineTab && liveModalMapTab) {
+      liveModalTimelineTab.addEventListener('click', () => {
+        state.liveModalView = 'timeline';
+        liveModalTimelineTab.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveModalMapTab.className = 'px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveModalTimelineContainer) liveModalTimelineContainer.classList.remove('hidden');
+        if (liveModalMapContainer) liveModalMapContainer.classList.add('hidden');
+        if (liveModalCenterTrainBtn) liveModalCenterTrainBtn.classList.add('hidden');
+      });
+
+      liveModalMapTab.addEventListener('click', () => {
+        state.liveModalView = 'map';
+        liveModalMapTab.className = 'px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveModalTimelineTab.className = 'px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveModalTimelineContainer) liveModalTimelineContainer.classList.add('hidden');
+        if (liveModalMapContainer) {
+          liveModalMapContainer.classList.remove('hidden');
+          if (liveModalCenterTrainBtn) liveModalCenterTrainBtn.classList.remove('hidden');
+          if (state.currentModalTrainData) {
+            initOrUpdateModalMap(state.currentModalTrainData);
+          }
+          setTimeout(() => {
+            if (liveModalLeafletMap) liveModalLeafletMap.invalidateSize();
+          }, 150);
+        }
+      });
+    }
+
+    if (liveModalCenterTrainBtn) {
+      liveModalCenterTrainBtn.addEventListener('click', () => {
+        if (liveModalLeafletMap && state.currentModalTrainMarker) {
+          liveModalLeafletMap.setView(state.currentModalTrainMarker.getLatLng(), 11, { animate: true });
+          state.currentModalTrainMarker.openPopup();
+        }
+      });
+    }
+
     // Modal Close Handlers
     if (closeLiveTrainModalBtn) {
       closeLiveTrainModalBtn.addEventListener('click', () => {
@@ -7286,6 +7357,225 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let liveNetworkLeafletMap = null;
+  let liveNetworkMarkersGroup = null;
+  let liveModalLeafletMap = null;
+  let liveModalMapLayerGroup = null;
+
+  function getMapTileUrl() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return isDark
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  }
+
+  function initOrUpdateNetworkMap(trains) {
+    if (!window.L || !document.getElementById('liveNetworkLeafletMap')) return;
+
+    if (!liveNetworkLeafletMap) {
+      liveNetworkLeafletMap = L.map('liveNetworkLeafletMap', {
+        center: [23.8103, 90.4125],
+        zoom: 7,
+        minZoom: 6,
+        maxZoom: 15,
+        zoomControl: true,
+        attributionControl: false
+      });
+
+      L.tileLayer(getMapTileUrl(), {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(liveNetworkLeafletMap);
+
+      liveNetworkMarkersGroup = L.layerGroup().addTo(liveNetworkLeafletMap);
+    }
+
+    if (!liveNetworkMarkersGroup) return;
+    liveNetworkMarkersGroup.clearLayers();
+
+    const bounds = [];
+    (trains || []).forEach(t => {
+      let latLng = t.current_coords;
+      if (!latLng || !latLng[0] || !latLng[1]) {
+        latLng = t.from_coords;
+      }
+      if (!latLng || !latLng[0] || !latLng[1]) return;
+
+      bounds.push(latLng);
+
+      const delayMin = t.delay_minutes || 0;
+      const status = t.status;
+      let colorClass = 'bg-cyan-500';
+      let ringClass = 'ring-cyan-500/40';
+      if (status === 'completed' || status === 'arrived') {
+        colorClass = 'bg-slate-400';
+        ringClass = 'ring-slate-400/30';
+      } else if (status === 'scheduled') {
+        colorClass = 'bg-blue-500';
+        ringClass = 'ring-blue-500/30';
+      } else if (delayMin > 10) {
+        colorClass = 'bg-amber-500';
+        ringClass = 'ring-amber-500/40';
+      } else {
+        colorClass = 'bg-emerald-500';
+        ringClass = 'ring-emerald-500/40';
+      }
+
+      const iconHtml = `
+        <div class="relative flex items-center justify-center cursor-pointer group">
+          <div class="w-7 h-7 rounded-full ${colorClass} text-white flex items-center justify-center text-[11px] shadow-lg ring-4 ${ringClass} animate-pulse">
+            <i class="fa-solid fa-train"></i>
+          </div>
+          <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 font-mono text-[9px] font-black px-1 rounded bg-slate-900/90 text-white shadow-xs whitespace-nowrap pointer-events-none">#${t.train_no}</span>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: iconHtml,
+        className: 'custom-live-train-icon',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16]
+      });
+
+      const popupContent = `
+        <div class="p-1 space-y-1.5 min-w-[170px] text-slate-800">
+          <div class="font-black text-xs text-cyan-700 flex items-center justify-between gap-1">
+            <span>${escapeHtml(t.train_name)}</span>
+            <span class="font-mono text-[10px] px-1 rounded bg-slate-100 font-bold">#${t.train_no}</span>
+          </div>
+          <div class="text-[11px] font-bold text-slate-600">${escapeHtml(t.from)} ➔ ${escapeHtml(t.to)}</div>
+          <div class="flex items-center justify-between text-[10px] font-semibold pt-1 border-t border-slate-100">
+            <span>${status === 'delayed' ? `Delay: +${delayMin}m` : (status === 'completed' ? 'Arrived' : (status === 'scheduled' ? 'Scheduled' : 'On Time'))}</span>
+            <span class="font-mono font-bold">${t.progress_pct || 0}%</span>
+          </div>
+          <button type="button" class="w-full mt-1.5 py-1 px-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 view-live-train-btn cursor-pointer" data-train-no="${t.train_no}">
+            <i class="fa-solid fa-route text-[10px]"></i>
+            <span>View Full Journey</span>
+          </button>
+        </div>
+      `;
+
+      const marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
+      liveNetworkMarkersGroup.addLayer(marker);
+    });
+
+    if (bounds.length > 0) {
+      liveNetworkLeafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
+    }
+  }
+
+  function initOrUpdateModalMap(data) {
+    if (!window.L || !document.getElementById('liveModalLeafletMap') || !data) return;
+
+    if (!liveModalLeafletMap) {
+      liveModalLeafletMap = L.map('liveModalLeafletMap', {
+        center: [23.8103, 90.4125],
+        zoom: 8,
+        minZoom: 6,
+        maxZoom: 16,
+        zoomControl: true,
+        attributionControl: false
+      });
+
+      L.tileLayer(getMapTileUrl(), {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(liveModalLeafletMap);
+
+      liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);
+    }
+
+    if (!liveModalMapLayerGroup) return;
+    liveModalMapLayerGroup.clearLayers();
+
+    const stoppages = data.stoppages || [];
+    const validCoords = [];
+
+    stoppages.forEach((stop) => {
+      if (stop.lat && stop.lng) {
+        const pt = [stop.lat, stop.lng];
+        validCoords.push(pt);
+
+        const isPassed = stop.status === 'passed' || stop.status === 'departed';
+        const isNext = stop.status === 'next' || stop.station_name === data.next_stop;
+
+        const circleMarker = L.circleMarker(pt, {
+          radius: isNext ? 7 : (isPassed ? 5 : 4),
+          fillColor: isNext ? '#06b6d4' : (isPassed ? '#10b981' : '#94a3b8'),
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.9
+        }).bindPopup(`
+          <div class="p-1 space-y-1 text-slate-800">
+            <div class="font-black text-xs text-cyan-800">${escapeHtml(stop.station_name)}</div>
+            <div class="text-[10px] text-slate-500 font-bold">Sched: ${stop.scheduled_time} • ${isPassed ? `Act: ${stop.actual_time}` : `ETA: ${stop.eta_time || stop.scheduled_time}`}</div>
+            <div class="text-[9px] text-slate-400 font-mono">${stop.distance_km} km • ${stop.platform && stop.platform !== '—' ? `PF ${stop.platform}` : 'PF --'}</div>
+          </div>
+        `).bindTooltip(stop.station_name, { permanent: false, direction: 'top', className: 'text-xs font-bold' });
+
+        liveModalMapLayerGroup.addLayer(circleMarker);
+      }
+    });
+
+    if (validCoords.length > 1) {
+      const polyline = L.polyline(validCoords, {
+        color: '#06b6d4',
+        weight: 4,
+        opacity: 0.85,
+        smoothFactor: 1
+      });
+      liveModalMapLayerGroup.addLayer(polyline);
+      liveModalLeafletMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+    }
+
+    // Determine current train position
+    let trainCoord = null;
+    if (data.prev_stop_idx >= 0 && data.prev_stop_idx < stoppages.length - 1) {
+      const prevStop = stoppages[data.prev_stop_idx];
+      const nextStop = stoppages[data.prev_stop_idx + 1];
+      if (prevStop?.lat && prevStop?.lng && nextStop?.lat && nextStop?.lng) {
+        const segPct = Math.min(1, Math.max(0, (data.segment_progress_pct || 50) / 100));
+        trainCoord = [
+          prevStop.lat + (nextStop.lat - prevStop.lat) * segPct,
+          prevStop.lng + (nextStop.lng - prevStop.lng) * segPct
+        ];
+      }
+    }
+    if (!trainCoord && validCoords.length > 0) {
+      trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
+    }
+
+    if (trainCoord) {
+      const trainIconHtml = `
+        <div class="relative flex items-center justify-center">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shadow-xl ring-4 ring-cyan-400/40 animate-pulse">
+            <i class="fa-solid fa-train"></i>
+          </div>
+        </div>
+      `;
+
+      const trainMarker = L.marker(trainCoord, {
+        icon: L.divIcon({
+          html: trainIconHtml,
+          className: 'custom-modal-train-beacon',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        })
+      }).bindPopup(`
+        <div class="p-1 space-y-1 text-slate-800">
+          <div class="font-black text-xs text-cyan-800">${escapeHtml(data.train_name)} #${data.train_no}</div>
+          <div class="text-[10px] font-bold text-slate-600">Speed: ${data.speed || 0} km/h • Delay: +${data.delay_minutes || 0}m</div>
+          <div class="text-[10px] font-bold text-cyan-600">Next: ${escapeHtml(data.next_stop)} (ETA ${data.next_eta || '--:--'})</div>
+        </div>
+      `);
+
+      liveModalMapLayerGroup.addLayer(trainMarker);
+      state.currentModalTrainMarker = trainMarker;
+    }
+  }
+
   async function loadRunningTrains(forceRefresh = false) {
     if (state.liveTrackerLoading) return;
     state.liveTrackerLoading = true;
@@ -7368,6 +7658,10 @@ document.addEventListener('DOMContentLoaded', () => {
       list = list.filter(t => t.status === 'completed' || t.status === 'arrived' || (t.progress_pct || 0) >= 100);
     }
 
+    if (state.liveTrackerView === 'map') {
+      initOrUpdateNetworkMap(list);
+    }
+
     if (list.length === 0) {
       liveTrackerGrid.classList.add('hidden');
       if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
@@ -7375,7 +7669,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (liveTrackerEmptyState) liveTrackerEmptyState.classList.add('hidden');
-    liveTrackerGrid.classList.remove('hidden');
+    if (state.liveTrackerView === 'grid') {
+      liveTrackerGrid.classList.remove('hidden');
+    }
 
     liveTrackerGrid.innerHTML = list.map(t => {
       const delayMin = t.delay_minutes || 0;
@@ -7743,6 +8039,14 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
           }).join('');
         }
+      }
+
+      state.currentModalTrainData = data;
+      if (state.liveModalView === 'map') {
+        initOrUpdateModalMap(data);
+        setTimeout(() => {
+          if (liveModalLeafletMap) liveModalLeafletMap.invalidateSize();
+        }, 150);
       }
 
     } catch (e) {

@@ -2244,11 +2244,27 @@ function parseRunningTrainsHtml(html) {
     else if (isDelayed) trainStatus = 'delayed';
     else if (isOntime) trainStatus = 'ontime';
 
+    const fromCoords = getStationCoordinates(stationPairs[0]?.station);
+    const toCoords = getStationCoordinates(stationPairs[1]?.station);
+    let currentCoords = null;
+    if (fromCoords && toCoords) {
+      const pctRatio = Math.min(1, Math.max(0, progressPct / 100));
+      currentCoords = [
+        Math.round((fromCoords[0] + (toCoords[0] - fromCoords[0]) * pctRatio) * 10000) / 10000,
+        Math.round((fromCoords[1] + (toCoords[1] - fromCoords[1]) * pctRatio) * 10000) / 10000
+      ];
+    } else if (fromCoords) {
+      currentCoords = fromCoords;
+    }
+
     trains.push({
       train_no: trainNo,
       train_name: trainName,
       from: stationPairs[0]?.station || '',
       to: stationPairs[1]?.station || '',
+      from_coords: fromCoords,
+      to_coords: toCoords,
+      current_coords: currentCoords,
       departure_time: stationPairs[0]?.time || '',
       arrival_time: stationPairs[1]?.time || '',
       duration,
@@ -2261,6 +2277,31 @@ function parseRunningTrainsHtml(html) {
   }
 
   return trains;
+}
+
+const stationCoordsPath = path.join(__dirname, 'data', 'station_coordinates.json');
+let stationCoordinates = {};
+try {
+  if (fs.existsSync(stationCoordsPath)) {
+    stationCoordinates = JSON.parse(fs.readFileSync(stationCoordsPath, 'utf8'));
+  }
+} catch (e) {
+  stationCoordinates = {};
+}
+
+function getStationCoordinates(name) {
+  if (!name) return null;
+  const clean = String(name).trim();
+  if (stationCoordinates[clean]) return stationCoordinates[clean];
+  
+  // Fuzzy match
+  const lower = clean.toLowerCase();
+  for (const [k, v] of Object.entries(stationCoordinates)) {
+    if (k.toLowerCase() === lower || lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)) {
+      return v;
+    }
+  }
+  return null;
 }
 
 function addMinutesToTime(timeStr, minutesToAdd) {
@@ -2316,6 +2357,7 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
     const isNext = afterStopIdx >= 0 && idx === afterStopIdx + 1;
     const calculatedEta = (r.sched && r.sched !== '—') ? addMinutesToTime(r.sched, delayMin) : '—';
     const actualTime = r.act && r.act !== '—' ? r.act : (isPassed ? calculatedEta : '—');
+    const coords = getStationCoordinates(r.name);
 
     return {
       station_name: r.name || '',
@@ -2326,6 +2368,8 @@ function parseTrainDetailStream(stream, trainNo, delayReport = null) {
       eta_time: calculatedEta,
       platform: r.platform || '—',
       distance_km: r.km || 0,
+      lat: coords ? coords[0] : null,
+      lng: coords ? coords[1] : null,
       status: isPassed ? 'passed' : (isNext ? 'next' : 'upcoming')
     };
   });
@@ -2589,6 +2633,14 @@ app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
   });
 });
 
+// 5.3. Get All Station Geolocation Coordinates
+app.get('/api/live-tracker/coordinates', (req, res) => {
+  res.json({
+    success: true,
+    count: Object.keys(stationCoordinates).length,
+    coordinates: stationCoordinates
+  });
+});
 
 // 4. Get Intercity Trains Catalogue (For searching by Train Name / Model Code / Route)
 const trainsCatalogPath = path.join(__dirname, 'data', 'trains.json');

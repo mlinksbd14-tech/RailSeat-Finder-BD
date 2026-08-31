@@ -146,28 +146,6 @@
       "status": "active",
       "canViewDashboard": true,
       "createdAt": "2026-08-26T08:57:48.900Z",
-      "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgxNDU0MDYsImV4cCI6MTc4ODE4ODYwNiwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODE0NTQwNiwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.gzuawJpQp_DyXiFtJfevEVEmLwWOy829UnKRGUSlVwAkmuSTqPBZ0n7e6cnUIpgd7Vs3_vXn-AMiv2dwtrCsGF78Zch6PCfzJI5zbIs0z0qto0pZgkU4BVDNaFpFL7gLI9Cd8HyZchtS8aKrFhiIehzc1xitfxVoRHW_BlDthaDgD0mZQJtMBLLjmwSDNdYIxbRmLOVZpRfpeSHhqjBXDaI0HFCU8OA5QQ1doFI49b03RnabtqCBfXhnVwBcc00imV8CeYle5bB2hPBGZr3pYdPlInDI0cEIf1m2FWPTgk_Gj1jZqfDxI8i6qchY8naE_JHuQ7YOOXrkoe_Erfgc0A",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
-        "cookie": null,
-        "user": {
-          "name": "Md. Habibullah",
-          "phone": "01871860487",
-          "email": "labu3416@gmail.com",
-          "nid": "8254236667",
-          "nidType": "Default",
-          "locale": "bn-BD",
-          "roles": [
-            "user",
-            "anonymous"
-          ],
-          "expiresAt": "2026-08-31T15:03:26.000Z",
-          "issuedAt": "2026-08-31T03:03:26.000Z",
-          "isExpired": false
-        },
-        "lastUpdated": "2026-08-31T03:44:22.782Z"
-      },
       "ips": [
         "::ffff:127.0.0.1",
         "103.59.178.232",
@@ -175,7 +153,28 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastIp": "::ffff:127.0.0.1",
+      "shohozSession": {
+        "cookie": null,
+        "lastUpdated": "2026-08-31T03:44:22.782Z",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "user": {
+          "locale": "bn-BD",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "isExpired": false,
+          "nidType": "Default",
+          "phone": "01871860487",
+          "name": "Md. Habibullah",
+          "nid": "8254236667",
+          "issuedAt": "2026-08-31T03:03:26.000Z",
+          "email": "labu3416@gmail.com",
+          "expiresAt": "2026-08-31T15:03:26.000Z"
+        },
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgxNDU0MDYsImV4cCI6MTc4ODE4ODYwNiwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODE0NTQwNiwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.gzuawJpQp_DyXiFtJfevEVEmLwWOy829UnKRGUSlVwAkmuSTqPBZ0n7e6cnUIpgd7Vs3_vXn-AMiv2dwtrCsGF78Zch6PCfzJI5zbIs0z0qto0pZgkU4BVDNaFpFL7gLI9Cd8HyZchtS8aKrFhiIehzc1xitfxVoRHW_BlDthaDgD0mZQJtMBLLjmwSDNdYIxbRmLOVZpRfpeSHhqjBXDaI0HFCU8OA5QQ1doFI49b03RnabtqCBfXhnVwBcc00imV8CeYle5bB2hPBGZr3pYdPlInDI0cEIf1m2FWPTgk_Gj1jZqfDxI8i6qchY8naE_JHuQ7YOOXrkoe_Erfgc0A"
+      },
       "lastLocation": {
         "countryCode": "BD",
         "country": "Bangladesh",
@@ -185,8 +184,60 @@
         "query": "27.147.149.234",
         "region": "Dhaka Division"
       },
-      "lastLogin": "2026-08-31T03:42:15.524Z",
+      "lastIp": "::1",
+      "lastLogin": "2026-08-31T03:52:21.387Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T03:52:21.387Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Tangail",
+            "isp": "Link3 Technologies Limited",
+            "query": "27.147.149.234",
+            "region": "Dhaka Division"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T03:50:26.526Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 152",
+          "location": {
+            "city": "Tangail",
+            "region": "Dhaka Division",
+            "country": "Bangladesh",
+            "countryCode": "BD",
+            "flag": "🇧🇩",
+            "isp": "Link3 Technologies Limited",
+            "query": "27.147.149.234"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T03:49:46.632Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Tangail",
+            "isp": "Link3 Technologies Limited",
+            "query": "27.147.149.234",
+            "region": "Dhaka Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T03:42:15.524Z",
@@ -560,61 +611,10 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T05:42:37.693Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T05:04:03.321Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-29T14:08:16.563Z",
-          "ip": "103.59.178.232",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
-          }
         }
       ],
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 57,
+      "loginCount": 60,
       "lastDevice": {
         "browser": "Edge 152",
         "os": "Windows 10/11",

@@ -192,22 +192,12 @@
         },
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgxNDU0MDYsImV4cCI6MTc4ODE4ODYwNiwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODE0NTQwNiwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.gzuawJpQp_DyXiFtJfevEVEmLwWOy829UnKRGUSlVwAkmuSTqPBZ0n7e6cnUIpgd7Vs3_vXn-AMiv2dwtrCsGF78Zch6PCfzJI5zbIs0z0qto0pZgkU4BVDNaFpFL7gLI9Cd8HyZchtS8aKrFhiIehzc1xitfxVoRHW_BlDthaDgD0mZQJtMBLLjmwSDNdYIxbRmLOVZpRfpeSHhqjBXDaI0HFCU8OA5QQ1doFI49b03RnabtqCBfXhnVwBcc00imV8CeYle5bB2hPBGZr3pYdPlInDI0cEIf1m2FWPTgk_Gj1jZqfDxI8i6qchY8naE_JHuQ7YOOXrkoe_Erfgc0A"
       },
-      "lastLocation": {
-        "countryCode": "BD",
-        "country": "Development",
-        "flag": "💻",
-        "city": "Localhost",
-        "isp": "Internal Loopback / Dev",
-        "region": "Local Network",
-        "query": "::1"
-      },
-      "lastIp": "::ffff:127.0.0.1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "browser": "Edge 152",
         "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+        "browser": "Edge 152",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+        "device": "Desktop"
       },
       "lastLogin": "2026-08-31T09:55:52.417Z",
       "activityHistory": [
@@ -219,13 +209,13 @@
           "os": "Windows 10/11",
           "browser": "Edge 152",
           "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
             "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
             "region": "Local Network",
-            "query": "::1"
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
+            "query": "::ffff:127.0.0.1"
           }
         },
         {
@@ -637,6 +627,16 @@
           }
         }
       ],
+      "lastIp": "::ffff:127.0.0.1",
+      "lastLocation": {
+        "countryCode": "BD",
+        "country": "Development",
+        "flag": "💻",
+        "city": "Localhost",
+        "isp": "Internal Loopback / Dev",
+        "region": "Local Network",
+        "query": "::ffff:127.0.0.1"
+      },
       "loginCount": 90
     }
   ]

@@ -7882,8 +7882,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="truncate">${t.next_station ? `Next: <strong class="text-slate-700 dark:text-slate-200">${escapeHtml(t.next_station)}</strong>` : 'Full Route Tracking'}</span>
             </div>
             <button type="button" class="view-live-train-btn px-2.5 py-1 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-600 text-cyan-700 dark:text-cyan-300 hover:text-white border border-cyan-200/80 dark:border-cyan-800 text-[11px] font-black transition flex items-center space-x-1 shrink-0 cursor-pointer shadow-2xs" data-train-no="${t.train_no}">
-              <i class="fa-solid fa-route text-[9px]"></i>
-              <span>Telemetry</span>
+              <i class="fa-solid fa-location-dot text-[9px]"></i>
+              <span>Live Location</span>
             </button>
           </div>
 

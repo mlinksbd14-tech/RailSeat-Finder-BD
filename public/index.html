@@ -82,24 +82,24 @@
         </a>
       </div>
 
-      <!-- Quick Feature Navigation (Desktop & Tablet) -->
-      <nav class="hidden md:flex items-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold">
-        <button type="button" id="navSeatFinderBtn" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+      <!-- Quick Feature Navigation (Mobile, Tablet & Desktop) -->
+      <nav class="flex items-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold">
+        <button type="button" id="navSeatFinderBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer" title="Seat Finder">
           <i class="fa-solid fa-chair text-emerald-500"></i>
-          <span>Seat Finder</span>
+          <span class="hidden sm:inline">Seat Finder</span>
         </button>
-        <button type="button" id="navLiveTrackerBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
+        <button type="button" id="navLiveTrackerBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
-          <span>Live Tracker</span>
+          <span class="hidden sm:inline">Live Tracker</span>
           <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
         </button>
-        <button type="button" id="openRouteExplorerBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
+        <button type="button" id="openRouteExplorerBtn" class="hidden md:flex px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition items-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
           <i class="fa-solid fa-route text-emerald-500"></i>
-          <span>Routes</span>
+          <span class="hidden lg:inline">Routes</span>
         </button>
-        <button type="button" id="openWatchlistBtn" class="relative px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer">
+        <button type="button" id="openWatchlistBtn" class="hidden md:flex relative px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition items-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
           <i class="fa-solid fa-crosshairs text-amber-500"></i>
-          <span>Watchlist</span>
+          <span class="hidden lg:inline">Watchlist</span>
           <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0</span>
         </button>
       </nav>
@@ -1103,7 +1103,7 @@
           <!-- Multi-date heatmap rendered here by JS -->
         </div>
       </div>
-
+    </div>
     </div>
     <!-- /#seatFinderSection -->
 

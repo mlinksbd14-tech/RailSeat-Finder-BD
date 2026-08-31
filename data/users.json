@@ -209,11 +209,11 @@
         "device": "Desktop",
         "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
-      "lastLogin": "2026-08-31T08:32:19.391Z",
+      "lastLogin": "2026-08-31T08:59:42.423Z",
       "activityHistory": [
         {
           "action": "login",
-          "timestamp": "2026-08-31T08:32:19.391Z",
+          "timestamp": "2026-08-31T08:59:42.423Z",
           "ip": "::1",
           "device": "Desktop",
           "os": "Windows 10/11",
@@ -225,6 +225,23 @@
             "city": "Localhost",
             "isp": "Internal Loopback / Dev",
             "region": "Local Network",
+            "query": "::1"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T08:32:19.391Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "city": "Localhost",
+            "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
         },
@@ -618,26 +635,9 @@
             "query": "27.147.149.234",
             "region": "Dhaka Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T03:42:15.524Z",
-          "ip": "::ffff:127.0.0.1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Tangail",
-            "isp": "Link3 Technologies Limited",
-            "query": "27.147.149.234",
-            "region": "Dhaka Division"
-          }
         }
       ],
-      "loginCount": 81
+      "loginCount": 82
     }
   ]
 }

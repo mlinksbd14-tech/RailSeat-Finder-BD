@@ -1112,117 +1112,117 @@
     <!-- ============================================== -->
     <!-- 🛰️ LIVE TRAIN GPS & DELAY TRACKER SECTION -->
     <!-- ============================================== -->
-    <div id="liveTrackerSection" class="hidden space-y-4 animate-fade-in">
+    <div id="liveTrackerSection" class="hidden space-y-3.5 animate-fade-in">
       
-      <!-- Hero Tracker Header Card -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative z-20">
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-t-2xl"></div>
+      <!-- High-Tech Radar Command Deck -->
+      <div class="dashboard-block bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 relative z-20 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-indigo-500"></div>
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div class="space-y-1">
             <div class="flex items-center space-x-2.5 flex-wrap">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+              <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-cyan-600 via-teal-500 to-indigo-600 text-white flex items-center justify-center text-sm shadow-sm shadow-cyan-500/20 shrink-0">
                 <i class="fa-solid fa-satellite-dish"></i>
               </div>
-              <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                Live Train GPS & Delay Radar
+              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span>GPS Train Radar</span>
+                <span class="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 font-extrabold border border-cyan-500/30 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
+                  <span>LIVE FEED</span>
+                </span>
               </h2>
-              <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-extrabold border border-cyan-300 dark:border-cyan-800 flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
-                <span>Active Network Feed</span>
-              </span>
             </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Real-time train movements, GPS progress percentages, delay minutes, and stoppage ETAs across Bangladesh.</p>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Precision GPS telemetry, route progress, delay forecasts & stoppage ETAs across Bangladesh.</p>
           </div>
 
-          <!-- Quick Statistics & Refresh -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold" id="liveTrackerViewToggle">
-              <button type="button" id="liveTrackerGridTab" class="px-2.5 sm:px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
+          <!-- Radar Mode & Action Controls -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex p-0.5 sm:p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold" id="liveTrackerViewToggle">
+              <button type="button" id="liveTrackerGridTab" class="px-2.5 sm:px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer text-xs">
                 <i class="fa-solid fa-table-cells text-[11px]"></i>
                 <span>Grid View</span>
               </button>
-              <button type="button" id="liveTrackerMapTab" class="px-2.5 sm:px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer">
+              <button type="button" id="liveTrackerMapTab" class="px-2.5 sm:px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer text-xs">
                 <i class="fa-solid fa-map-location-dot text-[11px]"></i>
-                <span>Live Radar Map</span>
+                <span>Radar Map</span>
               </button>
             </div>
-            <div class="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1.5">
-              <i class="fa-solid fa-train text-cyan-500"></i>
-              <span>Moving: <span id="liveTrackerCount" class="font-extrabold text-cyan-600 dark:text-cyan-400">--</span> Trains</span>
+            <div class="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1.5">
+              <i class="fa-solid fa-train text-cyan-500 text-[11px]"></i>
+              <span>Active: <span id="liveTrackerCount" class="font-black text-cyan-600 dark:text-cyan-400">--</span></span>
             </div>
-            <button id="refreshLiveTrackerBtn" type="button" class="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-xs font-extrabold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-              <i class="fa-solid fa-rotate text-[11px]" id="refreshLiveTrackerIcon"></i>
-              <span>Refresh Radar</span>
+            <button id="refreshLiveTrackerBtn" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 active:scale-95 text-white text-xs font-extrabold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-rotate text-[10px]" id="refreshLiveTrackerIcon"></i>
+              <span>Sync</span>
             </button>
           </div>
         </div>
 
-        <!-- Search & Filter Controls (By Train & By Route Modes) -->
-        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+        <!-- Sleek Search & Dynamic Filter Pod -->
+        <div class="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
           
-          <!-- Mode Tabs & Quick Filter Chips -->
-          <div class="flex items-center justify-between flex-wrap gap-2.5">
+          <!-- Mode Tabs & Quick Telemetry Filter Chips -->
+          <div class="flex items-center justify-between flex-wrap gap-2">
             <!-- Search Mode Tabs -->
-            <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold" id="liveSearchModeTabs">
-              <button type="button" id="liveSearchByTrainTab" class="px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer">
-                <i class="fa-solid fa-train text-[11px]"></i>
+            <div class="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold" id="liveSearchModeTabs">
+              <button type="button" id="liveSearchByTrainTab" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-2xs transition flex items-center space-x-1 cursor-pointer text-xs">
+                <i class="fa-solid fa-train text-[10px]"></i>
                 <span>By Train</span>
               </button>
-              <button type="button" id="liveSearchByRouteTab" class="px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer">
-                <i class="fa-solid fa-route text-[11px]"></i>
-                <span>By Route</span>
+              <button type="button" id="liveSearchByRouteTab" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1 cursor-pointer text-xs">
+                <i class="fa-solid fa-route text-[10px]"></i>
+                <span>By Corridor</span>
               </button>
             </div>
 
-            <!-- Quick Filter Buttons -->
-            <div class="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="liveTrackerFilterChips">
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-cyan-600 text-white shadow-2xs cursor-pointer" data-filter="all">All</button>
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="ontime">🟢 On time</button>
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="delayed">🟡 Delayed</button>
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="scheduled">⏱️ Scheduled</button>
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="nodata">⚪ No data</button>
-              <button type="button" class="live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="completed">🏁 Completed</button>
+            <!-- Quick Telemetry Filter Buttons -->
+            <div class="flex flex-wrap items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0" id="liveTrackerFilterChips">
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-cyan-600 text-white shadow-2xs cursor-pointer" data-filter="all">All</button>
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="ontime">🟢 On time</button>
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="delayed">🟡 Delayed</button>
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="scheduled">⏱️ Scheduled</button>
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="nodata">⚪ No data</button>
+              <button type="button" class="live-filter-chip px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer" data-filter="completed">🏁 Completed</button>
             </div>
           </div>
 
           <!-- Mode 1: By Train Input Field & Dropdown -->
           <div id="liveSearchByTrainContainer" class="relative z-30 max-w-md">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input type="text" id="liveTrackerSearchInput" autocomplete="off" placeholder="Search by train name or model (e.g. Subarna, 701, Kalni)..." class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+            <input type="text" id="liveTrackerSearchInput" autocomplete="off" placeholder="Search train name or number (e.g. Subarna, 701, Kalni)..." class="w-full h-9 sm:h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition">
             <button type="button" id="clearLiveTrackerSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
               <i class="fa-solid fa-xmark"></i>
             </button>
             
             <!-- Floating Autocomplete Dropdown for By Train -->
-            <div id="liveTrackerSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+            <div id="liveTrackerSearchDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
           </div>
 
-          <!-- Mode 2: By Route Input Fields & Dropdowns (From & To) -->
-          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-2xl relative z-30">
+          <!-- Mode 2: By Route Corridor Input Fields & Dropdowns -->
+          <div id="liveSearchByRouteContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-2xl relative z-30">
             
             <!-- From Station Input + Dropdown -->
             <div class="relative z-30">
               <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 text-xs pointer-events-none"></i>
-              <input type="text" id="liveRouteFromInput" autocomplete="off" placeholder="From Station (e.g. Dhaka)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+              <input type="text" id="liveRouteFromInput" autocomplete="off" placeholder="Origin Station (e.g. Dhaka)" class="w-full h-9 sm:h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteFromBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
               </button>
               
               <!-- Floating Autocomplete Dropdown for From Station -->
-              <div id="liveRouteFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+              <div id="liveRouteFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
 
             <!-- To Station Input + Dropdown -->
             <div class="relative z-30">
               <i class="fa-solid fa-location-crosshairs absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-500 text-xs pointer-events-none"></i>
-              <input type="text" id="liveRouteToInput" autocomplete="off" placeholder="To Station (e.g. Chattogram)" class="w-full h-10 pl-9 pr-8 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
+              <input type="text" id="liveRouteToInput" autocomplete="off" placeholder="Destination (e.g. Chattogram)" class="w-full h-9 sm:h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition">
               <button type="button" id="clearLiveRouteToBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1 cursor-pointer">
                 <i class="fa-solid fa-xmark"></i>
               </button>
 
               <!-- Floating Autocomplete Dropdown for To Station -->
-              <div id="liveRouteToDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
+              <div id="liveRouteToDropdown" class="hidden absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 animate-fade-in custom-scrollbar"></div>
             </div>
 
           </div>

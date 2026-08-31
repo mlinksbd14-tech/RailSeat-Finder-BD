@@ -201,8 +201,25 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-08-31T08:12:58.671Z",
+      "lastLogin": "2026-08-31T08:17:37.734Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T08:17:37.734Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T08:12:58.671Z",
@@ -610,33 +627,16 @@
             "isp": "Link3 Technologies Limited",
             "query": "27.147.149.234"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T11:19:27.404Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "query": "::ffff:127.0.0.1",
-            "region": "Local Network"
-          }
         }
       ],
       "lastIp": "::1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 76,
+      "loginCount": 77,
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       }
     }
   ]

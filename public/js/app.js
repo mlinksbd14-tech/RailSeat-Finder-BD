@@ -7518,95 +7518,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // Always draw train railway route tracks on Network Map
-      if (t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
-        bounds.push(t.from_coords);
-        bounds.push(t.to_coords);
-
-        if (t.current_coords && t.current_coords[0]) {
-          // Rail Bed Underlay
-          const railBed = L.polyline([t.from_coords, t.to_coords], {
-            color: '#1e293b',
-            weight: 5,
-            opacity: 0.6,
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(railBed);
-
-          // Passed Railway Steel Track (Origin ➔ Current Position)
-          const passedTrack = L.polyline([t.from_coords, t.current_coords], {
-            color: '#06b6d4',
-            weight: 3.5,
-            opacity: 0.95,
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(passedTrack);
-
-          // Passed Railway Crossties (Sleepers)
-          const passedTies = L.polyline([t.from_coords, t.current_coords], {
-            color: '#ffffff',
-            weight: 4,
-            opacity: 0.8,
-            dashArray: '2, 8',
-            lineCap: 'butt',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(passedTies);
-
-          // Remaining Railway Track (Current Position ➔ Destination)
-          const remainingTrack = L.polyline([t.current_coords, t.to_coords], {
-            color: '#64748b',
-            weight: 2.5,
-            opacity: 0.7,
-            dashArray: '6, 6',
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(remainingTrack);
-        } else {
-          // Scheduled Full Corridor Railway Track
-          const fullRailBed = L.polyline([t.from_coords, t.to_coords], {
-            color: '#1e293b',
-            weight: 4.5,
-            opacity: 0.5,
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(fullRailBed);
-
-          const fullTrack = L.polyline([t.from_coords, t.to_coords], {
-            color: '#0ea5e9',
-            weight: 2.5,
-            opacity: 0.8,
-            dashArray: '5, 5',
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          liveNetworkMarkersGroup.addLayer(fullTrack);
-        }
-
-        // Origin & Destination Station Mini-Pins
-        const fromDot = L.circleMarker(t.from_coords, {
-          radius: 4,
-          fillColor: '#10b981',
-          color: '#ffffff',
-          weight: 1.5,
-          fillOpacity: 1
-        }).bindTooltip(`🚉 Origin: ${t.from}`, { direction: 'top', className: 'text-[10px] font-bold' });
-        liveNetworkMarkersGroup.addLayer(fromDot);
-
-        const toDot = L.circleMarker(t.to_coords, {
-          radius: 4,
-          fillColor: '#f43f5e',
-          color: '#ffffff',
-          weight: 1.5,
-          fillOpacity: 1
-        }).bindTooltip(`🏁 Destination: ${t.to}`, { direction: 'top', className: 'text-[10px] font-bold' });
-        liveNetworkMarkersGroup.addLayer(toDot);
-      }
-
       const delayMin = t.delay_minutes || 0;
       const status = t.status;
       let colorClass = 'bg-cyan-500';
@@ -7759,68 +7670,16 @@ document.addEventListener('DOMContentLoaded', () => {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
     }
 
-    // Always render complete Railway Track corridor with Rail Bed & Ties
+    // Original clean train route polyline
     if (validCoords.length > 1) {
-      const activeIdx = data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0;
-      
-      // 1. Full Underlay Rail Bed
-      const fullRailBed = L.polyline(validCoords, {
-        color: '#0f172a',
-        weight: 6,
-        opacity: 0.75,
-        lineCap: 'round',
-        lineJoin: 'round'
+      const polyline = L.polyline(validCoords, {
+        color: '#06b6d4',
+        weight: 4,
+        opacity: 0.85,
+        smoothFactor: 1
       });
-      liveModalMapLayerGroup.addLayer(fullRailBed);
-
-      if (trainCoord && activeIdx >= 0 && activeIdx < validCoords.length - 1) {
-        // Passed Railway Track (Solid Emerald)
-        const passedSegment = validCoords.slice(0, activeIdx + 1).concat([trainCoord]);
-        const passedPolyline = L.polyline(passedSegment, {
-          color: '#10b981',
-          weight: 4,
-          opacity: 0.95,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveModalMapLayerGroup.addLayer(passedPolyline);
-
-        // Passed Railway Crossties (Sleepers)
-        const passedTies = L.polyline(passedSegment, {
-          color: '#ffffff',
-          weight: 5,
-          opacity: 0.85,
-          dashArray: '2, 9',
-          lineCap: 'butt',
-          lineJoin: 'round'
-        });
-        liveModalMapLayerGroup.addLayer(passedTies);
-
-        // Upcoming Railway Track (Dashed Cyan)
-        const upcomingSegment = [trainCoord].concat(validCoords.slice(activeIdx + 1));
-        const upcomingPolyline = L.polyline(upcomingSegment, {
-          color: '#06b6d4',
-          weight: 3.5,
-          opacity: 0.9,
-          dashArray: '6, 6',
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveModalMapLayerGroup.addLayer(upcomingPolyline);
-      } else {
-        // Full Railway Track Polyline
-        const polyline = L.polyline(validCoords, {
-          color: '#06b6d4',
-          weight: 4,
-          opacity: 0.9,
-          dashArray: '6, 6',
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveModalMapLayerGroup.addLayer(polyline);
-      }
-
-      liveModalLeafletMap.fitBounds(L.polyline(validCoords).getBounds(), { padding: [30, 30] });
+      liveModalMapLayerGroup.addLayer(polyline);
+      liveModalLeafletMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
     }
 
     if (trainCoord) {

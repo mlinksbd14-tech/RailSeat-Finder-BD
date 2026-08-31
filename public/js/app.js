@@ -7495,10 +7495,18 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Dedicated OpenRailwayMap Live Rail Route Layer
+      // 1. OpenStreetMap Mapnik Style Basemap Layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        subdomains: 'abc',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+      }).addTo(liveNetworkLeafletMap);
+
+      // 2. OpenRailwayMap Specialized Live Rail Route Layer
       L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
         maxZoom: 19,
         subdomains: 'abc',
+        opacity: 0.9,
         attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
       }).addTo(liveNetworkLeafletMap);
 
@@ -7593,10 +7601,18 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Dedicated OpenRailwayMap Live Rail Route Layer
+      // 1. OpenStreetMap Mapnik Style Basemap Layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        subdomains: 'abc',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+      }).addTo(liveModalLeafletMap);
+
+      // 2. OpenRailwayMap Specialized Live Rail Route Layer
       L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
         maxZoom: 19,
         subdomains: 'abc',
+        opacity: 0.9,
         attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
       }).addTo(liveModalLeafletMap);
 

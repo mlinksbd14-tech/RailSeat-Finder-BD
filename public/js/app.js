@@ -6998,21 +6998,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch('/api/live-tracker/running-trains');
+      const res = await fetch(`/api/live-tracker/running-trains${forceRefresh ? '?refresh=1' : ''}`);
       const data = await res.json();
 
-      if (data.success && Array.isArray(data.trains)) {
+      if (data && data.success && Array.isArray(data.trains) && data.trains.length > 0) {
         state.liveTrackerTrains = data.trains;
         if (liveTrackerCount) liveTrackerCount.textContent = data.trains.length;
         filterAndRenderLiveTrains();
+      } else if (state.liveTrackerTrains && state.liveTrackerTrains.length > 0) {
+        // Retain existing loaded trains if temporary sync occurs
+        filterAndRenderLiveTrains();
       } else {
-        if (!state.liveTrackerTrains || state.liveTrackerTrains.length === 0) {
-          if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
-          if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
-        }
+        if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
+        if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
       }
     } catch (err) {
-      showToast('Network error updating live train tracker feeds.', 'error');
+      console.warn('[LiveTracker] Load error:', err);
+      if (!state.liveTrackerTrains || state.liveTrackerTrains.length === 0) {
+        if (liveTrackerEmptyState) liveTrackerEmptyState.classList.remove('hidden');
+        if (liveTrackerGrid) liveTrackerGrid.classList.add('hidden');
+      }
     } finally {
       state.liveTrackerLoading = false;
       if (refreshLiveTrackerIcon) refreshLiveTrackerIcon.classList.remove('fa-spin');

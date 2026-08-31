@@ -186,10 +186,10 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "browser": "Edge 152",
         "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+        "browser": "Edge 152",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+        "device": "Desktop"
       },
       "lastIp": "::1",
       "lastLogin": "2026-08-31T05:52:07.953Z",
@@ -202,13 +202,13 @@
           "os": "Windows 10/11",
           "browser": "Edge 152",
           "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
             "city": "Localhost",
+            "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
             "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
+            "query": "::1"
           }
         },
         {

@@ -2158,15 +2158,28 @@ const liveTrackerCache = new Map();
 const LIVE_TRACKER_CACHE_TTL = 30 * 1000; // 30 seconds
 
 async function fetchLiveTrackerHtml(url) {
-  const resp = await axios.get(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9'
-    },
-    timeout: 12000
-  });
-  return typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data);
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const resp = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        timeout: 12000
+      });
+      return typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 function extractNextJsStreamText(html) {
@@ -2360,8 +2373,9 @@ function parseTrainDetailStream(stream, trainNo) {
 
 // 5.1. Get All Live Running Trains
 app.get('/api/live-tracker/running-trains', async (req, res) => {
+  const isForceRefresh = req.query.refresh === '1';
   const cached = liveTrackerCache.get('running_trains');
-  if (cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
+  if (!isForceRefresh && cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
     return res.json(cached.data);
   }
 
@@ -2383,12 +2397,16 @@ app.get('/api/live-tracker/running-trains', async (req, res) => {
 
     return res.json(payload);
   } catch (err) {
+    console.warn('[LiveTracker] Upstream trains fetch warning:', err.message);
     if (cached) {
-      return res.json(cached.data);
+      return res.json({
+        ...cached.data,
+        cached_fallback: true
+      });
     }
-    return res.status(500).json({
+    return res.status(200).json({
       success: false,
-      error: 'Unable to fetch live train tracker feeds at this moment.',
+      error: 'Live train tracker feed is temporarily syncing. Please retry in a moment.',
       trains: []
     });
   }
@@ -2403,7 +2421,9 @@ app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
 
   const cacheKey = `train_${trainNo}`;
   const cached = liveTrackerCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
+  const isForceRefresh = req.query.refresh === '1';
+
+  if (!isForceRefresh && cached && (Date.now() - cached.timestamp < LIVE_TRACKER_CACHE_TTL)) {
     return res.json(cached.data);
   }
 
@@ -2419,12 +2439,16 @@ app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
 
     return res.json(detail);
   } catch (err) {
+    console.warn(`[LiveTracker] Upstream train #${trainNo} fetch warning:`, err.message);
     if (cached) {
-      return res.json(cached.data);
+      return res.json({
+        ...cached.data,
+        cached_fallback: true
+      });
     }
-    return res.status(500).json({
+    return res.status(200).json({
       success: false,
-      error: `Could not retrieve live tracking data for train #${trainNo}.`
+      error: `Live tracking feed for train #${trainNo} is currently updating.`
     });
   }
 });

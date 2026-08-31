@@ -107,32 +107,33 @@
       </nav>
 
       <!-- Header Action Controls (Row 1 Right on Mobile, Right on Desktop) -->
-      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0 order-2 md:order-3">
+      <!-- Header Action Controls (Row 1 Right on Mobile, Right on Desktop) -->
+      <div class="flex items-center space-x-1 sm:space-x-2 shrink-0 order-2 md:order-3">
         
         <!-- Live API Auth Connection Button -->
-        <button id="authModalOpenBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white cursor-pointer" title="Manage Live Shohoz Session">
+        <button id="authModalOpenBtn" class="flex items-center justify-center space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white cursor-pointer shrink-0" title="Manage Live Shohoz Session">
           <i class="fa-solid fa-key text-[11px]" id="authBtnIcon"></i>
           <span id="authBtnText" class="hidden sm:inline">Connect Live API</span>
         </button>
 
         <!-- Install PWA Mobile/Desktop App Button -->
-        <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition text-xs font-bold shadow-xs cursor-pointer animate-bounce-subtle" title="Install RailSeat BD App">
+        <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition text-xs font-bold shadow-xs cursor-pointer animate-bounce-subtle shrink-0" title="Install RailSeat BD App">
           <i class="fa-solid fa-download text-xs"></i>
           <span class="hidden sm:inline">Install App</span>
         </button>
 
         <!-- User Account / Login & Logout Controls -->
-        <div class="relative" id="userAuthContainer">
+        <div class="relative shrink-0" id="userAuthContainer">
           <!-- State 1: When NOT Logged In -> Show "Sign In" Button -->
-          <button id="headerSignInBtn" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition text-xs font-bold shadow-xs cursor-pointer" title="Sign In to Dashboard">
+          <button id="headerSignInBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition text-xs font-bold shadow-xs cursor-pointer shrink-0" title="Sign In to Dashboard">
             <i class="fa-solid fa-right-to-bracket text-xs"></i>
-            <span>Sign In</span>
+            <span class="text-[11px] sm:text-xs">Sign In</span>
           </button>
 
           <!-- State 2: When LOGGED IN -> Show User Profile Pill with Dropdown -->
           <div id="headerUserMenuContainer" class="hidden relative">
-            <button id="headerUserDropdownBtn" class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/80 text-purple-900 dark:text-purple-200 hover:bg-purple-100 transition text-xs font-bold cursor-pointer" title="Account Menu">
-              <div class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black relative" id="headerUserAvatar">
+            <button id="headerUserDropdownBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/80 text-purple-900 dark:text-purple-200 hover:bg-purple-100 transition text-xs font-bold cursor-pointer shrink-0" title="Account Menu">
+              <div class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black relative shrink-0" id="headerUserAvatar">
                 <span>A</span>
                 <span id="headerPendingBadge" class="hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
               </div>
@@ -142,7 +143,7 @@
             </button>
 
             <!-- User Dropdown Menu -->
-            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
+            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
               <!-- User Info Card -->
               <div class="p-3 bg-purple-50/50 dark:bg-purple-950/30">
                 <p class="font-extrabold text-xs text-slate-900 dark:text-white truncate" id="dropdownUserFullName">System Administrator</p>
@@ -176,14 +177,14 @@
         </div>
 
         <!-- Top Menu Notification Center (Stores All Alert Notifications) -->
-        <div class="relative" id="notifCenterContainer">
-          <button id="notifBellBtn" class="relative p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition flex items-center justify-center" title="Alert Notification Center">
-            <i class="fa-solid fa-bell text-sm" id="notifBellIcon"></i>
-            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-600 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
+        <div class="relative shrink-0" id="notifCenterContainer">
+          <button id="notifBellBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition flex items-center justify-center shrink-0 cursor-pointer" title="Alert Notification Center">
+            <i class="fa-solid fa-bell text-xs sm:text-sm" id="notifBellIcon"></i>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
           </button>
 
           <!-- Notification Dropdown Panel -->
-          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in">
+          <div id="notifDropdown" class="hidden absolute -right-8 sm:right-0 mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in">
             <!-- Dropdown Header -->
             <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
               <div class="flex items-center space-x-2">
@@ -192,9 +193,9 @@
                 <span id="notifCountPill" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">0</span>
               </div>
               <div class="flex items-center space-x-2 text-[11px]">
-                <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition" title="Mark all as read">Mark Read</button>
+                <button id="markAllReadBtn" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-semibold transition cursor-pointer" title="Mark all as read">Mark Read</button>
                 <span class="text-slate-300 dark:text-slate-700">&bull;</span>
-                <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition" title="Clear all stored alerts">Clear</button>
+                <button id="clearAllNotifsBtn" class="text-rose-500 hover:text-rose-700 font-semibold transition cursor-pointer" title="Clear all stored alerts">Clear</button>
               </div>
             </div>
 
@@ -206,19 +207,19 @@
             <!-- Dropdown Footer -->
             <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
               <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-emerald-500"></i> Stored in local history</span>
-              <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold">Test Alert</button>
+              <button id="testNotifBtn" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold cursor-pointer">Test Alert</button>
             </div>
           </div>
         </div>
 
         <!-- Settings Menu Dropdown (Seat Alert Sound, Desktop Alerts, Theme) -->
-        <div class="relative" id="settingsDropdownContainer">
-          <button id="settingsMenuBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center" title="Settings & Preferences">
-            <i class="fa-solid fa-gear text-sm" id="settingsGearIcon"></i>
+        <div class="relative shrink-0" id="settingsDropdownContainer">
+          <button id="settingsMenuBtn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center shrink-0 cursor-pointer" title="Settings & Preferences">
+            <i class="fa-solid fa-gear text-xs sm:text-sm" id="settingsGearIcon"></i>
           </button>
 
           <!-- Settings Dropdown Panel (Category-Wise) -->
-          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[100] overflow-hidden animate-fade-in flex flex-col">
+          <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm max-h-[85vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in flex flex-col">
             
             <!-- Header -->
             <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">

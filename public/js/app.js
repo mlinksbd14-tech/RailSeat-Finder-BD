@@ -428,6 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Live Train Detail Modal Elements
   const liveTrainModal = document.getElementById('liveTrainModal');
   const closeLiveTrainModalBtn = document.getElementById('closeLiveTrainModalBtn');
+  const refreshLiveTrainModalBtn = document.getElementById('refreshLiveTrainModalBtn');
+  const refreshLiveTrainModalIcon = document.getElementById('refreshLiveTrainModalIcon');
   const liveTrainModalTitle = document.getElementById('liveTrainModalTitle');
   const liveTrainModalNumber = document.getElementById('liveTrainModalNumber');
   const liveModalDelayBadge = document.getElementById('liveModalDelayBadge');
@@ -7196,6 +7198,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (liveTrainModal) liveTrainModal.classList.add('hidden');
       });
     }
+    if (refreshLiveTrainModalBtn) {
+      refreshLiveTrainModalBtn.addEventListener('click', () => {
+        if (state.currentLiveModalTrainNo) {
+          openLiveTrainModal(state.currentLiveModalTrainNo, true);
+        }
+      });
+    }
     if (liveTrainModal) {
       liveTrainModal.addEventListener('click', (e) => {
         if (e.target === liveTrainModal) {
@@ -7454,25 +7463,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  async function openLiveTrainModal(trainNo) {
+  async function openLiveTrainModal(trainNo, forceRefresh = false) {
     if (!liveTrainModal) return;
+    state.currentLiveModalTrainNo = trainNo;
     liveTrainModal.classList.remove('hidden');
 
-    if (liveTrainModalTitle) liveTrainModalTitle.textContent = `Loading Train #${trainNo}...`;
-    if (liveTrainModalNumber) liveTrainModalNumber.textContent = `#${trainNo}`;
-    if (liveTrainModalSubtitle) liveTrainModalSubtitle.textContent = 'Fetching real-time GPS position & stoppages...';
+    if (refreshLiveTrainModalIcon) refreshLiveTrainModalIcon.classList.add('fa-spin');
 
-    if (liveModalTimelineContainer) {
-      liveModalTimelineContainer.innerHTML = `
-        <div class="p-8 text-center space-y-2">
-          <div class="w-8 h-8 rounded-full border-3 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto"></div>
-          <p class="text-xs text-slate-400">Loading stoppage schedule & delay history...</p>
-        </div>
-      `;
+    if (!forceRefresh) {
+      if (liveTrainModalTitle) liveTrainModalTitle.textContent = `Loading Train #${trainNo}...`;
+      if (liveTrainModalNumber) liveTrainModalNumber.textContent = `#${trainNo}`;
+      if (liveTrainModalSubtitle) liveTrainModalSubtitle.textContent = 'Fetching real-time GPS position & stoppages...';
+
+      if (liveModalTimelineContainer) {
+        liveModalTimelineContainer.innerHTML = `
+          <div class="p-8 text-center space-y-2">
+            <div class="w-8 h-8 rounded-full border-3 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto"></div>
+            <p class="text-xs text-slate-400">Loading stoppage schedule & delay history...</p>
+          </div>
+        `;
+      }
     }
 
     try {
-      const res = await fetch(`/api/live-tracker/train/${encodeURIComponent(trainNo)}`);
+      const res = await fetch(`/api/live-tracker/train/${encodeURIComponent(trainNo)}${forceRefresh ? '?refresh=1' : ''}`);
       const data = await res.json();
 
       if (!data.success) {
@@ -7735,6 +7749,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveModalTimelineContainer) {
         liveModalTimelineContainer.innerHTML = `<div class="p-4 text-center text-xs text-rose-500 font-bold">Network error loading train tracker data.</div>`;
       }
+    } finally {
+      if (refreshLiveTrainModalIcon) refreshLiveTrainModalIcon.classList.remove('fa-spin');
     }
   }
 

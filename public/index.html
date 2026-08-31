@@ -1776,9 +1776,15 @@
             </p>
           </div>
         </div>
-        <button id="closeLiveTrainModalBtn" type="button" class="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition shrink-0 cursor-pointer">
-          <i class="fa-solid fa-xmark text-base"></i>
-        </button>
+        <div class="flex items-center space-x-2 shrink-0">
+          <button id="refreshLiveTrainModalBtn" type="button" title="Refetch live GPS & stoppage data" class="px-2.5 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/50 hover:bg-cyan-600 text-cyan-700 dark:text-cyan-300 hover:text-white border border-cyan-200 dark:border-cyan-800 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs">
+            <i id="refreshLiveTrainModalIcon" class="fa-solid fa-arrows-rotate text-xs"></i>
+            <span class="hidden sm:inline">Refresh</span>
+          </button>
+          <button id="closeLiveTrainModalBtn" type="button" aria-label="Close modal" class="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition shrink-0 cursor-pointer">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Modal Body (Scrollable) -->

@@ -2284,49 +2284,50 @@ function formatTelegramError(err) {
   return `Telegram Error: ${rawMsg}`;
 }
 
-// Station Fuzzy Name Matcher for Telegram Bot
+// Station Fuzzy Name Matcher for Telegram Bot (100% Shohoz Compatible)
 function findStationName(query = '') {
   if (!query) return null;
+  const canonical = getCanonicalStationName(query);
+  if (canonical) return canonical;
+  
   const cleanQ = query.trim().toLowerCase();
-  const exact = officialStations.find(s => s.station_name.toLowerCase() === cleanQ || s.station_name.toLowerCase().startsWith(cleanQ));
-  if (exact) return exact.station_name;
+  const exact = stations.find(s => s.name && (s.name.toLowerCase() === cleanQ || s.name.toLowerCase().startsWith(cleanQ)));
+  if (exact) return exact.name;
 
   const abbrevs = {
-    'dha': 'Dhaka', 'dhaka': 'Dhaka', 'kam': 'Kamalapur', 'ctg': 'Chittagong', 'chattogram': 'Chittagong',
-    'syl': 'Sylhet', 'raj': 'Rajshahi', 'cox': "Cox's Bazar", 'coxs': "Cox's Bazar", 'khu': 'Khulna',
-    'bar': 'Barisal', 'rang': 'Rangpur', 'din': 'Dinajpur', 'com': 'Comilla', 'feni': 'Feni',
-    'bra': 'Brahmanbaria', 'sre': 'Sreemangal', 'jai': 'Jaflong', 'mou': 'Moulvibazar'
+    'dha': 'Dhaka', 'dhaka': 'Dhaka', 'kam': 'Dhaka', 'ctg': 'Chattogram', 'chittagong': 'Chattogram', 'chattogram': 'Chattogram',
+    'syl': 'Sylhet', 'raj': 'Rajshahi', 'cox': "Cox's Bazar", 'coxs': "Cox's Bazar", 'coxsbazar': "Cox's Bazar", 'khu': 'Khulna',
+    'bar': 'Barishal', 'rang': 'Rangpur', 'din': 'Dinajpur', 'com': 'Cumilla', 'comilla': 'Cumilla', 'feni': 'Feni',
+    'bra': 'Brahmanbaria', 'b.baria': 'Brahmanbaria', 'sre': 'Sreemangal', 'bog': 'Bogura', 'bogra': 'Bogura', 'jas': 'Jashore', 'jes': 'Jashore'
   };
   if (abbrevs[cleanQ]) return abbrevs[cleanQ];
 
-  const partial = officialStations.find(s => s.station_name.toLowerCase().includes(cleanQ));
-  return partial ? partial.station_name : null;
+  const partial = stations.find(s => s.name && s.name.toLowerCase().includes(cleanQ));
+  return partial ? partial.name : query;
 }
 
-// Background Telegram Poller for 1-Click Pairing & Interactive Bot Commands
+// ----------------------------------------------------
+// Telegram Polling Engine (Receives /start, /search, /radar)
+// ----------------------------------------------------
 async function pollTelegramBotUpdates() {
   if (!FIXED_TELEGRAM_BOT_TOKEN) return;
 
   try {
     const url = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateOffset}&timeout=3`;
-    const res = await axios.get(url, { timeout: 10000 });
+    const res = await axios.get(url, { timeout: 6000 });
     const updates = res.data?.result || [];
 
     for (const update of updates) {
-      if (update.update_id >= lastTelegramUpdateOffset) {
-        lastTelegramUpdateOffset = update.update_id + 1;
-      }
+      lastTelegramUpdateOffset = update.update_id + 1;
 
-      // Handle Inline Keyboard Button Callbacks
+      // Handle Callback Query (Inline Keyboard Clicks)
       if (update.callback_query) {
-        const cq = update.callback_query;
-        const cqId = cq.id;
-        const cqData = cq.data || '';
+        const cb = update.callback_query;
         try {
           await axios.post(`https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
-            callback_query_id: cqId,
-            text: '⚡ Action received! Opening RailSeat BD...'
-          }, { timeout: 4000 });
+            callback_query_id: cb.id,
+            text: 'Opening live booking page on Bangladesh Railway...'
+          });
         } catch (e) {}
         continue;
       }
@@ -2334,8 +2335,8 @@ async function pollTelegramBotUpdates() {
       const msg = update.message;
       if (!msg || !msg.text) continue;
 
-      const chatId = msg.chat?.id || msg.from?.id;
-      const text = (msg.text || '').trim();
+      const chatId = msg.chat?.id;
+      const text = msg.text.trim();
       const fromUser = msg.from || {};
       const firstName = fromUser.first_name || 'Traveler';
       const username = fromUser.username ? `@${fromUser.username}` : '';
@@ -2418,7 +2419,7 @@ async function pollTelegramBotUpdates() {
         } else {
           userWatchlist.forEach((w, idx) => {
             radarReply += `<b>${idx + 1}. ${w.trainName}</b> (${w.className || 'All'})\n` +
-              `📍 ${w.fromCity} ➔ ${w.toCity} | 📅 ${w.date}\n` +
+              `📍 ${getCanonicalStationName(w.fromCity)} ➔ ${getCanonicalStationName(w.toCity)} | 📅 ${formatShohozDoj(w.date)}\n` +
               `🔔 Status: ${w.status === 'active' ? '🟢 Monitoring' : '⏸️ Paused'}\n\n`;
           });
         }
@@ -2454,7 +2455,7 @@ async function pollTelegramBotUpdates() {
           try {
             await axios.post(replyUrl, {
               chat_id: chatId,
-              text: `❌ Could not find station name for <b>${!fromStation ? rawFrom : rawTo}</b>. Please check spelling (e.g. Dhaka, Chittagong, Sylhet, Rajshahi).`,
+              text: `❌ Could not find station name for <b>${!fromStation ? rawFrom : rawTo}</b>. Please check spelling (e.g. Dhaka, Chittagong, Sylhet, Rajshahi, Cox's Bazar).`,
               parse_mode: 'HTML'
             }, { timeout: 6000 });
           } catch (e) {}
@@ -2465,32 +2466,34 @@ async function pollTelegramBotUpdates() {
         let searchDate = new Date();
         if (rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
           searchDate = new Date(rawDate);
+        } else if (rawDate && /^\d{2}-[A-Za-z]{3}-\d{4}$/.test(rawDate)) {
+          searchDate = new Date(rawDate);
         } else {
-          // Default to tomorrow
           searchDate.setDate(searchDate.getDate() + 1);
         }
         const dateIsoStr = searchDate.toISOString().split('T')[0];
+        const formattedDoj = formatShohozDoj(dateIsoStr);
 
         try {
           await axios.post(replyUrl, {
             chat_id: chatId,
-            text: `🔍 <i>Querying Shohoz live gateway for <b>${fromStation} ➔ ${toStation}</b> on ${dateIsoStr}...</i>`,
+            text: `🔍 <i>Querying Shohoz live gateway for <b>${fromStation} ➔ ${toStation}</b> on ${formattedDoj}...</i>`,
             parse_mode: 'HTML'
           }, { timeout: 6000 });
 
           const defaultSession = authCredentials.token ? authCredentials : { token: null };
-          const result = await querySingleShohozTrip(fromStation, toStation, dateIsoStr, defaultSession);
+          const result = await querySingleShohozTrip(fromStation, toStation, formattedDoj, defaultSession);
 
           if (!result.success || !result.trains || result.trains.length === 0) {
             await axios.post(replyUrl, {
               chat_id: chatId,
-              text: `❌ <b>No trains found for ${fromStation} ➔ ${toStation} on ${dateIsoStr}.</b>\n${result.error || ''}`,
+              text: `❌ <b>No trains found for ${fromStation} ➔ ${toStation} on ${formattedDoj}.</b>\n${result.error || ''}`,
               parse_mode: 'HTML'
             }, { timeout: 6000 });
             continue;
           }
 
-          let replyMsg = `🚆 <b>${fromStation} ➔ ${toStation}</b>\n📅 <b>${dateIsoStr}</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+          let replyMsg = `🚆 <b>${fromStation} ➔ ${toStation}</b>\n📅 <b>${formattedDoj}</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
           let bookButtons = [];
 
           result.trains.forEach((t, i) => {
@@ -2513,14 +2516,14 @@ async function pollTelegramBotUpdates() {
 
             if (hasSeats && bookButtons.length < 3) {
               const bookClass = t.seat_types?.find(st => ((st.seats_available || 0) + (st.counter_seats_available || 0)) > 0)?.type || 'S_CHAIR';
-              const bookUrl = buildShohozBookingUrl(fromStation, toStation, dateIsoStr, bookClass);
-              bookButtons.push([{ text: `🎟️ Book Now (${t.train_name})`, url: bookUrl }]);
+              const bookUrl = buildShohozBookingUrl(fromStation, toStation, formattedDoj, bookClass);
+              bookButtons.push([{ text: `🎟️ Book (${t.train_name})`, url: bookUrl }]);
             }
           });
 
-          const directUrl = buildShohozBookingUrl(fromStation, toStation, dateIsoStr, 'S_CHAIR');
+          const directUrl = buildShohozBookingUrl(fromStation, toStation, formattedDoj, 'S_CHAIR');
           if (bookButtons.length === 0) {
-            bookButtons.push([{ text: `🎟️ Book Now`, url: directUrl }]);
+            bookButtons.push([{ text: `🎟️ Open Booking Search`, url: directUrl }]);
           }
 
           await axios.post(replyUrl, {
@@ -2625,7 +2628,7 @@ app.get('/api/telegram/pair-status', (req, res) => {
 
 // 4. Send Telegram Alert (Uses Fixed Bot Token)
 app.post('/api/telegram/send-alert', async (req, res) => {
-  const { chat_id, message } = req.body;
+  const { chat_id, message, bookUrl } = req.body;
   const cleanChatId = (chat_id || '').trim();
 
   if (!cleanChatId || !message) {
@@ -2634,12 +2637,22 @@ app.post('/api/telegram/send-alert', async (req, res) => {
 
   try {
     const telegramUrl = `https://api.telegram.org/bot${FIXED_TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const response = await axios.post(telegramUrl, {
+    const payload = {
       chat_id: cleanChatId,
       text: message,
       parse_mode: 'HTML',
       disable_web_page_preview: false
-    }, { timeout: 8000 });
+    };
+
+    if (bookUrl) {
+      payload.reply_markup = {
+        inline_keyboard: [
+          [{ text: '🎟️ Book Now on Railway', url: bookUrl }]
+        ]
+      };
+    }
+
+    const response = await axios.post(telegramUrl, payload, { timeout: 8000 });
 
     if (response.data && response.data.ok) {
       console.log(`[Telegram] ✅ Alert sent to chat ${cleanChatId}`);

@@ -3933,6 +3933,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cfg || !cfg.chat_id) return; // Silently skip if not configured
 
     const { trainName, trainModel, className, seats, fromCity, toCity, date, bookUrl, isRadarHit } = alertData;
+    const canonicalFrom = getCanonicalStationName(fromCity || state.selectedFrom || 'Dhaka');
+    const canonicalTo = getCanonicalStationName(toCity || state.selectedTo || 'Chattogram');
+    const canonicalDoj = formatShohozDoj(date || state.selectedDate || new Date().toISOString().split('T')[0]);
+    const finalBookUrl = bookUrl || buildShohozBookingUrl(canonicalFrom, canonicalTo, canonicalDoj, className);
 
     const message = isRadarHit ? 
 `🎯 <b>WATCHLIST RADAR TARGET HIT!</b> 🎯
@@ -3941,22 +3945,22 @@ document.addEventListener('DOMContentLoaded', () => {
 💺 <b>Class:</b> <b>${className}</b>
 🟢 <b>Seats:</b> <b>${seats} AVAILABLE TO BUY!</b>
 
-📍 <b>Route:</b> ${fromCity} ➔ ${toCity}
-📅 <b>Date:</b> ${date}
+📍 <b>Route:</b> ${canonicalFrom} ➔ ${canonicalTo}
+📅 <b>Date:</b> ${canonicalDoj}
 ━━━━━━━━━━━━━━━━━━━
 ⚡ <i>Book immediately before seats sell out!</i>
-🔗 <a href="${bookUrl}">🎟️ Click to Book Now on Railway</a>`
+🔗 <a href="${finalBookUrl}">🎟️ Click to Book Now on Railway</a>`
 :
-`🚆 <b>SEAT RELEASED ON ROUTE</b>
+`🚨 <b>SEAT RELEASED ON ROUTE</b>
 ━━━━━━━━━━━━━━━━━━━
 🚆 <b>Train:</b> ${trainName} (#${trainModel})
 🪑 <b>Class:</b> ${className}
 🟢 <b>Seats:</b> <b>${seats} available</b>
 
-📍 <b>Route:</b> ${fromCity} ➔ ${toCity}
-📅 <b>Date:</b> ${date}
+📍 <b>Route:</b> ${canonicalFrom} ➔ ${canonicalTo}
+📅 <b>Date:</b> ${canonicalDoj}
 ━━━━━━━━━━━━━━━━━━━
-🔗 <a href="${bookUrl}">🎟️ Book Now on Railway</a>`;
+🔗 <a href="${finalBookUrl}">🎟️ Book Now on Railway</a>`;
 
     try {
       await fetch('/api/telegram/send-alert', {
@@ -3964,7 +3968,8 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: cfg.chat_id,
-          message
+          message,
+          bookUrl: finalBookUrl
         })
       });
     } catch (e) {

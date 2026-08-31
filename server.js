@@ -1242,19 +1242,24 @@ const STATION_ALIASES = {
   'biman bandar': 'Biman_Bandar',
   'bimanbandar': 'Biman_Bandar',
   'biman_bandor': 'Biman_Bandar',
+  'biman bandor': 'Biman_Bandar',
   'chittagong': 'Chattogram',
   'ctg': 'Chattogram',
   'chottogram': 'Chattogram',
+  'chattagram': 'Chattogram',
   'comilla': 'Cumilla',
   'cumilla junction': 'Cumilla',
   'bogra': 'Bogura',
+  'bogura': 'Bogura',
   'jessore': 'Jashore',
+  'jashore': 'Jashore',
   'barisal': 'Barishal',
   'coxs bazar': "Cox's Bazar",
   'coxsbazar': "Cox's Bazar",
   "cox's_bazar": "Cox's Bazar",
   'coxs_bazar': "Cox's Bazar",
   'cox bazaar': "Cox's Bazar",
+  'coxsbazar railway station': "Cox's Bazar",
   'jamalpur': 'Jamalpur_Town',
   'jamalpur town': 'Jamalpur_Town',
   'cantonment': 'Dhaka_Cantonment',
@@ -1263,20 +1268,45 @@ const STATION_ALIASES = {
   'bhairab bazar': 'Bhairab_Bazar',
   'b.baria': 'Brahmanbaria',
   'b-baria': 'Brahmanbaria',
+  'b baria': 'Brahmanbaria',
   'brahman baria': 'Brahmanbaria',
   'dewanganj': 'Dewanganj_Bazar',
   'dewangonj': 'Dewanganj_Bazar',
   'melandah': 'Melandah_Bazar',
   'islampur': 'Islampur_Bazar',
   'sirajganj': 'Sirajganj_Bazar',
+  'sirajgonj': 'Sirajganj_Bazar',
   'thakurgaon': 'Thakurgaon_Road',
   'sayedpur': 'Saidpur',
+  'syedpur': 'Saidpur',
   'bhanga': 'Bhanga_Junction',
   'chandpur': 'Chandpur_Court',
   'kushtia': 'Kushtia_Court',
   'boalmari': 'Boalmari_Bazar',
   'bonarpara': 'Bonar_Para',
-  'bonar para': 'Bonar_Para'
+  'bonar para': 'Bonar_Para',
+  'sreemangal': 'Sreemangal',
+  'srimangal': 'Sreemangal',
+  'shreemangal': 'Sreemangal',
+  'parbatipur': 'Parbatipur',
+  'santahar': 'Santahar',
+  'mymensingh': 'Mymensingh',
+  'tongi': 'Tongi',
+  'joydebpur': 'Joydebpur',
+  'joydevpur': 'Joydebpur',
+  'gazipur': 'Joydebpur',
+  'ishwardi': 'Ishwardi',
+  'ishurdi': 'Ishwardi',
+  'poradah': 'Poradah',
+  'khulna': 'Khulna',
+  'rajshahi': 'Rajshahi',
+  'sylhet': 'Sylhet',
+  'dinajpur': 'Dinajpur',
+  'rangpur': 'Rangpur',
+  'kurigram': 'Kurigram',
+  'lalmonirhat': 'Lalmonirhat',
+  'panchagarh': 'Panchagarh',
+  'netrokona': 'Netrokona'
 };
 
 function getCanonicalStationName(raw) {
@@ -1475,11 +1505,11 @@ function formatShohozDoj(dateStr) {
 }
 
 function buildShohozBookingUrl(fromCity, toCity, dateStr, seatClass) {
-  const cleanFrom = (fromCity || 'DHAKA').trim().toUpperCase().replace(/\s+/g, '_');
-  const cleanTo = (toCity || 'CHATTOGRAM').trim().toUpperCase().replace(/\s+/g, '_');
+  const canonicalFrom = getCanonicalStationName(fromCity || 'Dhaka');
+  const canonicalTo = getCanonicalStationName(toCity || 'Chattogram');
   const doj = formatShohozDoj(dateStr || new Date().toISOString().split('T')[0]);
   const cls = (seatClass && seatClass !== 'ANY' && seatClass !== 'ALL') ? seatClass.trim() : 'S_CHAIR';
-  return `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(cleanFrom)}&tocity=${encodeURIComponent(cleanTo)}&doj=${encodeURIComponent(doj)}&class=${encodeURIComponent(cls)}`;
+  return `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(doj)}&class=${encodeURIComponent(cls)}`;
 }
 
 // Major Railway Junction Hubs and Corridor Stoppage Networks

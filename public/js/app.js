@@ -457,17 +457,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const deviceKeyInput = document.getElementById('deviceKeyInput');
 
   // ----------------------------------------------------
-  // Date & Station Canonical Helpers
+  // Date & Station Canonical Helpers (100% Shohoz Compatible)
   // ----------------------------------------------------
   function formatShohozDoj(dateStr) {
     if (!dateStr) return '';
+    const clean = String(dateStr).trim();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (clean.includes('-')) {
+      const parts = clean.split('-');
+      if (parts.length === 3) {
+        // YYYY-MM-DD (e.g. 2026-08-31)
+        if (parts[0].length === 4) {
+          const y = parts[0];
+          const mIdx = parseInt(parts[1], 10) - 1;
+          const d = parts[2].padStart(2, '0');
+          if (mIdx >= 0 && mIdx < 12) {
+            return `${d}-${months[mIdx]}-${y}`;
+          }
+        }
+        // Already DD-Mmm-YYYY (e.g. 31-Aug-2026)
+        if (parts[2].length === 4) {
+          return clean;
+        }
+      }
+    }
     const dateObj = new Date(dateStr);
     if (isNaN(dateObj.getTime())) return dateStr;
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const day = String(dateObj.getDate()).padStart(2, '0');
     const month = months[dateObj.getMonth()];
     const year = dateObj.getFullYear();
-    return `${day}-${month}-${year}`; // e.g. "28-Aug-2026"
+    return `${day}-${month}-${year}`;
   }
 
   // Official Bangladesh Railway / Shohoz station aliases & spelling correction map
@@ -477,19 +496,24 @@ document.addEventListener('DOMContentLoaded', () => {
     'biman bandar': 'Biman_Bandar',
     'bimanbandar': 'Biman_Bandar',
     'biman_bandor': 'Biman_Bandar',
+    'biman bandor': 'Biman_Bandar',
     'chittagong': 'Chattogram',
     'ctg': 'Chattogram',
     'chottogram': 'Chattogram',
+    'chattagram': 'Chattogram',
     'comilla': 'Cumilla',
     'cumilla junction': 'Cumilla',
     'bogra': 'Bogura',
+    'bogura': 'Bogura',
     'jessore': 'Jashore',
+    'jashore': 'Jashore',
     'barisal': 'Barishal',
     'coxs bazar': "Cox's Bazar",
     'coxsbazar': "Cox's Bazar",
     "cox's_bazar": "Cox's Bazar",
     'coxs_bazar': "Cox's Bazar",
     'cox bazaar': "Cox's Bazar",
+    'coxsbazar railway station': "Cox's Bazar",
     'jamalpur': 'Jamalpur_Town',
     'jamalpur town': 'Jamalpur_Town',
     'cantonment': 'Dhaka_Cantonment',
@@ -498,20 +522,45 @@ document.addEventListener('DOMContentLoaded', () => {
     'bhairab bazar': 'Bhairab_Bazar',
     'b.baria': 'Brahmanbaria',
     'b-baria': 'Brahmanbaria',
+    'b baria': 'Brahmanbaria',
     'brahman baria': 'Brahmanbaria',
     'dewanganj': 'Dewanganj_Bazar',
     'dewangonj': 'Dewanganj_Bazar',
     'melandah': 'Melandah_Bazar',
     'islampur': 'Islampur_Bazar',
     'sirajganj': 'Sirajganj_Bazar',
+    'sirajgonj': 'Sirajganj_Bazar',
     'thakurgaon': 'Thakurgaon_Road',
     'sayedpur': 'Saidpur',
+    'syedpur': 'Saidpur',
     'bhanga': 'Bhanga_Junction',
     'chandpur': 'Chandpur_Court',
     'kushtia': 'Kushtia_Court',
     'boalmari': 'Boalmari_Bazar',
     'bonarpara': 'Bonar_Para',
-    'bonar para': 'Bonar_Para'
+    'bonar para': 'Bonar_Para',
+    'sreemangal': 'Sreemangal',
+    'srimangal': 'Sreemangal',
+    'shreemangal': 'Sreemangal',
+    'parbatipur': 'Parbatipur',
+    'santahar': 'Santahar',
+    'mymensingh': 'Mymensingh',
+    'tongi': 'Tongi',
+    'joydebpur': 'Joydebpur',
+    'joydevpur': 'Joydebpur',
+    'gazipur': 'Joydebpur',
+    'ishwardi': 'Ishwardi',
+    'ishurdi': 'Ishwardi',
+    'poradah': 'Poradah',
+    'khulna': 'Khulna',
+    'rajshahi': 'Rajshahi',
+    'sylhet': 'Sylhet',
+    'dinajpur': 'Dinajpur',
+    'rangpur': 'Rangpur',
+    'kurigram': 'Kurigram',
+    'lalmonirhat': 'Lalmonirhat',
+    'panchagarh': 'Panchagarh',
+    'netrokona': 'Netrokona'
   };
 
   function getCanonicalStationName(raw) {

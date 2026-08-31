@@ -1,5 +1,5 @@
 // RailSeat Finder BD - High Performance Service Worker & Web Push Engine
-const CACHE_NAME = 'railseat-finder-v1';
+const CACHE_NAME = 'railseat-finder-v3.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 3. Fetch Strategy: Network-first for APIs, Stale-While-Revalidate for Static Assets
+// 3. Fetch Strategy: Network-First for core shell assets and APIs, cache fallback for offline
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -40,6 +40,30 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Network-First for core application shell
+  const isCoreAsset = url.pathname === '/' || 
+                      url.pathname === '/index.html' || 
+                      url.pathname.endsWith('.js') || 
+                      url.pathname.endsWith('.css');
+
+  if (isCoreAsset) {
+    event.respondWith(
+      fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for other static assets (images, fonts, favicons)
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       const fetchPromise = fetch(event.request).then(networkResponse => {

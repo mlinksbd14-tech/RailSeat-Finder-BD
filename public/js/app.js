@@ -7526,6 +7526,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
+      // Always draw train route corridor tracks on Network Map
+      if (t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
+        bounds.push(t.from_coords);
+        bounds.push(t.to_coords);
+
+        if (t.current_coords && t.current_coords[0]) {
+          // Passed/Active Track (Origin ➔ Current Position)
+          const passedTrack = L.polyline([t.from_coords, t.current_coords], {
+            color: '#06b6d4',
+            weight: 3,
+            opacity: 0.85,
+            smoothFactor: 1
+          });
+          liveNetworkMarkersGroup.addLayer(passedTrack);
+
+          // Remaining Track (Current Position ➔ Destination)
+          const remainingTrack = L.polyline([t.current_coords, t.to_coords], {
+            color: '#64748b',
+            weight: 2.5,
+            opacity: 0.65,
+            dashArray: '5, 5',
+            smoothFactor: 1
+          });
+          liveNetworkMarkersGroup.addLayer(remainingTrack);
+        } else {
+          // Scheduled / Complete Full Corridor Track
+          const fullTrack = L.polyline([t.from_coords, t.to_coords], {
+            color: '#0ea5e9',
+            weight: 2.5,
+            opacity: 0.6,
+            dashArray: '4, 4',
+            smoothFactor: 1
+          });
+          liveNetworkMarkersGroup.addLayer(fullTrack);
+        }
+
+        // Origin & Destination Station Mini-Pins
+        const fromDot = L.circleMarker(t.from_coords, {
+          radius: 3.5,
+          fillColor: '#10b981',
+          color: '#ffffff',
+          weight: 1.5,
+          fillOpacity: 1
+        }).bindTooltip(`Origin: ${t.from}`, { direction: 'top', className: 'text-[10px] font-bold' });
+        liveNetworkMarkersGroup.addLayer(fromDot);
+
+        const toDot = L.circleMarker(t.to_coords, {
+          radius: 3.5,
+          fillColor: '#f43f5e',
+          color: '#ffffff',
+          weight: 1.5,
+          fillOpacity: 1
+        }).bindTooltip(`Destination: ${t.to}`, { direction: 'top', className: 'text-[10px] font-bold' });
+        liveNetworkMarkersGroup.addLayer(toDot);
+      }
+
       const delayMin = t.delay_minutes || 0;
       const status = t.status;
       let colorClass = 'bg-cyan-500';
@@ -7616,43 +7672,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const stoppages = data.stoppages || [];
     const validCoords = [];
 
-    stoppages.forEach((stop) => {
+    stoppages.forEach((stop, idx) => {
       if (stop.lat && stop.lng) {
         const pt = [stop.lat, stop.lng];
         validCoords.push(pt);
 
-        const isPassed = stop.status === 'passed' || stop.status === 'departed';
+        const isOrigin = idx === 0;
+        const isDest = idx === stoppages.length - 1;
+        const isPassed = stop.status === 'passed' || stop.status === 'departed' || (data.prev_stop_idx >= 0 && idx <= data.prev_stop_idx);
         const isNext = stop.status === 'next' || stop.station_name === data.next_stop;
 
+        let radius = 5;
+        let fillColor = '#94a3b8';
+        if (isOrigin) {
+          radius = 6;
+          fillColor = '#10b981';
+        } else if (isDest) {
+          radius = 6;
+          fillColor = '#f43f5e';
+        } else if (isNext) {
+          radius = 7;
+          fillColor = '#06b6d4';
+        } else if (isPassed) {
+          fillColor = '#10b981';
+        }
+
         const circleMarker = L.circleMarker(pt, {
-          radius: isNext ? 7 : (isPassed ? 5 : 4),
-          fillColor: isNext ? '#06b6d4' : (isPassed ? '#10b981' : '#94a3b8'),
+          radius: radius,
+          fillColor: fillColor,
           color: '#ffffff',
           weight: 2,
           opacity: 1,
-          fillOpacity: 0.9
+          fillOpacity: 0.95
         }).bindPopup(`
           <div class="p-1 space-y-1 text-slate-800">
-            <div class="font-black text-xs text-cyan-800">${escapeHtml(stop.station_name)}</div>
-            <div class="text-[10px] text-slate-500 font-bold">Sched: ${stop.scheduled_time} • ${isPassed ? `Act: ${stop.actual_time}` : `ETA: ${stop.eta_time || stop.scheduled_time}`}</div>
+            <div class="font-black text-xs text-cyan-800">${escapeHtml(stop.station_name)}${isOrigin ? ' (Origin)' : (isDest ? ' (Destination)' : '')}</div>
+            <div class="text-[10px] text-slate-500 font-bold">Sched: ${stop.scheduled_time} • ${isPassed ? `Act: ${stop.actual_time || stop.scheduled_time}` : `ETA: ${stop.eta_time || stop.scheduled_time}`}</div>
             <div class="text-[9px] text-slate-400 font-mono">${stop.distance_km} km • ${stop.platform && stop.platform !== '—' ? `PF ${stop.platform}` : 'PF --'}</div>
           </div>
-        `).bindTooltip(stop.station_name, { permanent: false, direction: 'top', className: 'text-xs font-bold' });
+        `).bindTooltip(stop.station_name, { permanent: isOrigin || isDest || isNext, direction: 'top', className: 'text-xs font-bold' });
 
         liveModalMapLayerGroup.addLayer(circleMarker);
       }
     });
-
-    if (validCoords.length > 1) {
-      const polyline = L.polyline(validCoords, {
-        color: '#06b6d4',
-        weight: 4,
-        opacity: 0.85,
-        smoothFactor: 1
-      });
-      liveModalMapLayerGroup.addLayer(polyline);
-      liveModalLeafletMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
-    }
 
     // Determine current train position
     let trainCoord = null;
@@ -7669,6 +7731,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (!trainCoord && validCoords.length > 0) {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
+    }
+
+    // Always render complete route polylines (Passed vs Remaining)
+    if (validCoords.length > 1) {
+      const activeIdx = data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0;
+      
+      if (trainCoord && activeIdx >= 0 && activeIdx < validCoords.length - 1) {
+        // Passed Route Segment (Solid Emerald)
+        const passedSegment = validCoords.slice(0, activeIdx + 1).concat([trainCoord]);
+        const passedPolyline = L.polyline(passedSegment, {
+          color: '#10b981',
+          weight: 5,
+          opacity: 0.95,
+          smoothFactor: 1
+        });
+        liveModalMapLayerGroup.addLayer(passedPolyline);
+
+        // Upcoming Route Segment (Dashed Cyan)
+        const upcomingSegment = [trainCoord].concat(validCoords.slice(activeIdx + 1));
+        const upcomingPolyline = L.polyline(upcomingSegment, {
+          color: '#06b6d4',
+          weight: 4.5,
+          opacity: 0.9,
+          dashArray: '7, 7',
+          smoothFactor: 1
+        });
+        liveModalMapLayerGroup.addLayer(upcomingPolyline);
+      } else {
+        // Full Route Polyline
+        const polyline = L.polyline(validCoords, {
+          color: '#06b6d4',
+          weight: 4.5,
+          opacity: 0.9,
+          smoothFactor: 1
+        });
+        liveModalMapLayerGroup.addLayer(polyline);
+      }
+
+      liveModalLeafletMap.fitBounds(L.polyline(validCoords).getBounds(), { padding: [30, 30] });
     }
 
     if (trainCoord) {

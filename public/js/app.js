@@ -7363,10 +7363,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let liveModalMapLayerGroup = null;
 
   function getMapTileUrl() {
-    const isDark = document.documentElement.classList.contains('dark');
-    return isDark
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   }
 
   function initOrUpdateNetworkMap(trains) {
@@ -7377,14 +7374,14 @@ document.addEventListener('DOMContentLoaded', () => {
         center: [23.8103, 90.4125],
         zoom: 7,
         minZoom: 6,
-        maxZoom: 15,
+        maxZoom: 18,
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
       });
 
-      L.tileLayer(getMapTileUrl(), {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       }).addTo(liveNetworkLeafletMap);
 
       liveNetworkMarkersGroup = L.layerGroup().addTo(liveNetworkLeafletMap);
@@ -7473,14 +7470,14 @@ document.addEventListener('DOMContentLoaded', () => {
         center: [23.8103, 90.4125],
         zoom: 8,
         minZoom: 6,
-        maxZoom: 16,
+        maxZoom: 18,
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
       });
 
-      L.tileLayer(getMapTileUrl(), {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
       }).addTo(liveModalLeafletMap);
 
       liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);

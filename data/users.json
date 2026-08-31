@@ -186,14 +186,31 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
       "lastIp": "::1",
-      "lastLogin": "2026-08-31T05:52:07.953Z",
+      "lastLogin": "2026-08-31T05:53:57.589Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-08-31T05:53:57.589Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-08-31T05:52:07.953Z",
@@ -601,26 +618,9 @@
             "query": "27.147.149.234",
             "region": "Dhaka Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-30T08:28:04.243Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "city": "Tangail",
-            "region": "Dhaka Division",
-            "country": "Bangladesh",
-            "countryCode": "BD",
-            "flag": "🇧🇩",
-            "isp": "Link3 Technologies Limited",
-            "query": "27.147.149.234"
-          }
         }
       ],
-      "loginCount": 67
+      "loginCount": 68
     }
   ]
 }

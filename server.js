@@ -1554,151 +1554,13 @@ function parseTimeToMinutes(timeStr) {
 }
 
 // ----------------------------------------------------
-// Same-Train Split Ticket Auto-Combiner (Ghost Seat Finder)
+// Smart Multi-Hop Alternate Junction Route Engine (Corridor & General Transfer Hubs)
 // ----------------------------------------------------
-async function findSameTrainGhostSeats(fromCity, toCity, dateStr, session, targetTrainModel = null) {
-  const cleanFrom = (fromCity || '').trim().toLowerCase();
-  const cleanTo = (toCity || '').trim().toLowerCase();
-  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
-  
-  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
-  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
-  
-  const candidates = [];
-  const seen = new Set();
-  for (const h of candidatePool) {
-    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
-    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
-      seen.add(norm);
-      candidates.push(h);
-    }
-  }
-
-  const ghostSeatCombinations = [];
-  const cleanTargetModel = targetTrainModel ? String(targetTrainModel).replace(/\D/g, '').trim() : null;
-
-  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 6); hubIndex++) {
-    const hub = candidates[hubIndex];
-    try {
-      const cleanHubName = hub.replace(/_/g, ' ');
-
-      // Query Leg 1: From -> Hub
-      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
-      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg1Trains.length === 0) continue;
-
-      // Query Leg 2: Hub -> To
-      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
-      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg2Trains.length === 0) continue;
-
-      // Match SAME TRAIN by model number or digits or name
-      for (const t1 of leg1Trains) {
-        const m1Digits = String(t1.train_model || '').replace(/\D/g, '').trim();
-        const n1 = (t1.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-
-        if (cleanTargetModel && m1Digits !== cleanTargetModel) continue;
-
-        const matchingT2 = leg2Trains.find(t2 => {
-          const m2Digits = String(t2.train_model || '').replace(/\D/g, '').trim();
-          const n2 = (t2.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-          return (m1Digits && m2Digits && m1Digits === m2Digits) || (n1 && n2 && (n1.includes(n2) || n2.includes(n1)));
-        });
-
-        if (matchingT2) {
-          const t1Dep = parseTimeToMinutes(t1.departure_time);
-          const t2Dep = parseTimeToMinutes(matchingT2.departure_time);
-          if (t1Dep !== null && t2Dep !== null) {
-            if (t2Dep < t1Dep && (t2Dep + 1440 - t1Dep) > 720) {
-              continue;
-            }
-          }
-
-          // Compute matched class types & fares
-          const matchedClasses = [];
-          for (const c1 of (t1.seat_types || [])) {
-            const avail1 = Number(c1.seats_available || 0) + Number(c1.counter_seats_available || 0);
-            if (avail1 > 0) {
-              const c2 = (matchingT2.seat_types || []).find(x => x.type === c1.type);
-              const avail2 = c2 ? (Number(c2.seats_available || 0) + Number(c2.counter_seats_available || 0)) : 0;
-              if (avail2 > 0) {
-                matchedClasses.push({
-                  class_type: c1.type,
-                  display_name: c1.display_name || c1.type,
-                  min_available: Math.min(avail1, avail2),
-                  leg1_available: avail1,
-                  leg2_available: avail2,
-                  leg1_fare: Number(c1.fare || 0),
-                  leg2_fare: Number(c2.fare || 0),
-                  total_fare: Number(c1.fare || 0) + Number(c2.fare || 0)
-                });
-              }
-            }
-          }
-
-          const minSeats = Math.min(t1.total_combined_seats || 0, matchingT2.total_combined_seats || 0);
-          const preferredClass = matchedClasses.length > 0 ? matchedClasses[0].class_type : 'S_CHAIR';
-
-          ghostSeatCombinations.push({
-            is_same_train: true,
-            is_ghost_seat: true,
-            type: 'GHOST_SEAT_SPLIT',
-            route_type: 'SAME_TRAIN_STOPPAGE',
-            train_name: t1.train_name,
-            train_model: t1.train_model,
-            via_station: cleanHubName,
-            via_hub: cleanHubName,
-            available_seats: minSeats,
-            total_seats_min: minSeats,
-            departure_time: t1.departure_time,
-            arrival_time: matchingT2.arrival_time,
-            travel_time: t1.travel_time || matchingT2.travel_time || '',
-            matched_classes: matchedClasses,
-            leg1: {
-              train_name: t1.train_name,
-              train_model: t1.train_model,
-              from: fromCity,
-              to: cleanHubName,
-              departure_time: t1.departure_time,
-              arrival_time: t1.arrival_time,
-              seats: t1.total_combined_seats || 0,
-              online_seats: t1.total_online_seats || 0,
-              seat_types: t1.seat_types || [],
-              book_url: buildShohozBookingUrl(fromCity, cleanHubName, dateStr, preferredClass)
-            },
-            leg2: {
-              train_name: matchingT2.train_name,
-              train_model: matchingT2.train_model,
-              from: cleanHubName,
-              to: toCity,
-              departure_time: matchingT2.departure_time,
-              arrival_time: matchingT2.arrival_time,
-              seats: matchingT2.total_combined_seats || 0,
-              online_seats: matchingT2.total_online_seats || 0,
-              seat_types: matchingT2.seat_types || [],
-              book_url: buildShohozBookingUrl(cleanHubName, toCity, dateStr, preferredClass)
-            }
-          });
-
-          if (ghostSeatCombinations.length >= 6) break;
-        }
-      }
-      if (ghostSeatCombinations.length >= 6) break;
-    } catch (e) {}
-  }
-
-  return ghostSeatCombinations;
-}
-
 async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
   const cleanFrom = (fromCity || '').trim().toLowerCase();
   const cleanTo = (toCity || '').trim().toLowerCase();
   const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
   
-  // 1. First get Same-Train Ghost Seats
-  const sameTrainOptions = await findSameTrainGhostSeats(fromCity, toCity, dateStr, session);
-
-  // 2. Next get Transfer Routes
   const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
   const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
   
@@ -1783,12 +1645,11 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
         if (longestReachTransferOptions.length >= 3) break;
       }
 
-      if (sameTrainOptions.length >= 3 && longestReachTransferOptions.length >= 3) break;
+      if (longestReachTransferOptions.length >= 3) break;
     } catch (e) {}
   }
 
-  const combined = [...sameTrainOptions, ...longestReachTransferOptions];
-  return combined.slice(0, 6);
+  return longestReachTransferOptions.slice(0, 6);
 }
 
 // 2. Search Available Trains & Seats for Single Date
@@ -1805,53 +1666,21 @@ app.get('/api/search', async (req, res) => {
   const session = getUserShohozSession(req);
   const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
 
-  // Auto-scan Ghost Seats or Smart Alternate Junction Routes when requested
-  if (result.success && (check_alternates === 'true' || check_alternates === 'ghost')) {
+  // Auto-scan Smart Alternate Junction Routes when requested
+  if (result.success && check_alternates === 'true') {
     try {
       result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session, result.trains || []);
-      result.ghost_seats = result.alternate_routes.filter(r => r.is_same_train);
     } catch (altErr) {
       result.alternate_routes = [];
-      result.ghost_seats = [];
     }
   } else {
     result.alternate_routes = [];
-    result.ghost_seats = [];
   }
 
   return res.json(result);
 });
 
-// Dedicated Ghost Seat Auto-Combiner (Same-Train Split) Endpoint
-app.get('/api/ghost-seats', async (req, res) => {
-  const { from_city, to_city, date_of_journey, train_model } = req.query;
-
-  if (!from_city || !to_city || !date_of_journey) {
-    return res.status(400).json({
-      success: false,
-      error: 'Missing required parameters: from_city, to_city, date_of_journey are required.'
-    });
-  }
-
-  const session = getUserShohozSession(req);
-  try {
-    const ghostSeats = await findSameTrainGhostSeats(from_city, to_city, date_of_journey, session, train_model || null);
-    return res.json({
-      success: true,
-      route: { from: from_city, to: to_city, date: date_of_journey, train_model: train_model || null },
-      count: ghostSeats.length,
-      ghost_seats: ghostSeats
-    });
-  } catch (err) {
-    return res.json({
-      success: false,
-      error: err.message,
-      ghost_seats: []
-    });
-  }
-});
-
-// Dedicated On-Demand Alternate Junction & Same-Train Split Routes Endpoint
+// Dedicated On-Demand Alternate Junction Routes Endpoint
 app.get('/api/alternate-routes', async (req, res) => {
   const { from_city, to_city, date_of_journey } = req.query;
 
@@ -2310,71 +2139,6 @@ app.get('/api/train-station-matrix', async (req, res) => {
     }
   }
 
-  // Compute Ghost Combinations (Same-Train 2-Leg Back-to-Back Splits)
-  const ghostCombinations = [];
-  for (const seg1 of segments) {
-    if (!seg1.has_seats) continue;
-    const intermediate = seg1.to;
-
-    for (const seg2 of segments) {
-      if (!seg2.has_seats || seg2.from !== intermediate) continue;
-      if (seg2.to === seg1.from) continue;
-
-      const minSeats = Math.min(seg1.total_seats, seg2.total_seats);
-      const matchedClasses = [];
-
-      for (const c1 of (seg1.seat_types || [])) {
-        const avail1 = Number(c1.seats_available || 0) + Number(c1.counter_seats_available || 0);
-        if (avail1 > 0) {
-          const c2 = (seg2.seat_types || []).find(x => x.type === c1.type);
-          const avail2 = c2 ? (Number(c2.seats_available || 0) + Number(c2.counter_seats_available || 0)) : 0;
-          if (avail2 > 0) {
-            matchedClasses.push({
-              class_type: c1.type,
-              display_name: c1.display_name || c1.type,
-              min_available: Math.min(avail1, avail2),
-              leg1_fare: Number(c1.fare || 0),
-              leg2_fare: Number(c2.fare || 0),
-              total_fare: Number(c1.fare || 0) + Number(c2.fare || 0)
-            });
-          }
-        }
-      }
-
-      ghostCombinations.push({
-        train_name: routeData.train_name || `Train #${cleanModel}`,
-        train_model: cleanModel,
-        origin: seg1.from,
-        destination: seg2.to,
-        via_station: intermediate,
-        available_seats: minSeats,
-        departure_time: seg1.departure_time,
-        arrival_time: seg2.arrival_time,
-        matched_classes: matchedClasses,
-        leg1: {
-          from: seg1.from,
-          to: seg1.to,
-          departure_time: seg1.departure_time,
-          arrival_time: seg1.arrival_time,
-          seats: seg1.total_seats,
-          online_seats: seg1.online_seats,
-          book_url: seg1.book_url,
-          seat_types: seg1.seat_types
-        },
-        leg2: {
-          from: seg2.from,
-          to: seg2.to,
-          departure_time: seg2.departure_time,
-          arrival_time: seg2.arrival_time,
-          seats: seg2.total_seats,
-          online_seats: seg2.online_seats,
-          book_url: seg2.book_url,
-          seat_types: seg2.seat_types
-        }
-      });
-    }
-  }
-
   return res.json({
     success: true,
     train_name: routeData.train_name || `Train #${cleanModel}`,
@@ -2383,8 +2147,7 @@ app.get('/api/train-station-matrix', async (req, res) => {
     display_date: formatShohozDate(date_of_journey),
     off_day: routeData.off_day || 'None',
     stoppages: stops,
-    segments: segments,
-    ghost_combinations: ghostCombinations
+    segments: segments
   });
 });
 

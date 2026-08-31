@@ -1470,16 +1470,16 @@
       <!-- Header -->
       <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
         <div class="flex items-center space-x-2.5 min-w-0">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-purple-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
-            <i class="fa-solid fa-ghost"></i>
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+            <i class="fa-solid fa-table-cells"></i>
           </div>
           <div class="min-w-0">
             <div class="flex items-center space-x-2 flex-wrap">
-              <h3 id="stationMatrixTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">All Stops & Ghost Seats Matrix</h3>
+              <h3 id="stationMatrixTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Train Stoppages Matrix</h3>
               <span id="stationMatrixTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
             </div>
             <p id="stationMatrixSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              Same-Train Split Combinations (Ghost Seats) + Full Station-to-Station Intermediate Vacancy Grid
+              Single-Day Station-to-Station Blank Seat Availability & Fare Matrix
             </p>
           </div>
         </div>
@@ -1593,50 +1593,6 @@
       <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
         <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Live data direct from Bangladesh Railway Shohoz API</span>
         <span class="font-medium">Click "Book" to purchase on eticket portal</span>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Same-Train Split Ticket Auto-Combiner (Ghost Seat Finder) Modal -->
-  <div id="ghostSeatModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col border-2 border-emerald-500/40 shadow-2xl overflow-hidden modal-dialog-responsive">
-      
-      <!-- Header -->
-      <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-950/30 via-slate-900 to-indigo-950/30 shrink-0">
-        <div class="flex items-center space-x-3 min-w-0">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-lg shadow-md shrink-0 animate-pulse">
-            <i class="fa-solid fa-ghost"></i>
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2">
-              <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white truncate">Ghost Seat Auto-Combiner</h3>
-              <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">Same-Train Split</span>
-            </div>
-            <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium" id="ghostModalSubTitle">
-              Stay on the same train without switching by combining intermediate quota tickets.
-            </p>
-          </div>
-        </div>
-        <button type="button" id="closeGhostSeatModalBtn" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
-        </button>
-      </div>
-
-      <!-- Body / Results Content -->
-      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1" id="ghostSeatModalBody">
-        <!-- Rendered dynamically by JS -->
-      </div>
-
-      <!-- Footer -->
-      <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-        <div class="flex items-center space-x-1.5 font-medium">
-          <i class="fa-solid fa-circle-check text-emerald-500"></i>
-          <span>100% Exact Same Train (#Model) Guarantee</span>
-        </div>
-        <button type="button" id="closeGhostSeatModalFooterBtn" class="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-300 transition text-xs cursor-pointer">
-          Close
-        </button>
       </div>
 
     </div>

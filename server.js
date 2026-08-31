@@ -1553,12 +1553,14 @@ function parseTimeToMinutes(timeStr) {
   return (hours * 60) + minutes;
 }
 
-async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
+// ----------------------------------------------------
+// Same-Train Split Ticket Auto-Combiner (Ghost Seat Finder)
+// ----------------------------------------------------
+async function findSameTrainGhostSeats(fromCity, toCity, dateStr, session, targetTrainModel = null) {
   const cleanFrom = (fromCity || '').trim().toLowerCase();
   const cleanTo = (toCity || '').trim().toLowerCase();
   const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
   
-  // Prioritize corridor intermediate stoppage stations first (furthest first = longest reach), then general junction hubs
   const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
   const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
   
@@ -1572,34 +1574,35 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
     }
   }
 
-  const sameTrainOptions = [];
-  const longestReachTransferOptions = [];
+  const ghostSeatCombinations = [];
+  const cleanTargetModel = targetTrainModel ? String(targetTrainModel).replace(/\D/g, '').trim() : null;
 
-  // Evaluate candidate intermediate hubs (top 5 to stay fast and avoid rate limits)
-  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 5); hubIndex++) {
+  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 6); hubIndex++) {
     const hub = candidates[hubIndex];
     try {
       const cleanHubName = hub.replace(/_/g, ' ');
 
-      // Query Leg 1: fromCity -> Intermediate Hub (Longest available destination search)
+      // Query Leg 1: From -> Hub
       const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
       const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
       if (leg1Trains.length === 0) continue;
 
-      // Query Leg 2: Intermediate Hub -> toCity (Next train connection to destination)
+      // Query Leg 2: Hub -> To
       const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
       const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
       if (leg2Trains.length === 0) continue;
 
-      // 1. RULE 1: SAME-TRAIN STOPPAGE QUOTA
-      // Direct A ➔ B is sold out, but the SAME train has seats for A ➔ Hub AND Hub ➔ B
+      // Match SAME TRAIN by model number or digits or name
       for (const t1 of leg1Trains) {
+        const m1Digits = String(t1.train_model || '').replace(/\D/g, '').trim();
+        const n1 = (t1.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        if (cleanTargetModel && m1Digits !== cleanTargetModel) continue;
+
         const matchingT2 = leg2Trains.find(t2 => {
-          const m1 = String(t1.train_model || '').trim();
-          const m2 = String(t2.train_model || '').trim();
-          const n1 = (t1.train_name || '').toLowerCase().trim();
-          const n2 = (t2.train_name || '').toLowerCase().trim();
-          return (m1 && m2 && m1 === m2) || (n1 && n2 && n1 === n2);
+          const m2Digits = String(t2.train_model || '').replace(/\D/g, '').trim();
+          const n2 = (t2.train_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          return (m1Digits && m2Digits && m1Digits === m2Digits) || (n1 && n2 && (n1.includes(n2) || n2.includes(n1)));
         });
 
         if (matchingT2) {
@@ -1611,13 +1614,46 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
             }
           }
 
-          sameTrainOptions.push({
+          // Compute matched class types & fares
+          const matchedClasses = [];
+          for (const c1 of (t1.seat_types || [])) {
+            const avail1 = Number(c1.seats_available || 0) + Number(c1.counter_seats_available || 0);
+            if (avail1 > 0) {
+              const c2 = (matchingT2.seat_types || []).find(x => x.type === c1.type);
+              const avail2 = c2 ? (Number(c2.seats_available || 0) + Number(c2.counter_seats_available || 0)) : 0;
+              if (avail2 > 0) {
+                matchedClasses.push({
+                  class_type: c1.type,
+                  display_name: c1.display_name || c1.type,
+                  min_available: Math.min(avail1, avail2),
+                  leg1_available: avail1,
+                  leg2_available: avail2,
+                  leg1_fare: Number(c1.fare || 0),
+                  leg2_fare: Number(c2.fare || 0),
+                  total_fare: Number(c1.fare || 0) + Number(c2.fare || 0)
+                });
+              }
+            }
+          }
+
+          const minSeats = Math.min(t1.total_combined_seats || 0, matchingT2.total_combined_seats || 0);
+          const preferredClass = matchedClasses.length > 0 ? matchedClasses[0].class_type : 'S_CHAIR';
+
+          ghostSeatCombinations.push({
             is_same_train: true,
+            is_ghost_seat: true,
+            type: 'GHOST_SEAT_SPLIT',
             route_type: 'SAME_TRAIN_STOPPAGE',
-            via_hub: cleanHubName,
             train_name: t1.train_name,
             train_model: t1.train_model,
-            total_seats_min: Math.min(t1.total_combined_seats || 0, matchingT2.total_combined_seats || 0),
+            via_station: cleanHubName,
+            via_hub: cleanHubName,
+            available_seats: minSeats,
+            total_seats_min: minSeats,
+            departure_time: t1.departure_time,
+            arrival_time: matchingT2.arrival_time,
+            travel_time: t1.travel_time || matchingT2.travel_time || '',
+            matched_classes: matchedClasses,
             leg1: {
               train_name: t1.train_name,
               train_model: t1.train_model,
@@ -1627,7 +1663,8 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
               arrival_time: t1.arrival_time,
               seats: t1.total_combined_seats || 0,
               online_seats: t1.total_online_seats || 0,
-              seat_types: t1.seat_types || []
+              seat_types: t1.seat_types || [],
+              book_url: buildShohozBookingUrl(fromCity, cleanHubName, dateStr, preferredClass)
             },
             leg2: {
               train_name: matchingT2.train_name,
@@ -1638,16 +1675,58 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
               arrival_time: matchingT2.arrival_time,
               seats: matchingT2.total_combined_seats || 0,
               online_seats: matchingT2.total_online_seats || 0,
-              seat_types: matchingT2.seat_types || []
+              seat_types: matchingT2.seat_types || [],
+              book_url: buildShohozBookingUrl(cleanHubName, toCity, dateStr, preferredClass)
             }
           });
-          if (sameTrainOptions.length >= 4) break;
+
+          if (ghostSeatCombinations.length >= 6) break;
         }
       }
+      if (ghostSeatCombinations.length >= 6) break;
+    } catch (e) {}
+  }
 
-      // 2. RULE 2: LONGEST DESTINATION REACH + CONNECTING NEXT TRAIN
-      // Passenger rides Train 1 as far as possible towards destination (cleanHubName),
-      // then at cleanHubName connects to the NEXT train (Train 2) to toCity!
+  return ghostSeatCombinations;
+}
+
+async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
+  const cleanFrom = (fromCity || '').trim().toLowerCase();
+  const cleanTo = (toCity || '').trim().toLowerCase();
+  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
+  
+  // 1. First get Same-Train Ghost Seats
+  const sameTrainOptions = await findSameTrainGhostSeats(fromCity, toCity, dateStr, session);
+
+  // 2. Next get Transfer Routes
+  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
+  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
+  
+  const candidates = [];
+  const seen = new Set();
+  for (const h of candidatePool) {
+    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
+    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
+      seen.add(norm);
+      candidates.push(h);
+    }
+  }
+
+  const longestReachTransferOptions = [];
+
+  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 4); hubIndex++) {
+    const hub = candidates[hubIndex];
+    try {
+      const cleanHubName = hub.replace(/_/g, ' ');
+
+      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
+      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg1Trains.length === 0) continue;
+
+      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
+      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      if (leg2Trains.length === 0) continue;
+
       for (const t1 of leg1Trains) {
         for (const t2 of leg2Trains) {
           if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
@@ -1655,14 +1734,12 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
             const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
             const t2Dep = parseTimeToMinutes(t2.departure_time);
 
-            // STRICT CHRONOLOGICAL SEQUENCE:
-            // Train 2 at the transfer station MUST depart AFTER Train 1 arrives!
             if (t1Arr !== null && t2Dep !== null) {
               let layover = t2Dep - t1Arr;
-              if (layover < 0) layover += 1440; // Cross-midnight connection
+              if (layover < 0) layover += 1440;
 
               if (layover < 15 || layover > 360) {
-                continue; // Layover too tight (<15 min) or too long (>6 hours)
+                continue;
               }
 
               const layoverHours = Math.floor(layover / 60);
@@ -1671,7 +1748,7 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
 
               longestReachTransferOptions.push({
                 is_same_train: false,
-                is_longest_reach: hubIndex === 0, // First candidate in corridor is the longest reach
+                is_longest_reach: hubIndex === 0,
                 route_type: 'LONGEST_DESTINATION_TRANSFER',
                 via_hub: cleanHubName,
                 layover_minutes: layover,
@@ -1699,18 +1776,17 @@ async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, d
                   seat_types: t2.seat_types || []
                 }
               });
-              if (longestReachTransferOptions.length >= 4) break;
+              if (longestReachTransferOptions.length >= 3) break;
             }
           }
         }
-        if (longestReachTransferOptions.length >= 4) break;
+        if (longestReachTransferOptions.length >= 3) break;
       }
 
       if (sameTrainOptions.length >= 3 && longestReachTransferOptions.length >= 3) break;
     } catch (e) {}
   }
 
-  // Combine both: Same-Train options first, followed by Longest Reach Next-Train connections!
   const combined = [...sameTrainOptions, ...longestReachTransferOptions];
   return combined.slice(0, 6);
 }
@@ -1729,18 +1805,50 @@ app.get('/api/search', async (req, res) => {
   const session = getUserShohozSession(req);
   const result = await querySingleShohozTrip(from_city, to_city, date_of_journey, session);
 
-  // Smart Alternate Junction Routes are only queried when explicitly requested via Deep Search (check_alternates=true)
-  if (result.success && check_alternates === 'true') {
+  // Auto-scan Ghost Seats or Smart Alternate Junction Routes when requested
+  if (result.success && (check_alternates === 'true' || check_alternates === 'ghost')) {
     try {
       result.alternate_routes = await findAlternateJunctionRoutes(from_city, to_city, date_of_journey, session, result.trains || []);
+      result.ghost_seats = result.alternate_routes.filter(r => r.is_same_train);
     } catch (altErr) {
       result.alternate_routes = [];
+      result.ghost_seats = [];
     }
   } else {
     result.alternate_routes = [];
+    result.ghost_seats = [];
   }
 
   return res.json(result);
+});
+
+// Dedicated Ghost Seat Auto-Combiner (Same-Train Split) Endpoint
+app.get('/api/ghost-seats', async (req, res) => {
+  const { from_city, to_city, date_of_journey, train_model } = req.query;
+
+  if (!from_city || !to_city || !date_of_journey) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters: from_city, to_city, date_of_journey are required.'
+    });
+  }
+
+  const session = getUserShohozSession(req);
+  try {
+    const ghostSeats = await findSameTrainGhostSeats(from_city, to_city, date_of_journey, session, train_model || null);
+    return res.json({
+      success: true,
+      route: { from: from_city, to: to_city, date: date_of_journey, train_model: train_model || null },
+      count: ghostSeats.length,
+      ghost_seats: ghostSeats
+    });
+  } catch (err) {
+    return res.json({
+      success: false,
+      error: err.message,
+      ghost_seats: []
+    });
+  }
 });
 
 // Dedicated On-Demand Alternate Junction & Same-Train Split Routes Endpoint
@@ -1760,13 +1868,15 @@ app.get('/api/alternate-routes', async (req, res) => {
     return res.json({
       success: true,
       route: { from: from_city, to: to_city, date: date_of_journey },
-      alternate_routes: alternateRoutes
+      alternate_routes: alternateRoutes,
+      ghost_seats: alternateRoutes.filter(r => r.is_same_train)
     });
   } catch (err) {
     return res.json({
       success: false,
       error: err.message,
-      alternate_routes: []
+      alternate_routes: [],
+      ghost_seats: []
     });
   }
 });

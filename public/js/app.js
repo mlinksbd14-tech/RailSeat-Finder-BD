@@ -379,6 +379,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const telemetryIsp = document.getElementById('telemetryIsp');
   const pwaInstallBtn = document.getElementById('pwaInstallBtn');
   const alternateRoutesContainer = document.getElementById('alternateRoutesContainer');
+  
+  // Ghost Seat Modal Elements
+  const ghostSeatModal = document.getElementById('ghostSeatModal');
+  const closeGhostSeatModalBtn = document.getElementById('closeGhostSeatModalBtn');
+  const closeGhostSeatModalFooterBtn = document.getElementById('closeGhostSeatModalFooterBtn');
+  const ghostSeatModalBody = document.getElementById('ghostSeatModalBody');
+  const ghostModalSubTitle = document.getElementById('ghostModalSubTitle');
+
   const closeFirebaseConfigBtn = document.getElementById('closeFirebaseConfigBtn');
   const firebaseConfigForm = document.getElementById('firebaseConfigForm');
   const firebaseCfgApiKey = document.getElementById('firebaseCfgApiKey');
@@ -2925,6 +2933,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>Stops Matrix</span>
               </button>
 
+              <button type="button" class="find-ghost-seats-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/70 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-700 transition cursor-pointer"
+                data-train-model="${train.train_model || ''}"
+                data-train-name="${train.train_name || ''}"
+                title="Scan Same-Train Split Tickets (Ghost Seat Finder)">
+                <i class="fa-solid fa-ghost text-purple-500 text-[10px]"></i>
+                <span>Ghost Seats</span>
+              </button>
+
               <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
@@ -3549,6 +3565,200 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.selectedFrom && state.selectedTo && state.selectedFrom.toLowerCase() !== state.selectedTo.toLowerCase() && state.isAuthenticated) {
         fetchAndRenderMultiDayMatrix();
       }
+    });
+  }
+
+  // ----------------------------------------------------
+  // Same-Train Split Ticket Auto-Combiner (Ghost Seat Finder)
+  // ----------------------------------------------------
+  function initGhostSeatFinder() {
+    if (closeGhostSeatModalBtn) {
+      closeGhostSeatModalBtn.addEventListener('click', closeGhostSeatModal);
+    }
+    if (closeGhostSeatModalFooterBtn) {
+      closeGhostSeatModalFooterBtn.addEventListener('click', closeGhostSeatModal);
+    }
+    if (ghostSeatModal) {
+      ghostSeatModal.addEventListener('click', (e) => {
+        if (e.target === ghostSeatModal) closeGhostSeatModal();
+      });
+    }
+  }
+
+  function openGhostSeatModal(trainModel, trainName = '') {
+    if (!ghostSeatModal) return;
+    ghostSeatModal.classList.remove('hidden');
+    
+    const fromCity = state.selectedFrom || 'Dhaka';
+    const toCity = state.selectedTo || 'Chattogram';
+    const journeyDate = state.selectedDate || new Date().toISOString().split('T')[0];
+
+    if (ghostModalSubTitle) {
+      ghostModalSubTitle.textContent = `${fromCity} ➔ ${toCity} on ${formatShohozDoj(journeyDate)} (${trainName || `Train #${trainModel}`})`;
+    }
+
+    if (ghostSeatModalBody) {
+      ghostSeatModalBody.innerHTML = `
+        <div class="py-12 text-center space-y-3">
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-xl animate-spin">
+            <i class="fa-solid fa-circle-notch"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Scanning all intermediate stoppage quotas on ${trainName || `Train #${trainModel}`}...</p>
+          <p class="text-[11px] text-slate-400">Finding same-train back-to-back tickets so you don't have to switch trains</p>
+        </div>
+      `;
+    }
+
+    fetchGhostSeatsForTrain(fromCity, toCity, journeyDate, trainModel, trainName);
+  }
+
+  function closeGhostSeatModal() {
+    if (ghostSeatModal) ghostSeatModal.classList.add('hidden');
+  }
+
+  async function fetchGhostSeatsForTrain(fromCity, toCity, journeyDate, trainModel, trainName) {
+    try {
+      const url = `/api/ghost-seats?from_city=${encodeURIComponent(fromCity)}&to_city=${encodeURIComponent(toCity)}&date_of_journey=${encodeURIComponent(journeyDate)}&train_model=${encodeURIComponent(trainModel || '')}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!data.success || !data.ghost_seats || data.ghost_seats.length === 0) {
+        if (ghostSeatModalBody) {
+          ghostSeatModalBody.innerHTML = `
+            <div class="py-10 text-center space-y-3">
+              <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-ghost"></i>
+              </div>
+              <h4 class="text-sm font-extrabold text-slate-800 dark:text-slate-200">No Same-Train Split Seats Available</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                All intermediate stoppage quotas on this train are also booked out. Try setting a <b>24/7 Radar Alert</b> to get notified the second a seat drops!
+              </p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      renderGhostSeatCombinations(data.ghost_seats);
+    } catch (err) {
+      if (ghostSeatModalBody) {
+        ghostSeatModalBody.innerHTML = `
+          <div class="py-8 text-center space-y-2 text-rose-500 text-xs">
+            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            <p>Error finding split seats: ${err.message}</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  function renderGhostSeatCombinations(ghostSeats) {
+    if (!ghostSeatModalBody) return;
+
+    ghostSeatModalBody.innerHTML = `
+      <div class="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-800/60 flex items-center space-x-2.5 text-xs text-purple-900 dark:text-purple-200">
+        <i class="fa-solid fa-lightbulb text-amber-500 text-sm shrink-0"></i>
+        <span><b>How Ghost Seats Work:</b> Direct tickets from start to finish are sold out, but Bangladesh Railway has quota seats on the <b>exact same train</b> across an intermediate stoppage. Buy both tickets to ride the entire journey without switching trains!</span>
+      </div>
+
+      <div class="space-y-3 pt-1">
+        ${ghostSeats.map((ghost, idx) => {
+          const leg1Book = ghost.leg1?.book_url || '#';
+          const leg2Book = ghost.leg2?.book_url || '#';
+          const classes = ghost.matched_classes || [];
+
+          return `
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border-2 border-purple-400/50 dark:border-purple-600/50 space-y-3 shadow-sm">
+              
+              <!-- Header -->
+              <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2.5 flex-wrap gap-2">
+                <div class="flex items-center space-x-2">
+                  <span class="w-6 h-6 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center">${idx + 1}</span>
+                  <h4 class="font-extrabold text-slate-900 dark:text-white text-sm">
+                    ${ghost.train_name} <span class="font-mono text-xs text-slate-500">#${ghost.train_model}</span>
+                  </h4>
+                </div>
+                <div class="flex items-center space-x-1.5 text-xs">
+                  <span class="px-2.5 py-1 rounded-xl bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-700">
+                    Via ${ghost.via_station}
+                  </span>
+                  <span class="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-300 dark:border-emerald-700">
+                    🟢 ${ghost.available_seats} Min Seats
+                  </span>
+                </div>
+              </div>
+
+              <!-- 2-Ticket Segment Breakdown -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                
+                <!-- Ticket 1 -->
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div class="flex items-center justify-between font-bold text-slate-700 dark:text-slate-200">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">🎟️ Ticket 1 (Leg 1)</span>
+                    <span class="text-[10px] font-mono">${ghost.leg1.departure_time || '--'}</span>
+                  </div>
+                  <div class="text-xs font-extrabold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                    <span>${ghost.leg1.from}</span>
+                    <i class="fa-solid fa-arrow-right text-[10px] text-emerald-500"></i>
+                    <span>${ghost.leg1.to}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    Seats: <b class="text-emerald-600">${ghost.leg1.seats} available</b>
+                  </div>
+                  <a href="${leg1Book}" target="_blank" rel="noopener" class="mt-1 w-full py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center block text-xs shadow-xs transition">
+                    Book Ticket 1 &rarr;
+                  </a>
+                </div>
+
+                <!-- Ticket 2 -->
+                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div class="flex items-center justify-between font-bold text-slate-700 dark:text-slate-200">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">🎟️ Ticket 2 (Leg 2)</span>
+                    <span class="text-[10px] font-mono">${ghost.leg2.arrival_time || '--'}</span>
+                  </div>
+                  <div class="text-xs font-extrabold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                    <span>${ghost.leg2.from}</span>
+                    <i class="fa-solid fa-arrow-right text-[10px] text-indigo-500"></i>
+                    <span>${ghost.leg2.to}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500">
+                    Seats: <b class="text-indigo-600">${ghost.leg2.seats} available</b>
+                  </div>
+                  <a href="${leg2Book}" target="_blank" rel="noopener" class="mt-1 w-full py-1.5 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center block text-xs shadow-xs transition">
+                    Book Ticket 2 &rarr;
+                  </a>
+                </div>
+
+              </div>
+
+              <!-- Available Class Fares & 1-Click Dual Book Button -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                  ${classes.length > 0 ? `<b>Classes:</b> ` + classes.map(c => `${c.display_name} (৳${c.total_fare})`).join(', ') : 'Direct same-train split available'}
+                </div>
+                <button type="button" class="open-dual-tabs-btn px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-sm flex items-center space-x-1.5 transition cursor-pointer"
+                  data-leg1="${encodeURIComponent(leg1Book)}"
+                  data-leg2="${encodeURIComponent(leg2Book)}">
+                  <i class="fa-solid fa-bolt text-amber-300 text-[10px]"></i>
+                  <span>Open Both Tickets in 2 Tabs</span>
+                </button>
+              </div>
+
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Bind Dual Tabs opener
+    ghostSeatModalBody.querySelectorAll('.open-dual-tabs-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const leg1Url = decodeURIComponent(btn.dataset.leg1 || '');
+        const leg2Url = decodeURIComponent(btn.dataset.leg2 || '');
+        if (leg1Url && leg1Url !== '#') window.open(leg1Url, '_blank', 'noopener');
+        if (leg2Url && leg2Url !== '#') window.open(leg2Url, '_blank', 'noopener');
+        showToast('🚀 Opened both Ticket 1 and Ticket 2 in separate tabs!', 'success');
+      });
     });
   }
 
@@ -6899,10 +7109,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initShareModule();
     initStationMatrixModule();
     initMultiDayMatrixControls();
+    initGhostSeatFinder();
     initUserManagement();
     initPwaServiceWorker();
 
-    // Delegate click for view route, watch, and station matrix buttons
+    // Delegate click for view route, watch, station matrix, and ghost seats buttons
     document.addEventListener('click', (e) => {
       const routeBtn = e.target.closest('.view-route-btn');
       if (routeBtn) {
@@ -6913,6 +7124,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const matrixBtn = e.target.closest('.view-station-matrix-btn');
       if (matrixBtn) {
         openStationMatrixModal(matrixBtn.dataset.trainModel, matrixBtn.dataset.trainName);
+        return;
+      }
+
+      const ghostBtn = e.target.closest('.find-ghost-seats-btn');
+      if (ghostBtn) {
+        openGhostSeatModal(ghostBtn.dataset.trainModel, ghostBtn.dataset.trainName);
         return;
       }
 

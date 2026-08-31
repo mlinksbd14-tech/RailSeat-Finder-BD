@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     liveRouteFrom: '',
     liveRouteTo: '',
     liveTrackerTimer: null,
-    activeMainTab: 'tracker',
+    activeMainTab: 'seats',
     authNotice: '',
     authNoticeEnabled: true,
     popularRoutes: [
@@ -7292,9 +7292,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (trainNo) openLiveTrainModal(trainNo);
       }
     });
-
-    // Default start in Live Train GPS & Delay Radar Grid View
-    switchMainTab('tracker');
   }
 
   function switchMainTab(tab) {
@@ -7310,6 +7307,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (navLiveTrackerBtn) {
         navLiveTrackerBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
       }
+
+      // Default to Grid View when opening Live Radar
+      state.liveTrackerView = 'grid';
+      if (liveTrackerGridTab) {
+        liveTrackerGridTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+      }
+      if (liveTrackerMapTab) {
+        liveTrackerMapTab.className = 'px-2.5 sm:px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+      }
+      if (liveTrackerGrid) liveTrackerGrid.classList.remove('hidden');
+      if (liveTrackerNetworkMapContainer) liveTrackerNetworkMapContainer.classList.add('hidden');
 
       loadRunningTrains(false);
     } else {

@@ -2250,99 +2250,96 @@ function parseRunningTrainsHtml(html) {
   return trains;
 }
 
-function parseTrainDetailStream(stream, trainNo) {
-  let initialTrain = null;
-  let initialDerived = null;
-  let delayReport = null;
+function addMinutesToTime(timeStr, minutesToAdd) {
+  if (!timeStr || timeStr === '—' || !timeStr.includes(':')) return '—';
+  const parts = timeStr.split(':');
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return timeStr;
+  
+  let totalMinutes = (h * 60 + m + (minutesToAdd || 0)) % (24 * 60);
+  if (totalMinutes < 0) totalMinutes += 24 * 60;
+  
+  const newH = Math.floor(totalMinutes / 60);
+  const newM = totalMinutes % 60;
+  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
 
-  const trainIdx = stream.indexOf('"initialTrain":{');
-  if (trainIdx !== -1) {
-    const startObj = trainIdx + '"initialTrain":'.length;
+function parseTrainDetailStream(stream, trainNo, delayReport = null) {
+  const parseJsonObj = (str, key) => {
+    const idx = str.indexOf(`"${key}":{`);
+    if (idx === -1) return null;
+    const startObj = idx + `"${key}":`.length;
     let depth = 0;
-    let endObj = -1;
-    for (let i = startObj; i < stream.length; i++) {
-      if (stream[i] === '{') depth++;
-      else if (stream[i] === '}') {
+    for (let i = startObj; i < str.length; i++) {
+      if (str[i] === '{') depth++;
+      else if (str[i] === '}') {
         depth--;
         if (depth === 0) {
-          endObj = i + 1;
-          break;
+          try {
+            const rawJson = str.slice(startObj, i + 1);
+            const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
+            return JSON.parse(sanitized);
+          } catch (e) { return null; }
         }
       }
     }
-    if (endObj !== -1) {
-      const rawJson = stream.slice(startObj, endObj);
-      try {
-        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
-        initialTrain = JSON.parse(sanitized);
-      } catch (e) {}
-    }
+    return null;
+  };
+
+  const initialTrain = parseJsonObj(stream, 'initialTrain');
+  const initialDerived = parseJsonObj(stream, 'initialDerived');
+
+  const delayMin = initialTrain?.delay || initialDerived?.delay || 0;
+  const afterStopIdx = (initialDerived?.trainSegmentPosition?.afterStopIdx !== undefined && initialDerived?.trainSegmentPosition?.afterStopIdx !== null)
+    ? initialDerived.trainSegmentPosition.afterStopIdx
+    : -1;
+
+  const rawStoppages = initialTrain?.route || [];
+  const stoppages = rawStoppages.map((r, idx) => {
+    const isPassed = afterStopIdx >= 0 && idx <= afterStopIdx;
+    const isNext = afterStopIdx >= 0 && idx === afterStopIdx + 1;
+    const calculatedEta = (r.sched && r.sched !== '—') ? addMinutesToTime(r.sched, delayMin) : '—';
+    const actualTime = r.act && r.act !== '—' ? r.act : (isPassed ? calculatedEta : '—');
+
+    return {
+      station_name: r.name || '',
+      station_bn: r.bn || '',
+      station_code: r.code || '',
+      scheduled_time: r.sched || '—',
+      actual_time: actualTime,
+      eta_time: calculatedEta,
+      platform: r.platform || '—',
+      distance_km: r.km || 0,
+      status: isPassed ? 'passed' : (isNext ? 'next' : 'upcoming')
+    };
+  });
+
+  let nextStopIndex = -1;
+  if (afterStopIdx >= 0 && afterStopIdx + 1 < stoppages.length) {
+    nextStopIndex = afterStopIdx + 1;
+  } else if (afterStopIdx < 0 && stoppages.length > 0) {
+    nextStopIndex = 0;
   }
 
-  const derivedIdx = stream.indexOf('"initialDerived":{');
-  if (derivedIdx !== -1) {
-    const startObj = derivedIdx + '"initialDerived":'.length;
-    let depth = 0;
-    let endObj = -1;
-    for (let i = startObj; i < stream.length; i++) {
-      if (stream[i] === '{') depth++;
-      else if (stream[i] === '}') {
-        depth--;
-        if (depth === 0) {
-          endObj = i + 1;
-          break;
-        }
-      }
+  let fullNextStopName = '';
+  let nextEta = initialTrain?.nextEta || '';
+
+  if (nextStopIndex >= 0 && nextStopIndex < stoppages.length) {
+    fullNextStopName = stoppages[nextStopIndex].station_name;
+    if (!nextEta || nextEta === '—') {
+      nextEta = stoppages[nextStopIndex].eta_time;
     }
-    if (endObj !== -1) {
-      const rawJson = stream.slice(startObj, endObj);
-      try {
-        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
-        initialDerived = JSON.parse(sanitized);
-      } catch (e) {}
-    }
+  } else if (initialTrain?.nextStop) {
+    const code = String(initialTrain.nextStop).trim().toUpperCase();
+    const found = stoppages.find(s => s.station_code && s.station_code.toUpperCase() === code);
+    fullNextStopName = found ? found.station_name : initialTrain.nextStop;
+  } else if (stoppages.length > 0) {
+    fullNextStopName = stoppages[stoppages.length - 1].station_name;
+  } else {
+    fullNextStopName = 'Destination';
   }
 
-  const delayIdx = stream.indexOf('"delayReport":{');
-  if (delayIdx !== -1) {
-    const startObj = delayIdx + '"delayReport":'.length;
-    let depth = 0;
-    let endObj = -1;
-    for (let i = startObj; i < stream.length; i++) {
-      if (stream[i] === '{') depth++;
-      else if (stream[i] === '}') {
-        depth--;
-        if (depth === 0) {
-          endObj = i + 1;
-          break;
-        }
-      }
-    }
-    if (endObj !== -1) {
-      const rawJson = stream.slice(startObj, endObj);
-      try {
-        const sanitized = rawJson.replace(/"\$undefined"/g, 'null').replace(/"\$[\w:.]+"/g, 'null');
-        delayReport = JSON.parse(sanitized);
-      } catch (e) {}
-    }
-  }
-
-  const stoppages = (initialTrain?.route || []).map(r => ({
-    station_name: r.name || '',
-    station_bn: r.bn || '',
-    station_code: r.code || '',
-    scheduled_time: r.sched || '—',
-    actual_time: r.act || '—',
-    platform: r.platform || '—',
-    distance_km: r.km || 0,
-    status: r.status || 'upcoming'
-  }));
-
-  const nextStopCode = initialTrain?.nextStop || '';
-  const nextStopObj = stoppages.find(s => s.station_code.toUpperCase() === nextStopCode.toUpperCase() || s.station_name.toLowerCase() === nextStopCode.toLowerCase());
-  const fullNextStopName = nextStopObj ? nextStopObj.station_name : (nextStopCode || 'Destination');
-
-  const afterStopIdx = initialDerived?.trainSegmentPosition?.afterStopIdx ?? -1;
   const prevStopObj = afterStopIdx >= 0 && afterStopIdx < stoppages.length ? stoppages[afterStopIdx] : null;
   const prevStopName = prevStopObj ? prevStopObj.station_name : (stoppages[0]?.station_name || '');
   const coveredSincePrevStopKm = initialDerived?.coveredSincePrevStopKm ? Math.round(initialDerived.coveredSincePrevStopKm * 10) / 10 : null;

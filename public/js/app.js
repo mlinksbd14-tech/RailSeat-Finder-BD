@@ -7531,6 +7531,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const stationBn = stop.station_bn && stop.station_bn !== stop.station_name ? ` <span class="text-[11px] font-normal text-slate-400">(${escapeHtml(stop.station_bn)})</span>` : '';
 
+            // Display Scheduled Time vs Actual / Stoppage ETA Beside It
+            let timeBadge = '';
+            if (isPassed) {
+              timeBadge = `
+                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                  <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
+                  <span class="text-slate-300 dark:text-slate-600">·</span>
+                  <span class="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/70 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800" title="Actual Departed Time">Act: ${stop.actual_time || stop.scheduled_time}</span>
+                </div>
+              `;
+            } else if (isNextStop) {
+              timeBadge = `
+                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                  <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
+                  <span class="text-slate-300 dark:text-slate-600">·</span>
+                  <span class="font-extrabold text-cyan-600 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/80 px-1.5 py-0.2 rounded border border-cyan-300 dark:border-cyan-800 animate-pulse" title="Next Stop ETA">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
+                </div>
+              `;
+            } else {
+              const hasDelay = delayMin > 0;
+              timeBadge = `
+                <div class="flex items-center space-x-1.5 font-mono text-xs">
+                  <span class="text-slate-400 font-semibold" title="Scheduled Time">${stop.scheduled_time}</span>
+                  <span class="text-slate-300 dark:text-slate-600">·</span>
+                  <span class="font-extrabold ${hasDelay ? 'text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border-amber-300 dark:border-amber-800' : 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'} px-1.5 py-0.2 rounded border" title="Estimated Arrival Time">ETA: ${stop.eta_time || stop.actual_time || stop.scheduled_time}</span>
+                </div>
+              `;
+            }
+
             // Dynamic In-Transit Between-Station Indicator Box
             let inTransitRoadmapBlock = '';
             if (activePrevIdx >= 0 && idx === activePrevIdx && idx < stoppages.length - 1) {
@@ -7578,12 +7607,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="flex items-start space-x-3 pb-5 last:pb-1 relative group">
                 ${nodeIcon}
                 <div class="flex-1 min-w-0 pt-0.5">
-                  <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
                     <div class="font-extrabold text-xs sm:text-sm ${textClass}">
                       ${escapeHtml(stop.station_name)}${stationBn}
                     </div>
-                    <div class="flex items-center space-x-1.5 shrink-0">
-                      <div class="font-mono text-xs font-bold text-slate-900 dark:text-white">${stop.scheduled_time}</div>
+                    <div class="flex items-center space-x-2 shrink-0">
+                      ${timeBadge}
                       ${statusBadge}
                     </div>
                   </div>

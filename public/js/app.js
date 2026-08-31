@@ -7517,6 +7517,8 @@ document.addEventListener('DOMContentLoaded', () => {
     liveNetworkMarkersGroup.clearLayers();
 
     const bounds = [];
+    const isSingleSelectedTrain = (trains || []).length === 1;
+
     (trains || []).forEach(t => {
       let latLng = t.current_coords;
       if (!latLng || !latLng[0] || !latLng[1]) {
@@ -7525,6 +7527,30 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!latLng || !latLng[0] || !latLng[1]) return;
 
       bounds.push(latLng);
+
+      // When a single train is selected, show only that selected train's origin and destination stations
+      if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
+        bounds.push(t.from_coords);
+        bounds.push(t.to_coords);
+
+        const fromDot = L.circleMarker(t.from_coords, {
+          radius: 6,
+          fillColor: '#10b981',
+          color: '#ffffff',
+          weight: 2,
+          fillOpacity: 1
+        }).bindTooltip(`🚉 Origin: ${t.from}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
+        liveNetworkMarkersGroup.addLayer(fromDot);
+
+        const toDot = L.circleMarker(t.to_coords, {
+          radius: 6,
+          fillColor: '#f43f5e',
+          color: '#ffffff',
+          weight: 2,
+          fillOpacity: 1
+        }).bindTooltip(`🏁 Destination: ${t.to}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
+        liveNetworkMarkersGroup.addLayer(toDot);
+      }
 
       const delayMin = t.delay_minutes || 0;
       const status = t.status;
@@ -7581,10 +7607,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
       liveNetworkMarkersGroup.addLayer(marker);
+
+      if (isSingleSelectedTrain) {
+        setTimeout(() => marker.openPopup(), 200);
+      }
     });
 
     if (bounds.length > 0) {
-      liveNetworkLeafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
+      liveNetworkLeafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: isSingleSelectedTrain ? 11 : 10 });
     }
   }
 

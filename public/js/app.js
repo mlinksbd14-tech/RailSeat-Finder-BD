@@ -7378,8 +7378,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function getMapTileUrl() {
     const isDark = document.documentElement.classList.contains('dark');
     return isDark
-      ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`
-      : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`;
+      ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`
+      : `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`;
   }
 
   function initOrUpdateNetworkMap(trains) {

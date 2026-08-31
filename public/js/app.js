@@ -7670,16 +7670,11 @@ document.addEventListener('DOMContentLoaded', () => {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
     }
 
-    // Original clean train route polyline
-    if (validCoords.length > 1) {
-      const polyline = L.polyline(validCoords, {
-        color: '#06b6d4',
-        weight: 4,
-        opacity: 0.85,
-        smoothFactor: 1
-      });
-      liveModalMapLayerGroup.addLayer(polyline);
-      liveModalLeafletMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+    // Fit map bounds to show full route along OpenRailwayMap tracks
+    if (validCoords.length > 0) {
+      const routeBounds = L.latLngBounds(validCoords);
+      if (trainCoord) routeBounds.extend(trainCoord);
+      liveModalLeafletMap.fitBounds(routeBounds, { padding: [35, 35] });
     }
 
     if (trainCoord) {

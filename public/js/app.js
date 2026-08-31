@@ -39,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     allowRegistration: true,
     liveTrackerTrains: [],
     liveTrackerFilter: 'all',
+    liveSearchMode: 'train',
     liveTrackerSearchQuery: '',
+    liveRouteFrom: '',
+    liveRouteTo: '',
     liveTrackerTimer: null,
     activeMainTab: 'seats',
     authNotice: '',
@@ -384,6 +387,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const pwaInstallBtn = document.getElementById('pwaInstallBtn');
   const alternateRoutesContainer = document.getElementById('alternateRoutesContainer');
 
+  // Safe HTML Escaper
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   // Live Tracker DOM Elements
   const seatFinderSection = document.getElementById('seatFinderSection');
   const liveTrackerSection = document.getElementById('liveTrackerSection');
@@ -392,8 +406,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveTrackerCount = document.getElementById('liveTrackerCount');
   const refreshLiveTrackerBtn = document.getElementById('refreshLiveTrackerBtn');
   const refreshLiveTrackerIcon = document.getElementById('refreshLiveTrackerIcon');
+  const liveSearchModeTabs = document.getElementById('liveSearchModeTabs');
+  const liveSearchByTrainTab = document.getElementById('liveSearchByTrainTab');
+  const liveSearchByRouteTab = document.getElementById('liveSearchByRouteTab');
+  const liveSearchByTrainContainer = document.getElementById('liveSearchByTrainContainer');
+  const liveSearchByRouteContainer = document.getElementById('liveSearchByRouteContainer');
   const liveTrackerSearchInput = document.getElementById('liveTrackerSearchInput');
   const clearLiveTrackerSearchBtn = document.getElementById('clearLiveTrackerSearchBtn');
+  const liveRouteFromInput = document.getElementById('liveRouteFromInput');
+  const clearLiveRouteFromBtn = document.getElementById('clearLiveRouteFromBtn');
+  const liveRouteToInput = document.getElementById('liveRouteToInput');
+  const clearLiveRouteToBtn = document.getElementById('clearLiveRouteToBtn');
   const liveTrackerFilterChips = document.getElementById('liveTrackerFilterChips');
   const liveTrackerLoadingState = document.getElementById('liveTrackerLoadingState');
   const liveTrackerEmptyState = document.getElementById('liveTrackerEmptyState');
@@ -6893,7 +6916,28 @@ document.addEventListener('DOMContentLoaded', () => {
       refreshLiveTrackerBtn.addEventListener('click', () => loadRunningTrains(true));
     }
 
-    // Search Input
+    // Search Mode Tabs ("By Train" vs "By Route")
+    if (liveSearchByTrainTab && liveSearchByRouteTab) {
+      liveSearchByTrainTab.addEventListener('click', () => {
+        state.liveSearchMode = 'train';
+        liveSearchByTrainTab.className = 'px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveSearchByRouteTab.className = 'px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveSearchByTrainContainer) liveSearchByTrainContainer.classList.remove('hidden');
+        if (liveSearchByRouteContainer) liveSearchByRouteContainer.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+
+      liveSearchByRouteTab.addEventListener('click', () => {
+        state.liveSearchMode = 'route';
+        liveSearchByRouteTab.className = 'px-3 py-1 rounded-lg bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        liveSearchByTrainTab.className = 'px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition flex items-center space-x-1.5 cursor-pointer';
+        if (liveSearchByRouteContainer) liveSearchByRouteContainer.classList.remove('hidden');
+        if (liveSearchByTrainContainer) liveSearchByTrainContainer.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    // By Train Search Input
     if (liveTrackerSearchInput) {
       liveTrackerSearchInput.addEventListener('input', (e) => {
         state.liveTrackerSearchQuery = e.target.value.trim().toLowerCase();
@@ -6913,6 +6957,39 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // By Route Search Inputs (From & To)
+    if (liveRouteFromInput) {
+      liveRouteFromInput.addEventListener('input', (e) => {
+        state.liveRouteFrom = e.target.value.trim().toLowerCase();
+        if (clearLiveRouteFromBtn) clearLiveRouteFromBtn.classList.toggle('hidden', !state.liveRouteFrom);
+        filterAndRenderLiveTrains();
+      });
+    }
+    if (clearLiveRouteFromBtn) {
+      clearLiveRouteFromBtn.addEventListener('click', () => {
+        if (liveRouteFromInput) liveRouteFromInput.value = '';
+        state.liveRouteFrom = '';
+        clearLiveRouteFromBtn.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+    }
+
+    if (liveRouteToInput) {
+      liveRouteToInput.addEventListener('input', (e) => {
+        state.liveRouteTo = e.target.value.trim().toLowerCase();
+        if (clearLiveRouteToBtn) clearLiveRouteToBtn.classList.toggle('hidden', !state.liveRouteTo);
+        filterAndRenderLiveTrains();
+      });
+    }
+    if (clearLiveRouteToBtn) {
+      clearLiveRouteToBtn.addEventListener('click', () => {
+        if (liveRouteToInput) liveRouteToInput.value = '';
+        state.liveRouteTo = '';
+        clearLiveRouteToBtn.classList.add('hidden');
+        filterAndRenderLiveTrains();
+      });
+    }
+
     // Filter Chips
     if (liveTrackerFilterChips) {
       liveTrackerFilterChips.addEventListener('click', (e) => {
@@ -6924,9 +7001,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update active chip style
         liveTrackerFilterChips.querySelectorAll('.live-filter-chip').forEach(btn => {
           if (btn === chip) {
-            btn.className = 'live-filter-chip px-3 py-1 rounded-xl text-xs font-extrabold transition bg-cyan-600 text-white shadow-2xs cursor-pointer';
+            btn.className = 'live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-cyan-600 text-white shadow-2xs cursor-pointer';
           } else {
-            btn.className = 'live-filter-chip px-3 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer';
+            btn.className = 'live-filter-chip px-2.5 py-1 rounded-xl text-xs font-extrabold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer';
           }
         });
 
@@ -6966,10 +7043,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (liveTrackerSection) liveTrackerSection.classList.remove('hidden');
 
       if (navSeatFinderBtn) {
-        navSeatFinderBtn.className = 'px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+        navSeatFinderBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
       }
       if (navLiveTrackerBtn) {
-        navLiveTrackerBtn.className = 'px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        navLiveTrackerBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
       }
 
       loadRunningTrains(false);
@@ -6978,10 +7055,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (seatFinderSection) seatFinderSection.classList.remove('hidden');
 
       if (navSeatFinderBtn) {
-        navSeatFinderBtn.className = 'px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
+        navSeatFinderBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center space-x-1.5 cursor-pointer';
       }
       if (navLiveTrackerBtn) {
-        navLiveTrackerBtn.className = 'px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
+        navLiveTrackerBtn.className = 'px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center space-x-1.5 cursor-pointer';
       }
     }
   }
@@ -7029,16 +7106,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!liveTrackerGrid) return;
     let list = state.liveTrackerTrains || [];
 
-    // Filter by search query
-    if (state.liveTrackerSearchQuery) {
-      const q = state.liveTrackerSearchQuery;
-      list = list.filter(t => {
-        const name = (t.train_name || '').toLowerCase();
-        const no = String(t.train_no || '');
-        const from = (t.from || '').toLowerCase();
-        const to = (t.to || '').toLowerCase();
-        return name.includes(q) || no.includes(q) || from.includes(q) || to.includes(q);
-      });
+    // Filter by Search Mode ("route" vs "train")
+    if (state.liveSearchMode === 'route') {
+      if (state.liveRouteFrom) {
+        const fromQ = state.liveRouteFrom;
+        list = list.filter(t => (t.from || '').toLowerCase().includes(fromQ));
+      }
+      if (state.liveRouteTo) {
+        const toQ = state.liveRouteTo;
+        list = list.filter(t => (t.to || '').toLowerCase().includes(toQ));
+      }
+    } else {
+      // By Train search
+      if (state.liveTrackerSearchQuery) {
+        const q = state.liveTrackerSearchQuery;
+        list = list.filter(t => {
+          const name = (t.train_name || '').toLowerCase();
+          const no = String(t.train_no || '');
+          const from = (t.from || '').toLowerCase();
+          const to = (t.to || '').toLowerCase();
+          return name.includes(q) || no.includes(q) || from.includes(q) || to.includes(q);
+        });
+      }
     }
 
     // Filter by chips

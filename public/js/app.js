@@ -7634,24 +7634,16 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // 1. High-Performance Base Map Layer
+      // High-Performance Carto Basemap with User Key
       const isDark = document.documentElement.classList.contains('dark');
-      const baseTileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      const cartoTileUrl = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
+        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187';
 
-      L.tileLayer(baseTileUrl, {
+      L.tileLayer(cartoTileUrl, {
         maxZoom: 19,
         subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-      }).addTo(liveNetworkLeafletMap);
-
-      // 2. Dedicated OpenRailwayMap Layer Overlay
-      L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        subdomains: 'abc',
-        opacity: 0.9,
-        attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
+        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a>'
       }).addTo(liveNetworkLeafletMap);
 
       liveNetworkMarkersGroup = L.layerGroup().addTo(liveNetworkLeafletMap);
@@ -7801,24 +7793,16 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // 1. High-Performance Base Map Layer
+      // High-Performance Carto Basemap with User Key
       const isDark = document.documentElement.classList.contains('dark');
-      const baseTileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      const cartoTileUrl = isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
+        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187';
 
-      L.tileLayer(baseTileUrl, {
+      L.tileLayer(cartoTileUrl, {
         maxZoom: 19,
         subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-      }).addTo(liveModalLeafletMap);
-
-      // 2. Dedicated OpenRailwayMap Layer Overlay
-      L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        subdomains: 'abc',
-        opacity: 0.9,
-        attribution: '&copy; <a href="https://www.openrailwaymap.org" target="_blank">OpenRailwayMap</a>'
+        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a>'
       }).addTo(liveModalLeafletMap);
 
       liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);

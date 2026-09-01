@@ -2562,6 +2562,12 @@ app.get('/api/live-tracker/running-trains', async (req, res) => {
 // 5.2. Get 100% Accurate Physical Railway Curve Coordinates Matching Google Maps
 const BD_RAIL_CURVES_FILE = path.join(__dirname, 'data', 'bd_rail_curves.json');
 let bdRailCurvesCache = null;
+let railTrackRouter = null;
+try {
+  railTrackRouter = require('./lib/rail-track-router');
+} catch (e) {
+  console.warn('[RailRouter] lib/rail-track-router not loaded:', e.message);
+}
 
 function loadBdRailCurves() {
   if (bdRailCurvesCache) return bdRailCurvesCache;
@@ -2577,34 +2583,55 @@ function loadBdRailCurves() {
   return bdRailCurvesCache || {};
 }
 
-app.get('/api/live-tracker/rail-curve', (req, res) => {
-  const from = String(req.query.from || '').trim();
-  const to = String(req.query.to || '').trim();
-  const curves = loadBdRailCurves();
+app.all('/api/live-tracker/rail-curve', (req, res) => {
+  const query = req.method === 'POST' ? (req.body || {}) : req.query;
+  const from = String(query.from || '').trim();
+  const to = String(query.to || '').trim();
+  const fromLat = parseFloat(query.from_lat || query.lat1);
+  const fromLng = parseFloat(query.from_lng || query.lng1);
+  const toLat = parseFloat(query.to_lat || query.lat2);
+  const toLng = parseFloat(query.to_lng || query.lng2);
+  const waypoints = query.waypoints;
 
-  if (!from || !to) {
-    return res.json({ success: false, coordinates: [] });
-  }
-
-  const key1 = `${from}->${to}`;
-  const key2 = `${to}->${from}`;
-
-  if (curves[key1]) {
-    return res.json({ success: true, coordinates: curves[key1] });
-  }
-  if (curves[key2]) {
-    return res.json({ success: true, coordinates: curves[key2].slice().reverse() });
-  }
-
-  for (const [k, v] of Object.entries(curves)) {
-    const [s1, s2] = k.split('->');
-    if ((s1.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s1.toLowerCase())) &&
-        (s2.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s2.toLowerCase()))) {
-      return res.json({ success: true, coordinates: v });
+  // 1. Multi-stop waypoints solving
+  if (Array.isArray(waypoints) && waypoints.length >= 2 && railTrackRouter) {
+    const coords = railTrackRouter.solveMultiStopTrack(waypoints);
+    if (coords && coords.length > 2) {
+      return res.json({ success: true, coordinates: coords });
     }
-    if ((s1.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s1.toLowerCase())) &&
-        (s2.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s2.toLowerCase()))) {
-      return res.json({ success: true, coordinates: v.slice().reverse() });
+  }
+
+  // 2. Precomputed curves lookup
+  const curves = loadBdRailCurves();
+  if (from && to) {
+    const key1 = `${from}->${to}`;
+    const key2 = `${to}->${from}`;
+
+    if (curves[key1]) {
+      return res.json({ success: true, coordinates: curves[key1] });
+    }
+    if (curves[key2]) {
+      return res.json({ success: true, coordinates: curves[key2].slice().reverse() });
+    }
+
+    for (const [k, v] of Object.entries(curves)) {
+      const [s1, s2] = k.split('->');
+      if ((s1.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s1.toLowerCase())) &&
+          (s2.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s2.toLowerCase()))) {
+        return res.json({ success: true, coordinates: v });
+      }
+      if ((s1.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s1.toLowerCase())) &&
+          (s2.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s2.toLowerCase()))) {
+        return res.json({ success: true, coordinates: v.slice().reverse() });
+      }
+    }
+  }
+
+  // 3. Dynamic A* track curve solving between coordinates
+  if (!isNaN(fromLat) && !isNaN(fromLng) && !isNaN(toLat) && !isNaN(toLng) && railTrackRouter) {
+    const track = railTrackRouter.solveTrackBetweenCoords([fromLat, fromLng], [toLat, toLng]);
+    if (track && track.length > 1) {
+      return res.json({ success: true, coordinates: track });
     }
   }
 

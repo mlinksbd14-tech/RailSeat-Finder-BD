@@ -7545,13 +7545,42 @@ document.addEventListener('DOMContentLoaded', () => {
     return minD < 0.15 ? best : pt;
   }
 
-  async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords) {
+  async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords, fromCoords, toCoords) {
     if (!mapLayerGroup) return null;
     let trackPoints = null;
 
     try {
-      if (from && to) {
-        const res = await fetch(`/api/live-tracker/rail-curve?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+      // 1. If waypoints (multiple stoppages) are available, request full track geometry
+      if (Array.isArray(fallbackCoords) && fallbackCoords.length >= 2) {
+        const res = await fetch('/api/live-tracker/rail-curve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: from || '',
+            to: to || '',
+            waypoints: fallbackCoords
+          })
+        });
+        const json = await res.json();
+        if (json && json.success && Array.isArray(json.coordinates) && json.coordinates.length > 1) {
+          trackPoints = json.coordinates;
+        }
+      }
+
+      // 2. Query with from/to station names and GPS coordinates
+      if (!trackPoints && (from || fromCoords) && (to || toCoords)) {
+        const params = new URLSearchParams();
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        if (fromCoords && fromCoords[0] && fromCoords[1]) {
+          params.set('from_lat', fromCoords[0]);
+          params.set('from_lng', fromCoords[1]);
+        }
+        if (toCoords && toCoords[0] && toCoords[1]) {
+          params.set('to_lat', toCoords[0]);
+          params.set('to_lng', toCoords[1]);
+        }
+        const res = await fetch(`/api/live-tracker/rail-curve?${params.toString()}`);
         const json = await res.json();
         if (json && json.success && Array.isArray(json.coordinates) && json.coordinates.length > 1) {
           trackPoints = json.coordinates;
@@ -7559,10 +7588,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       console.warn('[RailCurve] fetch curve error:', e.message);
-    }
-
-    if (!trackPoints && Array.isArray(fallbackCoords) && fallbackCoords.length > 1) {
-      trackPoints = fallbackCoords;
     }
 
     if (trackPoints && trackPoints.length > 1) {
@@ -7661,7 +7686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
 
-        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, [t.from_coords, t.to_coords]);
+        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords);
         const fromPos = snapPointToTrack(t.from_coords, trackPoints);
         const toPos = snapPointToTrack(t.to_coords, trackPoints);
 
@@ -7816,7 +7841,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render 100% Accurate Physical Rail Track Curve matching Google Maps
     const originStop = stoppages[0]?.station_name || data.from;
     const destStop = stoppages[stoppages.length - 1]?.station_name || data.to;
-    const trackPoints = await drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, rawCoords);
+    const originCoord = (stoppages[0]?.lat && stoppages[0]?.lng) ? [stoppages[0].lat, stoppages[0].lng] : null;
+    const destCoord = (stoppages[stoppages.length - 1]?.lat && stoppages[stoppages.length - 1]?.lng) ? [stoppages[stoppages.length - 1].lat, stoppages[stoppages.length - 1].lng] : null;
+    const trackPoints = await drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, rawCoords, originCoord, destCoord);
 
     const validCoords = [];
     stoppages.forEach((stop, idx) => {

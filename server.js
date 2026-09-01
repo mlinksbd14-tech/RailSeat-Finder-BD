@@ -454,7 +454,13 @@ initFirebase();
 function getAuthenticatedUser(req) {
   if (!req) return null;
   const authHeader = req.headers?.authorization || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim() || req.query?.token || '';
+  let token = authHeader.replace(/^Bearer\s+/i, '').trim() || req.query?.token || '';
+
+  if (!token && req.headers?.cookie) {
+    const match = req.headers.cookie.match(/rail_auth_token=([^;]+)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
+
   if (!token) return null;
 
   const session = userSessions.get(token);

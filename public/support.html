@@ -60,6 +60,23 @@
       </div>
 
       <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Admin Status / Login Button -->
+        <div id="navAuthContainer" class="flex items-center">
+          <button type="button" id="openAdminLoginBtn" class="px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 font-bold text-xs shadow-2xs transition flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-user-shield text-purple-600 dark:text-purple-400 text-xs"></i>
+            <span>Admin Login</span>
+          </button>
+          <div id="adminBadgeWrapper" class="hidden flex items-center space-x-1.5">
+            <span class="px-2.5 py-1 rounded-xl bg-purple-600 text-white font-extrabold text-xs shadow-xs flex items-center space-x-1">
+              <i class="fa-solid fa-crown text-[10px] text-amber-300"></i>
+              <span id="adminUsernameLabel">Admin</span>
+            </span>
+            <button type="button" id="logoutAdminBtn" class="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer" title="Log Out Admin">
+              <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+            </button>
+          </div>
+        </div>
+
         <button id="themeToggleBtn" type="button" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-cyan-600 flex items-center justify-center transition cursor-pointer" title="Toggle Dark/Light Mode">
           <i class="fa-solid fa-moon text-xs dark:hidden"></i>
           <i class="fa-solid fa-sun text-xs hidden dark:inline text-amber-400"></i>
@@ -305,6 +322,42 @@
     </div>
   </footer>
 
+  <!-- Admin Login Modal -->
+  <div id="adminLoginModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-purple-200 dark:border-purple-800 shadow-2xl max-w-sm w-full p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900 dark:text-white">Admin Sign In</h3>
+            <p class="text-[10.5px] text-slate-400">Unlock Administrator Reply Console</p>
+          </div>
+        </div>
+        <button type="button" id="closeAdminLoginBtn" class="text-slate-400 hover:text-slate-600 text-xs">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <form id="adminLoginForm" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Username</label>
+          <input type="text" id="adminLoginUser" placeholder="e.g. shawon421 or admin" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+          <input type="password" id="adminLoginPass" placeholder="Enter password" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+        <div id="adminLoginError" class="text-[10.5px] font-bold text-rose-500 min-h-[1rem]"></div>
+        <button type="submit" id="adminLoginSubmitBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95">
+          <i class="fa-solid fa-key text-xs"></i>
+          <span>Sign In to Admin Console</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Support Page Script -->
   <script>
     // Theme Switcher Sync
@@ -322,6 +375,25 @@
       });
     }
 
+    // Unified Auth Token Helper
+    function getAuthToken() {
+      return localStorage.getItem('rail_auth_token') || 
+             sessionStorage.getItem('rail_auth_token') || 
+             localStorage.getItem('rail_user_jwt_token') || 
+             sessionStorage.getItem('rail_user_jwt_token') || '';
+    }
+
+    function setAuthToken(token) {
+      if (token) {
+        localStorage.setItem('rail_auth_token', token);
+      } else {
+        localStorage.removeItem('rail_auth_token');
+        sessionStorage.removeItem('rail_auth_token');
+        localStorage.removeItem('rail_user_jwt_token');
+        sessionStorage.removeItem('rail_user_jwt_token');
+      }
+    }
+
     // Client Session & User Identification
     let sessionId = localStorage.getItem('rail_support_session_id');
     if (!sessionId) {
@@ -332,6 +404,7 @@
     let userName = localStorage.getItem('rail_support_user_name') || '';
     let userPhone = localStorage.getItem('rail_support_user_phone') || '';
     let isUserAdmin = false;
+    let currentAdminUsername = '';
     let selectedThreadId = null;
     let cachedThreads = [];
 
@@ -363,6 +436,74 @@
     const heroDeskStatus = document.getElementById('heroDeskStatus');
     const heroTitle = document.getElementById('heroTitle');
     const heroSubtitle = document.getElementById('heroSubtitle');
+    const openAdminLoginBtn = document.getElementById('openAdminLoginBtn');
+    const adminBadgeWrapper = document.getElementById('adminBadgeWrapper');
+    const adminUsernameLabel = document.getElementById('adminUsernameLabel');
+    const logoutAdminBtn = document.getElementById('logoutAdminBtn');
+    const adminLoginModal = document.getElementById('adminLoginModal');
+    const closeAdminLoginBtn = document.getElementById('closeAdminLoginBtn');
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const adminLoginUser = document.getElementById('adminLoginUser');
+    const adminLoginPass = document.getElementById('adminLoginPass');
+    const adminLoginError = document.getElementById('adminLoginError');
+
+    // Admin Login Modal Handlers
+    if (openAdminLoginBtn) {
+      openAdminLoginBtn.addEventListener('click', () => {
+        if (adminLoginModal) adminLoginModal.classList.remove('hidden');
+        if (adminLoginUser) adminLoginUser.focus();
+      });
+    }
+    if (closeAdminLoginBtn) {
+      closeAdminLoginBtn.addEventListener('click', () => {
+        if (adminLoginModal) adminLoginModal.classList.add('hidden');
+      });
+    }
+
+    if (adminLoginForm) {
+      adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = (adminLoginUser.value || '').trim();
+        const password = (adminLoginPass.value || '').trim();
+        if (!username || !password) return;
+
+        if (adminLoginError) adminLoginError.textContent = 'Signing in...';
+        try {
+          const res = await fetch('/api/user-auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (data && data.success && data.token) {
+            setAuthToken(data.token);
+            if (adminLoginModal) adminLoginModal.classList.add('hidden');
+            loadChatMessages();
+          } else {
+            if (adminLoginError) adminLoginError.textContent = data.error || 'Invalid credentials.';
+          }
+        } catch (err) {
+          if (adminLoginError) adminLoginError.textContent = 'Connection error. Please try again.';
+        }
+      });
+    }
+
+    if (logoutAdminBtn) {
+      logoutAdminBtn.addEventListener('click', async () => {
+        const token = getAuthToken();
+        if (token) {
+          try {
+            await fetch('/api/user-auth/logout', {
+              method: 'POST',
+              headers: { 'Authorization': 'Bearer ' + token }
+            });
+          } catch(e) {}
+        }
+        setAuthToken(null);
+        isUserAdmin = false;
+        window.location.reload();
+      });
+    }
 
     function isIdentityValid() {
       if (isUserAdmin) return true;
@@ -371,9 +512,14 @@
 
     function updateIdentityDisplay() {
       if (isUserAdmin) {
+        if (openAdminLoginBtn) openAdminLoginBtn.classList.add('hidden');
+        if (adminBadgeWrapper) adminBadgeWrapper.classList.remove('hidden');
+        if (adminUsernameLabel) adminUsernameLabel.textContent = currentAdminUsername || 'Admin';
+
         if (viewerIdentityRibbon) viewerIdentityRibbon.classList.add('hidden');
         if (identitySetupDrawer) identitySetupDrawer.classList.add('hidden');
         if (adminInboxToggleBtn) adminInboxToggleBtn.classList.remove('hidden');
+        
         chatHeaderTitle.innerHTML = '👑 Admin Reply Console ' + (selectedThreadId ? '<span class="text-purple-600 font-mono text-xs">(Thread: ' + selectedThreadId.substring(0, 10) + ')</span>' : '');
         chatAvatarBadge.className = 'w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-md';
         chatSendBtn.className = 'px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer active:scale-95';
@@ -382,8 +528,11 @@
         supportSubtitle.textContent = 'Administrator Console';
         heroDeskStatus.textContent = 'Administrator Logged In';
         heroTitle.textContent = 'Support Inbox & User Reply Center';
-        heroSubtitle.textContent = 'Select any user chat inquiry below to send direct administrator replies or manage messages.';
+        heroSubtitle.textContent = 'Select any user chat inquiry below to send direct administrator replies or delete threads.';
         return;
+      } else {
+        if (openAdminLoginBtn) openAdminLoginBtn.classList.remove('hidden');
+        if (adminBadgeWrapper) adminBadgeWrapper.classList.add('hidden');
       }
 
       if (isIdentityValid()) {
@@ -446,13 +595,16 @@
     async function loadChatMessages() {
       if (refreshChatIcon) refreshChatIcon.classList.add('fa-spin');
       try {
-        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const token = getAuthToken();
         const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
         const res = await fetch('/api/support/messages?sessionId=' + encodeURIComponent(sessionId), { headers });
         const data = await res.json();
 
         if (data && data.success) {
           isUserAdmin = !!data.isAdmin;
+          if (data.sessionUser) {
+            currentAdminUsername = data.sessionUser.username || data.sessionUser.name;
+          }
           updateIdentityDisplay();
 
           if (isUserAdmin && Array.isArray(data.threads)) {
@@ -545,7 +697,7 @@
       }
 
       try {
-        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const token = getAuthToken();
         const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
         const res = await fetch('/api/support/delete-thread', {
           method: 'POST',
@@ -567,7 +719,7 @@
     window.deleteAdminMessage = async function(threadId, messageId) {
       if (!confirm('Delete this specific message?')) return;
       try {
-        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const token = getAuthToken();
         const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
         const res = await fetch('/api/support/delete-message', {
           method: 'POST',
@@ -709,7 +861,7 @@
         chatMessageInput.value = '';
 
         try {
-          const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+          const token = getAuthToken();
           const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
 
           let res, data;

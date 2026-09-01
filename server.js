@@ -3916,7 +3916,12 @@ app.post('/api/user-auth/firebase-login', async (req, res) => {
 
 // 4. User Logout
 app.post('/api/user-auth/logout', (req, res) => {
-  const token = getAuthToken(req);
+  const authHeader = req.headers?.authorization || '';
+  let token = authHeader.replace(/^Bearer\s+/i, '').trim() || req.query?.token || '';
+  if (!token && req.headers?.cookie) {
+    const match = req.headers.cookie.match(/rail_auth_token=([^;]+)/);
+    if (match) token = decodeURIComponent(match[1]);
+  }
   if (token && userSessions.has(token)) {
     userSessions.delete(token);
   }

@@ -171,13 +171,6 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "lastDevice": {
-        "os": "Windows 10/11",
-        "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
-      },
       "shohozSession": {
         "cookie": null,
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
@@ -200,7 +193,6 @@
         },
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgyMzY0NDMsImV4cCI6MTc4ODI3OTY0MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODIzNjQ0MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.UANaTWu3QGAZi75bO-q_53fl2V2dJSanYjAcOY8R8pma37idur6TuhDEeTSNw9gwsrRckizvzoPXvOy3FZeYjkDLtruPHKWpQ6ng3cVCBoAnb97rrtnPIBTmyL0MpYVa7KZTI7p5EIs-nYDw8CzESl6mwR15vm4SUnaoTjVawbCyaCKszcUhddFTDgsIxfKaLrnqXccICRUSTxIFfzwuj7lgm8UZFJOR6s-9rsiLm4JS2bB9QQRPv1os4Odt5sfuzrzYW3gevX7dg7NRhY9EtR-Rnfr6Z1IBlqMtWOM1IsUX0WAc7qHirRE8NKONc6HP7t6y3HE7LQdWZeHtW2tVcg"
       },
-      "lastIp": "::1",
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -210,8 +202,25 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-09-01T06:45:38.256Z",
+      "lastLogin": "2026-09-01T08:47:53.067Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-01T08:47:53.067Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-01T06:45:38.256Z",
@@ -619,26 +628,17 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T11:28:11.857Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "region": "Local Network",
-            "query": "::1"
-          }
         }
       ],
-      "loginCount": 128
+      "lastIp": "27.147.149.234",
+      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+      "loginCount": 129,
+      "lastDevice": {
+        "os": "Android 10",
+        "browser": "Chrome 152",
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+        "device": "Mobile"
+      }
     }
   ]
 }

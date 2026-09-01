@@ -3011,7 +3011,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- SEAT CLASSES MATRIX (Compact Grid with Bold Borders) -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
             ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
           </div>
 
@@ -3091,38 +3091,51 @@ document.addEventListener('DOMContentLoaded', () => {
       ? buildShohozBookingUrl(fromCity, toCity, journeyDate, seat.type || 'S_CHAIR')
       : '#';
 
-    let cardBorder = '';
-    let countBadge = '';
-
     if (isAvail) {
-      cardBorder = 'border-2 border-emerald-400 dark:border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 shadow-2xs';
-      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-emerald-600 text-white font-black text-[11px] text-center shadow-2xs">🟢 ${totalSeatCount} Seats</div>`;
+      return `
+        <a href="${bookUrl}" target="_blank" rel="noopener"
+          class="seat-pill block p-1.5 sm:p-2 rounded-xl border border-emerald-400/90 dark:border-emerald-600/90 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 transition cursor-pointer shadow-2xs group"
+          title="Book ${seat.display_name} (${totalSeatCount} seats available)">
+          
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 truncate">${seat.display_name}</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 group-hover:scale-125 transition-transform"></span>
+          </div>
+
+          <div class="my-1">
+            <div class="py-0.5 px-1 rounded-md bg-emerald-600 text-white font-black text-[10px] sm:text-[11px] text-center shadow-2xs">
+              ${totalSeatCount} Seats
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-emerald-700 dark:text-emerald-300 font-mono font-bold pt-0.5 border-t border-emerald-200/60 dark:border-emerald-800/60">
+            <span>Fare</span>
+            <span class="font-black text-slate-900 dark:text-white">৳${totalFare}</span>
+          </div>
+        </a>
+      `;
     } else {
-      cardBorder = 'border-2 border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 text-slate-400 opacity-60';
-      countBadge = `<div class="py-0.5 px-1 rounded-lg bg-slate-200 dark:bg-slate-700/90 text-slate-500 dark:text-slate-400 font-bold text-[10px] text-center">Sold Out</div>`;
+      return `
+        <div class="seat-pill block p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/30 text-slate-400 opacity-60 cursor-not-allowed select-none"
+          title="${seat.display_name} (Sold Out)">
+          
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-500 dark:text-slate-400 truncate">${seat.display_name}</span>
+          </div>
+
+          <div class="my-1">
+            <div class="py-0.5 px-1 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[9px] sm:text-[10px] text-center">
+              Sold Out
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 font-mono font-bold pt-0.5 border-t border-slate-200/60 dark:border-slate-800/60">
+            <span>Fare</span>
+            <span class="font-bold text-slate-600 dark:text-slate-400">৳${totalFare}</span>
+          </div>
+        </div>
+      `;
     }
-
-    return `
-      <a href="${bookUrl}" target="_blank" rel="noopener"
-        class="seat-pill block p-2 sm:p-2.5 rounded-xl border-2 ${cardBorder} flex flex-col justify-between space-y-1.5 transition ${isAvail ? 'cursor-pointer' : 'cursor-not-allowed'}"
-        title="${isAvail ? `Book ${seat.display_name} (${totalSeatCount} available)` : `${seat.display_name} (Sold Out)`}"
-        ${!isAvail ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : ''}>
-        
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] font-black uppercase tracking-wider truncate">${seat.display_name}</span>
-          ${isAvail ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>' : ''}
-        </div>
-
-        <div>
-          ${countBadge}
-        </div>
-
-        <div class="pt-1 border-t-2 border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between text-xs">
-          <span class="font-black text-xs text-slate-900 dark:text-white">৳${totalFare}</span>
-          <span class="text-[9px] text-slate-500 dark:text-slate-400 font-bold">fare</span>
-        </div>
-      </a>
-    `;
   }
 
   // ----------------------------------------------------

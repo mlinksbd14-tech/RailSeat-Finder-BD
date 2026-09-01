@@ -173,10 +173,10 @@
       ],
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
       "shohozSession": {
         "cookie": null,
@@ -210,8 +210,25 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-09-01T06:39:36.510Z",
+      "lastLogin": "2026-09-01T06:45:38.256Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-01T06:45:38.256Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-01T06:39:36.510Z",
@@ -619,26 +636,9 @@
             "region": "Local Network",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T11:24:46.129Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
-      "loginCount": 127
+      "loginCount": 128
     }
   ]
 }

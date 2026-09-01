@@ -266,9 +266,26 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastIp": "27.147.149.234",
-      "lastLogin": "2026-09-01T10:30:42.137Z",
+      "lastIp": "::ffff:127.0.0.1",
+      "lastLogin": "2026-09-01T11:19:32.766Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-01T11:19:32.766Z",
+          "ip": "::ffff:127.0.0.1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-01T10:30:42.137Z",
@@ -676,32 +693,15 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T11:32:52.260Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
-            "region": "Local Network",
-            "query": "::1"
-          }
         }
       ],
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 130,
+      "loginCount": 131,
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       }
     }
   ]

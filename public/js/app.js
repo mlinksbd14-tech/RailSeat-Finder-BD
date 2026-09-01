@@ -7531,17 +7531,27 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Original Carto Basemap with Native Rail Line Markings & User Key
+      // Google Maps Layer with User API Key
       const isDark = document.documentElement.classList.contains('dark');
-      const cartoTileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187';
-
-      L.tileLayer(cartoTileUrl, {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a>'
-      }).addTo(liveNetworkLeafletMap);
+      if (window.L && L.gridLayer && typeof L.gridLayer.googleMutant === 'function') {
+        L.gridLayer.googleMutant({
+          type: 'roadmap',
+          styles: isDark ? [
+            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+            { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
+          ] : []
+        }).addTo(liveNetworkLeafletMap);
+      } else {
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: '&copy; Google Maps'
+        }).addTo(liveNetworkLeafletMap);
+      }
 
       liveNetworkMarkersGroup = L.layerGroup().addTo(liveNetworkLeafletMap);
     }
@@ -7664,17 +7674,27 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Original Carto Basemap with Native Rail Line Markings & User Key
+      // Google Maps Layer with User API Key
       const isDark = document.documentElement.classList.contains('dark');
-      const cartoTileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
-        : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187';
-
-      L.tileLayer(cartoTileUrl, {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a>'
-      }).addTo(liveModalLeafletMap);
+      if (window.L && L.gridLayer && typeof L.gridLayer.googleMutant === 'function') {
+        L.gridLayer.googleMutant({
+          type: 'roadmap',
+          styles: isDark ? [
+            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+            { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
+          ] : []
+        }).addTo(liveModalLeafletMap);
+      } else {
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: '&copy; Google Maps'
+        }).addTo(liveModalLeafletMap);
+      }
 
       liveModalMapLayerGroup = L.layerGroup().addTo(liveModalLeafletMap);
     }

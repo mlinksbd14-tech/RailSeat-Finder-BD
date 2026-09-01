@@ -7619,17 +7619,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function snapPointToTrack(pt, trackPoints) {
     if (!pt || !trackPoints || trackPoints.length === 0) return pt;
+    if (trackPoints.length === 1) return trackPoints[0];
     let minD = Infinity;
-    let best = pt;
-    for (let i = 0; i < trackPoints.length; i++) {
-      const tp = trackPoints[i];
-      const d = Math.hypot(tp[0] - pt[0], tp[1] - pt[1]);
+    let bestPt = pt;
+    for (let i = 0; i < trackPoints.length - 1; i++) {
+      const p1 = trackPoints[i];
+      const p2 = trackPoints[i + 1];
+      const dx = p2[0] - p1[0];
+      const dy = p2[1] - p1[1];
+      const lenSq = dx * dx + dy * dy;
+      let proj;
+      if (lenSq === 0) {
+        proj = p1;
+      } else {
+        const u = Math.max(0, Math.min(1, ((pt[0] - p1[0]) * dx + (pt[1] - p1[1]) * dy) / lenSq));
+        proj = [p1[0] + u * dx, p1[1] + u * dy];
+      }
+      const d = Math.hypot(proj[0] - pt[0], proj[1] - pt[1]);
       if (d < minD) {
         minD = d;
-        best = tp;
+        bestPt = proj;
       }
     }
-    return minD < 0.15 ? best : pt;
+    return minD < 0.25 ? bestPt : pt;
   }
 
   async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords, fromCoords, toCoords, progressPct) {
@@ -7796,6 +7808,9 @@ document.addEventListener('DOMContentLoaded', () => {
         bounds.push(t.to_coords);
 
         const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords, t.progress_pct);
+        if (trackPoints && trackPoints.length > 0) {
+          latLng = snapPointToTrack(latLng, trackPoints);
+        }
         const fromPos = snapPointToTrack(t.from_coords, trackPoints);
         const toPos = snapPointToTrack(t.to_coords, trackPoints);
 

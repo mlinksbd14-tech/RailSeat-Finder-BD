@@ -2154,6 +2154,51 @@ app.get('/api/train-station-matrix', async (req, res) => {
 // ----------------------------------------------------
 // 5. Live Train GPS & Delay Tracker Relay Engine
 // ----------------------------------------------------
+const BD_RAIL_CURVES_FILE = path.join(__dirname, 'data', 'bd_rail_curves.json');
+let bdRailCurvesCache = null;
+let railTrackRouter = null;
+try {
+  railTrackRouter = require('./lib/rail-track-router');
+} catch (e) {
+  console.warn('[RailRouter] lib/rail-track-router not loaded:', e.message);
+}
+
+const stationCoordsPath = path.join(__dirname, 'data', 'station_coordinates.json');
+let stationCoordinates = {};
+try {
+  if (fs.existsSync(stationCoordsPath)) {
+    stationCoordinates = JSON.parse(fs.readFileSync(stationCoordsPath, 'utf8'));
+  }
+} catch (e) {
+  stationCoordinates = {};
+}
+
+function getStationCoordinates(name) {
+  if (!name) return null;
+  const raw = String(name).trim();
+  if (stationCoordinates[raw]) return stationCoordinates[raw];
+
+  // Try normalized variations
+  const spaceName = raw.replace(/_/g, ' ');
+  if (stationCoordinates[spaceName]) return stationCoordinates[spaceName];
+
+  const underName = raw.replace(/\s+/g, '_');
+  if (stationCoordinates[underName]) return stationCoordinates[underName];
+
+  const clean = spaceName.replace(/\s*\([^)]*\)/g, '').trim();
+  if (stationCoordinates[clean]) return stationCoordinates[clean];
+
+  // Fuzzy match
+  const lower = clean.toLowerCase();
+  for (const [k, v] of Object.entries(stationCoordinates)) {
+    const kLower = k.toLowerCase().replace(/_/g, ' ');
+    if (kLower === lower || lower.includes(kLower) || kLower.includes(lower)) {
+      return v;
+    }
+  }
+  return null;
+}
+
 const liveTrackerCache = new Map();
 const LIVE_TRACKER_CACHE_TTL = 30 * 1000; // 30 seconds
 
@@ -2247,14 +2292,29 @@ function parseRunningTrainsHtml(html) {
     const fromCoords = getStationCoordinates(stationPairs[0]?.station);
     const toCoords = getStationCoordinates(stationPairs[1]?.station);
     let currentCoords = null;
-    if (fromCoords && toCoords) {
+
+    // Calculate live position strictly along the physical Google Maps railway track curve
+    if (fromCoords && toCoords && railTrackRouter) {
+      const track = railTrackRouter.solveTrackBetweenCoords(fromCoords, toCoords);
+      if (track && track.length > 1) {
+        const pctRatio = Math.min(1, Math.max(0, progressPct / 100));
+        const idx = Math.min(track.length - 1, Math.max(0, Math.round((track.length - 1) * pctRatio)));
+        currentCoords = track[idx];
+      }
+    }
+
+    if (!currentCoords && fromCoords && toCoords) {
       const pctRatio = Math.min(1, Math.max(0, progressPct / 100));
       currentCoords = [
         Math.round((fromCoords[0] + (toCoords[0] - fromCoords[0]) * pctRatio) * 10000) / 10000,
         Math.round((fromCoords[1] + (toCoords[1] - fromCoords[1]) * pctRatio) * 10000) / 10000
       ];
-    } else if (fromCoords) {
+    } else if (!currentCoords && fromCoords) {
       currentCoords = fromCoords;
+    }
+
+    if (currentCoords && railTrackRouter) {
+      currentCoords = railTrackRouter.snapToRailTrack(currentCoords[0], currentCoords[1]);
     }
 
     trains.push({
@@ -2279,31 +2339,6 @@ function parseRunningTrainsHtml(html) {
   return trains;
 }
 
-const stationCoordsPath = path.join(__dirname, 'data', 'station_coordinates.json');
-let stationCoordinates = {};
-try {
-  if (fs.existsSync(stationCoordsPath)) {
-    stationCoordinates = JSON.parse(fs.readFileSync(stationCoordsPath, 'utf8'));
-  }
-} catch (e) {
-  stationCoordinates = {};
-}
-
-function getStationCoordinates(name) {
-  if (!name) return null;
-  const clean = String(name).trim();
-  if (stationCoordinates[clean]) return stationCoordinates[clean];
-  
-  // Fuzzy match
-  const lower = clean.toLowerCase();
-  for (const [k, v] of Object.entries(stationCoordinates)) {
-    if (k.toLowerCase() === lower || lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)) {
-      return v;
-    }
-  }
-  return null;
-}
-
 function addMinutesToTime(timeStr, minutesToAdd) {
   if (!timeStr || timeStr === '—' || !timeStr.includes(':')) return '—';
   const parts = timeStr.split(':');
@@ -2318,6 +2353,7 @@ function addMinutesToTime(timeStr, minutesToAdd) {
   const newM = totalMinutes % 60;
   return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
 }
+
 
 function parseTrainDetailStream(stream, trainNo, delayReport = null) {
   const parseJsonObj = (str, key) => {
@@ -2559,16 +2595,6 @@ app.get('/api/live-tracker/running-trains', async (req, res) => {
   }
 });
 
-// 5.2. Get 100% Accurate Physical Railway Curve Coordinates Matching Google Maps
-const BD_RAIL_CURVES_FILE = path.join(__dirname, 'data', 'bd_rail_curves.json');
-let bdRailCurvesCache = null;
-let railTrackRouter = null;
-try {
-  railTrackRouter = require('./lib/rail-track-router');
-} catch (e) {
-  console.warn('[RailRouter] lib/rail-track-router not loaded:', e.message);
-}
-
 function loadBdRailCurves() {
   if (bdRailCurvesCache) return bdRailCurvesCache;
   try {
@@ -2583,6 +2609,7 @@ function loadBdRailCurves() {
   return bdRailCurvesCache || {};
 }
 
+// 5.2. Get 100% Accurate Physical Railway Curve Coordinates Matching Google Maps
 app.all('/api/live-tracker/rail-curve', (req, res) => {
   const query = req.method === 'POST' ? (req.body || {}) : req.query;
   const from = String(query.from || '').trim();
@@ -2627,10 +2654,22 @@ app.all('/api/live-tracker/rail-curve', (req, res) => {
     }
   }
 
-  // 3. Dynamic A* track curve solving between coordinates
+  // 3. Dynamic A* track curve solving between station names
+  if (from && to && railTrackRouter) {
+    const c1 = getStationCoordinates(from);
+    const c2 = getStationCoordinates(to);
+    if (c1 && c2) {
+      const track = railTrackRouter.solveTrackBetweenCoords(c1, c2);
+      if (track && track.length > 2) {
+        return res.json({ success: true, coordinates: track });
+      }
+    }
+  }
+
+  // 4. Dynamic A* track curve solving between GPS coordinates
   if (!isNaN(fromLat) && !isNaN(fromLng) && !isNaN(toLat) && !isNaN(toLng) && railTrackRouter) {
     const track = railTrackRouter.solveTrackBetweenCoords([fromLat, fromLng], [toLat, toLng]);
-    if (track && track.length > 1) {
+    if (track && track.length > 2) {
       return res.json({ success: true, coordinates: track });
     }
   }

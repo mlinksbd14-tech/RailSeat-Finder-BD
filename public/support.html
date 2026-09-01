@@ -54,7 +54,7 @@
           </div>
           <div>
             <span class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white block leading-tight">RailSeat BD Support</span>
-            <span class="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider">Direct Admin Assistance</span>
+            <span id="supportSubtitle" class="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider">Direct Admin Assistance</span>
           </div>
         </a>
       </div>
@@ -84,10 +84,10 @@
       <div class="relative z-10 max-w-2xl space-y-2">
         <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-[10.5px] font-bold uppercase tracking-wider">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Support Desk Online</span>
+          <span id="heroDeskStatus">Support Desk Online</span>
         </div>
-        <h1 class="text-xl sm:text-2xl font-black tracking-tight">How can we help you today?</h1>
-        <p class="text-xs sm:text-sm text-slate-300">Chat directly with the system administrator, get help with seat alerts, train tracking, or reach out via social media.</p>
+        <h1 id="heroTitle" class="text-xl sm:text-2xl font-black tracking-tight">How can we help you today?</h1>
+        <p id="heroSubtitle" class="text-xs sm:text-sm text-slate-300">Chat directly with the system administrator, get help with seat alerts, train tracking, or reach out via social media.</p>
       </div>
     </div>
 
@@ -95,25 +95,41 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
       <!-- LEFT COLUMN: Live Chat with Admin (7 Cols on LG) -->
-      <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col h-[620px] sm:h-[670px]">
+      <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col h-[640px] sm:h-[680px]">
         
         <!-- Chat Header -->
         <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/60 flex items-center justify-between shrink-0">
           <div class="flex items-center space-x-2.5 min-w-0">
             <div class="relative">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-md">
+              <div id="chatAvatarBadge" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-md">
                 <i class="fa-solid fa-headset"></i>
               </div>
               <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
             </div>
             <div class="min-w-0">
-              <h3 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">Live Chat with Admin</h3>
+              <h3 id="chatHeaderTitle" class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">Live Chat with Admin</h3>
               <p class="text-[10px] text-slate-400 font-medium" id="chatStatusSubtitle">Typically replies within a few minutes</p>
             </div>
           </div>
-          <button type="button" id="refreshChatBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer" title="Refresh Chat Stream">
-            <i class="fa-solid fa-arrows-rotate text-xs" id="refreshChatIcon"></i>
-          </button>
+          <div class="flex items-center space-x-1.5">
+            <!-- Admin Thread Switcher Button (Only visible in admin mode) -->
+            <button type="button" id="adminInboxToggleBtn" class="hidden px-2.5 py-1 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-2xs transition items-center space-x-1 cursor-pointer">
+              <i class="fa-solid fa-inbox text-[11px]"></i>
+              <span id="adminInboxBtnText">All Chats (<span id="adminThreadCount">0</span>)</span>
+            </button>
+            <button type="button" id="refreshChatBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer" title="Refresh Chat Stream">
+              <i class="fa-solid fa-arrows-rotate text-xs" id="refreshChatIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Thread Selector Tray (Only for Admin Mode) -->
+        <div id="adminThreadsTray" class="hidden max-h-48 overflow-y-auto border-b border-purple-200 dark:border-purple-800/60 bg-purple-50/70 dark:bg-purple-950/30 p-2 space-y-1 custom-scrollbar shrink-0">
+          <div class="flex items-center justify-between px-2 py-1 text-[10.5px] font-extrabold text-purple-900 dark:text-purple-300">
+            <span>Select User Conversation to Reply:</span>
+            <span class="font-normal opacity-80">Click a thread below</span>
+          </div>
+          <div id="adminThreadsList" class="space-y-1"></div>
         </div>
 
         <!-- Chat Identification Ribbon -->
@@ -179,8 +195,8 @@
         <form id="chatSendForm" class="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center space-x-2">
           <input type="text" id="chatMessageInput" placeholder="Type your message or question here..." required autocomplete="off" class="flex-1 px-3.5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none transition">
           <button type="submit" id="chatSendBtn" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer active:scale-95">
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-            <span class="hidden sm:inline">Send</span>
+            <i class="fa-solid fa-paper-plane text-xs" id="chatSendBtnIcon"></i>
+            <span id="chatSendBtnText" class="hidden sm:inline">Send</span>
           </button>
         </form>
 
@@ -315,14 +331,20 @@
 
     let userName = localStorage.getItem('rail_support_user_name') || '';
     let userPhone = localStorage.getItem('rail_support_user_phone') || '';
+    let isUserAdmin = false;
+    let selectedThreadId = null;
+    let cachedThreads = [];
 
     const chatMessageStream = document.getElementById('chatMessageStream');
     const chatLoadingState = document.getElementById('chatLoadingState');
     const chatSendForm = document.getElementById('chatSendForm');
     const chatMessageInput = document.getElementById('chatMessageInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
+    const chatSendBtnIcon = document.getElementById('chatSendBtnIcon');
+    const chatSendBtnText = document.getElementById('chatSendBtnText');
     const refreshChatBtn = document.getElementById('refreshChatBtn');
     const refreshChatIcon = document.getElementById('refreshChatIcon');
+    const viewerIdentityRibbon = document.getElementById('viewerIdentityRibbon');
     const viewerIdentityLabel = document.getElementById('viewerIdentityLabel');
     const editIdentityBtn = document.getElementById('editIdentityBtn');
     const identitySetupDrawer = document.getElementById('identitySetupDrawer');
@@ -330,12 +352,40 @@
     const guestPhoneInput = document.getElementById('guestPhoneInput');
     const saveIdentityBtn = document.getElementById('saveIdentityBtn');
     const identityErrorMsg = document.getElementById('identityErrorMsg');
+    const adminInboxToggleBtn = document.getElementById('adminInboxToggleBtn');
+    const adminInboxBtnText = document.getElementById('adminInboxBtnText');
+    const adminThreadCount = document.getElementById('adminThreadCount');
+    const adminThreadsTray = document.getElementById('adminThreadsTray');
+    const adminThreadsList = document.getElementById('adminThreadsList');
+    const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+    const chatAvatarBadge = document.getElementById('chatAvatarBadge');
+    const supportSubtitle = document.getElementById('supportSubtitle');
+    const heroDeskStatus = document.getElementById('heroDeskStatus');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroSubtitle = document.getElementById('heroSubtitle');
 
     function isIdentityValid() {
+      if (isUserAdmin) return true;
       return userName.trim().length >= 2 && userPhone.trim().length >= 6;
     }
 
     function updateIdentityDisplay() {
+      if (isUserAdmin) {
+        if (viewerIdentityRibbon) viewerIdentityRibbon.classList.add('hidden');
+        if (identitySetupDrawer) identitySetupDrawer.classList.add('hidden');
+        if (adminInboxToggleBtn) adminInboxToggleBtn.classList.remove('hidden');
+        chatHeaderTitle.innerHTML = '👑 Admin Reply Console ' + (selectedThreadId ? '<span class="text-purple-600 font-mono text-xs">(Thread: ' + selectedThreadId.substring(0, 10) + ')</span>' : '');
+        chatAvatarBadge.className = 'w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-md';
+        chatSendBtn.className = 'px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer active:scale-95';
+        if (chatSendBtnIcon) chatSendBtnIcon.className = 'fa-solid fa-reply text-xs';
+        if (chatSendBtnText) chatSendBtnText.textContent = 'Reply as Admin';
+        supportSubtitle.textContent = 'Administrator Console';
+        heroDeskStatus.textContent = 'Administrator Logged In';
+        heroTitle.textContent = 'Support Inbox & User Reply Center';
+        heroSubtitle.textContent = 'Select any user chat inquiry below to send direct administrator replies.';
+        return;
+      }
+
       if (isIdentityValid()) {
         viewerIdentityLabel.innerHTML = '<span>Chatting as <strong class="text-cyan-700 dark:text-cyan-300">' + escapeHtml(userName) + '</strong> (' + escapeHtml(userPhone) + ')</span>';
         if (identitySetupDrawer) identitySetupDrawer.classList.add('hidden');
@@ -349,6 +399,12 @@
       if (guestPhoneInput) guestPhoneInput.value = userPhone;
     }
     updateIdentityDisplay();
+
+    if (adminInboxToggleBtn) {
+      adminInboxToggleBtn.addEventListener('click', () => {
+        adminThreadsTray.classList.toggle('hidden');
+      });
+    }
 
     if (editIdentityBtn) {
       editIdentityBtn.addEventListener('click', () => {
@@ -395,8 +451,29 @@
         const res = await fetch('/api/support/messages?sessionId=' + encodeURIComponent(sessionId), { headers });
         const data = await res.json();
 
-        if (data && data.success && Array.isArray(data.messages)) {
-          renderMessages(data.messages, data.isAdmin);
+        if (data && data.success) {
+          isUserAdmin = !!data.isAdmin;
+          updateIdentityDisplay();
+
+          if (isUserAdmin && Array.isArray(data.threads)) {
+            cachedThreads = data.threads;
+            renderAdminThreadsList(data.threads);
+
+            if (!selectedThreadId && data.threads.length > 0) {
+              selectedThreadId = data.threads[0].id;
+            }
+
+            const currentThread = data.threads.find(t => t.id === selectedThreadId) || data.threads[0];
+            if (currentThread) {
+              renderMessages(currentThread.messages || [], true, currentThread);
+            } else {
+              renderWelcomeOnly();
+            }
+          } else if (Array.isArray(data.messages)) {
+            renderMessages(data.messages, false);
+          } else {
+            renderWelcomeOnly();
+          }
         } else {
           renderWelcomeOnly();
         }
@@ -408,6 +485,51 @@
         if (chatLoadingState) chatLoadingState.classList.add('hidden');
       }
     }
+
+    function renderAdminThreadsList(threads) {
+      if (!adminThreadsList) return;
+      if (adminThreadCount) adminThreadCount.textContent = threads.length;
+
+      adminThreadsList.innerHTML = threads.map(t => {
+        const isSel = t.id === selectedThreadId;
+        const msgCount = (t.messages || []).length;
+        const lastMsg = msgCount > 0 ? t.messages[msgCount - 1].text : 'No messages yet';
+        const sender = t.senderName || 'Anonymous';
+        const phone = t.senderPhone || t.senderContact || '';
+
+        return `
+          <div class="admin-thread-card p-2 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+            isSel 
+              ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
+              : 'bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-800 text-slate-800 dark:text-slate-200 hover:bg-purple-100 dark:hover:bg-purple-950/60'
+          }" onclick="selectAdminThread('${t.id}')">
+            <div class="min-w-0 flex-1 pr-2">
+              <div class="flex items-center space-x-1.5">
+                <span class="font-extrabold text-xs truncate">${escapeHtml(sender)}</span>
+                ${phone ? `<span class="text-[10px] font-mono opacity-80">(${escapeHtml(phone)})</span>` : ''}
+              </div>
+              <p class="text-[10.5px] truncate opacity-90">${escapeHtml(lastMsg)}</p>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${isSel ? 'bg-white/20 text-white' : 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'}">${msgCount} msg</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.selectAdminThread = function(threadId) {
+      selectedThreadId = threadId;
+      const t = cachedThreads.find(x => x.id === threadId);
+      if (t) {
+        renderAdminThreadsList(cachedThreads);
+        renderMessages(t.messages || [], true, t);
+        if (chatMessageInput) {
+          chatMessageInput.placeholder = 'Reply to ' + (t.senderName || 'user') + '...';
+          chatMessageInput.focus();
+        }
+      }
+    };
 
     function renderWelcomeOnly() {
       chatMessageStream.innerHTML = `
@@ -429,30 +551,49 @@
       `;
     }
 
-    function renderMessages(messages, isAdmin) {
+    function renderMessages(messages, isAdmin, currentThread) {
       if (!messages || messages.length === 0) {
         renderWelcomeOnly();
         return;
       }
 
-      chatMessageStream.innerHTML = messages.map(m => {
+      let headerInfoHtml = '';
+      if (isAdmin && currentThread) {
+        const phone = currentThread.senderPhone || currentThread.senderContact;
+        headerInfoHtml = `
+          <div class="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex items-center justify-between text-xs mb-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div>
+                <span class="font-black text-purple-900 dark:text-purple-200">${escapeHtml(currentThread.senderName || 'User')}</span>
+                ${phone ? `<span class="text-purple-600 dark:text-purple-400 font-mono text-[11px] ml-1">(${escapeHtml(phone)})</span>` : ''}
+              </div>
+            </div>
+            ${phone ? `<a href="tel:${escapeHtml(phone)}" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-2xs flex items-center space-x-1"><i class="fa-solid fa-phone text-[9px]"></i><span>Call User</span></a>` : ''}
+          </div>
+        `;
+      }
+
+      chatMessageStream.innerHTML = headerInfoHtml + messages.map(m => {
         const isFromAdmin = m.senderRole === 'admin';
         const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         if (isFromAdmin) {
           return `
             <div class="flex items-start space-x-2.5 max-w-[85%]">
-              <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-xs">
+              <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-xs">
                 <i class="fa-solid fa-user-shield"></i>
               </div>
               <div class="space-y-1">
                 <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold">
-                  <span class="text-cyan-600 dark:text-cyan-400 font-black">${escapeHtml(m.sender || 'Admin')}</span>
-                  <span class="px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-bold text-[9px]">Admin</span>
+                  <span class="text-purple-600 dark:text-purple-400 font-black">${escapeHtml(m.sender || 'Admin')}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[9px]">Admin</span>
                   <span>&bull;</span>
                   <span>${timeStr}</span>
                 </div>
-                <div class="p-3 rounded-2xl bg-cyan-50 dark:bg-slate-800 border border-cyan-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin leading-relaxed">
+                <div class="p-3 rounded-2xl bg-purple-50 dark:bg-slate-800 border border-purple-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin leading-relaxed">
                   ${escapeHtml(m.text)}
                 </div>
               </div>
@@ -494,7 +635,7 @@
         const text = (chatMessageInput.value || '').trim();
         if (!text) return;
 
-        if (!isIdentityValid()) {
+        if (!isUserAdmin && !isIdentityValid()) {
           identitySetupDrawer.classList.remove('hidden');
           if (identityErrorMsg) identityErrorMsg.textContent = '⚠️ Please enter your Name and Phone Number above before sending a message.';
           if (guestNameInput && !guestNameInput.value) guestNameInput.focus();
@@ -509,24 +650,38 @@
           const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
           const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
 
-          const res = await fetch('/api/support/send', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              sessionId,
-              senderName: userName,
-              senderPhone: userPhone,
-              senderContact: userPhone,
-              message: text
-            })
-          });
+          let res, data;
+          if (isUserAdmin && selectedThreadId) {
+            // Admin Reply Mode
+            res = await fetch('/api/support/reply', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                threadId: selectedThreadId,
+                replyText: text
+              })
+            });
+            data = await res.json();
+          } else {
+            // User / Guest Send Mode
+            res = await fetch('/api/support/send', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                sessionId,
+                senderName: userName,
+                senderPhone: userPhone,
+                senderContact: userPhone,
+                message: text
+              })
+            });
+            data = await res.json();
+          }
 
-          const data = await res.json();
-          if (data.success) {
+          if (data && data.success) {
             loadChatMessages();
-          } else if (data.error) {
+          } else if (data && data.error) {
             alert(data.error);
-            if (!isIdentityValid()) identitySetupDrawer.classList.remove('hidden');
           }
         } catch (e) {
           console.warn('Send error:', e.message);

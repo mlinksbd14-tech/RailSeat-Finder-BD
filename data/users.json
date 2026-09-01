@@ -11,8 +11,8 @@
     "authNotice": "Welcome to RailSeat Finder BD!",
     "authNoticeEnabled": true,
     "requireAdminApproval": false,
-    "requireEmailVerification": true,
-    "allowRegistration": true
+    "allowRegistration": true,
+    "requireEmailVerification": false
   },
   "users": [
     {
@@ -155,6 +155,70 @@
       }
     },
     {
+      "role": "viewer",
+      "lastIp": "103.177.220.164",
+      "lastLocation": {
+        "country": "Bangladesh",
+        "flag": "🇧🇩",
+        "city": "Nawāb Char",
+        "countryCode": "BD",
+        "isp": "Duranto Broadband Network",
+        "query": "103.177.220.164",
+        "region": "Dhaka Division"
+      },
+      "canViewDashboard": true,
+      "ips": [
+        "103.177.220.164"
+      ],
+      "authProvider": "password",
+      "createdAt": "2026-09-01T10:33:44.635Z",
+      "emailVerified": true,
+      "firebaseUid": null,
+      "password": "scrypt$16384$8$1$86b91dae71dd8332869103ee79fcd183$4740cd387357ae6ebe1b5533ef56138549808e70805526a040413de02bffe31006285c2e31f1d9a9fa1a4f876e2512d8439dba5d7fa1c0b77d4b6103775da23c",
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+      "name": "temptest",
+      "id": "usr_1788258824411_865p",
+      "email": "fex14849@laoia.com",
+      "status": "active",
+      "username": "temptest",
+      "lastDevice": {
+        "os": "Windows 10/11",
+        "browser": "Edge 152",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+        "device": "Desktop"
+      },
+      "lastLogin": "2026-09-01T10:33:54.243Z",
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-01T10:33:54.243Z",
+          "ip": "103.177.220.164",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "city": "Nawāb Char",
+            "region": "Dhaka Division",
+            "country": "Bangladesh",
+            "countryCode": "BD",
+            "flag": "🇧🇩",
+            "isp": "Duranto Broadband Network",
+            "query": "103.177.220.164"
+          }
+        },
+        {
+          "action": "register",
+          "timestamp": "2026-09-01T10:33:44.635Z",
+          "ip": "103.177.220.164",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": null
+        }
+      ],
+      "loginCount": 1
+    },
+    {
       "id": "usr_admin_001",
       "username": "admin",
       "password": "scrypt$16384$8$1$3c17f6d0a04ef5ae69f4d1e840a40374$67342c9cdab8c8ed963cdc8b24cd9984f263f74177dd339e83f5dadd572a28c944fbda51451177cb0c4c2d278dd6288d64b581baebf62474a18f4833a4d4ef27",
@@ -202,8 +266,26 @@
         "region": "Local Network",
         "query": "::1"
       },
-      "lastLogin": "2026-09-01T08:47:53.067Z",
+      "lastIp": "27.147.149.234",
+      "lastLogin": "2026-09-01T10:30:42.137Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-01T10:30:42.137Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "region": "Local Network",
+            "query": "::1"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-01T08:47:53.067Z",
@@ -611,33 +693,15 @@
             "region": "Local Network",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-08-31T11:31:49.082Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
-      "lastIp": "27.147.149.234",
-      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
-      "loginCount": 129,
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+      "loginCount": 130,
       "lastDevice": {
-        "os": "Android 10",
-        "browser": "Chrome 152",
-        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
-        "device": "Mobile"
+        "os": "Windows 10/11",
+        "browser": "Edge 152",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+        "device": "Desktop"
       }
     }
   ]

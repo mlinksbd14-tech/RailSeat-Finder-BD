@@ -4947,6 +4947,122 @@ app.post('/api/push/unsubscribe', (req, res) => {
   });
 });
 
+// ====================================================
+// 🎧 SUPPORT & CONTACT CHAT BACKEND ENGINE
+// ====================================================
+const SUPPORT_MESSAGES_FILE = path.join(__dirname, 'data', 'support_messages.json');
+
+function loadSupportMessages() {
+  try {
+    if (fs.existsSync(SUPPORT_MESSAGES_FILE)) {
+      const raw = fs.readFileSync(SUPPORT_MESSAGES_FILE, 'utf8');
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('[Support] ⚠️ Error loading support messages:', e.message);
+  }
+  return { threads: [] };
+}
+
+function saveSupportMessages(data) {
+  try {
+    fs.writeFileSync(SUPPORT_MESSAGES_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[Support] ❌ Error saving support messages:', e.message);
+  }
+}
+
+// Dedicated Support Page Route
+app.get('/support', (req, res) => {
+  const supportPath = path.join(__dirname, 'public', 'support.html');
+  if (fs.existsSync(supportPath)) {
+    return res.sendFile(supportPath);
+  }
+  res.redirect('/');
+});
+
+// GET /api/support/messages - Get support conversation stream
+app.get('/api/support/messages', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const isAdmin = session && session.role === 'admin';
+  const querySessionId = (req.query.sessionId || '').trim();
+  const data = loadSupportMessages();
+
+  if (isAdmin) {
+    const allMessages = [];
+    (data.threads || []).forEach(t => {
+      (t.messages || []).forEach(m => {
+        allMessages.push({ ...m, threadId: t.id, threadSender: t.senderName });
+      });
+    });
+    allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    return res.json({ success: true, isAdmin: true, messages: allMessages, threads: data.threads });
+  }
+
+  let thread = null;
+  if (session && session.userId) {
+    thread = (data.threads || []).find(t => t.userId === session.userId || t.sessionId === querySessionId);
+  } else if (querySessionId) {
+    thread = (data.threads || []).find(t => t.sessionId === querySessionId);
+  }
+
+  const messages = thread ? (thread.messages || []) : [];
+  res.json({
+    success: true,
+    isAdmin: false,
+    messages
+  });
+});
+
+// POST /api/support/send - Send a support message
+app.post('/api/support/send', (req, res) => {
+  const session = getAuthenticatedUser(req);
+  const isAdmin = session && session.role === 'admin';
+  const { sessionId, senderName, senderContact, message } = req.body;
+  const cleanMsg = (message || '').trim();
+
+  if (!cleanMsg) {
+    return res.status(400).json({ success: false, error: 'Message cannot be empty.' });
+  }
+
+  const data = loadSupportMessages();
+  if (!data.threads) data.threads = [];
+
+  const targetSessionId = sessionId || (session ? 'user_' + session.userId : 'guest_' + Date.now());
+  let thread = (data.threads || []).find(t => (session && session.userId && t.userId === session.userId) || t.sessionId === targetSessionId);
+
+  if (!thread) {
+    thread = {
+      id: 'thread_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      userId: session ? session.userId : null,
+      sessionId: targetSessionId,
+      senderName: session ? (session.name || session.username) : (senderName || 'Guest User'),
+      senderContact: senderContact || (session ? session.email : ''),
+      senderRole: session ? session.role : 'viewer',
+      status: 'open',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: []
+    };
+    data.threads.push(thread);
+  }
+
+  const newMsg = {
+    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    sender: session ? (session.name || session.username) : (senderName || 'Guest User'),
+    senderRole: isAdmin ? 'admin' : (session ? 'user' : 'viewer'),
+    text: cleanMsg,
+    timestamp: new Date().toISOString()
+  };
+
+  thread.messages.push(newMsg);
+  thread.updatedAt = new Date().toISOString();
+  saveSupportMessages(data);
+
+  console.log(`[Support] 💬 New message from ${newMsg.sender} (${newMsg.senderRole}): "${cleanMsg.substring(0, 40)}..."`);
+  res.json({ success: true, message: newMsg });
+});
+
 // Dedicated User Manual Documentation Route
 app.get('/manual', (req, res) => {
   const manualPath = path.join(__dirname, 'public', 'manual.html');

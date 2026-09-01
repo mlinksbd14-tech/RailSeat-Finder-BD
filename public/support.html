@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support & Help Center — RailSeat Finder BD</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .chat-bubble-user {
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble-admin {
+      border-bottom-left-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="/" class="flex items-center space-x-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-base shadow-md group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <div>
+            <span class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white block leading-tight">RailSeat BD Support</span>
+            <span class="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider">Direct Admin Assistance</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button id="themeToggleBtn" type="button" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-cyan-600 flex items-center justify-center transition cursor-pointer" title="Toggle Dark/Light Mode">
+          <i class="fa-solid fa-moon text-xs dark:hidden"></i>
+          <i class="fa-solid fa-sun text-xs hidden dark:inline text-amber-400"></i>
+        </button>
+        <a href="/manual" class="hidden sm:inline-flex px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-600 font-bold text-xs shadow-2xs transition items-center space-x-1.5">
+          <i class="fa-solid fa-book-open text-emerald-500 text-xs"></i>
+          <span>User Manual</span>
+        </a>
+        <a href="/" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Support Help Center Container -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+    
+    <!-- Hero Banner -->
+    <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 text-white shadow-xl border border-cyan-800/40 relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl space-y-2">
+        <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-[10.5px] font-bold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Support Desk Online</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-black tracking-tight">How can we help you today?</h1>
+        <p class="text-xs sm:text-sm text-slate-300">Chat directly with the system administrator, get help with seat alerts, train tracking, or reach out via social media.</p>
+      </div>
+    </div>
+
+    <!-- 2-Column Layout: Live Chat (Left) + Quick Contact Channels & FAQ (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT COLUMN: Live Chat with Admin (7 Cols on LG) -->
+      <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col h-[600px] sm:h-[650px]">
+        
+        <!-- Chat Header -->
+        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/60 flex items-center justify-between shrink-0">
+          <div class="flex items-center space-x-2.5 min-w-0">
+            <div class="relative">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-md">
+                <i class="fa-solid fa-headset"></i>
+              </div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">Live Chat with Admin</h3>
+              <p class="text-[10px] text-slate-400 font-medium" id="chatStatusSubtitle">Typically replies within a few minutes</p>
+            </div>
+          </div>
+          <button type="button" id="refreshChatBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer" title="Refresh Chat Stream">
+            <i class="fa-solid fa-arrows-rotate text-xs" id="refreshChatIcon"></i>
+          </button>
+        </div>
+
+        <!-- Chat Identification Ribbon (For non-logged in viewers) -->
+        <div id="viewerIdentityRibbon" class="px-4 py-2 bg-cyan-50/70 dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+          <div class="flex items-center space-x-1.5 text-cyan-800 dark:text-cyan-300 font-bold text-[11px]">
+            <i class="fa-solid fa-user-circle"></i>
+            <span id="viewerIdentityLabel">Chatting as Guest</span>
+          </div>
+          <button type="button" id="editIdentityBtn" class="text-[10.5px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer">Edit Info</button>
+        </div>
+
+        <!-- Chat Stream Message List (Scrollable) -->
+        <div id="chatMessageStream" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          <!-- Loading State -->
+          <div id="chatLoadingState" class="py-12 text-center text-slate-400 space-y-2">
+            <div class="w-8 h-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto"></div>
+            <p class="text-xs font-bold">Loading support conversation...</p>
+          </div>
+        </div>
+
+        <!-- Identity Setup Drawer (Collapsible) -->
+        <div id="identitySetupDrawer" class="hidden p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 shrink-0 space-y-2 text-xs">
+          <div class="font-bold text-slate-700 dark:text-slate-200 text-[11px]">Your Contact Info (so admin can reply to you):</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="guestNameInput" placeholder="Your Name (e.g. Rahat)" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+            <input type="text" id="guestContactInput" placeholder="Email or Phone" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+          </div>
+          <div class="flex justify-end">
+            <button type="button" id="saveIdentityBtn" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs transition cursor-pointer">Save & Continue</button>
+          </div>
+        </div>
+
+        <!-- Chat Input Footer Form -->
+        <form id="chatSendForm" class="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 flex items-center space-x-2">
+          <input type="text" id="chatMessageInput" placeholder="Type your message or question here..." required autocomplete="off" class="flex-1 px-3.5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none transition">
+          <button type="submit" id="chatSendBtn" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer active:scale-95">
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+            <span class="hidden sm:inline">Send</span>
+          </button>
+        </form>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Direct Social Channels & FAQ (5 Cols on LG) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- Primary Channel: Direct Facebook Contact -->
+        <div class="p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white shadow-xl space-y-3.5 relative overflow-hidden group">
+          <div class="absolute -right-6 -bottom-6 text-blue-500/20 text-8xl pointer-events-none group-hover:scale-110 transition-transform">
+            <i class="fa-brands fa-facebook-messenger"></i>
+          </div>
+          <div class="flex items-center space-x-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-white text-blue-600 flex items-center justify-center text-xl shadow-md shrink-0">
+              <i class="fa-brands fa-facebook-f"></i>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-200 block">Direct Admin Channel</span>
+              <h3 class="font-black text-base text-white">Connect on Facebook</h3>
+            </div>
+          </div>
+          <p class="text-xs text-blue-100 leading-relaxed">Need immediate support, custom inquiries, or have feedback? Message the admin directly on Facebook profile / Messenger.</p>
+          <a href="https://facebook.com/shawon421" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-extrabold text-xs shadow-md transition flex items-center justify-center space-x-2 cursor-pointer active:scale-[0.98]">
+            <i class="fa-brands fa-facebook text-sm"></i>
+            <span>fb.com/shawon421</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1 opacity-75"></i>
+          </a>
+        </div>
+
+        <!-- Additional Contact Channels (Email / Fast Channels) -->
+        <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
+          <div class="flex items-center space-x-2 text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            <i class="fa-solid fa-envelope text-cyan-500"></i>
+            <span>Alternative Contact Channels</span>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <a href="mailto:srshawon421@gmail.com" class="p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center justify-between group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800 dark:text-slate-200">Email Admin</div>
+                  <div class="text-[10px] text-slate-400 font-mono">srshawon421@gmail.com</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 group-hover:text-cyan-500 transition-colors"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Common Quick FAQs Accordion -->
+        <div class="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-2.5">
+          <div class="flex items-center space-x-2 text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">
+            <i class="fa-solid fa-circle-question text-emerald-500"></i>
+            <span>Frequently Asked Questions</span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <!-- Q1 -->
+            <details class="group p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+              <summary class="font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none flex items-center justify-between">
+                <span>How does live seat tracking work?</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <p class="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">RailSeat Finder queries official Bangladesh Railway availability feeds in real-time, checking all coach classes and route sectors.</p>
+            </details>
+
+            <!-- Q2 -->
+            <details class="group p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+              <summary class="font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none flex items-center justify-between">
+                <span>How accurate is the Live Radar map?</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <p class="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Our map geometry is 100% snapped to Google Maps physical railway tracks with sub-meter precision and dynamic compass heading.</p>
+            </details>
+
+            <!-- Q3 -->
+            <details class="group p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+              <summary class="font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none flex items-center justify-between">
+                <span>How do Seat Drop Alerts work?</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <p class="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Click 'Alert Me' on any train card. When cancelled tickets are released, our background monitor triggers audio alerts and Web Push notifications.</p>
+            </details>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-200/80 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-4">
+    <div class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2">
+      <span>&copy; 2026 RailSeat Finder BD &bull; Dedicated Support & Help Desk</span>
+      <div class="flex items-center space-x-3">
+        <a href="/manual" class="text-slate-500 hover:text-emerald-600 dark:text-slate-400 font-bold transition">User Manual</a>
+        <span>&bull;</span>
+        <a href="https://facebook.com/shawon421" target="_blank" rel="noopener" class="text-blue-600 font-bold transition">Facebook: @shawon421</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Support Page Script -->
+  <script>
+    // Theme Switcher Sync
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    function applyTheme() {
+      const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.classList.toggle('dark', isDark);
+    }
+    applyTheme();
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        applyTheme();
+      });
+    }
+
+    // Client Session Identification
+    let sessionId = localStorage.getItem('rail_support_session_id');
+    if (!sessionId) {
+      sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      localStorage.setItem('rail_support_session_id', sessionId);
+    }
+
+    let guestName = localStorage.getItem('rail_support_guest_name') || '';
+    let guestContact = localStorage.getItem('rail_support_guest_contact') || '';
+
+    const chatMessageStream = document.getElementById('chatMessageStream');
+    const chatLoadingState = document.getElementById('chatLoadingState');
+    const chatSendForm = document.getElementById('chatSendForm');
+    const chatMessageInput = document.getElementById('chatMessageInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const refreshChatBtn = document.getElementById('refreshChatBtn');
+    const refreshChatIcon = document.getElementById('refreshChatIcon');
+    const viewerIdentityLabel = document.getElementById('viewerIdentityLabel');
+    const editIdentityBtn = document.getElementById('editIdentityBtn');
+    const identitySetupDrawer = document.getElementById('identitySetupDrawer');
+    const guestNameInput = document.getElementById('guestNameInput');
+    const guestContactInput = document.getElementById('guestContactInput');
+    const saveIdentityBtn = document.getElementById('saveIdentityBtn');
+
+    function updateIdentityDisplay() {
+      if (guestName) {
+        viewerIdentityLabel.textContent = 'Chatting as ' + guestName + (guestContact ? ' (' + guestContact + ')' : '');
+      } else {
+        viewerIdentityLabel.textContent = 'Chatting as Guest';
+      }
+      if (guestNameInput) guestNameInput.value = guestName;
+      if (guestContactInput) guestContactInput.value = guestContact;
+    }
+    updateIdentityDisplay();
+
+    if (editIdentityBtn) {
+      editIdentityBtn.addEventListener('click', () => {
+        identitySetupDrawer.classList.toggle('hidden');
+      });
+    }
+
+    if (saveIdentityBtn) {
+      saveIdentityBtn.addEventListener('click', () => {
+        guestName = (guestNameInput.value || '').trim();
+        guestContact = (guestContactInput.value || '').trim();
+        localStorage.setItem('rail_support_guest_name', guestName);
+        localStorage.setItem('rail_support_guest_contact', guestContact);
+        updateIdentityDisplay();
+        identitySetupDrawer.classList.add('hidden');
+      });
+    }
+
+    // Load & Render Support Messages
+    async function loadChatMessages() {
+      if (refreshChatIcon) refreshChatIcon.classList.add('fa-spin');
+      try {
+        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+        const res = await fetch('/api/support/messages?sessionId=' + encodeURIComponent(sessionId), { headers });
+        const data = await res.json();
+
+        if (data && data.success && Array.isArray(data.messages)) {
+          renderMessages(data.messages, data.isAdmin);
+        } else {
+          renderWelcomeOnly();
+        }
+      } catch (err) {
+        console.warn('Failed to load chat:', err.message);
+        renderWelcomeOnly();
+      } finally {
+        if (refreshChatIcon) refreshChatIcon.classList.remove('fa-spin');
+        if (chatLoadingState) chatLoadingState.classList.add('hidden');
+      }
+    }
+
+    function renderWelcomeOnly() {
+      chatMessageStream.innerHTML = `
+        <div class="flex items-start space-x-2.5 max-w-[85%]">
+          <div class="w-7 h-7 rounded-xl bg-cyan-600 text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-xs">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold">
+              <span class="text-cyan-600 dark:text-cyan-400 font-black">Admin Support</span>
+              <span>&bull;</span>
+              <span>Welcome</span>
+            </div>
+            <div class="p-3 rounded-2xl bg-cyan-50 dark:bg-slate-800 border border-cyan-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin space-y-1.5">
+              <p>👋 Hello! Welcome to RailSeat BD Support. How can we help you? Send your question here or connect on Facebook (<a href="https://facebook.com/shawon421" target="_blank" class="text-blue-600 font-bold underline">fb.com/shawon421</a>).</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMessages(messages, isAdmin) {
+      if (!messages || messages.length === 0) {
+        renderWelcomeOnly();
+        return;
+      }
+
+      chatMessageStream.innerHTML = messages.map(m => {
+        const isFromAdmin = m.senderRole === 'admin';
+        const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (isFromAdmin) {
+          return `
+            <div class="flex items-start space-x-2.5 max-w-[85%]">
+              <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-xs">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 font-bold">
+                  <span class="text-cyan-600 dark:text-cyan-400 font-black">${escapeHtml(m.sender || 'Admin')}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 font-bold text-[9px]">Admin</span>
+                  <span>&bull;</span>
+                  <span>${timeStr}</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-cyan-50 dark:bg-slate-800 border border-cyan-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin leading-relaxed">
+                  ${escapeHtml(m.text)}
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="flex items-end justify-end space-x-2.5 ml-auto max-w-[85%]">
+              <div class="space-y-1 text-right">
+                <div class="flex items-center justify-end space-x-1.5 text-[10px] text-slate-400 font-bold">
+                  <span>${timeStr}</span>
+                  <span>&bull;</span>
+                  <span class="font-black text-slate-700 dark:text-slate-300">${escapeHtml(m.sender || 'You')}</span>
+                </div>
+                <div class="p-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-xs shadow-md chat-bubble-user text-left leading-relaxed">
+                  ${escapeHtml(m.text)}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      chatMessageStream.scrollTop = chatMessageStream.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Send Message Handler
+    if (chatSendForm) {
+      chatSendForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = (chatMessageInput.value || '').trim();
+        if (!text) return;
+
+        if (!guestName && identitySetupDrawer) {
+          identitySetupDrawer.classList.remove('hidden');
+        }
+
+        chatSendBtn.disabled = true;
+        chatMessageInput.value = '';
+
+        try {
+          const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+          const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
+
+          const res = await fetch('/api/support/send', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              sessionId,
+              senderName: guestName || 'Guest User',
+              senderContact: guestContact || '',
+              message: text
+            })
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            loadChatMessages();
+          }
+        } catch (e) {
+          console.warn('Send error:', e.message);
+        } finally {
+          chatSendBtn.disabled = false;
+        }
+      });
+    }
+
+    if (refreshChatBtn) {
+      refreshChatBtn.addEventListener('click', loadChatMessages);
+    }
+
+    // Initial Load & Auto-polling every 8s
+    loadChatMessages();
+    setInterval(loadChatMessages, 8000);
+  </script>
+</body>
+</html>

@@ -158,10 +158,10 @@
                   </div>
                   <span id="manageUsersPendingBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0 pending</span>
                 </button>
-                <button id="dropdownChangePasswordBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 font-semibold flex items-center space-x-2 transition cursor-pointer">
-                  <i class="fa-solid fa-key text-purple-500 text-xs"></i>
-                  <span>Change Password</span>
-                </button>
+                <a href="/support" target="_blank" rel="noopener noreferrer" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 hover:text-cyan-600 font-semibold flex items-center space-x-2 transition cursor-pointer">
+                  <i class="fa-solid fa-headset text-cyan-500 text-xs"></i>
+                  <span>Help & Live Support</span>
+                </a>
               </div>
 
               <!-- Logout Button -->
@@ -2775,14 +2775,20 @@
       <p class="font-medium text-slate-700 dark:text-slate-300">
         RailSeat Finder BD &bull; Developed By <span class="font-bold text-emerald-600 dark:text-emerald-400">Md. Saidur Rahaman Shawon</span>
       </p>
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2 sm:space-x-3">
         <!-- User Manual Button (Opens in New Tab) -->
         <a href="/manual" target="_blank" rel="noopener noreferrer" id="footerUserManualBtn" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold text-xs shadow-2xs transition hover:scale-105">
           <i class="fa-solid fa-book-open text-emerald-600 dark:text-emerald-400 text-xs"></i>
           <span>User Manual</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-70"></i>
         </a>
-        <p class="flex items-center space-x-1 text-slate-400">
+        <!-- Support & Contact Button -->
+        <a href="/support" target="_blank" rel="noopener noreferrer" id="footerSupportBtn" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 font-bold text-xs shadow-2xs transition hover:scale-105">
+          <i class="fa-solid fa-headset text-cyan-600 dark:text-cyan-400 text-xs"></i>
+          <span>Support</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-70"></i>
+        </a>
+        <p class="flex items-center space-x-1 text-slate-400 hidden sm:flex">
           <span>Protected with Security Shield</span>
           <i class="fa-solid fa-shield-halved text-emerald-500 ml-1"></i>
         </p>

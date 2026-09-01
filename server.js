@@ -53,6 +53,42 @@ const SEED_SESSION_FILE = path.join(SEED_DATA_DIR, 'session.json');
 
 // In-memory active dashboard user sessions (token -> { userId, username, role, name, expiresAt })
 const userSessions = new Map();
+const SESSIONS_STORAGE_FILE = path.join(DATA_DIR, 'active_sessions.json');
+
+function loadPersistedSessions() {
+  try {
+    if (fs.existsSync(SESSIONS_STORAGE_FILE)) {
+      const raw = fs.readFileSync(SESSIONS_STORAGE_FILE, 'utf8');
+      const obj = JSON.parse(raw);
+      const now = Date.now();
+      for (const [token, s] of Object.entries(obj)) {
+        if (s && s.expiresAt > now) {
+          userSessions.set(token, s);
+        }
+      }
+      console.log(`[Sessions] 💾 Loaded ${userSessions.size} active session(s) from persistent storage.`);
+    }
+  } catch (e) {
+    console.warn('[Sessions] ⚠️ Error loading sessions:', e.message);
+  }
+}
+
+function savePersistedSessions() {
+  try {
+    const obj = {};
+    const now = Date.now();
+    for (const [token, s] of userSessions.entries()) {
+      if (s && s.expiresAt > now) {
+        obj[token] = s;
+      }
+    }
+    fs.writeFileSync(SESSIONS_STORAGE_FILE, JSON.stringify(obj, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[Sessions] ❌ Error saving sessions:', e.message);
+  }
+}
+
+loadPersistedSessions();
 
 // ----------------------------------------------------
 // Cryptographic Password Hashing & Security Utilities
@@ -463,7 +499,12 @@ function getAuthenticatedUser(req) {
 
   if (!token) return null;
 
-  const session = userSessions.get(token);
+  let session = userSessions.get(token);
+  if (!session) {
+    loadPersistedSessions();
+    session = userSessions.get(token);
+  }
+
   if (session && session.expiresAt > Date.now()) {
     try {
       const data = loadUsersData();
@@ -3747,6 +3788,7 @@ app.post('/api/user-auth/login', async (req, res) => {
   };
 
   userSessions.set(token, sessionData);
+  savePersistedSessions();
   console.log(`[Users] 🔑 User logged in: ${user.username} (${user.role}) - IP: ${user.lastIp}`);
 
   res.json({
@@ -3924,6 +3966,7 @@ app.post('/api/user-auth/logout', (req, res) => {
   }
   if (token && userSessions.has(token)) {
     userSessions.delete(token);
+    savePersistedSessions();
   }
   res.json({ success: true, message: 'Logged out successfully.' });
 });
@@ -5081,7 +5124,13 @@ app.get('/api/support/messages', (req, res) => {
       });
     });
     allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    return res.json({ success: true, isAdmin: true, messages: allMessages, threads: data.threads });
+    return res.json({ 
+      success: true, 
+      isAdmin: true, 
+      sessionUser: { username: session.username, name: session.name, role: session.role },
+      messages: allMessages, 
+      threads: data.threads 
+    });
   }
 
   let thread = null;

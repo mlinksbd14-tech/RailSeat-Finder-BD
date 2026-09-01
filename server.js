@@ -5083,11 +5083,22 @@ app.get('/api/support/messages', (req, res) => {
 app.post('/api/support/send', async (req, res) => {
   const session = getAuthenticatedUser(req);
   const isAdmin = session && session.role === 'admin';
-  const { sessionId, senderName, senderContact, message } = req.body;
+  const { sessionId, senderName, senderPhone, senderContact, message } = req.body;
   const cleanMsg = (message || '').trim();
 
   if (!cleanMsg) {
     return res.status(400).json({ success: false, error: 'Message cannot be empty.' });
+  }
+
+  const cleanName = (senderName || (session && (session.name || session.username)) || '').trim();
+  const cleanPhone = (senderPhone || senderContact || (session && (session.phone || session.email)) || '').trim();
+
+  if (!isAdmin && (!cleanName || cleanName.length < 2)) {
+    return res.status(400).json({ success: false, error: 'Please enter your Full Name before sending a message.' });
+  }
+
+  if (!isAdmin && (!cleanPhone || cleanPhone.length < 6)) {
+    return res.status(400).json({ success: false, error: 'Please enter a valid Phone Number before sending a message.' });
   }
 
   const data = loadSupportMessages();
@@ -5101,8 +5112,9 @@ app.post('/api/support/send', async (req, res) => {
       id: 'thread_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       userId: session ? session.userId : null,
       sessionId: targetSessionId,
-      senderName: session ? (session.name || session.username) : (senderName || 'Guest User'),
-      senderContact: senderContact || (session ? session.email : ''),
+      senderName: cleanName || 'User',
+      senderPhone: cleanPhone || '',
+      senderContact: cleanPhone || '',
       senderRole: session ? session.role : 'viewer',
       status: 'open',
       createdAt: new Date().toISOString(),
@@ -5110,11 +5122,18 @@ app.post('/api/support/send', async (req, res) => {
       messages: []
     };
     data.threads.push(thread);
+  } else {
+    if (cleanName) thread.senderName = cleanName;
+    if (cleanPhone) {
+      thread.senderPhone = cleanPhone;
+      thread.senderContact = cleanPhone;
+    }
   }
 
   const newMsg = {
     id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-    sender: session ? (session.name || session.username) : (senderName || 'Guest User'),
+    sender: isAdmin ? (session.name || session.username || 'Admin Support') : cleanName,
+    senderPhone: isAdmin ? '' : cleanPhone,
     senderRole: isAdmin ? 'admin' : (session ? 'user' : 'viewer'),
     text: cleanMsg,
     timestamp: new Date().toISOString()
@@ -5127,7 +5146,7 @@ app.post('/api/support/send', async (req, res) => {
   // Sync to Cloud Firestore 'chat_history' table
   await syncChatToFirestore(thread, newMsg);
 
-  console.log(`[Support] 💬 New message from ${newMsg.sender} (${newMsg.senderRole}): "${cleanMsg.substring(0, 40)}..."`);
+  console.log(`[Support] 💬 New message from ${newMsg.sender} (${cleanPhone}): "${cleanMsg.substring(0, 40)}..."`);
   res.json({ success: true, message: newMsg });
 });
 

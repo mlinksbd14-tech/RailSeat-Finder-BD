@@ -95,7 +95,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
       <!-- LEFT COLUMN: Live Chat with Admin (7 Cols on LG) -->
-      <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col h-[600px] sm:h-[650px]">
+      <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col h-[620px] sm:h-[670px]">
         
         <!-- Chat Header -->
         <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/60 flex items-center justify-between shrink-0">
@@ -116,13 +116,15 @@
           </button>
         </div>
 
-        <!-- Chat Identification Ribbon (For non-logged in viewers) -->
-        <div id="viewerIdentityRibbon" class="px-4 py-2 bg-cyan-50/70 dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
-          <div class="flex items-center space-x-1.5 text-cyan-800 dark:text-cyan-300 font-bold text-[11px]">
-            <i class="fa-solid fa-user-circle"></i>
-            <span id="viewerIdentityLabel">Chatting as Guest</span>
+        <!-- Chat Identification Ribbon -->
+        <div id="viewerIdentityRibbon" class="px-4 py-2.5 bg-cyan-50/80 dark:bg-cyan-950/40 border-b border-cyan-100 dark:border-cyan-900/40 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
+          <div class="flex items-center space-x-2 text-cyan-900 dark:text-cyan-200 font-bold text-[11px] min-w-0 truncate">
+            <i class="fa-solid fa-id-badge text-cyan-600 dark:text-cyan-400 text-xs"></i>
+            <span id="viewerIdentityLabel">Enter your Name & Phone Number below to start chatting</span>
           </div>
-          <button type="button" id="editIdentityBtn" class="text-[10.5px] font-bold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer">Edit Info</button>
+          <button type="button" id="editIdentityBtn" class="px-2 py-0.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[10.5px] transition shadow-2xs cursor-pointer shrink-0">
+            <i class="fa-solid fa-pen-to-square text-[9px] mr-1"></i>Edit Info
+          </button>
         </div>
 
         <!-- Chat Stream Message List (Scrollable) -->
@@ -134,15 +136,42 @@
           </div>
         </div>
 
-        <!-- Identity Setup Drawer (Collapsible) -->
-        <div id="identitySetupDrawer" class="hidden p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 shrink-0 space-y-2 text-xs">
-          <div class="font-bold text-slate-700 dark:text-slate-200 text-[11px]">Your Contact Info (so admin can reply to you):</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="guestNameInput" placeholder="Your Name (e.g. Rahat)" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none">
-            <input type="text" id="guestContactInput" placeholder="Email or Phone" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs focus:ring-1 focus:ring-cyan-500 focus:outline-none">
+        <!-- Mandatory User Identity Drawer (Auto-prompts if missing) -->
+        <div id="identitySetupDrawer" class="p-3.5 border-t border-cyan-200/80 dark:border-cyan-800/80 bg-cyan-50/90 dark:bg-slate-800/90 shrink-0 space-y-2.5 text-xs animate-fade-in">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-slate-900 dark:text-white text-[11.5px] flex items-center gap-1.5">
+              <i class="fa-solid fa-user-check text-cyan-600 dark:text-cyan-400"></i>
+              <span>Your Contact Info <span class="text-rose-500 font-black">*</span> (Required to chat)</span>
+            </span>
+            <span class="text-[10px] text-slate-400">Admin will contact you directly</span>
           </div>
-          <div class="flex justify-end">
-            <button type="button" id="saveIdentityBtn" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs transition cursor-pointer">Save & Continue</button>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block font-bold text-[10.5px] text-slate-700 dark:text-slate-300 mb-0.5">Full Name *</label>
+              <div class="relative">
+                <input type="text" id="guestNameInput" placeholder="e.g. Md. Rahat" required
+                  class="w-full pl-7 pr-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none font-medium">
+                <i class="fa-solid fa-user text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]"></i>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-[10.5px] text-slate-700 dark:text-slate-300 mb-0.5">Phone Number * (e.g. 017XXXXXXXX)</label>
+              <div class="relative">
+                <input type="tel" id="guestPhoneInput" placeholder="e.g. 01712345678" required
+                  class="w-full pl-7 pr-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none font-mono font-medium">
+                <i class="fa-solid fa-phone text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px]"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <span id="identityErrorMsg" class="text-[10.5px] font-bold text-rose-500 min-h-[1rem]"></span>
+            <button type="button" id="saveIdentityBtn" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center space-x-1 active:scale-95">
+              <i class="fa-solid fa-check text-xs"></i>
+              <span>Save & Continue</span>
+            </button>
           </div>
         </div>
 
@@ -277,15 +306,15 @@
       });
     }
 
-    // Client Session Identification
+    // Client Session & User Identification
     let sessionId = localStorage.getItem('rail_support_session_id');
     if (!sessionId) {
       sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       localStorage.setItem('rail_support_session_id', sessionId);
     }
 
-    let guestName = localStorage.getItem('rail_support_guest_name') || '';
-    let guestContact = localStorage.getItem('rail_support_guest_contact') || '';
+    let userName = localStorage.getItem('rail_support_user_name') || '';
+    let userPhone = localStorage.getItem('rail_support_user_phone') || '';
 
     const chatMessageStream = document.getElementById('chatMessageStream');
     const chatLoadingState = document.getElementById('chatLoadingState');
@@ -298,34 +327,62 @@
     const editIdentityBtn = document.getElementById('editIdentityBtn');
     const identitySetupDrawer = document.getElementById('identitySetupDrawer');
     const guestNameInput = document.getElementById('guestNameInput');
-    const guestContactInput = document.getElementById('guestContactInput');
+    const guestPhoneInput = document.getElementById('guestPhoneInput');
     const saveIdentityBtn = document.getElementById('saveIdentityBtn');
+    const identityErrorMsg = document.getElementById('identityErrorMsg');
+
+    function isIdentityValid() {
+      return userName.trim().length >= 2 && userPhone.trim().length >= 6;
+    }
 
     function updateIdentityDisplay() {
-      if (guestName) {
-        viewerIdentityLabel.textContent = 'Chatting as ' + guestName + (guestContact ? ' (' + guestContact + ')' : '');
+      if (isIdentityValid()) {
+        viewerIdentityLabel.innerHTML = '<span>Chatting as <strong class="text-cyan-700 dark:text-cyan-300">' + escapeHtml(userName) + '</strong> (' + escapeHtml(userPhone) + ')</span>';
+        if (identitySetupDrawer) identitySetupDrawer.classList.add('hidden');
+        if (chatMessageInput) chatMessageInput.placeholder = 'Type your message or question here...';
       } else {
-        viewerIdentityLabel.textContent = 'Chatting as Guest';
+        viewerIdentityLabel.innerHTML = '<span class="text-amber-700 dark:text-amber-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Please enter Name & Phone below to start chatting</span>';
+        if (identitySetupDrawer) identitySetupDrawer.classList.remove('hidden');
+        if (chatMessageInput) chatMessageInput.placeholder = 'Please enter your Name & Phone Number above first...';
       }
-      if (guestNameInput) guestNameInput.value = guestName;
-      if (guestContactInput) guestContactInput.value = guestContact;
+      if (guestNameInput) guestNameInput.value = userName;
+      if (guestPhoneInput) guestPhoneInput.value = userPhone;
     }
     updateIdentityDisplay();
 
     if (editIdentityBtn) {
       editIdentityBtn.addEventListener('click', () => {
         identitySetupDrawer.classList.toggle('hidden');
+        if (!identitySetupDrawer.classList.contains('hidden') && guestNameInput) {
+          guestNameInput.focus();
+        }
       });
     }
 
     if (saveIdentityBtn) {
       saveIdentityBtn.addEventListener('click', () => {
-        guestName = (guestNameInput.value || '').trim();
-        guestContact = (guestContactInput.value || '').trim();
-        localStorage.setItem('rail_support_guest_name', guestName);
-        localStorage.setItem('rail_support_guest_contact', guestContact);
+        const nameVal = (guestNameInput.value || '').trim();
+        const phoneVal = (guestPhoneInput.value || '').trim();
+
+        if (nameVal.length < 2) {
+          if (identityErrorMsg) identityErrorMsg.textContent = '❌ Please enter your full name (at least 2 letters).';
+          guestNameInput.focus();
+          return;
+        }
+
+        if (phoneVal.length < 6 || !/^[0-9+-\s()]{6,20}$/.test(phoneVal)) {
+          if (identityErrorMsg) identityErrorMsg.textContent = '❌ Please enter a valid phone number (e.g. 017XXXXXXXX).';
+          guestPhoneInput.focus();
+          return;
+        }
+
+        if (identityErrorMsg) identityErrorMsg.textContent = '';
+        userName = nameVal;
+        userPhone = phoneVal;
+        localStorage.setItem('rail_support_user_name', userName);
+        localStorage.setItem('rail_support_user_phone', userPhone);
         updateIdentityDisplay();
-        identitySetupDrawer.classList.add('hidden');
+        chatMessageInput.focus();
       });
     }
 
@@ -365,7 +422,7 @@
               <span>Welcome</span>
             </div>
             <div class="p-3 rounded-2xl bg-cyan-50 dark:bg-slate-800 border border-cyan-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin space-y-1.5">
-              <p>👋 Hello! Welcome to RailSeat BD Support. How can we help you? Send your question here or connect on Facebook (<a href="https://www.facebook.com/shawon421/" target="_blank" class="text-blue-600 font-bold underline">facebook.com/shawon421</a>).</p>
+              <p>👋 Hello! Welcome to RailSeat BD Support. Please enter your name and phone number above to chat with our admin team or connect on Facebook (<a href="https://www.facebook.com/shawon421/" target="_blank" class="text-blue-600 font-bold underline">facebook.com/shawon421</a>).</p>
             </div>
           </div>
         </div>
@@ -409,6 +466,7 @@
                   <span>${timeStr}</span>
                   <span>&bull;</span>
                   <span class="font-black text-slate-700 dark:text-slate-300">${escapeHtml(m.sender || 'You')}</span>
+                  ${m.senderPhone ? `<span class="text-[9px] text-slate-400 font-mono">(${escapeHtml(m.senderPhone)})</span>` : ''}
                 </div>
                 <div class="p-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-xs shadow-md chat-bubble-user text-left leading-relaxed">
                   ${escapeHtml(m.text)}
@@ -436,8 +494,12 @@
         const text = (chatMessageInput.value || '').trim();
         if (!text) return;
 
-        if (!guestName && identitySetupDrawer) {
+        if (!isIdentityValid()) {
           identitySetupDrawer.classList.remove('hidden');
+          if (identityErrorMsg) identityErrorMsg.textContent = '⚠️ Please enter your Name and Phone Number above before sending a message.';
+          if (guestNameInput && !guestNameInput.value) guestNameInput.focus();
+          else if (guestPhoneInput) guestPhoneInput.focus();
+          return;
         }
 
         chatSendBtn.disabled = true;
@@ -452,8 +514,9 @@
             headers,
             body: JSON.stringify({
               sessionId,
-              senderName: guestName || 'Guest User',
-              senderContact: guestContact || '',
+              senderName: userName,
+              senderPhone: userPhone,
+              senderContact: userPhone,
               message: text
             })
           });
@@ -461,6 +524,9 @@
           const data = await res.json();
           if (data.success) {
             loadChatMessages();
+          } else if (data.error) {
+            alert(data.error);
+            if (!isIdentityValid()) identitySetupDrawer.classList.remove('hidden');
           }
         } catch (e) {
           console.warn('Send error:', e.message);

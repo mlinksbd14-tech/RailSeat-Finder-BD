@@ -7364,7 +7364,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // In-Map Controls for Modal Route Map
     const liveModalMapFullscreenBtn = document.getElementById('liveModalMapFullscreenBtn');
     const liveModalMapFullscreenIcon = document.getElementById('liveModalMapFullscreenIcon');
-    const liveModalMapCenterBtn = document.getElementById('liveModalMapCenterBtn');
+    const liveModalMapAutoFollowBtn = document.getElementById('liveModalMapAutoFollowBtn');
+    const liveModalMapAutoFollowIcon = document.getElementById('liveModalMapAutoFollowIcon');
+    const liveModalMapFitRouteBtn = document.getElementById('liveModalMapFitRouteBtn');
     const liveModalMapZoomInBtn = document.getElementById('liveModalMapZoomInBtn');
     const liveModalMapZoomOutBtn = document.getElementById('liveModalMapZoomOutBtn');
 
@@ -7373,11 +7375,27 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleElementFullscreen(liveModalMapContainer, liveModalMapFullscreenIcon, liveModalLeafletMap);
       });
     }
-    if (liveModalMapCenterBtn) {
-      liveModalMapCenterBtn.addEventListener('click', () => {
-        if (liveModalLeafletMap && state.currentModalTrainMarker) {
-          liveModalLeafletMap.setView(state.currentModalTrainMarker.getLatLng(), 11, { animate: true });
-          state.currentModalTrainMarker.openPopup();
+    if (liveModalMapAutoFollowBtn) {
+      liveModalMapAutoFollowBtn.addEventListener('click', () => {
+        state.modalMapAutoFollow = !state.modalMapAutoFollow;
+        if (state.modalMapAutoFollow) {
+          liveModalMapAutoFollowBtn.className = 'w-8 h-8 rounded-xl bg-cyan-600 text-white hover:bg-cyan-700 backdrop-blur-md border border-cyan-500 shadow-md ring-2 ring-cyan-400/50 flex items-center justify-center text-xs transition cursor-pointer active:scale-95';
+          if (liveModalLeafletMap && state.currentModalTrainMarker) {
+            liveModalLeafletMap.setView(state.currentModalTrainMarker.getLatLng(), 11, { animate: true });
+          }
+        } else {
+          liveModalMapAutoFollowBtn.className = 'w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95';
+        }
+      });
+    }
+    if (liveModalMapFitRouteBtn) {
+      liveModalMapFitRouteBtn.addEventListener('click', () => {
+        state.modalMapAutoFollow = false;
+        if (liveModalMapAutoFollowBtn) {
+          liveModalMapAutoFollowBtn.className = 'w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95';
+        }
+        if (liveModalLeafletMap && state.currentModalRouteBounds) {
+          liveModalLeafletMap.fitBounds(state.currentModalRouteBounds, { padding: [35, 35] });
         }
       });
     }
@@ -8021,6 +8039,20 @@ document.addEventListener('DOMContentLoaded', () => {
           strokeColor = '#ffffff';
           weight = 2.5;
           labelText = `🔵 Next: ${stop.station_name}`;
+
+          // Pulsing radar halo marker on immediate next stop
+          const pulseIcon = L.divIcon({
+            html: `
+              <div class="relative flex items-center justify-center pointer-events-none">
+                <span class="absolute w-8 h-8 rounded-full bg-cyan-400/50 animate-ping"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-cyan-500 ring-2 ring-white shadow-lg"></span>
+              </div>
+            `,
+            className: 'custom-next-stop-pulse',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+          liveModalMapLayerGroup.addLayer(L.marker(pt, { icon: pulseIcon, interactive: false }));
         } else if (isPassed) {
           fillColor = '#10b981';
         }
@@ -8033,10 +8065,21 @@ document.addEventListener('DOMContentLoaded', () => {
           opacity: 1,
           fillOpacity: 0.95
         }).bindPopup(`
-          <div class="p-1 space-y-1 text-slate-800">
-            <div class="font-black text-xs text-cyan-800">🚉 ${escapeHtml(stop.station_name)}${isOrigin ? ' (Origin)' : (isDest ? ' (Destination)' : '')}</div>
-            <div class="text-[10px] text-slate-500 font-bold">Sched: ${stop.scheduled_time} • ${isPassed ? `Act: ${stop.actual_time || stop.scheduled_time}` : `ETA: ${stop.eta_time || stop.scheduled_time}`}</div>
-            <div class="text-[9px] text-slate-400 font-mono">${stop.distance_km} km • ${stop.platform && stop.platform !== '—' ? `PF ${stop.platform}` : 'PF --'}</div>
+          <div class="p-1.5 space-y-1.5 min-w-[200px] text-slate-800">
+            <div class="flex items-center justify-between gap-1 pb-1 border-b border-slate-100">
+              <span class="font-black text-xs text-cyan-800">🚉 ${escapeHtml(stop.station_name)}</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded ${isPassed ? 'bg-emerald-100 text-emerald-700' : (isNext ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-600')}">
+                ${isOrigin ? 'Origin' : (isDest ? 'Destination' : (isNext ? 'Next Stop' : (isPassed ? 'Passed' : 'Upcoming')))}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-600 font-bold">
+              <div>Sched: <span class="font-mono text-slate-800">${stop.scheduled_time}</span></div>
+              <div>${isPassed ? 'Actual' : 'ETA'}: <span class="font-mono ${isPassed ? 'text-emerald-700' : 'text-cyan-700'}">${isPassed ? (stop.actual_time || stop.scheduled_time) : (stop.eta_time || stop.scheduled_time)}</span></div>
+            </div>
+            <div class="flex items-center justify-between text-[9px] text-slate-400 font-mono pt-1 border-t border-slate-100">
+              <span>${stop.distance_km} km from start</span>
+              <span class="font-bold text-slate-600">${stop.platform && stop.platform !== '—' ? `Platform ${stop.platform}` : 'Platform --'}</span>
+            </div>
           </div>
         `).bindTooltip(labelText, { permanent: isOrigin || isDest || isNext, direction: 'top', className: 'text-xs font-bold shadow-md' });
 
@@ -8071,7 +8114,53 @@ document.addEventListener('DOMContentLoaded', () => {
     if (validCoords.length > 0) {
       const routeBounds = L.latLngBounds(validCoords);
       if (trainCoord) routeBounds.extend(trainCoord);
-      liveModalLeafletMap.fitBounds(routeBounds, { padding: [35, 35] });
+      state.currentModalRouteBounds = routeBounds;
+
+      if (!state.modalMapAutoFollow) {
+        liveModalLeafletMap.fitBounds(routeBounds, { padding: [35, 35] });
+      }
+    }
+
+    // Bind User Drag Listener to auto-disable camera lock
+    if (!liveModalLeafletMap._hasDragListener) {
+      liveModalLeafletMap._hasDragListener = true;
+      liveModalLeafletMap.on('dragstart', () => {
+        state.modalMapAutoFollow = false;
+        const btn = document.getElementById('liveModalMapAutoFollowBtn');
+        if (btn) btn.className = 'w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95';
+      });
+    }
+
+    // Auto-Follow Camera pan
+    if (state.modalMapAutoFollow && trainCoord) {
+      liveModalLeafletMap.setView(trainCoord, 11, { animate: true });
+    }
+
+    // Update In-Map Floating Telemetry HUD
+    const modalHudStatusBadge = document.getElementById('modalHudStatusBadge');
+    const modalHudSpeedText = document.getElementById('modalHudSpeedText');
+    const modalHudNextStopText = document.getElementById('modalHudNextStopText');
+    const modalHudDistanceEtaText = document.getElementById('modalHudDistanceEtaText');
+    const modalHudBearingText = document.getElementById('modalHudBearingText');
+
+    const delayMin = data.delay_minutes || 0;
+    if (modalHudStatusBadge) {
+      if (delayMin > 10) {
+        modalHudStatusBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300';
+        modalHudStatusBadge.textContent = `+${delayMin}m Delay`;
+      } else {
+        modalHudStatusBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300';
+        modalHudStatusBadge.textContent = 'On Time';
+      }
+    }
+    if (modalHudSpeedText) modalHudSpeedText.textContent = `${data.speed || 0} km/h`;
+    if (modalHudNextStopText) modalHudNextStopText.textContent = data.next_stop || '—';
+    if (modalHudDistanceEtaText) {
+      const nextEta = data.next_eta || (stoppages.find(s => s.station_name === data.next_stop)?.eta_time || '--:--');
+      modalHudDistanceEtaText.textContent = `${data.next_distance_km ? `${data.next_distance_km} km ahead • ` : ''}ETA ${nextEta}`;
+    }
+    if (modalHudBearingText) {
+      modalHudBearingText.textContent = `${compassDir(modalBearing)} ${Math.round(modalBearing)}°`;
     }
 
     if (trainCoord) {
@@ -8096,10 +8185,11 @@ document.addEventListener('DOMContentLoaded', () => {
           iconAnchor: [16, 16]
         })
       }).bindPopup(`
-        <div class="p-1 space-y-1 text-slate-800">
+        <div class="p-1.5 space-y-1 text-slate-800">
           <div class="font-black text-xs text-cyan-800">${escapeHtml(data.train_name)} #${data.train_no}</div>
           <div class="text-[10px] font-bold text-slate-600">Speed: ${data.speed || 0} km/h • Delay: +${data.delay_minutes || 0}m</div>
           <div class="text-[10px] font-bold text-cyan-600">Next: ${escapeHtml(data.next_stop)} (ETA ${data.next_eta || '--:--'})</div>
+          <div class="text-[9px] font-bold text-slate-400 font-mono">Heading ${compassDir(modalBearing)} (${Math.round(modalBearing)}°)</div>
         </div>
       `);
 

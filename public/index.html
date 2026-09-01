@@ -1956,22 +1956,48 @@
           </div>
 
           <!-- Tab 2: Interactive Live Route Leaflet Map (Mobile-Compact) -->
-          <div id="liveModalMapContainer" class="hidden w-full h-64 sm:h-80 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-900 shadow-inner z-10">
+          <div id="liveModalMapContainer" class="hidden w-full h-72 sm:h-96 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 relative bg-slate-100 dark:bg-slate-900 shadow-inner z-10">
             <div id="liveModalLeafletMap" class="w-full h-full"></div>
 
+            <!-- Floating In-Map Telemetry HUD (Bottom Left) -->
+            <div id="liveModalMapHud" class="absolute bottom-3 left-3 z-[500] p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/90 shadow-xl text-[11px] font-bold space-y-1.5 pointer-events-auto max-w-[280px] sm:max-w-[320px] transition-all">
+              <div class="flex items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-1.5 text-xs font-black text-cyan-700 dark:text-cyan-400">
+                  <i class="fa-solid fa-satellite text-xs animate-pulse"></i>
+                  <span>Live Telemetry</span>
+                </div>
+                <span id="modalHudStatusBadge" class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">On Time</span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] gap-2">
+                <span class="text-slate-500 dark:text-slate-400 font-semibold">Speed:</span>
+                <span id="modalHudSpeedText" class="font-mono font-black text-slate-800 dark:text-slate-100">58 km/h</span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] gap-2">
+                <span class="text-slate-500 dark:text-slate-400 font-semibold">Next Stop:</span>
+                <span id="modalHudNextStopText" class="font-black text-cyan-600 dark:text-cyan-400 truncate max-w-[160px]">Gunabati</span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 gap-2 font-mono">
+                <span id="modalHudDistanceEtaText">23 km ahead • ETA 12:29</span>
+                <span id="modalHudBearingText" class="text-[9px] font-bold text-slate-400">SE 134°</span>
+              </div>
+            </div>
+
             <!-- Floating In-Map Quick Controls Toolbar (Top Right) -->
-            <div class="absolute top-2.5 right-2.5 z-[500] flex flex-col space-y-1 pointer-events-auto">
-              <button type="button" id="liveModalMapFullscreenBtn" title="Toggle Fullscreen View" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+            <div class="absolute top-2.5 right-2.5 z-[500] flex flex-col space-y-1.5 pointer-events-auto">
+              <button type="button" id="liveModalMapFullscreenBtn" title="Toggle Fullscreen View" class="w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
                 <i class="fa-solid fa-expand" id="liveModalMapFullscreenIcon"></i>
               </button>
-              <button type="button" id="liveModalMapCenterBtn" title="Focus Moving Train" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
-                <i class="fa-solid fa-crosshairs"></i>
+              <button type="button" id="liveModalMapAutoFollowBtn" title="Lock & Auto-Follow Moving Train" class="w-8 h-8 rounded-xl bg-cyan-600 text-white hover:bg-cyan-700 backdrop-blur-md border border-cyan-500 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-crosshairs" id="liveModalMapAutoFollowIcon"></i>
               </button>
-              <div class="flex flex-col rounded-lg overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md divide-y divide-slate-100 dark:divide-slate-800">
-                <button type="button" id="liveModalMapZoomInBtn" title="Zoom In" class="w-7 h-7 sm:w-8 sm:h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+              <button type="button" id="liveModalMapFitRouteBtn" title="Fit Complete Route Track" class="w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
+                <i class="fa-solid fa-route"></i>
+              </button>
+              <div class="flex flex-col rounded-xl overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-md divide-y divide-slate-100 dark:divide-slate-800">
+                <button type="button" id="liveModalMapZoomInBtn" title="Zoom In" class="w-8 h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
                   <i class="fa-solid fa-plus"></i>
                 </button>
-                <button type="button" id="liveModalMapZoomOutBtn" title="Zoom Out" class="w-7 h-7 sm:w-8 sm:h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-xs transition cursor-pointer active:scale-95">
+                <button type="button" id="liveModalMapZoomOutBtn" title="Zoom Out" class="w-8 h-8 hover:bg-cyan-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs transition cursor-pointer active:scale-95">
                   <i class="fa-solid fa-minus"></i>
                 </button>
               </div>

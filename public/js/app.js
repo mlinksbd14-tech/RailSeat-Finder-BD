@@ -7802,27 +7802,29 @@ document.addEventListener('DOMContentLoaded', () => {
         : (t.from_coords && latLng ? calculateBearing(t.from_coords, latLng) : 0);
       const dirLabel = compassDir(bearing);
 
-      // In individual train mode, draw progress-split route + snapped station pins
-      if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
-        bounds.push(t.from_coords);
-        bounds.push(t.to_coords);
+      // In individual train mode or filtered route mode, draw progress-split route + snapped station pins
+      if (t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
+        if (isSingleSelectedTrain || (trains.length <= 4 && state.liveSearchMode === 'route')) {
+          bounds.push(t.from_coords);
+          bounds.push(t.to_coords);
 
-        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords, t.progress_pct);
-        if (trackPoints && trackPoints.length > 0) {
-          latLng = snapPointToTrack(latLng, trackPoints);
+          const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords, t.progress_pct);
+          if (trackPoints && trackPoints.length > 0) {
+            latLng = snapPointToTrack(latLng, trackPoints);
+          }
+          const fromPos = snapPointToTrack(t.from_coords, trackPoints);
+          const toPos = snapPointToTrack(t.to_coords, trackPoints);
+
+          const fromDot = L.circleMarker(fromPos, {
+            radius: 7, fillColor: '#10b981', color: '#ffffff', weight: 2.5, fillOpacity: 1
+          }).bindTooltip(`🚉 Origin: ${escapeHtml(t.from)}`, { permanent: true, direction: 'top', className: 'text-xs font-bold shadow-md' });
+          liveNetworkMarkersGroup.addLayer(fromDot);
+
+          const toDot = L.circleMarker(toPos, {
+            radius: 7, fillColor: '#f43f5e', color: '#ffffff', weight: 2.5, fillOpacity: 1
+          }).bindTooltip(`🏁 Destination: ${escapeHtml(t.to)}`, { permanent: true, direction: 'top', className: 'text-xs font-bold shadow-md' });
+          liveNetworkMarkersGroup.addLayer(toDot);
         }
-        const fromPos = snapPointToTrack(t.from_coords, trackPoints);
-        const toPos = snapPointToTrack(t.to_coords, trackPoints);
-
-        const fromDot = L.circleMarker(fromPos, {
-          radius: 6.5, fillColor: '#10b981', color: '#ffffff', weight: 2, fillOpacity: 1
-        }).bindTooltip(`🚉 Origin: ${t.from}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
-        liveNetworkMarkersGroup.addLayer(fromDot);
-
-        const toDot = L.circleMarker(toPos, {
-          radius: 6.5, fillColor: '#f43f5e', color: '#ffffff', weight: 2, fillOpacity: 1
-        }).bindTooltip(`🏁 Destination: ${t.to}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
-        liveNetworkMarkersGroup.addLayer(toDot);
       }
 
       const delayMin = t.delay_minutes || 0;
@@ -7994,15 +7996,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let radius = 5;
         let fillColor = '#94a3b8';
+        let strokeColor = '#ffffff';
+        let weight = 2;
+        let labelText = stop.station_name;
+
         if (isOrigin) {
-          radius = 6.5;
-          fillColor = '#10b981';
-        } else if (isDest) {
-          radius = 6.5;
-          fillColor = '#f43f5e';
-        } else if (isNext) {
           radius = 7.5;
+          fillColor = '#10b981';
+          strokeColor = '#ffffff';
+          weight = 2.5;
+          labelText = `🚉 ${stop.station_name} (Origin)`;
+        } else if (isDest) {
+          radius = 7.5;
+          fillColor = '#f43f5e';
+          strokeColor = '#ffffff';
+          weight = 2.5;
+          labelText = `🏁 ${stop.station_name} (Destination)`;
+        } else if (isNext) {
+          radius = 8;
           fillColor = '#06b6d4';
+          strokeColor = '#ffffff';
+          weight = 2.5;
+          labelText = `🔵 Next: ${stop.station_name}`;
         } else if (isPassed) {
           fillColor = '#10b981';
         }
@@ -8010,8 +8025,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const circleMarker = L.circleMarker(pt, {
           radius: radius,
           fillColor: fillColor,
-          color: '#ffffff',
-          weight: 2,
+          color: strokeColor,
+          weight: weight,
           opacity: 1,
           fillOpacity: 0.95
         }).bindPopup(`
@@ -8020,7 +8035,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="text-[10px] text-slate-500 font-bold">Sched: ${stop.scheduled_time} • ${isPassed ? `Act: ${stop.actual_time || stop.scheduled_time}` : `ETA: ${stop.eta_time || stop.scheduled_time}`}</div>
             <div class="text-[9px] text-slate-400 font-mono">${stop.distance_km} km • ${stop.platform && stop.platform !== '—' ? `PF ${stop.platform}` : 'PF --'}</div>
           </div>
-        `).bindTooltip(stop.station_name, { permanent: isOrigin || isDest || isNext, direction: 'top', className: 'text-xs font-bold' });
+        `).bindTooltip(labelText, { permanent: isOrigin || isDest || isNext, direction: 'top', className: 'text-xs font-bold shadow-md' });
 
         liveModalMapLayerGroup.addLayer(circleMarker);
       }

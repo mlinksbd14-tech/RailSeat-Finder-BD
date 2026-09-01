@@ -5200,6 +5200,72 @@ app.post('/api/support/reply', async (req, res) => {
   res.json({ success: true, message: adminMsg, thread });
 });
 
+// POST /api/support/delete-thread - Admin deletes an entire chat thread
+app.post('/api/support/delete-thread', async (req, res) => {
+  const session = getAuthenticatedUser(req);
+  if (!session || session.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Unauthorized: Admin access required.' });
+  }
+
+  const { threadId } = req.body;
+  if (!threadId) {
+    return res.status(400).json({ success: false, error: 'Thread ID is required.' });
+  }
+
+  const data = loadSupportMessages();
+  const initialLength = (data.threads || []).length;
+  data.threads = (data.threads || []).filter(t => t.id !== threadId);
+
+  if (data.threads.length === initialLength) {
+    return res.status(404).json({ success: false, error: 'Chat thread not found.' });
+  }
+
+  saveSupportMessages(data);
+
+  // Delete from Cloud Firestore 'chat_history'
+  if (firestoreDb && isFirebaseConnected) {
+    try {
+      await firestoreDb.collection('chat_history').doc(threadId).delete();
+      console.log(`[Firebase Firestore] 🗑️ Deleted chat thread from 'chat_history': ${threadId}`);
+    } catch (err) {
+      console.warn(`[Firebase Firestore] ⚠️ Error deleting thread ${threadId}:`, err.message);
+    }
+  }
+
+  console.log(`[Support] 🗑️ Admin @${session.username} deleted chat thread ${threadId}`);
+  res.json({ success: true, message: 'Chat thread deleted successfully.' });
+});
+
+// POST /api/support/delete-message - Admin deletes an individual message
+app.post('/api/support/delete-message', async (req, res) => {
+  const session = getAuthenticatedUser(req);
+  if (!session || session.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Unauthorized: Admin access required.' });
+  }
+
+  const { threadId, messageId } = req.body;
+  if (!threadId || !messageId) {
+    return res.status(400).json({ success: false, error: 'Thread ID and Message ID are required.' });
+  }
+
+  const data = loadSupportMessages();
+  const thread = (data.threads || []).find(t => t.id === threadId);
+
+  if (!thread) {
+    return res.status(404).json({ success: false, error: 'Chat thread not found.' });
+  }
+
+  thread.messages = (thread.messages || []).filter(m => m.id !== messageId);
+  thread.updatedAt = new Date().toISOString();
+  saveSupportMessages(data);
+
+  // Update in Cloud Firestore
+  await syncChatToFirestore(thread);
+
+  console.log(`[Support] 🗑️ Admin @${session.username} deleted message ${messageId} from thread ${threadId}`);
+  res.json({ success: true, message: 'Message deleted successfully.' });
+});
+
 // Dedicated User Manual Documentation Route
 app.get('/manual', (req, res) => {
   const manualPath = path.join(__dirname, 'public', 'manual.html');

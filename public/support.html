@@ -382,7 +382,7 @@
         supportSubtitle.textContent = 'Administrator Console';
         heroDeskStatus.textContent = 'Administrator Logged In';
         heroTitle.textContent = 'Support Inbox & User Reply Center';
-        heroSubtitle.textContent = 'Select any user chat inquiry below to send direct administrator replies.';
+        heroSubtitle.textContent = 'Select any user chat inquiry below to send direct administrator replies or manage messages.';
         return;
       }
 
@@ -490,6 +490,11 @@
       if (!adminThreadsList) return;
       if (adminThreadCount) adminThreadCount.textContent = threads.length;
 
+      if (!threads || threads.length === 0) {
+        adminThreadsList.innerHTML = '<div class="p-3 text-center text-xs text-slate-400">No active user chats yet.</div>';
+        return;
+      }
+
       adminThreadsList.innerHTML = threads.map(t => {
         const isSel = t.id === selectedThreadId;
         const msgCount = (t.messages || []).length;
@@ -498,7 +503,7 @@
         const phone = t.senderPhone || t.senderContact || '';
 
         return `
-          <div class="admin-thread-card p-2 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+          <div class="admin-thread-card p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between ${
             isSel 
               ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
               : 'bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-800 text-slate-800 dark:text-slate-200 hover:bg-purple-100 dark:hover:bg-purple-950/60'
@@ -510,8 +515,11 @@
               </div>
               <p class="text-[10.5px] truncate opacity-90">${escapeHtml(lastMsg)}</p>
             </div>
-            <div class="text-right shrink-0">
+            <div class="flex items-center space-x-1.5 shrink-0">
               <span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold ${isSel ? 'bg-white/20 text-white' : 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'}">${msgCount} msg</span>
+              <button type="button" onclick="event.stopPropagation(); deleteAdminThread('${t.id}', '${escapeHtml(sender)}')" class="p-1 rounded text-rose-300 hover:text-rose-100 hover:bg-rose-600/30 transition" title="Delete User Chat">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
             </div>
           </div>
         `;
@@ -528,6 +536,52 @@
           chatMessageInput.placeholder = 'Reply to ' + (t.senderName || 'user') + '...';
           chatMessageInput.focus();
         }
+      }
+    };
+
+    window.deleteAdminThread = async function(threadId, senderName) {
+      if (!confirm('Are you sure you want to permanently delete chat thread from ' + (senderName || 'this user') + '? This cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
+        const res = await fetch('/api/support/delete-thread', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ threadId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (selectedThreadId === threadId) selectedThreadId = null;
+          loadChatMessages();
+        } else {
+          alert('Delete failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Network error deleting thread.');
+      }
+    };
+
+    window.deleteAdminMessage = async function(threadId, messageId) {
+      if (!confirm('Delete this specific message?')) return;
+      try {
+        const token = localStorage.getItem('rail_user_jwt_token') || sessionStorage.getItem('rail_user_jwt_token');
+        const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
+        const res = await fetch('/api/support/delete-message', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ threadId, messageId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadChatMessages();
+        } else {
+          alert('Delete failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Network error deleting message.');
       }
     };
 
@@ -561,17 +615,23 @@
       if (isAdmin && currentThread) {
         const phone = currentThread.senderPhone || currentThread.senderContact;
         headerInfoHtml = `
-          <div class="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex items-center justify-between text-xs mb-3">
-            <div class="flex items-center space-x-2">
-              <div class="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+          <div class="p-2.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-wrap items-center justify-between gap-2 text-xs mb-3">
+            <div class="flex items-center space-x-2 min-w-0">
+              <div class="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
                 <i class="fa-solid fa-user"></i>
               </div>
-              <div>
-                <span class="font-black text-purple-900 dark:text-purple-200">${escapeHtml(currentThread.senderName || 'User')}</span>
+              <div class="min-w-0">
+                <span class="font-black text-purple-900 dark:text-purple-200 truncate">${escapeHtml(currentThread.senderName || 'User')}</span>
                 ${phone ? `<span class="text-purple-600 dark:text-purple-400 font-mono text-[11px] ml-1">(${escapeHtml(phone)})</span>` : ''}
               </div>
             </div>
-            ${phone ? `<a href="tel:${escapeHtml(phone)}" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-2xs flex items-center space-x-1"><i class="fa-solid fa-phone text-[9px]"></i><span>Call User</span></a>` : ''}
+            <div class="flex items-center space-x-1.5 shrink-0">
+              ${phone ? `<a href="tel:${escapeHtml(phone)}" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-2xs flex items-center space-x-1"><i class="fa-solid fa-phone text-[9px]"></i><span>Call User</span></a>` : ''}
+              <button type="button" onclick="deleteAdminThread('${currentThread.id}', '${escapeHtml(currentThread.senderName || 'User')}')" class="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] shadow-2xs flex items-center space-x-1 cursor-pointer" title="Delete This User Chat">
+                <i class="fa-solid fa-trash-can text-[9px]"></i>
+                <span>Delete Chat</span>
+              </button>
+            </div>
           </div>
         `;
       }
@@ -582,7 +642,7 @@
 
         if (isFromAdmin) {
           return `
-            <div class="flex items-start space-x-2.5 max-w-[85%]">
+            <div class="flex items-start space-x-2.5 max-w-[85%] group">
               <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center text-xs shrink-0 mt-1 shadow-xs">
                 <i class="fa-solid fa-user-shield"></i>
               </div>
@@ -592,6 +652,7 @@
                   <span class="px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[9px]">Admin</span>
                   <span>&bull;</span>
                   <span>${timeStr}</span>
+                  ${isAdmin ? `<button type="button" onclick="deleteAdminMessage('${currentThread.id}', '${m.id}')" class="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-600 ml-1 transition cursor-pointer" title="Delete this message"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
                 </div>
                 <div class="p-3 rounded-2xl bg-purple-50 dark:bg-slate-800 border border-purple-100 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 shadow-xs chat-bubble-admin leading-relaxed">
                   ${escapeHtml(m.text)}
@@ -601,9 +662,10 @@
           `;
         } else {
           return `
-            <div class="flex items-end justify-end space-x-2.5 ml-auto max-w-[85%]">
+            <div class="flex items-end justify-end space-x-2.5 ml-auto max-w-[85%] group">
               <div class="space-y-1 text-right">
                 <div class="flex items-center justify-end space-x-1.5 text-[10px] text-slate-400 font-bold">
+                  ${isAdmin ? `<button type="button" onclick="deleteAdminMessage('${currentThread.id}', '${m.id}')" class="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-600 mr-1 transition cursor-pointer" title="Delete this message"><i class="fa-solid fa-trash text-[9px]"></i></button>` : ''}
                   <span>${timeStr}</span>
                   <span>&bull;</span>
                   <span class="font-black text-slate-700 dark:text-slate-300">${escapeHtml(m.sender || 'You')}</span>

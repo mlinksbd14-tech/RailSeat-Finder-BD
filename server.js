@@ -184,6 +184,7 @@ function initFirebase() {
       
       // Perform initial database synchronization
       syncFirestoreUsers();
+      syncFirestoreChatHistory();
     } catch (err) {
       console.error('[Firebase] ❌ Initialization error:', err.message);
       isFirebaseConnected = false;
@@ -191,6 +192,52 @@ function initFirebase() {
     }
   } else {
     console.log('[Firebase] ℹ️ Operating in local database mode. Place serviceAccountKey.json in root to connect Firebase.');
+  }
+}
+
+async function syncFirestoreChatHistory() {
+  if (!firestoreDb) return;
+  try {
+    const snapshot = await firestoreDb.collection('chat_history').get();
+    if (snapshot.empty) {
+      const localData = loadSupportMessages();
+      if (localData.threads && localData.threads.length > 0) {
+        console.log(`[Firebase Firestore] 📤 Seeding ${localData.threads.length} chat thread(s) to 'chat_history' table...`);
+        const batch = firestoreDb.batch();
+        for (const thread of localData.threads) {
+          const docRef = firestoreDb.collection('chat_history').doc(thread.id);
+          batch.set(docRef, thread);
+        }
+        await batch.commit();
+        console.log('[Firebase Firestore] ✅ chat_history seeded successfully.');
+      }
+    } else {
+      const threads = [];
+      snapshot.forEach(doc => {
+        threads.push(doc.data());
+      });
+      threads.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+      saveSupportMessages({ threads });
+      console.log(`[Firebase Firestore] 📥 Pulled ${threads.length} chat thread(s) from 'chat_history' table.`);
+    }
+  } catch (err) {
+    console.warn('[Firebase Firestore] ⚠️ Chat sync error with Firestore:', err.message);
+  }
+}
+
+async function syncChatToFirestore(thread, message) {
+  if (!firestoreDb || !isFirebaseConnected || !thread) return;
+  try {
+    const docRef = firestoreDb.collection('chat_history').doc(thread.id);
+    await docRef.set(thread, { merge: true });
+
+    if (message) {
+      const msgRef = docRef.collection('messages').doc(message.id);
+      await msgRef.set(message, { merge: true });
+    }
+    console.log(`[Firebase Firestore] 💬 Synced chat to 'chat_history' table: thread=${thread.id}`);
+  } catch (err) {
+    console.warn(`[Firebase Firestore] ⚠️ Failed to sync chat thread ${thread.id} to Firestore:`, err.message);
   }
 }
 
@@ -5033,7 +5080,7 @@ app.get('/api/support/messages', (req, res) => {
 });
 
 // POST /api/support/send - Send a support message
-app.post('/api/support/send', (req, res) => {
+app.post('/api/support/send', async (req, res) => {
   const session = getAuthenticatedUser(req);
   const isAdmin = session && session.role === 'admin';
   const { sessionId, senderName, senderContact, message } = req.body;
@@ -5077,8 +5124,52 @@ app.post('/api/support/send', (req, res) => {
   thread.updatedAt = new Date().toISOString();
   saveSupportMessages(data);
 
+  // Sync to Cloud Firestore 'chat_history' table
+  await syncChatToFirestore(thread, newMsg);
+
   console.log(`[Support] 💬 New message from ${newMsg.sender} (${newMsg.senderRole}): "${cleanMsg.substring(0, 40)}..."`);
   res.json({ success: true, message: newMsg });
+});
+
+// POST /api/support/reply - Admin replies to a chat thread
+app.post('/api/support/reply', async (req, res) => {
+  const session = getAuthenticatedUser(req);
+  if (!session || session.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Unauthorized: Admin access required.' });
+  }
+
+  const { threadId, replyText } = req.body;
+  const cleanReply = (replyText || '').trim();
+
+  if (!threadId || !cleanReply) {
+    return res.status(400).json({ success: false, error: 'Thread ID and reply text are required.' });
+  }
+
+  const data = loadSupportMessages();
+  const thread = (data.threads || []).find(t => t.id === threadId);
+
+  if (!thread) {
+    return res.status(404).json({ success: false, error: 'Chat thread not found.' });
+  }
+
+  const adminMsg = {
+    id: 'msg_reply_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    sender: session.name || session.username || 'Admin Support',
+    senderRole: 'admin',
+    text: cleanReply,
+    timestamp: new Date().toISOString()
+  };
+
+  if (!thread.messages) thread.messages = [];
+  thread.messages.push(adminMsg);
+  thread.updatedAt = new Date().toISOString();
+  saveSupportMessages(data);
+
+  // Sync to Cloud Firestore 'chat_history' table
+  await syncChatToFirestore(thread, adminMsg);
+
+  console.log(`[Support] 👑 Admin reply sent to thread ${threadId}: "${cleanReply.substring(0, 40)}..."`);
+  res.json({ success: true, message: adminMsg, thread });
 });
 
 // Dedicated User Manual Documentation Route

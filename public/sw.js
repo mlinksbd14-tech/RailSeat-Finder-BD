@@ -1,10 +1,12 @@
 // RailSeat Finder BD - High Performance Service Worker & Web Push Engine
-const CACHE_NAME = 'railseat-finder-v10.11';
+const CACHE_NAME = 'railseat-finder-v10.12';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manual',
   '/support',
+  '/manual.html',
+  '/support.html',
   '/css/style.css',
   '/js/app.js',
   '/favicon.ico',
@@ -45,6 +47,10 @@ self.addEventListener('fetch', event => {
   // Network-First for core application shell
   const isCoreAsset = url.pathname === '/' || 
                       url.pathname === '/index.html' || 
+                      url.pathname === '/manual' || 
+                      url.pathname === '/support' || 
+                      url.pathname === '/manual.html' || 
+                      url.pathname === '/support.html' || 
                       url.pathname.endsWith('.js') || 
                       url.pathname.endsWith('.css');
 

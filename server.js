@@ -744,7 +744,25 @@ app.get('/', (req, res) => {
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
   }
-  return res.status(404).send('<h1>RailSeat Finder BD</h1><p>Error: public/index.html not found on this server. Please ensure the public directory was uploaded.</p>');
+  return res.status(404).send('<h1>RailSeat Finder BD</h1><p>Error: public/index.html not found on this server.</p>');
+});
+
+// Explicit Support Page Route
+app.get(['/support', '/support.html'], (req, res) => {
+  const supportPath = path.join(publicDir, 'support.html');
+  if (fs.existsSync(supportPath)) {
+    return res.sendFile(supportPath);
+  }
+  res.redirect('/');
+});
+
+// Explicit User Manual Page Route
+app.get(['/manual', '/manual.html'], (req, res) => {
+  const manualPath = path.join(publicDir, 'manual.html');
+  if (fs.existsSync(manualPath)) {
+    return res.sendFile(manualPath);
+  }
+  res.redirect('/USER_MANUAL.md');
 });
 
 // Load stations list

@@ -2634,14 +2634,15 @@ app.all('/api/live-tracker/rail-curve', (req, res) => {
     const key1 = `${from}->${to}`;
     const key2 = `${to}->${from}`;
 
-    if (curves[key1]) {
+    if (curves[key1] && curves[key1].length > 2) {
       return res.json({ success: true, coordinates: curves[key1] });
     }
-    if (curves[key2]) {
+    if (curves[key2] && curves[key2].length > 2) {
       return res.json({ success: true, coordinates: curves[key2].slice().reverse() });
     }
 
     for (const [k, v] of Object.entries(curves)) {
+      if (!Array.isArray(v) || v.length <= 2) continue;
       const [s1, s2] = k.split('->');
       if ((s1.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s1.toLowerCase())) &&
           (s2.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s2.toLowerCase()))) {

@@ -7698,28 +7698,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const completedPts = trackPoints.slice(0, splitIdx + 1);
         const remainingPts = trackPoints.slice(splitIdx);
 
-        // Completed segment — muted grey, faded
+        // Completed segment — muted grey along track
         if (completedPts.length > 1) {
           mapLayerGroup.addLayer(L.polyline(completedPts, {
-            color: '#64748b', weight: 3.5, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+            color: '#64748b', weight: 3, opacity: 0.6, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
           }));
         }
-        // Remaining segment — glowing cyan (full style)
+        // Remaining segment — glowing cyan transit track matching Google Maps
         if (remainingPts.length > 1) {
           mapLayerGroup.addLayer(L.polyline(remainingPts, {
-            color: '#06b6d4', weight: 7, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+            color: '#06b6d4', weight: 5.5, opacity: 0.5, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
           }));
           mapLayerGroup.addLayer(L.polyline(remainingPts, {
-            color: '#0891b2', weight: 3.5, opacity: 0.95, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+            color: '#0284c7', weight: 2.5, opacity: 1, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
           }));
         }
       } else {
-        // No progress data — render full line in uniform cyan
+        // No progress data — render full line in uniform cyan transit track
         mapLayerGroup.addLayer(L.polyline(trackPoints, {
-          color: '#06b6d4', weight: 7, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+          color: '#06b6d4', weight: 5.5, opacity: 0.5, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
         }));
         mapLayerGroup.addLayer(L.polyline(trackPoints, {
-          color: '#0891b2', weight: 3.5, opacity: 0.95, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+          color: '#0284c7', weight: 2.5, opacity: 1, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
         }));
       }
     }

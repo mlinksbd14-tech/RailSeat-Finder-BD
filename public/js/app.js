@@ -6080,6 +6080,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      // Update Dynamic Registration Policy Banner & Button Labels
+      const registerPolicyBanner = document.getElementById('registerPolicyBanner');
+      const registerPolicyText = document.getElementById('registerPolicyText');
+      const registerEmailHint = document.getElementById('registerEmailHint');
+      const submitRegisterBtnText = document.getElementById('submitRegisterBtnText');
+      const submitRegisterBtnIcon = document.getElementById('submitRegisterBtnIcon');
+
+      const reqEmail = (state.requireEmailVerification === true);
+      const reqApproval = (state.requireAdminApproval === true);
+
+      if (registerPolicyBanner && registerPolicyText) {
+        if (reqEmail && reqApproval) {
+          registerPolicyText.innerHTML = '<strong>Verification Policy:</strong> A verification link will be sent to your email. Administrator approval is required before dashboard access.';
+          registerPolicyBanner.classList.remove('hidden');
+        } else if (reqEmail) {
+          registerPolicyText.innerHTML = '<strong>Email Verification Required:</strong> A verification link will be sent to your email to verify your account.';
+          registerPolicyBanner.classList.remove('hidden');
+        } else if (reqApproval) {
+          registerPolicyText.innerHTML = '<strong>Administrator Approval Required:</strong> Your account will be reviewed by the administrator before dashboard access is granted.';
+          registerPolicyBanner.classList.remove('hidden');
+        } else {
+          // Both off — completely hide verification/approval banner!
+          registerPolicyBanner.classList.add('hidden');
+        }
+      }
+
+      if (registerEmailHint) {
+        registerEmailHint.classList.toggle('hidden', !reqEmail);
+      }
+
+      if (submitRegisterBtnText) {
+        if (reqEmail && reqApproval) {
+          submitRegisterBtnText.textContent = 'Create Account & Send Verification';
+        } else if (reqEmail) {
+          submitRegisterBtnText.textContent = 'Create Account & Verify Email';
+        } else if (reqApproval) {
+          submitRegisterBtnText.textContent = 'Submit Registration for Approval';
+        } else {
+          submitRegisterBtnText.textContent = 'Create Account';
+        }
+      }
+
+      if (submitRegisterBtnIcon) {
+        submitRegisterBtnIcon.className = reqEmail ? 'fa-solid fa-paper-plane' : 'fa-solid fa-user-plus';
+      }
+
       // Update Registration Open/Closed State in Auth Modal
       if (registrationClosedBanner) {
         const isRegClosed = (state.allowRegistration === false);
@@ -6373,14 +6419,19 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        const reqEmail = (state.requireEmailVerification === true);
+        const reqApproval = (state.requireAdminApproval === true);
+
         submitRegisterBtn.disabled = true;
-        submitRegisterBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Creating Account & Sending Verification...';
+        submitRegisterBtn.innerHTML = reqEmail
+          ? '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Creating Account & Sending Verification...'
+          : '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Creating Account...';
         if (registerStatusMsg) registerStatusMsg.textContent = '';
 
         let firebaseUid = null;
         try {
-          // Attempt Firebase Auth creation & dispatch email verification
-          if (window.firebase && firebase.auth) {
+          // Only attempt Firebase Auth creation & email verification if Email Verification is ENABLED
+          if (reqEmail && window.firebase && firebase.auth) {
             ensureFirebaseInitialized();
             try {
               const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -6391,28 +6442,35 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             } catch (fbErr) {
               console.warn('[Firebase Auth] Client user create note:', fbErr.message);
-              // If user already exists in Firebase Auth, we proceed to check local system
             }
           }
 
           const res = await fetch('/api/user-auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, username, password, firebaseUid, emailVerified: false })
+            body: JSON.stringify({ name, email, username, password, firebaseUid, emailVerified: !reqEmail })
           });
           const data = await res.json();
 
           if (data.success) {
             if (registerStatusMsg) {
-              registerStatusMsg.innerHTML = `✅ <strong>Verification Email Sent!</strong><br><span class="text-[11px] font-normal">A verification link has been sent to <strong>${email}</strong>. Please check your inbox (and spam folder) to verify your account, then await administrator approval.</span>`;
+              if (reqEmail && reqApproval) {
+                registerStatusMsg.innerHTML = `✅ <strong>Verification Email Sent!</strong><br><span class="text-[11px] font-normal">A verification link has been sent to <strong>${email}</strong>. Please check your inbox to verify your account, then await administrator approval.</span>`;
+              } else if (reqEmail) {
+                registerStatusMsg.innerHTML = `✅ <strong>Verification Email Sent!</strong><br><span class="text-[11px] font-normal">A verification link has been sent to <strong>${email}</strong>. Please check your inbox (and spam folder) to verify your account.</span>`;
+              } else if (reqApproval) {
+                registerStatusMsg.innerHTML = `✅ <strong>Registration Submitted!</strong><br><span class="text-[11px] font-normal">Your account has been submitted and is pending administrator approval before sign-in.</span>`;
+              } else {
+                registerStatusMsg.innerHTML = `✅ <strong>Registration Successful!</strong><br><span class="text-[11px] font-normal">Your account is ready! You can now sign in immediately.</span>`;
+              }
               registerStatusMsg.className = 'text-xs font-bold text-center text-emerald-700 dark:text-emerald-300 p-3 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-300 dark:border-emerald-700 space-y-1';
             }
-            showToast(`✉️ Verification link sent to ${email}`, 'success');
+            showToast(data.message || (reqEmail ? `✉️ Verification link sent to ${email}` : 'Registration successful!'), 'success');
             userRegisterForm.reset();
             setTimeout(() => {
               if (loginTabBtn) loginTabBtn.click();
               if (loginUsername) loginUsername.value = username;
-            }, 6000);
+            }, reqEmail ? 5000 : 2500);
           } else {
             if (registerStatusMsg) {
               registerStatusMsg.textContent = `❌ ${data.error || 'Registration failed.'}`;
@@ -6426,7 +6484,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } finally {
           submitRegisterBtn.disabled = false;
-          submitRegisterBtn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i> Create Account & Send Verification';
+          const btnText = reqEmail ? (reqApproval ? 'Create Account & Send Verification' : 'Create Account & Verify Email') : (reqApproval ? 'Submit Registration for Approval' : 'Create Account');
+          const btnIcon = reqEmail ? 'fa-paper-plane' : 'fa-user-plus';
+          submitRegisterBtn.innerHTML = `<i class="fa-solid ${btnIcon} mr-1" id="submitRegisterBtnIcon"></i> <span id="submitRegisterBtnText">${btnText}</span>`;
         }
       });
     }

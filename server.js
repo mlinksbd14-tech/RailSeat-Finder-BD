@@ -3528,12 +3528,13 @@ app.post('/api/user-auth/register', async (req, res) => {
     emailVerified: newUser.emailVerified,
     instantActive: status === 'active',
     requireEmailVerification,
+    requireAdminApproval: requireApproval,
     message: (cleanEmail && requireEmailVerification)
       ? (requireApproval
           ? 'Registration submitted! Please verify your email via the link sent to your inbox. Once approved by administrator, you will be able to sign in.'
           : 'Registration successful! Please verify your email via the link sent to your inbox. You can sign in immediately once verified.')
       : (requireApproval
-          ? 'Registration submitted successfully! Your account is pending administrator approval.'
+          ? 'Registration submitted successfully! Your account is pending administrator approval before sign in.'
           : 'Registration successful! Your account is active and you can sign in now.')
   });
 });

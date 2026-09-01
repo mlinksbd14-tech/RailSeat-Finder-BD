@@ -11,7 +11,7 @@
     "authNotice": "Welcome to RailSeat Finder BD!",
     "authNoticeEnabled": true,
     "requireAdminApproval": false,
-    "requireEmailVerification": false,
+    "requireEmailVerification": true,
     "allowRegistration": true
   },
   "users": [

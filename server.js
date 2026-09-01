@@ -5125,8 +5125,9 @@ function openBrowser(url) {
 
 // Start Server with dynamic port fallback
 function startServer(portToTry) {
-  const server = app.listen(portToTry, () => {
-    const serverUrl = `http://localhost:${portToTry}`;
+  const numericPort = parseInt(portToTry, 10) || 3000;
+  const server = app.listen(numericPort, () => {
+    const serverUrl = `http://localhost:${numericPort}`;
     console.log(`====================================================`);
     console.log(` 🚆 RailSeat Finder BD - Bangladesh Railway Seat Availability`);
     console.log(` 🌐 Server running at: ${serverUrl}`);
@@ -5144,8 +5145,9 @@ function startServer(portToTry) {
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.warn(`[Port Conflict] Port ${portToTry} is busy. Trying port ${portToTry + 1}...`);
-      startServer(portToTry + 1);
+      const nextPort = numericPort + 1;
+      console.warn(`[Port Conflict] Port ${numericPort} is busy. Trying port ${nextPort}...`);
+      startServer(nextPort);
     } else {
       console.error('Server error:', err);
     }

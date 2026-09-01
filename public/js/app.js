@@ -7578,33 +7578,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // In individual train mode, indicate live train route with origin & destination and route line
+      // In individual train mode, place station markers on origin & destination
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
-
-        const routeWaypoints = (t.current_coords && t.current_coords[0])
-          ? [t.from_coords, t.current_coords, t.to_coords]
-          : [t.from_coords, t.to_coords];
-
-        // Glowing Live Route Indicator Line
-        const glowCasing = L.polyline(routeWaypoints, {
-          color: '#06b6d4',
-          weight: 6,
-          opacity: 0.45,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveNetworkMarkersGroup.addLayer(glowCasing);
-
-        const coreLine = L.polyline(routeWaypoints, {
-          color: '#0891b2',
-          weight: 3.5,
-          opacity: 0.95,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveNetworkMarkersGroup.addLayer(coreLine);
 
         const fromDot = L.circleMarker(t.from_coords, {
           radius: 6.5,
@@ -7801,27 +7778,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (!trainCoord && validCoords.length > 0) {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
-    }
-
-    // Indicate live train route across all stoppages
-    if (validCoords.length > 1) {
-      const glowCasing = L.polyline(validCoords, {
-        color: '#06b6d4',
-        weight: 7,
-        opacity: 0.45,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      liveModalMapLayerGroup.addLayer(glowCasing);
-
-      const coreRoute = L.polyline(validCoords, {
-        color: '#0891b2',
-        weight: 3.5,
-        opacity: 0.95,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      liveModalMapLayerGroup.addLayer(coreRoute);
     }
 
     if (validCoords.length > 0) {

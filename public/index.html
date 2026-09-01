@@ -201,7 +201,7 @@
   </header>
 
   <!-- Main Content Container -->
-  <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 py-3.5 space-y-3.5">
+  <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 pt-3.5 pb-24 md:pb-3.5 space-y-3.5">
 
     <!-- ============================================== -->
     <!-- 💺 SEAT FINDER SECTION (SEARCH, STATS, RESULTS) -->
@@ -2764,8 +2764,54 @@
     </div>
   </footer>
 
+  <!-- Mobile Bottom Navigation Bar (hidden on md+ screens) -->
+  <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]" style="padding-bottom: env(safe-area-inset-bottom, 0)">
+    <div class="flex items-stretch justify-around px-1 pt-1 pb-2">
+      <!-- Seat Finder -->
+      <button type="button" id="mobileNavSeatFinderBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"></div>
+        <i class="fa-solid fa-chair text-[17px] text-slate-400 group-[.active-tab]:text-emerald-500 transition-colors"></i>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors">Seats</span>
+      </button>
+      <!-- Live Radar -->
+      <button type="button" id="mobileNavLiveRadarBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-cyan-500"></div>
+        <div class="relative">
+          <i class="fa-solid fa-satellite-dish text-[17px] text-slate-400 group-[.active-tab]:text-cyan-500 transition-colors"></i>
+          <span class="absolute -top-1 -right-2 w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+        </div>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-cyan-600 dark:group-[.active-tab]:text-cyan-400 transition-colors">Radar</span>
+      </button>
+      <!-- Routes -->
+      <button type="button" id="mobileNavRoutesBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"></div>
+        <i class="fa-solid fa-route text-[17px] text-slate-400 group-[.active-tab]:text-emerald-500 transition-colors"></i>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors">Routes</span>
+      </button>
+      <!-- Watchlist -->
+      <button type="button" id="mobileNavWatchlistBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-amber-500"></div>
+        <div class="relative">
+          <i class="fa-solid fa-crosshairs text-[17px] text-slate-400 group-[.active-tab]:text-amber-500 transition-colors"></i>
+          <span id="mobileWatchlistBadge" class="hidden absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 bg-amber-500 text-white font-extrabold text-[8px] rounded-full flex items-center justify-center"></span>
+        </div>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-amber-600 dark:group-[.active-tab]:text-amber-400 transition-colors">Watchlist</span>
+      </button>
+      <!-- Notifications -->
+      <button type="button" id="mobileNavNotifBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-indigo-500"></div>
+        <div class="relative">
+          <i class="fa-solid fa-bell text-[17px] text-slate-400 group-[.active-tab]:text-indigo-500 transition-colors"></i>
+          <span id="mobileNotifBadge" class="hidden absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 bg-rose-500 text-white font-extrabold text-[8px] rounded-full flex items-center justify-center"></span>
+        </div>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-indigo-600 dark:group-[.active-tab]:text-indigo-400 transition-colors">Alerts</span>
+      </button>
+    </div>
+  </nav>
+
   <!-- Notification Toast Container -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
+  <div id="toastContainer" class="fixed bottom-20 md:bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
+
 
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

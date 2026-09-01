@@ -7165,13 +7165,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initLiveTrackerModule() {
-    // Navigation Tabs Switching
+    // Navigation Tabs Switching (Top Nav)
     if (navSeatFinderBtn) {
       navSeatFinderBtn.addEventListener('click', () => switchMainTab('seats'));
     }
     if (navLiveTrackerBtn) {
       navLiveTrackerBtn.addEventListener('click', () => switchMainTab('tracker'));
     }
+
+    // Mobile Bottom Navigation Bar — wired to same actions as top nav
+    const mobileNavSeatFinderBtn = document.getElementById('mobileNavSeatFinderBtn');
+    const mobileNavLiveRadarBtn  = document.getElementById('mobileNavLiveRadarBtn');
+    const mobileNavRoutesBtn     = document.getElementById('mobileNavRoutesBtn');
+    const mobileNavWatchlistBtn  = document.getElementById('mobileNavWatchlistBtn');
+    const mobileNavNotifBtn      = document.getElementById('mobileNavNotifBtn');
+
+    if (mobileNavSeatFinderBtn) mobileNavSeatFinderBtn.addEventListener('click', () => switchMainTab('seats'));
+    if (mobileNavLiveRadarBtn)  mobileNavLiveRadarBtn.addEventListener('click', () => switchMainTab('tracker'));
+    if (mobileNavRoutesBtn)     mobileNavRoutesBtn.addEventListener('click', () => { const btn = document.getElementById('openRouteExplorerBtn'); if (btn) btn.click(); });
+    if (mobileNavWatchlistBtn)  mobileNavWatchlistBtn.addEventListener('click', () => { const btn = document.getElementById('openWatchlistBtn'); if (btn) btn.click(); });
+    if (mobileNavNotifBtn)      mobileNavNotifBtn.addEventListener('click', () => { const btn = document.getElementById('notifBell'); if (btn) btn.click(); });
+
+    // Sync mobile bottom nav watchlist badge whenever the top badge updates
+    const topWatchlistBadge = document.getElementById('watchlistBadge');
+    const mobileWatchlistBadge = document.getElementById('mobileWatchlistBadge');
+    const topNotifBadge = document.getElementById('notifCountBadge');
+    const mobileNotifBadge = document.getElementById('mobileNotifBadge');
+    if (topWatchlistBadge && mobileWatchlistBadge) {
+      new MutationObserver(() => {
+        const count = topWatchlistBadge.textContent.trim();
+        mobileWatchlistBadge.textContent = count;
+        mobileWatchlistBadge.classList.toggle('hidden', topWatchlistBadge.classList.contains('hidden') || !count || count === '0');
+      }).observe(topWatchlistBadge, { childList: true, attributes: true, attributeFilter: ['class'] });
+    }
+    if (topNotifBadge && mobileNotifBadge) {
+      new MutationObserver(() => {
+        const count = topNotifBadge.textContent.trim();
+        mobileNotifBadge.textContent = count;
+        mobileNotifBadge.classList.toggle('hidden', topNotifBadge.classList.contains('hidden') || !count || count === '0');
+      }).observe(topNotifBadge, { childList: true, attributes: true, attributeFilter: ['class'] });
+    }
+
+    // Set initial mobile bottom nav active tab to Seats
+    syncMobileBottomNav('seats');
 
     // Refresh Button
     if (refreshLiveTrackerBtn) {
@@ -7387,8 +7423,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+
+  function syncMobileBottomNav(tab) {
+    const tabMap = {
+      seats: 'mobileNavSeatFinderBtn',
+      tracker: 'mobileNavLiveRadarBtn'
+    };
+    document.querySelectorAll('.mobile-bottom-nav-btn').forEach(btn => {
+      btn.classList.remove('active-tab');
+      const ind = btn.querySelector('.mobile-nav-indicator');
+      if (ind) ind.classList.add('hidden');
+    });
+    const activeId = tabMap[tab];
+    if (activeId) {
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) {
+        activeBtn.classList.add('active-tab');
+        const ind = activeBtn.querySelector('.mobile-nav-indicator');
+        if (ind) ind.classList.remove('hidden');
+      }
+    }
+  }
+
   function switchMainTab(tab) {
     state.activeMainTab = tab;
+    syncMobileBottomNav(tab);
 
     if (tab === 'tracker') {
       if (seatFinderSection) seatFinderSection.classList.add('hidden');
@@ -7465,6 +7524,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let liveNetworkMarkersGroup = null;
   let liveModalLeafletMap = null;
   let liveModalMapLayerGroup = null;
+  // Dedicated map for smooth-animated train beacon markers (not cleared on each refresh)
+  let liveTrainBeaconMap = new Map(); // train_no → L.marker
+
 
   function toggleElementFullscreen(el, iconEl, mapInstance) {
     if (!el) return;
@@ -7518,6 +7580,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
+  // Smoothly animate a Leaflet marker to a new [lat, lng] over durationMs milliseconds
+  function animateLeafletMarker(marker, newLatLng, durationMs = 2800) {
+    if (!marker) return;
+    const start = marker.getLatLng();
+    const startLat = start.lat, startLng = start.lng;
+    const endLat = newLatLng[0], endLng = newLatLng[1];
+    if (Math.abs(startLat - endLat) < 0.00001 && Math.abs(startLng - endLng) < 0.00001) return;
+    const startTime = performance.now();
+    const easeInOut = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const tick = (now) => {
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const e = easeInOut(t);
+      marker.setLatLng([startLat + (endLat - startLat) * e, startLng + (endLng - startLng) * e]);
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // Convert bearing degrees to an 8-point compass label
+  function compassDir(deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return dirs[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+  }
+
   function calculateBearing(p1, p2) {
     if (!p1 || !p2 || (p1[0] === p2[0] && p1[1] === p2[1])) return 0;
     const lat1 = (p1[0] * Math.PI) / 180;
@@ -7545,7 +7632,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return minD < 0.15 ? best : pt;
   }
 
-  async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords, fromCoords, toCoords) {
+  async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords, fromCoords, toCoords, progressPct) {
     if (!mapLayerGroup) return null;
     let trackPoints = null;
 
@@ -7591,30 +7678,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (trackPoints && trackPoints.length > 1) {
-      // 1. Glowing Casing along exact Google train line
-      const glow = L.polyline(trackPoints, {
-        color: '#06b6d4',
-        weight: 7,
-        opacity: 0.45,
-        smoothFactor: 0,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      mapLayerGroup.addLayer(glow);
+      const pct = (progressPct !== null && progressPct !== undefined && progressPct >= 0 && progressPct <= 100) ? progressPct : null;
 
-      // 2. Core 100% Accurate Physical Rail Track Line
-      const core = L.polyline(trackPoints, {
-        color: '#0891b2',
-        weight: 3.5,
-        opacity: 0.95,
-        smoothFactor: 0,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      mapLayerGroup.addLayer(core);
+      if (pct !== null && pct > 0) {
+        // Split polyline into completed (grey) and remaining (cyan glow) segments
+        const splitIdx = Math.max(1, Math.min(trackPoints.length - 1, Math.round(trackPoints.length * pct / 100)));
+        const completedPts = trackPoints.slice(0, splitIdx + 1);
+        const remainingPts = trackPoints.slice(splitIdx);
+
+        // Completed segment — muted grey, faded
+        if (completedPts.length > 1) {
+          mapLayerGroup.addLayer(L.polyline(completedPts, {
+            color: '#64748b', weight: 3.5, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+          }));
+        }
+        // Remaining segment — glowing cyan (full style)
+        if (remainingPts.length > 1) {
+          mapLayerGroup.addLayer(L.polyline(remainingPts, {
+            color: '#06b6d4', weight: 7, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+          }));
+          mapLayerGroup.addLayer(L.polyline(remainingPts, {
+            color: '#0891b2', weight: 3.5, opacity: 0.95, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+          }));
+        }
+      } else {
+        // No progress data — render full line in uniform cyan
+        mapLayerGroup.addLayer(L.polyline(trackPoints, {
+          color: '#06b6d4', weight: 7, opacity: 0.45, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+        }));
+        mapLayerGroup.addLayer(L.polyline(trackPoints, {
+          color: '#0891b2', weight: 3.5, opacity: 0.95, smoothFactor: 0, lineCap: 'round', lineJoin: 'round'
+        }));
+      }
     }
     return trackPoints;
   }
+
 
   function initOrUpdateNetworkMap(trains) {
     if (!window.L || !document.getElementById('liveNetworkLeafletMap')) return;
@@ -7662,7 +7761,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!liveNetworkMarkersGroup) return;
-    liveNetworkMarkersGroup.clearLayers();
+    liveNetworkMarkersGroup.clearLayers(); // clears curves and station markers only
+
+    // Remove beacon markers for trains no longer in this update
+    const activeTrNos = new Set((trains || []).filter(t => (t.current_coords?.[0] || t.from_coords?.[0])).map(t => String(t.train_no)));
+    for (const [trNo, bm] of liveTrainBeaconMap.entries()) {
+      if (!activeTrNos.has(trNo)) {
+        liveNetworkLeafletMap.removeLayer(bm);
+        liveTrainBeaconMap.delete(trNo);
+      }
+    }
 
     const bounds = [];
     const isSingleSelectedTrain = (trains || []).length === 1;
@@ -7676,35 +7784,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // Compute heading bearing in degrees
+      // Compute travel heading bearing
       const bearing = (t.from_coords && t.to_coords)
         ? calculateBearing(latLng || t.from_coords, t.to_coords)
         : (t.from_coords && latLng ? calculateBearing(t.from_coords, latLng) : 0);
+      const dirLabel = compassDir(bearing);
 
-      // In individual train mode, place station markers strictly on origin & destination railway line
+      // In individual train mode, draw progress-split route + snapped station pins
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
 
-        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords);
+        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, null, t.from_coords, t.to_coords, t.progress_pct);
         const fromPos = snapPointToTrack(t.from_coords, trackPoints);
         const toPos = snapPointToTrack(t.to_coords, trackPoints);
 
         const fromDot = L.circleMarker(fromPos, {
-          radius: 6.5,
-          fillColor: '#10b981',
-          color: '#ffffff',
-          weight: 2,
-          fillOpacity: 1
+          radius: 6.5, fillColor: '#10b981', color: '#ffffff', weight: 2, fillOpacity: 1
         }).bindTooltip(`🚉 Origin: ${t.from}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
         liveNetworkMarkersGroup.addLayer(fromDot);
 
         const toDot = L.circleMarker(toPos, {
-          radius: 6.5,
-          fillColor: '#f43f5e',
-          color: '#ffffff',
-          weight: 2,
-          fillOpacity: 1
+          radius: 6.5, fillColor: '#f43f5e', color: '#ffffff', weight: 2, fillOpacity: 1
         }).bindTooltip(`🏁 Destination: ${t.to}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
         liveNetworkMarkersGroup.addLayer(toDot);
       }
@@ -7712,25 +7813,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const delayMin = t.delay_minutes || 0;
       const status = t.status;
       let colorClass = 'bg-cyan-500';
-      let ringClass = 'ring-cyan-500/40';
       if (status === 'completed' || status === 'arrived') {
         colorClass = 'bg-slate-400';
-        ringClass = 'ring-slate-400/30';
       } else if (status === 'scheduled') {
         colorClass = 'bg-blue-500';
-        ringClass = 'ring-blue-500/30';
       } else if (delayMin > 10) {
         colorClass = 'bg-amber-500';
-        ringClass = 'ring-amber-500/40';
       } else {
         colorClass = 'bg-emerald-500';
-        ringClass = 'ring-emerald-500/40';
       }
 
       const iconHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group">
           <!-- Directional Heading Pointer Arrow -->
-          <div class="absolute w-8 h-8 flex items-center justify-center pointer-events-none transition-transform duration-300" style="transform: rotate(${Math.round(bearing)}deg);">
+          <div class="absolute w-8 h-8 flex items-center justify-center pointer-events-none" style="transform: rotate(${Math.round(bearing)}deg);">
             <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-cyan-400 -translate-y-4 filter drop-shadow-md"></div>
           </div>
           <!-- Main Train Badge -->
@@ -7750,29 +7846,51 @@ document.addEventListener('DOMContentLoaded', () => {
         popupAnchor: [0, -16]
       });
 
+      const statusLabel = status === 'delayed' ? `🟡 Delay: +${delayMin}m` : (status === 'completed' ? '✅ Arrived' : (status === 'scheduled' ? '⏱ Scheduled' : '🟢 On Time'));
       const popupContent = `
-        <div class="p-1 space-y-1.5 min-w-[170px] text-slate-800">
+        <div class="p-1 space-y-1.5 min-w-[185px] text-slate-800">
           <div class="font-black text-xs text-cyan-700 flex items-center justify-between gap-1">
             <span>${escapeHtml(t.train_name)}</span>
             <span class="font-mono text-[10px] px-1 rounded bg-slate-100 font-bold">#${t.train_no}</span>
           </div>
-          <div class="text-[11px] font-bold text-slate-600">${escapeHtml(t.from)} ➔ ${escapeHtml(t.to)}</div>
-          <div class="flex items-center justify-between text-[10px] font-semibold pt-1 border-t border-slate-100">
-            <span>${status === 'delayed' ? `Delay: +${delayMin}m` : (status === 'completed' ? 'Arrived' : (status === 'scheduled' ? 'Scheduled' : 'On Time'))}</span>
-            <span class="font-mono font-bold">${t.progress_pct || 0}%</span>
+          <div class="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+            <span>${escapeHtml(t.from)}</span>
+            <span class="text-cyan-500">➔</span>
+            <span class="text-rose-600 font-black">${escapeHtml(t.to)}</span>
           </div>
-          <button type="button" class="w-full mt-1.5 py-1 px-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 view-live-train-btn cursor-pointer" data-train-no="${t.train_no}">
+          <div class="flex items-center gap-2 text-[10px] font-semibold pt-1 border-t border-slate-100">
+            <span>${statusLabel}</span>
+            <span class="font-mono font-bold text-slate-500">${t.progress_pct || 0}% done</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+            <i class="fa-solid fa-location-arrow text-[9px] text-cyan-500"></i>
+            <span>Heading <strong class="text-slate-700">${dirLabel}</strong> towards <strong class="text-rose-600">${escapeHtml(t.to)}</strong></span>
+          </div>
+          <button type="button" class="w-full mt-1 py-1 px-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 view-live-train-btn cursor-pointer" data-train-no="${t.train_no}">
             <i class="fa-solid fa-route text-[10px]"></i>
             <span>View Full Journey</span>
           </button>
         </div>
       `;
 
-      const marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
-      liveNetworkMarkersGroup.addLayer(marker);
-
-      if (isSingleSelectedTrain) {
-        setTimeout(() => marker.openPopup(), 200);
+      const trKey = String(t.train_no);
+      const existingBeacon = liveTrainBeaconMap.get(trKey);
+      if (existingBeacon) {
+        // Smoothly animate to new position, update icon & popup
+        animateLeafletMarker(existingBeacon, latLng);
+        existingBeacon.setIcon(customIcon);
+        existingBeacon.setPopupContent(popupContent);
+        if (isSingleSelectedTrain) {
+          setTimeout(() => existingBeacon.openPopup(), 200);
+        }
+      } else {
+        // First time — create and add beacon directly to map (not to markersGroup)
+        const newMarker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
+        newMarker.addTo(liveNetworkLeafletMap);
+        liveTrainBeaconMap.set(trKey, newMarker);
+        if (isSingleSelectedTrain) {
+          setTimeout(() => newMarker.openPopup(), 200);
+        }
       }
     });
 
@@ -7780,6 +7898,7 @@ document.addEventListener('DOMContentLoaded', () => {
       liveNetworkLeafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: isSingleSelectedTrain ? 11 : 10 });
     }
   }
+
 
   async function initOrUpdateModalMap(data) {
     if (!window.L || !document.getElementById('liveModalLeafletMap') || !data) return;
@@ -7843,7 +7962,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const destStop = stoppages[stoppages.length - 1]?.station_name || data.to;
     const originCoord = (stoppages[0]?.lat && stoppages[0]?.lng) ? [stoppages[0].lat, stoppages[0].lng] : null;
     const destCoord = (stoppages[stoppages.length - 1]?.lat && stoppages[stoppages.length - 1]?.lng) ? [stoppages[stoppages.length - 1].lat, stoppages[stoppages.length - 1].lng] : null;
-    const trackPoints = await drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, rawCoords, originCoord, destCoord);
+    const trackPoints = await drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, rawCoords, originCoord, destCoord, data.progress_pct);
 
     const validCoords = [];
     stoppages.forEach((stop, idx) => {

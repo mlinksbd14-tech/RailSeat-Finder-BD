@@ -7531,19 +7531,26 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Google Maps Layer with User API Key
+      // Google Maps Layer with User API Key & Railway Transit Highlights
       const isDark = document.documentElement.classList.contains('dark');
       if (window.L && L.gridLayer && typeof L.gridLayer.googleMutant === 'function') {
         L.gridLayer.googleMutant({
           type: 'roadmap',
           styles: isDark ? [
-            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-            { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
-            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
-          ] : []
+            { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
+            { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#06b6d4' }, { weight: 2 }] },
+            { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#0284c7' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#38bdf8' }] },
+            { featureType: 'transit.station', elementType: 'labels.icon', stylers: [{ visibility: 'on' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0f172a' }] }
+          ] : [
+            { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#0284c7' }, { weight: 2.5 }] },
+            { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#0369a1' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#0369a1' }] },
+            { featureType: 'transit.station', elementType: 'labels.icon', stylers: [{ visibility: 'on' }] }
+          ]
         }).addTo(liveNetworkLeafletMap);
       } else {
         L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
@@ -7571,13 +7578,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // In individual train mode, place station markers on origin & destination
+      // In individual train mode, indicate live train route with origin & destination and route line
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
 
+        const routeWaypoints = (t.current_coords && t.current_coords[0])
+          ? [t.from_coords, t.current_coords, t.to_coords]
+          : [t.from_coords, t.to_coords];
+
+        // Glowing Live Route Indicator Line
+        const glowCasing = L.polyline(routeWaypoints, {
+          color: '#06b6d4',
+          weight: 6,
+          opacity: 0.45,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+        liveNetworkMarkersGroup.addLayer(glowCasing);
+
+        const coreLine = L.polyline(routeWaypoints, {
+          color: '#0891b2',
+          weight: 3.5,
+          opacity: 0.95,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+        liveNetworkMarkersGroup.addLayer(coreLine);
+
         const fromDot = L.circleMarker(t.from_coords, {
-          radius: 6,
+          radius: 6.5,
           fillColor: '#10b981',
           color: '#ffffff',
           weight: 2,
@@ -7586,7 +7616,7 @@ document.addEventListener('DOMContentLoaded', () => {
         liveNetworkMarkersGroup.addLayer(fromDot);
 
         const toDot = L.circleMarker(t.to_coords, {
-          radius: 6,
+          radius: 6.5,
           fillColor: '#f43f5e',
           color: '#ffffff',
           weight: 2,
@@ -7674,19 +7704,26 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Google Maps Layer with User API Key
+      // Google Maps Layer with User API Key & Railway Transit Highlights
       const isDark = document.documentElement.classList.contains('dark');
       if (window.L && L.gridLayer && typeof L.gridLayer.googleMutant === 'function') {
         L.gridLayer.googleMutant({
           type: 'roadmap',
           styles: isDark ? [
-            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-            { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
-            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
-          ] : []
+            { elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
+            { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#06b6d4' }, { weight: 2 }] },
+            { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#0284c7' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#38bdf8' }] },
+            { featureType: 'transit.station', elementType: 'labels.icon', stylers: [{ visibility: 'on' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0f172a' }] }
+          ] : [
+            { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#0284c7' }, { weight: 2.5 }] },
+            { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#0369a1' }] },
+            { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#0369a1' }] },
+            { featureType: 'transit.station', elementType: 'labels.icon', stylers: [{ visibility: 'on' }] }
+          ]
         }).addTo(liveModalLeafletMap);
       } else {
         L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
@@ -7764,6 +7801,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (!trainCoord && validCoords.length > 0) {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
+    }
+
+    // Indicate live train route across all stoppages
+    if (validCoords.length > 1) {
+      const glowCasing = L.polyline(validCoords, {
+        color: '#06b6d4',
+        weight: 7,
+        opacity: 0.45,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      liveModalMapLayerGroup.addLayer(glowCasing);
+
+      const coreRoute = L.polyline(validCoords, {
+        color: '#0891b2',
+        weight: 3.5,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      liveModalMapLayerGroup.addLayer(coreRoute);
     }
 
     if (validCoords.length > 0) {

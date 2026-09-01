@@ -7518,6 +7518,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const BANGLADESH_MAJOR_STATIONS = [
+    { name: 'Dhaka (Kamalapur)', coords: [23.7315, 90.4265], code: 'DK' },
+    { name: 'Dhaka Airport', coords: [23.8513, 90.4079], code: 'DA' },
+    { name: 'Joydebpur Jn', coords: [23.9982, 90.4194], code: 'JDP' },
+    { name: 'Chattogram Jn', coords: [22.3355, 91.8315], code: 'CG' },
+    { name: "Cox's Bazar", coords: [21.4385, 91.9965], code: 'CXB' },
+    { name: 'Sylhet Jn', coords: [24.8898, 91.8697], code: 'SYL' },
+    { name: 'Rajshahi Jn', coords: [24.3745, 88.6042], code: 'RJ' },
+    { name: 'Khulna Jn', coords: [22.8185, 89.5542], code: 'KLN' },
+    { name: 'Mymensingh Jn', coords: [24.7539, 90.4073], code: 'MYM' },
+    { name: 'Bhairab Bazar Jn', coords: [24.0504, 90.9856], code: 'BXB' },
+    { name: 'Brahmanbaria', coords: [23.9688, 91.1118], code: 'BBA' },
+    { name: 'Akhaura Jn', coords: [23.8716, 91.2144], code: 'AKH' },
+    { name: 'Cumilla', coords: [23.4682, 91.1788], code: 'CML' },
+    { name: 'Feni Jn', coords: [23.0135, 91.3986], code: 'FNI' },
+    { name: 'Ishwardi Jn', coords: [24.1282, 89.0682], code: 'ISD' },
+    { name: 'Santahar Jn', coords: [24.7895, 88.9745], code: 'SNT' },
+    { name: 'Bogura', coords: [24.8512, 89.3712], code: 'BGA' },
+    { name: 'Rangpur', coords: [25.7485, 89.2612], code: 'RNP' },
+    { name: 'Parbatipur Jn', coords: [25.6845, 88.9185], code: 'PBT' },
+    { name: 'Dinajpur', coords: [25.6285, 88.6412], code: 'DNJ' },
+    { name: 'Panchagarh', coords: [26.3385, 88.5585], code: 'PCG' },
+    { name: 'Chilahati', coords: [26.3185, 88.7954], code: 'CLH' },
+    { name: 'Poradah Jn', coords: [23.9854, 88.9512], code: 'PRD' },
+    { name: 'Chuadanga', coords: [23.6425, 88.8542], code: 'CDG' },
+    { name: 'Jashore Jn', coords: [23.1685, 89.1754], code: 'JSR' },
+    { name: 'Benapole', coords: [23.0412, 88.8954], code: 'BNP' },
+    { name: 'Bhanga Jn', coords: [23.3854, 89.9854], code: 'BNG' }
+  ];
+
   const RAIL_TRACK_CORRIDORS = [
     // 1. Dhaka - Chattogram - Cox's Bazar Main Line
     [
@@ -7541,29 +7571,97 @@ document.addEventListener('DOMContentLoaded', () => {
       [24.3125, 91.8654], [24.3854, 91.9165], [24.5215, 92.0325], [24.6215, 91.9845],
       [24.7431, 91.8845], [24.8125, 91.8745], [24.8898, 91.8697]
     ],
-    // 3. Dhaka - Jamuna Bridge - Rajshahi / North Bengal Line
+    // 3. Dhaka - Jamuna Bridge - Rajshahi / Chapainawabganj Line
     [
       [23.7315, 90.4265], [23.8513, 90.4079], [23.8966, 90.4035], [23.9982, 90.4194],
       [24.0215, 90.2845], [24.1012, 90.0985], [24.1825, 90.0125], [24.2513, 89.9167],
       [24.3985, 89.8125], [24.4023, 89.7312], [24.4312, 89.6912], [24.4021, 89.6312],
       [24.3182, 89.5682], [24.2512, 89.4712], [24.2012, 89.3982], [24.2215, 89.2845],
       [24.1845, 89.1825], [24.1523, 89.0685], [24.1282, 89.0682], [24.2845, 88.9512],
-      [24.4123, 88.9812], [24.3821, 88.7512], [24.3745, 88.6042]
+      [24.4123, 88.9812], [24.3821, 88.7512], [24.3745, 88.6042], [24.5932, 88.2712]
     ],
-    // 4. Dhaka - Mymensingh - Jamalpur Line
+    // 4. Santahar - Bogura - Rangpur - Parbatipur - Dinajpur - Panchagarh Line
     [
-      [23.8966, 90.4035], [23.9982, 90.4194], [24.1254, 90.4512], [24.2012, 90.4854],
-      [24.4326, 90.5516], [24.7539, 90.4073], [24.8512, 90.1523], [24.9221, 89.9482],
-      [25.1436, 89.7825]
+      [24.7895, 88.9745], [24.8512, 89.3712], [25.0682, 89.5412], [25.3325, 89.5385],
+      [25.7485, 89.2612], [25.6845, 88.9185], [25.6285, 88.6412], [25.8542, 88.4215],
+      [26.0325, 88.4612], [26.3385, 88.5585]
     ],
-    // 5. Dhaka - Padma Bridge - Bhanga - Khulna Line
+    // 5. Parbatipur - Saidpur - Nilphamari - Chilahati Line
     [
-      [23.7315, 90.4265], [23.7012, 90.4325], [23.6512, 90.3845], [23.5621, 90.3125],
-      [23.5123, 90.2845], [23.4754, 90.2612], [23.4485, 90.2185], [23.4012, 90.1254],
-      [23.3854, 89.9854], [23.2512, 89.7845], [23.2125, 89.6512], [23.1845, 89.5123],
-      [23.1685, 89.4982], [22.9512, 89.5125], [22.8845, 89.5312], [22.8185, 89.5542]
+      [25.6845, 88.9185], [25.7785, 88.8912], [25.9325, 88.8456], [26.1125, 88.8325],
+      [26.3185, 88.7954]
+    ],
+    // 6. Santahar - Joypurhat - Hili - Parbatipur Main Broad Gauge Line
+    [
+      [24.7895, 88.9745], [24.9542, 89.0185], [25.1012, 89.0285], [25.2845, 89.0125],
+      [25.3895, 88.9512], [25.5125, 88.9312], [25.6845, 88.9185]
+    ],
+    // 7. Tongi - Mymensingh - Jamalpur - Dewanganj Line
+    [
+      [23.8966, 90.4035], [23.9982, 90.4194], [24.4326, 90.5516], [24.7539, 90.4073],
+      [24.8512, 90.1523], [24.9221, 89.9482], [25.1436, 89.7825]
+    ],
+    // 8. Jamalpur - Tarakandi Line
+    [
+      [24.9221, 89.9482], [24.8325, 89.8745], [24.7512, 89.8215]
+    ],
+    // 9. Dhaka - Padma Bridge - Bhanga - Narail - Jashore - Khulna Line
+    [
+      [23.7315, 90.4265], [23.5621, 90.3125], [23.4754, 90.2612], [23.4485, 90.2185],
+      [23.3854, 89.9854], [23.2512, 89.7845], [23.1845, 89.5123], [23.1685, 89.1754],
+      [22.9512, 89.5125], [22.8185, 89.5542]
+    ],
+    // 10. Ishwardi - Kushtia - Poradah - Chuadanga - Darsana - Jashore - Benapole Line
+    [
+      [24.1282, 89.0682], [24.0754, 89.0321], [23.9854, 88.9512], [23.8954, 88.8845],
+      [23.6425, 88.8542], [23.5325, 88.8954], [23.3512, 89.0125], [23.1685, 89.1754],
+      [23.0412, 88.8954]
     ]
   ];
+
+  function renderPermanentRailwayTracks(mapLayerGroup) {
+    if (!mapLayerGroup) return;
+
+    // 1. Draw Real Bangladesh Railway Track Network
+    RAIL_TRACK_CORRIDORS.forEach(corridor => {
+      // Base Rail Bed (Dark Outline)
+      const railBed = L.polyline(corridor, {
+        color: '#1e293b',
+        weight: 4.5,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
+      mapLayerGroup.addLayer(railBed);
+
+      // Railroad Ties / Sleepers (White/Silver Railway Line Dashes)
+      const railTies = L.polyline(corridor, {
+        color: '#ffffff',
+        weight: 2.2,
+        dashArray: '3, 6',
+        opacity: 0.95,
+        lineCap: 'butt',
+        lineJoin: 'round'
+      });
+      mapLayerGroup.addLayer(railTies);
+    });
+
+    // 2. Draw Major Railway Junction Station Pins
+    BANGLADESH_MAJOR_STATIONS.forEach(st => {
+      const stationDot = L.circleMarker(st.coords, {
+        radius: 4,
+        fillColor: '#38bdf8',
+        color: '#0f172a',
+        weight: 1.5,
+        fillOpacity: 1
+      }).bindTooltip(`🚉 ${st.name} [${st.code}]`, {
+        permanent: false,
+        direction: 'top',
+        className: 'text-[10px] font-extrabold'
+      });
+      mapLayerGroup.addLayer(stationDot);
+    });
+  }
 
   function getClosestCorridorWaypointIndex(corridor, pt) {
     let minD = Infinity;
@@ -7651,6 +7749,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!liveNetworkMarkersGroup) return;
     liveNetworkMarkersGroup.clearLayers();
+
+    // 1. Render Real Permanent Railway Track Network on Carto Map
+    renderPermanentRailwayTracks(liveNetworkMarkersGroup);
 
     const bounds = [];
     const isSingleSelectedTrain = (trains || []).length === 1;
@@ -7810,6 +7911,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!liveModalMapLayerGroup) return;
     liveModalMapLayerGroup.clearLayers();
+
+    // 1. Render Real Permanent Railway Track Network on Carto Map
+    renderPermanentRailwayTracks(liveModalMapLayerGroup);
 
     const stoppages = data.stoppages || [];
     const validCoords = [];

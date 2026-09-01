@@ -85,21 +85,25 @@
       </div>
 
       <!-- Quick Feature Navigation (Row 2 Full-Width on Mobile, Center on Desktop) -->
-      <nav class="w-full md:w-auto order-3 md:order-2 flex items-center justify-between sm:justify-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold shrink-0">
-        <button type="button" id="navSeatFinderBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Finder">
+      <nav class="w-full md:w-auto order-3 md:order-2 flex items-center justify-between sm:justify-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold shrink-0 overflow-x-auto">
+        <button type="button" id="navSeatFinderBtn" class="flex-1 md:flex-initial px-2 sm:px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1 sm:space-x-1.5 cursor-pointer shrink-0" title="Seat Finder">
           <i class="fa-solid fa-chair text-emerald-500"></i>
           <span>Seat Finder</span>
         </button>
-        <button type="button" id="navLiveTrackerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
+        <button type="button" id="navLiveTrackerBtn" class="flex-1 md:flex-initial px-2 sm:px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1 sm:space-x-1.5 cursor-pointer shrink-0" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
           <span>Live Radar</span>
           <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-cyan-500 animate-pulse"></span>
         </button>
-        <button type="button" id="openRouteExplorerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
+        <button type="button" id="navStationPidsBtn" class="flex-1 md:flex-initial px-2 sm:px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1 sm:space-x-1.5 cursor-pointer shrink-0" title="Station Platform Information Display (PIDS)">
+          <i class="fa-solid fa-tv text-amber-500"></i>
+          <span>Station PIDS</span>
+        </button>
+        <button type="button" id="openRouteExplorerBtn" class="flex-1 md:flex-initial px-2 sm:px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1 sm:space-x-1.5 cursor-pointer shrink-0" title="Train Routes Explorer">
           <i class="fa-solid fa-route text-emerald-500"></i>
           <span>Routes</span>
         </button>
-        <button type="button" id="openWatchlistBtn" class="flex-1 md:flex-initial relative px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
+        <button type="button" id="openWatchlistBtn" class="flex-1 md:flex-initial relative px-2 sm:px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1 sm:space-x-1.5 cursor-pointer shrink-0" title="Seat Watchlist">
           <i class="fa-solid fa-crosshairs text-amber-500"></i>
           <span>Watchlist</span>
           <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0</span>
@@ -719,6 +723,10 @@
               <i class="fa-solid fa-train text-cyan-500 text-[11px]"></i>
               <span>Active: <span id="liveTrackerCount" class="font-black text-cyan-600 dark:text-cyan-400">--</span></span>
             </div>
+            <button type="button" id="liveTrackerPidsBtn" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/70 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs" title="Open Station Platform Information Display (PIDS)">
+              <i class="fa-solid fa-tv text-amber-500 text-[11px]"></i>
+              <span>Station PIDS</span>
+            </button>
             <button id="refreshLiveTrackerBtn" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 active:scale-95 text-white text-xs font-extrabold shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
               <i class="fa-solid fa-rotate text-[10px]" id="refreshLiveTrackerIcon"></i>
               <span>Sync</span>
@@ -857,6 +865,148 @@
     </div>
 
   </main>
+
+  <!-- ============================================== -->
+  <!-- 🚉 LIVE STATION PIDS (Platform Display Screen) -->
+  <!-- ============================================== -->
+  <div id="stationPidsModal" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+    <!-- PIDS LED Board Screen (Station/Airport TV Kiosk Aesthetic) -->
+    <div id="pidsModalCard" class="w-full max-w-6xl max-h-[94vh] bg-slate-900 text-slate-100 rounded-3xl shadow-2xl border border-slate-700/80 overflow-hidden flex flex-col transition-all duration-300">
+      
+      <!-- Top Station PIDS Status Bar -->
+      <div class="px-4 py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        
+        <!-- Left: Station Info -->
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-base shadow-sm shrink-0">
+            <i class="fa-solid fa-tv"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2 flex-wrap">
+              <h3 id="pidsStationTitle" class="font-black text-sm sm:text-base text-white tracking-wide truncate">
+                ঢাকা কমলাপুর (Dhaka)
+              </h3>
+              <span id="pidsStationCodeBadge" class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-mono font-black text-[10px] sm:text-xs border border-amber-500/40">
+                DK
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>PIDS LIVE</span>
+              </span>
+            </div>
+            <p class="text-[10px] sm:text-xs text-slate-400">Electronic Platform Information Display & Movement Tracker</p>
+          </div>
+        </div>
+
+        <!-- Right: Digital Station Clock & Board Controls -->
+        <div class="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-auto">
+          <!-- Digital LED Clock -->
+          <div class="bg-black/60 px-3 py-1.5 rounded-xl border border-amber-500/30 text-right">
+            <span class="text-[9px] uppercase tracking-wider text-slate-400 block leading-tight">Bangladesh Standard Time</span>
+            <span id="pidsLiveClock" class="font-mono text-sm sm:text-lg font-black text-amber-400 tracking-wider">--:--:-- --</span>
+          </div>
+
+          <!-- Audio Announcement Chime Button -->
+          <button type="button" id="pidsChimeBtn" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition flex items-center space-x-1.5 text-xs font-bold cursor-pointer" title="Play Station Announcement Chime">
+            <i class="fa-solid fa-bullhorn text-xs"></i>
+            <span class="hidden sm:inline">Chime</span>
+          </button>
+
+          <!-- Fullscreen Kiosk Mode Toggle -->
+          <button type="button" id="pidsFullscreenBtn" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition flex items-center space-x-1.5 text-xs font-bold cursor-pointer" title="Toggle Fullscreen Kiosk Display">
+            <i class="fa-solid fa-expand text-xs" id="pidsFullscreenIcon"></i>
+            <span class="hidden sm:inline">Kiosk</span>
+          </button>
+
+          <!-- Refresh Button -->
+          <button type="button" id="pidsRefreshBtn" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-xs" title="Refresh Schedule">
+            <i class="fa-solid fa-rotate text-xs" id="pidsRefreshIcon"></i>
+            <span class="hidden sm:inline">Sync</span>
+          </button>
+
+          <!-- Close Button -->
+          <button type="button" id="pidsCloseBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Close PIDS">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Station Selector Strip -->
+      <div class="px-4 py-2.5 bg-slate-950/60 border-b border-slate-800 flex items-center space-x-2 overflow-x-auto no-scrollbar shrink-0 text-xs">
+        <span class="text-[11px] font-bold text-slate-400 shrink-0 flex items-center gap-1">
+          <i class="fa-solid fa-location-dot text-amber-500"></i> Station:
+        </span>
+        <div class="flex items-center space-x-1.5" id="pidsStationPills">
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950 shadow-xs cursor-pointer shrink-0" data-station="Dhaka">Dhaka (Kamalapur)</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Dhaka_Airport">Dhaka Airport</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Chattogram">Chattogram</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Cox's_Bazar">Cox's Bazar</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Sylhet">Sylhet</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Rajshahi">Rajshahi</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Khulna">Khulna</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Mymensingh">Mymensingh</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Cumilla">Cumilla</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Feni">Feni</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Santahar">Santahar Jn</button>
+          <button type="button" class="pids-station-pill px-3 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer shrink-0" data-station="Ishwardi">Ishwardi Jn</button>
+        </div>
+      </div>
+
+      <!-- Navigation Movement Filters & Search -->
+      <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <!-- View Toggle (Departures / Arrivals / All) -->
+        <div class="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold" id="pidsMovementFilter">
+          <button type="button" class="pids-filter-tab px-3 py-1 rounded-lg bg-amber-500 text-slate-950 transition flex items-center space-x-1.5 cursor-pointer shadow-xs" data-filter="departures">
+            <i class="fa-solid fa-plane-departure text-xs"></i>
+            <span>Departures (প্রস্থান)</span>
+          </button>
+          <button type="button" class="pids-filter-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center space-x-1.5 cursor-pointer" data-filter="arrivals">
+            <i class="fa-solid fa-plane-arrival text-xs"></i>
+            <span>Arrivals (আগমন)</span>
+          </button>
+          <button type="button" class="pids-filter-tab px-3 py-1 rounded-lg text-slate-400 hover:text-white transition flex items-center space-x-1.5 cursor-pointer" data-filter="all">
+            <i class="fa-solid fa-list-check text-xs"></i>
+            <span>All Movements</span>
+          </button>
+        </div>
+
+        <!-- Search in Current Station Schedule -->
+        <div class="relative min-w-[200px] flex-1 sm:flex-initial">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input type="text" id="pidsFilterInput" placeholder="Filter train, number or city..." 
+            class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500/50">
+        </div>
+      </div>
+
+      <!-- PIDS Board Content (Scrollable LED Flipboard & Mobile Cards) -->
+      <div id="pidsBoardContainer" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 text-xs">
+        <!-- Dynamic Schedule Rows Loaded by JavaScript -->
+        <div class="flex items-center justify-center py-16 text-slate-500">
+          <i class="fa-solid fa-spinner fa-spin text-2xl text-amber-500 mr-2"></i>
+          <span>Loading live platform display screen...</span>
+        </div>
+      </div>
+
+      <!-- PIDS Footer Information -->
+      <div class="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="flex items-center gap-1.5 text-emerald-400 font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live Telemetry Connected</span>
+          </span>
+          <span class="text-slate-600">&bull;</span>
+          <span id="pidsMovementCountBadge">Loading trains...</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-500">Auto-refresh in <strong id="pidsCountdownLabel" class="text-amber-400 font-mono">15s</strong></span>
+          <span class="text-slate-600">&bull;</span>
+          <span class="text-slate-500">BR Official Timetables</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Notification Modal Panel -->
   <div id="notifDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">

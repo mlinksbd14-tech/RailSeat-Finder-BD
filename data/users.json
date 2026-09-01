@@ -163,28 +163,6 @@
       "status": "active",
       "canViewDashboard": true,
       "createdAt": "2026-08-26T08:57:48.900Z",
-      "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgyMzY0NDMsImV4cCI6MTc4ODI3OTY0MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODIzNjQ0MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.UANaTWu3QGAZi75bO-q_53fl2V2dJSanYjAcOY8R8pma37idur6TuhDEeTSNw9gwsrRckizvzoPXvOy3FZeYjkDLtruPHKWpQ6ng3cVCBoAnb97rrtnPIBTmyL0MpYVa7KZTI7p5EIs-nYDw8CzESl6mwR15vm4SUnaoTjVawbCyaCKszcUhddFTDgsIxfKaLrnqXccICRUSTxIFfzwuj7lgm8UZFJOR6s-9rsiLm4JS2bB9QQRPv1os4Odt5sfuzrzYW3gevX7dg7NRhY9EtR-Rnfr6Z1IBlqMtWOM1IsUX0WAc7qHirRE8NKONc6HP7t6y3HE7LQdWZeHtW2tVcg",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
-        "cookie": null,
-        "user": {
-          "name": "Md. Habibullah",
-          "phone": "01871860487",
-          "email": "labu3416@gmail.com",
-          "nid": "8254236667",
-          "nidType": "Default",
-          "locale": "bn-BD",
-          "roles": [
-            "user",
-            "anonymous"
-          ],
-          "expiresAt": "2026-09-01T16:20:43.000Z",
-          "issuedAt": "2026-09-01T04:20:43.000Z",
-          "isExpired": false
-        },
-        "lastUpdated": "2026-09-01T04:21:17.733Z"
-      },
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -194,6 +172,14 @@
         "region": "Local Network",
         "query": "::1"
       },
+      "ips": [
+        "103.230.104.35",
+        "::ffff:127.0.0.1",
+        "103.59.178.232",
+        "103.230.106.33",
+        "::1",
+        "27.147.149.234"
+      ],
       "lastLogin": "2026-09-01T04:17:42.540Z",
       "activityHistory": [
         {
@@ -204,12 +190,12 @@
           "os": "Windows 10/11",
           "browser": "Edge 152",
           "location": {
-            "countryCode": "BD",
-            "country": "Development",
-            "flag": "💻",
             "city": "Localhost",
-            "isp": "Internal Loopback / Dev",
             "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
         },
@@ -624,20 +610,34 @@
       ],
       "lastIp": "::1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "ips": [
-        "103.230.104.35",
-        "::ffff:127.0.0.1",
-        "103.59.178.232",
-        "103.230.106.33",
-        "::1",
-        "27.147.149.234"
-      ],
       "loginCount": 111,
       "lastDevice": {
-        "browser": "Edge 152",
         "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+        "browser": "Edge 152",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+        "device": "Desktop"
+      },
+      "shohozSession": {
+        "cookie": null,
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "lastUpdated": "2026-09-01T04:21:17.733Z",
+        "user": {
+          "locale": "bn-BD",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "isExpired": false,
+          "nidType": "Default",
+          "phone": "01871860487",
+          "name": "Md. Habibullah",
+          "nid": "8254236667",
+          "email": "labu3416@gmail.com",
+          "issuedAt": "2026-09-01T04:20:43.000Z",
+          "expiresAt": "2026-09-01T16:20:43.000Z"
+        },
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODgyMzY0NDMsImV4cCI6MTc4ODI3OTY0MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4ODIzNjQ0MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.UANaTWu3QGAZi75bO-q_53fl2V2dJSanYjAcOY8R8pma37idur6TuhDEeTSNw9gwsrRckizvzoPXvOy3FZeYjkDLtruPHKWpQ6ng3cVCBoAnb97rrtnPIBTmyL0MpYVa7KZTI7p5EIs-nYDw8CzESl6mwR15vm4SUnaoTjVawbCyaCKszcUhddFTDgsIxfKaLrnqXccICRUSTxIFfzwuj7lgm8UZFJOR6s-9rsiLm4JS2bB9QQRPv1os4Odt5sfuzrzYW3gevX7dg7NRhY9EtR-Rnfr6Z1IBlqMtWOM1IsUX0WAc7qHirRE8NKONc6HP7t6y3HE7LQdWZeHtW2tVcg"
       }
     }
   ]

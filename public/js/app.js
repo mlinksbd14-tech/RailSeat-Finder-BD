@@ -7571,6 +7571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         color: '#06b6d4',
         weight: 7,
         opacity: 0.45,
+        smoothFactor: 0,
         lineCap: 'round',
         lineJoin: 'round'
       });
@@ -7581,7 +7582,7 @@ document.addEventListener('DOMContentLoaded', () => {
         color: '#0891b2',
         weight: 3.5,
         opacity: 0.95,
-        smoothFactor: 1,
+        smoothFactor: 0,
         lineCap: 'round',
         lineJoin: 'round'
       });

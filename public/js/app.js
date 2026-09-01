@@ -7698,28 +7698,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const completedPts = trackPoints.slice(0, splitIdx + 1);
         const remainingPts = trackPoints.slice(splitIdx);
 
-        // Completed segment — muted grey along track
+        // Completed segment — single clean grey line
         if (completedPts.length > 1) {
           mapLayerGroup.addLayer(L.polyline(completedPts, {
-            color: '#64748b', weight: 3, opacity: 0.6, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
+            color: '#64748b', weight: 3, opacity: 0.65, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
           }));
         }
-        // Remaining segment — glowing cyan transit track matching Google Maps
+        // Remaining segment — single clean glowing cyan line
         if (remainingPts.length > 1) {
           mapLayerGroup.addLayer(L.polyline(remainingPts, {
-            color: '#06b6d4', weight: 5.5, opacity: 0.5, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
-          }));
-          mapLayerGroup.addLayer(L.polyline(remainingPts, {
-            color: '#0284c7', weight: 2.5, opacity: 1, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
+            color: '#06b6d4', weight: 3.5, opacity: 0.95, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
           }));
         }
       } else {
-        // No progress data — render full line in uniform cyan transit track
+        // No progress data — render single clean cyan line
         mapLayerGroup.addLayer(L.polyline(trackPoints, {
-          color: '#06b6d4', weight: 5.5, opacity: 0.5, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
-        }));
-        mapLayerGroup.addLayer(L.polyline(trackPoints, {
-          color: '#0284c7', weight: 2.5, opacity: 1, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
+          color: '#06b6d4', weight: 3.5, opacity: 0.95, smoothFactor: 0, noClip: true, lineCap: 'round', lineJoin: 'round'
         }));
       }
     }
@@ -7790,6 +7784,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const bounds = [];
     const isSingleSelectedTrain = (trains || []).length === 1;
+    const drawnCorridors = new Set();
 
     (trains || []).forEach(async t => {
       let latLng = t.current_coords;
@@ -7806,9 +7801,11 @@ document.addEventListener('DOMContentLoaded', () => {
         : (t.from_coords && latLng ? calculateBearing(t.from_coords, latLng) : 0);
       const dirLabel = compassDir(bearing);
 
-      // In individual train mode or filtered route mode, draw progress-split route + snapped station pins
+      // In individual train mode or filtered route mode, draw single progress-split route + snapped station pins
       if (t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
-        if (isSingleSelectedTrain || (trains.length <= 4 && state.liveSearchMode === 'route')) {
+        const corridorKey = `${t.from}->${t.to}`;
+        if (isSingleSelectedTrain || (trains.length <= 4 && state.liveSearchMode === 'route' && !drawnCorridors.has(corridorKey))) {
+          drawnCorridors.add(corridorKey);
           bounds.push(t.from_coords);
           bounds.push(t.to_coords);
 

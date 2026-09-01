@@ -7518,155 +7518,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // High-precision Connected Bangladesh Railway Corridors for Exact Track Routing
-  const BD_CONNECTED_RAIL_CORRIDORS = [
-    // 1. Dhaka - Chattogram - Cox's Bazar Main Line
-    [
-      [23.7315, 90.4265], [23.7598, 90.3925], [23.7932, 90.4045], [23.8513, 90.4079],
-      [23.8966, 90.4035], [23.9042, 90.4789], [23.9215, 90.5642], [23.9234, 90.7185],
-      [23.9512, 90.7932], [24.0326, 90.8354], [24.0504, 90.9856], [24.0385, 91.0012],
-      [24.0285, 91.0125], [23.9688, 91.1118], [23.9125, 91.1685], [23.8716, 91.2144],
-      [23.8123, 91.2054], [23.7335, 91.1611], [23.6521, 91.1623], [23.5932, 91.1712],
-      [23.5321, 91.1684], [23.4982, 91.1654], [23.4682, 91.1788], [23.4125, 91.1845],
-      [23.3215, 91.1523], [23.2384, 91.1278], [23.1362, 91.2464], [23.0825, 91.3125],
-      [23.0135, 91.3986], [22.9512, 91.4623], [22.9235, 91.4876], [22.8643, 91.5321],
-      [22.7723, 91.5745], [22.7023, 91.6012], [22.6189, 91.6612], [22.5621, 91.6845],
-      [22.5123, 91.7082], [22.4012, 91.7534], [22.3355, 91.8315], [22.3012, 91.8745],
-      [22.2512, 91.9523], [22.1625, 92.0625], [22.0125, 92.0984], [21.8954, 92.0865],
-      [21.7895, 92.0784], [21.6845, 92.0654], [21.5542, 92.0321], [21.4421, 92.0965],
-      [21.4385, 91.9965]
-    ],
-    // 2. Dhaka - Bhairab - Akhaura - Sylhet
-    [
-      [23.7315, 90.4265], [23.7598, 90.3925], [23.8513, 90.4079], [23.8966, 90.4035],
-      [23.9042, 90.4789], [23.9215, 90.5642], [23.9234, 90.7185], [23.9512, 90.7932],
-      [24.0504, 90.9856], [24.0285, 91.0125], [23.9688, 91.1118], [23.8716, 91.2144],
-      [23.9521, 91.2458], [24.0325, 91.3012], [24.0895, 91.3541], [24.1654, 91.4125],
-      [24.2215, 91.4421], [24.2698, 91.4889], [24.2754, 91.6125], [24.3089, 91.7336],
-      [24.3125, 91.8654], [24.3854, 91.9165], [24.4512, 91.9682], [24.5215, 92.0325],
-      [24.6215, 91.9845], [24.7431, 91.8845], [24.8125, 91.8745], [24.8898, 91.8697]
-    ],
-    // 3. Chattogram - Feni - Cumilla - Akhaura - Sylhet
-    [
-      [22.3355, 91.8315], [22.5123, 91.7082], [22.7023, 91.6012], [22.8643, 91.5321],
-      [23.0135, 91.3986], [23.3215, 91.1523], [23.4682, 91.1788], [23.7335, 91.1611],
-      [23.8716, 91.2144], [24.0325, 91.3012], [24.1654, 91.4125], [24.2698, 91.4889],
-      [24.3089, 91.7336], [24.3854, 91.9165], [24.5215, 92.0325], [24.7431, 91.8845],
-      [24.8898, 91.8697]
-    ],
-    // 4. Dhaka - Joydebpur - Jamuna - Ishwardi - Rajshahi - Chapainawabganj
-    [
-      [23.7315, 90.4265], [23.8513, 90.4079], [23.8966, 90.4035], [23.9982, 90.4194],
-      [24.0215, 90.2845], [24.0512, 90.1785], [24.1012, 90.0985], [24.1825, 90.0125],
-      [24.2513, 89.9167], [24.3985, 89.8125], [24.4023, 89.7312], [24.4312, 89.6912],
-      [24.4021, 89.6312], [24.3182, 89.5682], [24.2512, 89.4712], [24.2012, 89.3982],
-      [24.2215, 89.2845], [24.1845, 89.1825], [24.1523, 89.0685], [24.1282, 89.0682],
-      [24.2845, 88.9512], [24.4123, 88.9812], [24.3821, 88.7512], [24.3745, 88.6042],
-      [24.4512, 88.4215], [24.5932, 88.2712]
-    ],
-    // 5. Dhaka - Jamuna - Santahar - Bogura - Rangpur - Parbatipur - Dinajpur - Panchagarh
-    [
-      [23.7315, 90.4265], [23.8513, 90.4079], [23.9982, 90.4194], [24.1825, 90.0125],
-      [24.3985, 89.8125], [24.4023, 89.7312], [24.3182, 89.5682], [24.2215, 89.2845],
-      [24.1282, 89.0682], [24.2845, 88.9512], [24.7895, 88.9745], [24.8512, 89.3712],
-      [25.0682, 89.5412], [25.1845, 89.5485], [25.3325, 89.5385], [25.7185, 89.4125],
-      [25.7485, 89.2612], [25.6845, 88.9185], [25.6285, 88.6412], [25.7512, 88.5125],
-      [25.8542, 88.4215], [26.0325, 88.4612], [26.3385, 88.5585]
-    ],
-    // 6. Dhaka - Jamuna - Santahar - Joypurhat - Parbatipur - Saidpur - Nilphamari - Chilahati
-    [
-      [23.7315, 90.4265], [23.8513, 90.4079], [23.9982, 90.4194], [24.1825, 90.0125],
-      [24.3985, 89.8125], [24.4023, 89.7312], [24.3182, 89.5682], [24.1282, 89.0682],
-      [24.2845, 88.9512], [24.7895, 88.9745], [24.9542, 89.0185], [25.1012, 89.0285],
-      [25.2845, 89.0125], [25.3895, 88.9512], [25.6845, 88.9185], [25.7785, 88.8912],
-      [25.9325, 88.8456], [26.1125, 88.8325], [26.3185, 88.7954]
-    ],
-    // 7. Dhaka - Tongi - Mymensingh - Jamalpur - Dewanganj
-    [
-      [23.7315, 90.4265], [23.8513, 90.4079], [23.8966, 90.4035], [23.9982, 90.4194],
-      [24.1254, 90.4512], [24.2012, 90.4854], [24.4326, 90.5516], [24.7539, 90.4073],
-      [24.8125, 90.2845], [24.8512, 90.1523], [24.9221, 89.9482], [25.0325, 89.8512],
-      [25.1436, 89.7825]
-    ],
-    // 8. Dhaka - Padma Bridge - Bhanga - Narail - Jashore - Khulna
-    [
-      [23.7315, 90.4265], [23.7012, 90.4325], [23.6512, 90.3845], [23.5621, 90.3125],
-      [23.5123, 90.2845], [23.4754, 90.2612], [23.4485, 90.2185], [23.4012, 90.1254],
-      [23.3854, 89.9854], [23.3012, 89.8512], [23.2512, 89.7845], [23.2125, 89.6512],
-      [23.1845, 89.5123], [23.1685, 89.1754], [23.0845, 89.3125], [22.9512, 89.5125],
-      [22.8845, 89.5312], [22.8185, 89.5542]
-    ],
-    // 9. Dhaka - Padma Bridge - Bhanga - Jashore - Benapole
-    [
-      [23.7315, 90.4265], [23.5621, 90.3125], [23.4754, 90.2612], [23.4485, 90.2185],
-      [23.3854, 89.9854], [23.2512, 89.7845], [23.1845, 89.5123], [23.1685, 89.1754],
-      [23.0985, 89.0125], [23.0412, 88.8954]
-    ],
-    // 10. Khulna - Jashore - Chuadanga - Poradah - Ishwardi - Rajshahi
-    [
-      [22.8185, 89.5542], [22.9512, 89.5125], [23.1685, 89.1754], [23.3512, 89.0125],
-      [23.4325, 88.9512], [23.5325, 88.8954], [23.6425, 88.8542], [23.8954, 88.8845],
-      [23.9854, 88.9512], [24.0754, 89.0321], [24.1282, 89.0682], [24.2845, 88.9512],
-      [24.4123, 88.9812], [24.3745, 88.6042]
-    ]
-  ];
-
-  function getClosestCorridorNode(corridor, pt) {
-    let minD = Infinity;
-    let bestIdx = -1;
-    for (let i = 0; i < corridor.length; i++) {
-      const c = corridor[i];
-      const d = Math.hypot(c[0] - pt[0], c[1] - pt[1]);
-      if (d < minD) {
-        minD = d;
-        bestIdx = i;
-      }
-    }
-    return { idx: bestIdx, dist: minD };
-  }
-
-  function getAccurateRailRoute(waypoints) {
-    if (!waypoints || waypoints.length < 2) return waypoints || [];
-
-    const denseLine = [];
-
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      const p1 = waypoints[i];
-      const p2 = waypoints[i + 1];
-      if (!p1 || !p2) continue;
-
-      let bestSegment = null;
-      let minScore = 0.55; // Threshold for corridor node matching
-
-      for (const corridor of BD_CONNECTED_RAIL_CORRIDORS) {
-        const c1 = getClosestCorridorNode(corridor, p1);
-        const c2 = getClosestCorridorNode(corridor, p2);
-
-        if (c1.dist < minScore && c2.dist < minScore && c1.idx !== -1 && c2.idx !== -1 && c1.idx !== c2.idx) {
-          if (c1.idx <= c2.idx) {
-            bestSegment = corridor.slice(c1.idx, c2.idx + 1);
-          } else {
-            bestSegment = corridor.slice(c2.idx, c1.idx + 1).reverse();
-          }
-          break;
-        }
-      }
-
-      if (bestSegment && bestSegment.length > 1) {
-        bestSegment.forEach(pt => {
-          if (denseLine.length === 0 || denseLine[denseLine.length - 1][0] !== pt[0] || denseLine[denseLine.length - 1][1] !== pt[1]) {
-            denseLine.push(pt);
-          }
-        });
-      } else {
-        if (denseLine.length === 0) denseLine.push(p1);
-        denseLine.push(p2);
-      }
-    }
-
-    return denseLine.length > 1 ? denseLine : waypoints;
-  }
-
   function initOrUpdateNetworkMap(trains) {
     if (!window.L || !document.getElementById('liveNetworkLeafletMap')) return;
 
@@ -7680,7 +7531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Clean High-Performance Carto Basemap with User Key
+      // Original Carto Basemap with Native Rail Line Markings & User Key
       const isDark = document.documentElement.classList.contains('dark');
       const cartoTileUrl = isDark
         ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
@@ -7710,37 +7561,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
-      // When an individual train is selected in Radar Map, draw its exact railway track route line
+      // In individual train mode, place station markers on origin & destination
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
-
-        const rawWaypoints = (t.current_coords && t.current_coords[0])
-          ? [t.from_coords, t.current_coords, t.to_coords]
-          : [t.from_coords, t.to_coords];
-
-        const exactTrackRoute = getAccurateRailRoute(rawWaypoints);
-
-        // 1. Glowing Highlight Casing for Selected Train Route
-        const glowCasing = L.polyline(exactTrackRoute, {
-          color: '#06b6d4',
-          weight: 7,
-          opacity: 0.45,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveNetworkMarkersGroup.addLayer(glowCasing);
-
-        // 2. Core Exact Railway Track Route Line
-        const coreHighlight = L.polyline(exactTrackRoute, {
-          color: '#0891b2',
-          weight: 4,
-          opacity: 1,
-          smoothFactor: 1,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-        liveNetworkMarkersGroup.addLayer(coreHighlight);
 
         const fromDot = L.circleMarker(t.from_coords, {
           radius: 6,
@@ -7840,7 +7664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: true
       });
 
-      // Clean High-Performance Carto Basemap with User Key
+      // Original Carto Basemap with Native Rail Line Markings & User Key
       const isDark = document.documentElement.classList.contains('dark');
       const cartoTileUrl = isDark
         ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2mah_1_4779a1668bc1f9532f862187'
@@ -7922,31 +7746,7 @@ document.addEventListener('DOMContentLoaded', () => {
       trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
     }
 
-    // Highlight exact physical railway track route line for this individual train
-    if (validCoords.length > 1) {
-      const exactTrackRoute = getAccurateRailRoute(validCoords);
-
-      // 1. Glowing Highlight Casing
-      const glowCasing = L.polyline(exactTrackRoute, {
-        color: '#06b6d4',
-        weight: 7,
-        opacity: 0.45,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      liveModalMapLayerGroup.addLayer(glowCasing);
-
-      // 2. Core Exact Railway Route Line
-      const coreRoute = L.polyline(exactTrackRoute, {
-        color: '#0891b2',
-        weight: 4,
-        opacity: 1,
-        smoothFactor: 1,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-      liveModalMapLayerGroup.addLayer(coreRoute);
-
+    if (validCoords.length > 0) {
       const routeBounds = L.latLngBounds(validCoords);
       if (trainCoord) routeBounds.extend(trainCoord);
       liveModalLeafletMap.fitBounds(routeBounds, { padding: [35, 35] });

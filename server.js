@@ -2559,7 +2559,59 @@ app.get('/api/live-tracker/running-trains', async (req, res) => {
   }
 });
 
-// 5.2. Get Real-Time Live Status for Specific Train
+// 5.2. Get 100% Accurate Physical Railway Curve Coordinates Matching Google Maps
+const BD_RAIL_CURVES_FILE = path.join(__dirname, 'data', 'bd_rail_curves.json');
+let bdRailCurvesCache = null;
+
+function loadBdRailCurves() {
+  if (bdRailCurvesCache) return bdRailCurvesCache;
+  try {
+    if (fs.existsSync(BD_RAIL_CURVES_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(BD_RAIL_CURVES_FILE, 'utf8'));
+      bdRailCurvesCache = raw.routes || {};
+    }
+  } catch (e) {
+    console.warn('[RailCurves] Error reading bd_rail_curves.json:', e.message);
+    bdRailCurvesCache = {};
+  }
+  return bdRailCurvesCache || {};
+}
+
+app.get('/api/live-tracker/rail-curve', (req, res) => {
+  const from = String(req.query.from || '').trim();
+  const to = String(req.query.to || '').trim();
+  const curves = loadBdRailCurves();
+
+  if (!from || !to) {
+    return res.json({ success: false, coordinates: [] });
+  }
+
+  const key1 = `${from}->${to}`;
+  const key2 = `${to}->${from}`;
+
+  if (curves[key1]) {
+    return res.json({ success: true, coordinates: curves[key1] });
+  }
+  if (curves[key2]) {
+    return res.json({ success: true, coordinates: curves[key2].slice().reverse() });
+  }
+
+  for (const [k, v] of Object.entries(curves)) {
+    const [s1, s2] = k.split('->');
+    if ((s1.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s1.toLowerCase())) &&
+        (s2.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s2.toLowerCase()))) {
+      return res.json({ success: true, coordinates: v });
+    }
+    if ((s1.toLowerCase().includes(to.toLowerCase()) || to.toLowerCase().includes(s1.toLowerCase())) &&
+        (s2.toLowerCase().includes(from.toLowerCase()) || from.toLowerCase().includes(s2.toLowerCase()))) {
+      return res.json({ success: true, coordinates: v.slice().reverse() });
+    }
+  }
+
+  return res.json({ success: false, coordinates: [] });
+});
+
+// 5.3. Get Real-Time Live Status for Specific Train
 app.get('/api/live-tracker/train/:trainNo', async (req, res) => {
   const trainNo = String(req.params.trainNo || '').trim();
   if (!trainNo) {

@@ -12,7 +12,7 @@
     "authNoticeEnabled": true,
     "requireAdminApproval": false,
     "requireEmailVerification": false,
-    "allowRegistration": false
+    "allowRegistration": true
   },
   "users": [
     {

@@ -7345,7 +7345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const group = new L.featureGroup(liveNetworkMarkersGroup.getLayers());
             liveNetworkLeafletMap.fitBounds(group.getBounds(), { padding: [40, 40], maxZoom: 10 });
           } else {
-            liveNetworkLeafletMap.setView([23.8103, 90.4125], 7, { animate: true });
+            liveNetworkLeafletMap.setView([23.8103, 90.4125], 7.2, { animate: true });
           }
         }
       });
@@ -7727,15 +7727,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  const BANGLADESH_MAP_BOUNDS = [[20.25, 87.75], [26.90, 92.95]];
+
   function initOrUpdateNetworkMap(trains) {
     if (!window.L || !document.getElementById('liveNetworkLeafletMap')) return;
 
     if (!liveNetworkLeafletMap) {
       liveNetworkLeafletMap = L.map('liveNetworkLeafletMap', {
         center: [23.8103, 90.4125],
-        zoom: 7,
-        minZoom: 6,
+        zoom: 7.2,
+        minZoom: 6.8,
         maxZoom: 18,
+        maxBounds: BANGLADESH_MAP_BOUNDS,
+        maxBoundsViscosity: 1.0,
         zoomControl: false,
         attributionControl: true
       });
@@ -7924,8 +7928,10 @@ document.addEventListener('DOMContentLoaded', () => {
       liveModalLeafletMap = L.map('liveModalLeafletMap', {
         center: [23.8103, 90.4125],
         zoom: 8,
-        minZoom: 6,
+        minZoom: 6.8,
         maxZoom: 18,
+        maxBounds: BANGLADESH_MAP_BOUNDS,
+        maxBoundsViscosity: 1.0,
         zoomControl: false,
         attributionControl: true
       });

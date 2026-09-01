@@ -459,6 +459,15 @@ function getAuthenticatedUser(req) {
 
   const session = userSessions.get(token);
   if (session && session.expiresAt > Date.now()) {
+    try {
+      const data = loadUsersData();
+      const liveUser = data.users.find(u => u.id === session.userId || u.username.toLowerCase() === (session.username || '').toLowerCase());
+      if (liveUser) {
+        session.role = liveUser.role || session.role;
+        session.status = liveUser.status || session.status;
+        if (liveUser.name) session.name = liveUser.name;
+      }
+    } catch (e) {}
     return session;
   }
   return null;

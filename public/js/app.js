@@ -7546,7 +7546,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords) {
-    if (!mapLayerGroup) return;
+    if (!mapLayerGroup) return null;
     let trackPoints = null;
 
     try {
@@ -7587,6 +7587,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       mapLayerGroup.addLayer(core);
     }
+    return trackPoints;
   }
 
   function initOrUpdateNetworkMap(trains) {
@@ -7640,7 +7641,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bounds = [];
     const isSingleSelectedTrain = (trains || []).length === 1;
 
-    (trains || []).forEach(t => {
+    (trains || []).forEach(async t => {
       let latLng = t.current_coords;
       if (!latLng || !latLng[0] || !latLng[1]) {
         latLng = t.from_coords;
@@ -7654,12 +7655,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ? calculateBearing(latLng || t.from_coords, t.to_coords)
         : (t.from_coords && latLng ? calculateBearing(t.from_coords, latLng) : 0);
 
-      // In individual train mode, place station markers on origin & destination and draw 100% accurate railway curve
+      // In individual train mode, place station markers strictly on origin & destination railway line
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
         bounds.push(t.to_coords);
 
-        const fromDot = L.circleMarker(t.from_coords, {
+        const trackPoints = await drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, [t.from_coords, t.to_coords]);
+        const fromPos = snapPointToTrack(t.from_coords, trackPoints);
+        const toPos = snapPointToTrack(t.to_coords, trackPoints);
+
+        const fromDot = L.circleMarker(fromPos, {
           radius: 6.5,
           fillColor: '#10b981',
           color: '#ffffff',
@@ -7668,7 +7673,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).bindTooltip(`🚉 Origin: ${t.from}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
         liveNetworkMarkersGroup.addLayer(fromDot);
 
-        const toDot = L.circleMarker(t.to_coords, {
+        const toDot = L.circleMarker(toPos, {
           radius: 6.5,
           fillColor: '#f43f5e',
           color: '#ffffff',
@@ -7676,9 +7681,6 @@ document.addEventListener('DOMContentLoaded', () => {
           fillOpacity: 1
         }).bindTooltip(`🏁 Destination: ${t.to}`, { permanent: true, direction: 'top', className: 'text-xs font-bold' });
         liveNetworkMarkersGroup.addLayer(toDot);
-
-        // Render 100% Accurate Physical Rail Track Curve matching Google Maps
-        drawAccurateTrainCurve(liveNetworkMarkersGroup, t.from, t.to, [t.from_coords, t.to_coords]);
       }
 
       const delayMin = t.delay_minutes || 0;
@@ -7753,7 +7755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function initOrUpdateModalMap(data) {
+  async function initOrUpdateModalMap(data) {
     if (!window.L || !document.getElementById('liveModalLeafletMap') || !data) return;
 
     if (!liveModalLeafletMap) {
@@ -7802,11 +7804,25 @@ document.addEventListener('DOMContentLoaded', () => {
     liveModalMapLayerGroup.clearLayers();
 
     const stoppages = data.stoppages || [];
-    const validCoords = [];
+    const rawCoords = [];
 
+    stoppages.forEach((stop) => {
+      if (stop.lat && stop.lng) {
+        rawCoords.push([stop.lat, stop.lng]);
+      }
+    });
+
+    // Render 100% Accurate Physical Rail Track Curve matching Google Maps
+    const originStop = stoppages[0]?.station_name || data.from;
+    const destStop = stoppages[stoppages.length - 1]?.station_name || data.to;
+    const trackPoints = await drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, rawCoords);
+
+    const validCoords = [];
     stoppages.forEach((stop, idx) => {
       if (stop.lat && stop.lng) {
-        const pt = [stop.lat, stop.lng];
+        const rawPt = [stop.lat, stop.lng];
+        // Strictly snap stoppage station position to the physical railway track line
+        const pt = snapPointToTrack(rawPt, trackPoints);
         validCoords.push(pt);
 
         const isOrigin = idx === 0;
@@ -7848,12 +7864,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Render 100% Accurate Physical Rail Track Curve matching Google Maps
-    const originStop = stoppages[0]?.station_name || data.from;
-    const destStop = stoppages[stoppages.length - 1]?.station_name || data.to;
-    drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, validCoords);
-
-    // Determine current train position & direction bearing
+    // Determine current train position & direction bearing strictly on track
     let trainCoord = null;
     let modalBearing = 0;
     if (data.prev_stop_idx >= 0 && data.prev_stop_idx < stoppages.length - 1) {
@@ -7861,10 +7872,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const nextStop = stoppages[data.prev_stop_idx + 1];
       if (prevStop?.lat && prevStop?.lng && nextStop?.lat && nextStop?.lng) {
         const segPct = Math.min(1, Math.max(0, (data.segment_progress_pct || 50) / 100));
-        trainCoord = [
+        const rawTrainPt = [
           prevStop.lat + (nextStop.lat - prevStop.lat) * segPct,
           prevStop.lng + (nextStop.lng - prevStop.lng) * segPct
         ];
+        trainCoord = snapPointToTrack(rawTrainPt, trackPoints);
         modalBearing = calculateBearing([prevStop.lat, prevStop.lng], [nextStop.lat, nextStop.lng]);
       }
     }

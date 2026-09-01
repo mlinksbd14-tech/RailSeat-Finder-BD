@@ -7518,6 +7518,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  function calculateBearing(p1, p2) {
+    if (!p1 || !p2 || (p1[0] === p2[0] && p1[1] === p2[1])) return 0;
+    const lat1 = (p1[0] * Math.PI) / 180;
+    const lon1 = (p1[1] * Math.PI) / 180;
+    const lat2 = (p2[0] * Math.PI) / 180;
+    const lon2 = (p2[1] * Math.PI) / 180;
+    const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+    const brng = (Math.atan2(y, x) * 180) / Math.PI;
+    return (brng + 360) % 360;
+  }
+
+  function snapPointToTrack(pt, trackPoints) {
+    if (!pt || !trackPoints || trackPoints.length === 0) return pt;
+    let minD = Infinity;
+    let best = pt;
+    for (let i = 0; i < trackPoints.length; i++) {
+      const tp = trackPoints[i];
+      const d = Math.hypot(tp[0] - pt[0], tp[1] - pt[1]);
+      if (d < minD) {
+        minD = d;
+        best = tp;
+      }
+    }
+    return minD < 0.15 ? best : pt;
+  }
+
   async function drawAccurateTrainCurve(mapLayerGroup, from, to, fallbackCoords) {
     if (!mapLayerGroup) return;
     let trackPoints = null;
@@ -7622,6 +7649,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       bounds.push(latLng);
 
+      // Compute heading bearing in degrees
+      const bearing = (t.from_coords && t.to_coords)
+        ? calculateBearing(latLng || t.from_coords, t.to_coords)
+        : (t.from_coords && latLng ? calculateBearing(t.from_coords, latLng) : 0);
+
       // In individual train mode, place station markers on origin & destination and draw 100% accurate railway curve
       if (isSingleSelectedTrain && t.from_coords && t.to_coords && t.from_coords[0] && t.to_coords[0]) {
         bounds.push(t.from_coords);
@@ -7669,10 +7701,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const iconHtml = `
         <div class="relative flex items-center justify-center cursor-pointer group">
-          <div class="w-7 h-7 rounded-full ${colorClass} text-white flex items-center justify-center text-[11px] shadow-lg ring-4 ${ringClass} animate-pulse">
+          <!-- Directional Heading Pointer Arrow -->
+          <div class="absolute w-8 h-8 flex items-center justify-center pointer-events-none transition-transform duration-300" style="transform: rotate(${Math.round(bearing)}deg);">
+            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-cyan-400 -translate-y-4 filter drop-shadow-md"></div>
+          </div>
+          <!-- Main Train Badge -->
+          <div class="w-7 h-7 rounded-full ${colorClass} text-white flex items-center justify-center text-[11px] shadow-xl ring-2 ring-white ring-offset-1 ring-offset-cyan-500/40 relative z-10 transition-transform group-hover:scale-110">
             <i class="fa-solid fa-train"></i>
           </div>
-          <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 font-mono text-[9px] font-black px-1 rounded bg-slate-900/90 text-white shadow-xs whitespace-nowrap pointer-events-none">#${t.train_no}</span>
+          <!-- Train Number Tag -->
+          <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 font-mono text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-900/95 text-white shadow-md border border-slate-700 whitespace-nowrap pointer-events-none z-20">#${t.train_no}</span>
         </div>
       `;
 
@@ -7815,8 +7853,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const destStop = stoppages[stoppages.length - 1]?.station_name || data.to;
     drawAccurateTrainCurve(liveModalMapLayerGroup, originStop, destStop, validCoords);
 
-    // Determine current train position
+    // Determine current train position & direction bearing
     let trainCoord = null;
+    let modalBearing = 0;
     if (data.prev_stop_idx >= 0 && data.prev_stop_idx < stoppages.length - 1) {
       const prevStop = stoppages[data.prev_stop_idx];
       const nextStop = stoppages[data.prev_stop_idx + 1];
@@ -7826,10 +7865,15 @@ document.addEventListener('DOMContentLoaded', () => {
           prevStop.lat + (nextStop.lat - prevStop.lat) * segPct,
           prevStop.lng + (nextStop.lng - prevStop.lng) * segPct
         ];
+        modalBearing = calculateBearing([prevStop.lat, prevStop.lng], [nextStop.lat, nextStop.lng]);
       }
     }
     if (!trainCoord && validCoords.length > 0) {
-      trainCoord = validCoords[Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0))];
+      const idx = Math.min(validCoords.length - 1, Math.max(0, data.prev_stop_idx >= 0 ? data.prev_stop_idx : 0));
+      trainCoord = validCoords[idx];
+      if (idx < validCoords.length - 1) {
+        modalBearing = calculateBearing(validCoords[idx], validCoords[idx + 1]);
+      }
     }
 
     if (validCoords.length > 0) {
@@ -7841,7 +7885,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trainCoord) {
       const trainIconHtml = `
         <div class="relative flex items-center justify-center">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shadow-xl ring-4 ring-cyan-400/40 animate-pulse">
+          <!-- Directional Heading Pointer Arrow -->
+          <div class="absolute w-10 h-10 flex items-center justify-center pointer-events-none transition-transform duration-300" style="transform: rotate(${Math.round(modalBearing)}deg);">
+            <div class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[10px] border-b-cyan-300 -translate-y-5 filter drop-shadow-lg"></div>
+          </div>
+          <!-- Main Train Badge -->
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center text-xs shadow-2xl ring-2 ring-white ring-offset-2 ring-offset-cyan-400/50 animate-pulse relative z-10">
             <i class="fa-solid fa-train"></i>
           </div>
         </div>

@@ -62,8 +62,25 @@
         "103.177.220.164"
       ],
       "role": "admin",
-      "lastLogin": "2026-09-02T04:30:04.610Z",
+      "lastLogin": "2026-09-02T04:48:24.606Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T04:48:24.606Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "countryCode": "BD",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-02T04:30:04.610Z",
@@ -127,11 +144,11 @@
       ],
       "lastIp": "::1",
       "lastUserAgent": "",
-      "loginCount": 5,
+      "loginCount": 6,
       "lastDevice": {
-        "device": "Desktop",
-        "os": "Unknown OS",
         "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
         "raw": ""
       }
     },

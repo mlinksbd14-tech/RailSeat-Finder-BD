@@ -334,14 +334,17 @@ function loadLocalUsersData() {
     settings: { requireLogin: true },
     users: [
       {
-        id: 'usr_admin_001',
-        username: 'admin',
+        id: 'usr_1787812528386_taky',
+        username: 'shawon421',
         password: hashPassword('44277999'),
-        name: 'System Administrator',
+        name: 'Saydur Rahaman Shawon',
+        email: 'srshawon421@gmail.com',
         role: 'admin',
         status: 'active',
         canViewDashboard: true,
-        createdAt: new Date().toISOString(),
+        emailVerified: true,
+        firebaseUid: '5gofRzFUYJWhAywCBjJCuJorsHH2',
+        createdAt: '2026-08-27T06:35:28.688Z',
         lastLogin: null
       }
     ]

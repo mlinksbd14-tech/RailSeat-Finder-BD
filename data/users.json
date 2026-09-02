@@ -70,11 +70,11 @@
         "device": "Desktop",
         "raw": ""
       },
-      "lastLogin": "2026-09-02T05:53:20.313Z",
+      "lastLogin": "2026-09-02T05:56:30.389Z",
       "activityHistory": [
         {
           "action": "login",
-          "timestamp": "2026-09-02T05:53:20.313Z",
+          "timestamp": "2026-09-02T05:56:30.389Z",
           "ip": "::1",
           "device": "Desktop",
           "os": "Unknown OS",
@@ -87,6 +87,23 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1",
             "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T05:53:20.313Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "city": "Localhost",
+            "region": "Local Network",
+            "country": "Development",
+            "countryCode": "BD",
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1"
           }
         },
         {
@@ -201,7 +218,7 @@
           "browser": "Edge 151"
         }
       ],
-      "loginCount": 9
+      "loginCount": 10
     },
     {
       "createdAt": "2026-08-27T09:53:19.298Z",
@@ -310,60 +327,6 @@
         "region": "Dhaka Division"
       },
       "loginCount": 1
-    },
-    {
-      "id": "usr_admin_001",
-      "username": "admin",
-      "password": "scrypt$16384$8$1$c4d6368a4cf1f702f75f7ce67fc3c8c0$faf46700c73afebb99b4ef5130f423ba413abb8ea867941d2f85a72a242f5a4695d4b4ed5951c4a1017a43d14b62109f31dab2c3e065eeb3fd88cd1ae519d8d7",
-      "name": "System Administrator",
-      "email": "saidur@sinhafwl.com",
-      "role": "admin",
-      "status": "active",
-      "canViewDashboard": true,
-      "emailVerified": true,
-      "createdAt": "2026-09-02T05:54:24.584Z",
-      "lastIp": "::1",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "lastDevice": {
-        "browser": "Edge 152",
-        "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
-      },
-      "lastLogin": "2026-09-02T05:54:53.551Z",
-      "loginCount": 3,
-      "ips": [
-        "::1"
-      ],
-      "activityHistory": [
-        {
-          "action": "login",
-          "timestamp": "2026-09-02T05:54:53.551Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": null
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-02T05:54:44.679Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": null
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-02T05:54:24.632Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": null
-        }
-      ]
     }
   ]
 }

@@ -62,8 +62,42 @@
         "103.177.220.164"
       ],
       "role": "admin",
-      "lastLogin": "2026-09-02T04:48:24.606Z",
+      "lastLogin": "2026-09-02T04:48:24.768Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T04:48:24.768Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "countryCode": "BD",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T04:48:24.698Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "countryCode": "BD",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-02T04:48:24.606Z",
@@ -144,7 +178,7 @@
       ],
       "lastIp": "::1",
       "lastUserAgent": "",
-      "loginCount": 6,
+      "loginCount": 8,
       "lastDevice": {
         "browser": "Unknown Browser",
         "os": "Unknown OS",
@@ -361,17 +395,51 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastLogin": "2026-09-02T03:43:55.891Z",
-      "lastIp": "27.147.149.234",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 143,
+      "lastLogin": "2026-09-02T04:48:24.903Z",
+      "lastIp": "::1",
+      "lastUserAgent": "",
+      "loginCount": 145,
       "lastDevice": {
-        "os": "Windows 10/11",
-        "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "browser": "Unknown Browser",
+        "os": "Unknown OS",
+        "device": "Desktop",
+        "raw": ""
       },
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T04:48:24.903Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T04:48:24.847Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Unknown OS",
+          "browser": "Unknown Browser",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-02T03:43:55.891Z",
@@ -762,40 +830,6 @@
             "isp": "Internal Loopback / Dev",
             "query": "::1"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-01T05:08:08.335Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-01T05:06:02.155Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
         }
       ],
       "shohozSession": {
@@ -829,7 +863,8 @@
         "query": "::1",
         "region": "Local Network"
       },
-      "password": "scrypt$16384$8$1$ceb4b974e26b1549089603bac9b996be$6f7d323671b063fb4d0b1dbc93ba4e63b0720c1d30f661af3fcd3244cae54d75c6d52858e2967762f018ccb6d19a277984e6a3893946361dceb2061f1821d23d"
+      "password": "scrypt$16384$8$1$ceb4b974e26b1549089603bac9b996be$6f7d323671b063fb4d0b1dbc93ba4e63b0720c1d30f661af3fcd3244cae54d75c6d52858e2967762f018ccb6d19a277984e6a3893946361dceb2061f1821d23d",
+      "emailVerified": true
     }
   ]
 }

@@ -57,6 +57,8 @@
       }
     }
   </script>
+  <!-- Chart.js for Admin Analytics Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased">
 
@@ -2195,6 +2197,10 @@
           </div>
         </div>
         <div class="flex items-center space-x-2 shrink-0 ml-2">
+          <button id="openAnalyticsDashboardBtn" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs transition border border-indigo-200 dark:border-indigo-800/80 cursor-pointer" title="Analytics Dashboard">
+            <i class="fa-solid fa-chart-line text-[10px]"></i>
+            <span class="hidden sm:inline">Analytics</span>
+          </button>
           <button id="modalLogoutBtn" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs transition border border-rose-200 dark:border-rose-800/80 cursor-pointer" title="Sign Out">
             <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
             <span>Logout</span>
@@ -2844,6 +2850,154 @@
   <!-- Notification Toast Container -->
   <div id="toastContainer" class="fixed bottom-20 md:bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
 
+
+  <!-- ============================================== -->
+  <!-- Admin Analytics Dashboard Modal               -->
+  <!-- ============================================== -->
+  <div id="analyticsDashboardModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-6xl border border-slate-200 dark:border-slate-800 shadow-2xl my-2 sm:my-4">
+
+      <!-- Header -->
+      <div class="sticky top-0 z-10 px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 rounded-t-2xl shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <i class="fa-solid fa-chart-line text-sm"></i>
+          </div>
+          <div>
+            <h2 class="font-extrabold text-sm text-slate-900 dark:text-white">Admin Analytics Dashboard</h2>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400" id="analyticsLastUpdated">Loading data...</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="analyticsRefreshBtn" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs transition border border-indigo-200 dark:border-indigo-800/60 cursor-pointer">
+            <i id="analyticsRefreshIcon" class="fa-solid fa-rotate-right text-[10px]"></i>
+            <span>Refresh</span>
+          </button>
+          <button id="analyticsDashboardCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-4 space-y-5">
+
+        <!-- Overview Stat Cards -->
+        <div>
+          <h3 class="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5">Overview</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="analyticsStatCards">
+            <!-- JS-rendered -->
+            <div class="animate-pulse col-span-2 sm:col-span-3 lg:col-span-6 h-20 bg-slate-100 dark:bg-slate-800 rounded-2xl"></div>
+          </div>
+        </div>
+
+        <!-- Charts Row 1: User Growth + Login Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-user-plus text-indigo-500 text-[11px]"></i>
+              <span>User Registrations (Last 12 Weeks)</span>
+            </h4>
+            <div class="relative h-44"><canvas id="chartUserGrowth"></canvas></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-right-to-bracket text-emerald-500 text-[11px]"></i>
+              <span>Login Activity (Last 14 Days)</span>
+            </h4>
+            <div class="relative h-44"><canvas id="chartLoginActivity"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts Row 2: Doughnuts + Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-mobile-screen text-purple-500 text-[11px]"></i>
+              <span>Device Types</span>
+            </h4>
+            <div class="relative h-36"><canvas id="chartDevices"></canvas></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-brands fa-google text-cyan-500 text-[11px]"></i>
+              <span>Auth Provider</span>
+            </h4>
+            <div class="relative h-36"><canvas id="chartAuthProvider"></canvas></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-globe text-amber-500 text-[11px]"></i>
+              <span>Radar Alert Types</span>
+            </h4>
+            <div class="relative h-36"><canvas id="chartRadarTypes"></canvas></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-user-check text-teal-500 text-[11px]"></i>
+              <span>User Status</span>
+            </h4>
+            <div class="relative h-36"><canvas id="chartUserStatus"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Top Lists + Activity Feed -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+          <!-- Top Routes -->
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-route text-rose-500 text-[11px]"></i>
+              <span>Top Watched Routes</span>
+            </h4>
+            <div id="analyticsTopRoutes" class="space-y-2 text-xs">
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-4/5"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5"></div>
+            </div>
+          </div>
+
+          <!-- Top Trains -->
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-train text-indigo-500 text-[11px]"></i>
+              <span>Top Alerted Trains</span>
+            </h4>
+            <div id="analyticsTopTrains" class="space-y-2 text-xs">
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-4/5"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5"></div>
+            </div>
+          </div>
+
+          <!-- Top Seat Classes -->
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-3 flex items-center space-x-1.5">
+              <i class="fa-solid fa-chair text-emerald-500 text-[11px]"></i>
+              <span>Top Seat Classes</span>
+            </h4>
+            <div id="analyticsTopClasses" class="space-y-2 text-xs">
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-4/5"></div>
+              <div class="animate-pulse h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div>
+          <h3 class="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5">Recent Activity</h3>
+          <div id="analyticsActivityFeed" class="space-y-1.5">
+            <div class="animate-pulse h-10 bg-slate-100 dark:bg-slate-800 rounded-xl w-full"></div>
+            <div class="animate-pulse h-10 bg-slate-100 dark:bg-slate-800 rounded-xl w-full"></div>
+            <div class="animate-pulse h-10 bg-slate-100 dark:bg-slate-800 rounded-xl w-full"></div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div>
+  </div>
+  <!-- /Analytics Dashboard Modal -->
 
   <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

@@ -330,12 +330,21 @@
         "device": "Desktop",
         "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
-      "lastLogin": "2026-09-02T05:54:24.632Z",
-      "loginCount": 1,
+      "lastLogin": "2026-09-02T05:54:44.679Z",
+      "loginCount": 2,
       "ips": [
         "::1"
       ],
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T05:54:44.679Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": null
+        },
         {
           "action": "login",
           "timestamp": "2026-09-02T05:54:24.632Z",

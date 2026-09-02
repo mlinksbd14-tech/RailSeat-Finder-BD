@@ -395,10 +395,10 @@
         "::1",
         "27.147.149.234"
       ],
-      "lastLogin": "2026-09-02T05:30:48.100Z",
+      "lastLogin": "2026-09-02T05:31:32.987Z",
       "lastIp": "::1",
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 146,
+      "loginCount": 147,
       "lastDevice": {
         "browser": "Edge 152",
         "os": "Windows 10/11",
@@ -406,6 +406,23 @@
         "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
       },
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-02T05:31:32.987Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-02T05:30:48.100Z",
@@ -800,23 +817,6 @@
         {
           "action": "login",
           "timestamp": "2026-09-01T05:36:47.128Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "city": "Localhost",
-            "region": "Local Network",
-            "country": "Development",
-            "countryCode": "BD",
-            "flag": "💻",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-01T05:29:45.002Z",
           "ip": "::1",
           "device": "Desktop",
           "os": "Windows 10/11",

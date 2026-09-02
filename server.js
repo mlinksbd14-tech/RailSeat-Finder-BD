@@ -5100,6 +5100,164 @@ function saveSupportMessages(data) {
   }
 }
 
+// ====================================================
+// 📊 ADMIN ANALYTICS ENDPOINT
+// ====================================================
+app.get('/api/admin/analytics', requireAdmin, (req, res) => {
+  try {
+    const usersData = loadUsersData();
+    const users = usersData.users || [];
+    const radarData = loadRadarData();
+    const alerts = radarData.recentAlerts || [];
+    const supportData = loadSupportMessages();
+    const threads = supportData.threads || [];
+
+    // --- User Counts ---
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.status === 'active').length;
+    const pendingUsers = users.filter(u => u.status === 'pending').length;
+    const disabledUsers = users.filter(u => u.status === 'disabled').length;
+    const adminCount = users.filter(u => u.role === 'admin').length;
+    const totalLogins = users.reduce((s, u) => s + (u.loginCount || 0), 0);
+
+    // --- User Status breakdown ---
+    const userStatusBreakdown = { active: activeUsers, pending: pendingUsers, disabled: disabledUsers };
+
+    // --- Auth Provider breakdown ---
+    const providerMap = {};
+    users.forEach(u => {
+      const p = u.authProvider === 'firebase_google' ? 'Google' : 'Password';
+      providerMap[p] = (providerMap[p] || 0) + 1;
+    });
+
+    // --- Device breakdown ---
+    const deviceMap = {};
+    users.forEach(u => {
+      const d = (u.lastDevice && u.lastDevice.device) ? u.lastDevice.device : 'Unknown';
+      deviceMap[d] = (deviceMap[d] || 0) + 1;
+    });
+
+    // --- Browser breakdown ---
+    const browserMap = {};
+    users.forEach(u => {
+      if (u.lastDevice && u.lastDevice.browser) {
+        const b = u.lastDevice.browser.split(' ')[0]; // just "Chrome", "Edge" etc
+        browserMap[b] = (browserMap[b] || 0) + 1;
+      }
+    });
+
+    // --- Registration timeline: last 12 weeks ---
+    const now = new Date();
+    const weekLabels = [];
+    const weekCounts = new Array(12).fill(0);
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i * 7);
+      const label = d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric' });
+      weekLabels.push(label);
+    }
+    users.forEach(u => {
+      if (!u.createdAt) return;
+      const created = new Date(u.createdAt);
+      const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+      const weekIdx = 11 - Math.floor(diffDays / 7);
+      if (weekIdx >= 0 && weekIdx < 12) weekCounts[weekIdx]++;
+    });
+
+    // --- Login activity: last 14 days from activityHistory ---
+    const dayLabels = [];
+    const dayCounts = new Array(14).fill(0);
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      dayLabels.push(d.toLocaleDateString('en-BD', { month: 'short', day: 'numeric' }));
+    }
+    users.forEach(u => {
+      (u.activityHistory || []).forEach(ev => {
+        if (ev.action !== 'login') return;
+        const evDate = new Date(ev.timestamp);
+        const diffDays = Math.floor((now - evDate) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 14) {
+          dayCounts[13 - diffDays]++;
+        }
+      });
+    });
+
+    // --- Geographic top cities ---
+    const cityMap = {};
+    users.forEach(u => {
+      if (u.lastLocation && u.lastLocation.city) {
+        const city = u.lastLocation.city;
+        cityMap[city] = (cityMap[city] || 0) + 1;
+      }
+    });
+    const topCities = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([city, count]) => ({ city, count }));
+
+    // --- Radar analytics ---
+    const totalAlerts = alerts.length;
+    const alertTypeMap = {};
+    const routeMap = {};
+    const trainMap = {};
+    const classMap = {};
+    alerts.forEach(a => {
+      const t = a.type || 'UNKNOWN';
+      alertTypeMap[t] = (alertTypeMap[t] || 0) + 1;
+      if (a.fromCity && a.toCity) {
+        const route = `${a.fromCity} → ${a.toCity}`;
+        routeMap[route] = (routeMap[route] || 0) + 1;
+      }
+      if (a.trainName) trainMap[a.trainName] = (trainMap[a.trainName] || 0) + 1;
+      if (a.className) classMap[a.className] = (classMap[a.className] || 0) + 1;
+    });
+    const topRoutes = Object.entries(routeMap).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([route, count]) => ({ route, count }));
+    const topTrains = Object.entries(trainMap).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([train, count]) => ({ train, count }));
+    const topClasses = Object.entries(classMap).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([cls, count]) => ({ cls, count }));
+
+    // --- Support stats ---
+    const totalThreads = threads.length;
+    const openThreads = threads.filter(t => t.status !== 'closed').length;
+
+    // --- Recent activity feed: last 15 events across all users ---
+    const allEvents = [];
+    users.forEach(u => {
+      (u.activityHistory || []).forEach(ev => {
+        allEvents.push({
+          action: ev.action,
+          username: u.username,
+          name: u.name || u.username,
+          timestamp: ev.timestamp,
+          device: ev.device || (u.lastDevice && u.lastDevice.device) || 'Unknown',
+          browser: ev.browser || (u.lastDevice && u.lastDevice.browser) || '',
+          ip: ev.ip || u.lastIp || ''
+        });
+      });
+    });
+    allEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const recentActivity = allEvents.slice(0, 15);
+
+    res.json({
+      success: true,
+      generatedAt: new Date().toISOString(),
+      overview: {
+        totalUsers, activeUsers, pendingUsers, disabledUsers, adminCount, totalLogins,
+        totalAlerts, totalThreads, openThreads
+      },
+      userStatusBreakdown,
+      authProviders: providerMap,
+      deviceBreakdown: deviceMap,
+      browserBreakdown: browserMap,
+      registrationTimeline: { labels: weekLabels, counts: weekCounts },
+      loginActivity: { labels: dayLabels, counts: dayCounts },
+      topCities,
+      radar: { totalAlerts, alertTypeMap, topRoutes, topTrains, topClasses },
+      recentActivity
+    });
+  } catch (err) {
+    console.error('[Analytics] ❌ Error generating analytics:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to generate analytics.' });
+  }
+});
+
 // Dedicated Support Page Route
 app.get('/support', (req, res) => {
   const supportPath = path.join(__dirname, 'public', 'support.html');

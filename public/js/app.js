@@ -8853,9 +8853,247 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
     });
-  }
+
+
+  // ====================================================
+  // 📊 ADMIN ANALYTICS DASHBOARD
+  // ====================================================
+  (function initAnalyticsDashboard() {
+    const modal = document.getElementById('analyticsDashboardModal');
+    const openBtn = document.getElementById('openAnalyticsDashboardBtn');
+    const closeBtn = document.getElementById('analyticsDashboardCloseBtn');
+    const refreshBtn = document.getElementById('analyticsRefreshBtn');
+    const refreshIcon = document.getElementById('analyticsRefreshIcon');
+    const lastUpdatedEl = document.getElementById('analyticsLastUpdated');
+
+    if (!modal || !openBtn) return;
+
+    // Chart.js instances — kept for cleanup on re-render
+    const chartInstances = {};
+
+    function isDarkMode() {
+      return document.documentElement.classList.contains('dark');
+    }
+
+    function chartTextColor() { return isDarkMode() ? '#94a3b8' : '#64748b'; }
+    function chartGridColor() { return isDarkMode() ? 'rgba(148,163,184,0.1)' : 'rgba(100,116,139,0.1)'; }
+
+    function destroyChart(id) {
+      if (chartInstances[id]) {
+        chartInstances[id].destroy();
+        delete chartInstances[id];
+      }
+    }
+
+    function makeLineChart(id, labels, data, color) {
+      destroyChart(id);
+      const ctx = document.getElementById(id);
+      if (!ctx) return;
+      chartInstances[id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            borderColor: color,
+            backgroundColor: color.replace('1)', '0.1)'),
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: chartTextColor(), font: { size: 9 }, maxRotation: 45 }, grid: { color: chartGridColor() } },
+            y: { ticks: { color: chartTextColor(), font: { size: 9 }, stepSize: 1 }, grid: { color: chartGridColor() }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function makeDoughnutChart(id, labels, data, colors) {
+      destroyChart(id);
+      const ctx = document.getElementById(id);
+      if (!ctx) return;
+      chartInstances[id] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDarkMode() ? '#1e293b' : '#f8fafc' }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: chartTextColor(), font: { size: 9 }, padding: 8, boxWidth: 10 } }
+          }
+        }
+      });
+    }
+
+    function renderStatCards(overview) {
+      const container = document.getElementById('analyticsStatCards');
+      if (!container) return;
+      const cards = [
+        { icon: 'fa-users', label: 'Total Users', value: overview.totalUsers, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-950/30' },
+        { icon: 'fa-circle-check', label: 'Active Users', value: overview.activeUsers, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
+        { icon: 'fa-clock', label: 'Pending', value: overview.pendingUsers, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/30' },
+        { icon: 'fa-shield-halved', label: 'Admins', value: overview.adminCount, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-950/30' },
+        { icon: 'fa-right-to-bracket', label: 'Total Logins', value: overview.totalLogins, color: 'text-cyan-500', bg: 'bg-cyan-50 dark:bg-cyan-950/30' },
+        { icon: 'fa-crosshairs', label: 'Radar Alerts', value: overview.totalAlerts, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/30' }
+      ];
+      container.innerHTML = cards.map(c => `
+        <div class="p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-center space-y-1 shadow-xs hover:shadow-md transition">
+          <div class="w-9 h-9 rounded-xl ${c.bg} flex items-center justify-center">
+            <i class="fa-solid ${c.icon} ${c.color} text-sm"></i>
+          </div>
+          <p class="font-extrabold text-xl text-slate-900 dark:text-white">${c.value}</p>
+          <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${c.label}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderTopList(containerId, items, labelKey, countKey, emptyMsg) {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      if (!items || items.length === 0) {
+        el.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">${emptyMsg || 'No data yet.'}</p>`;
+        return;
+      }
+      const max = items[0][countKey] || 1;
+      el.innerHTML = items.map((item, i) => {
+        const pct = Math.round((item[countKey] / max) * 100);
+        const rankColors = ['text-amber-500', 'text-slate-500', 'text-orange-400'];
+        const rankColor = rankColors[i] || 'text-slate-400';
+        return `
+          <div class="space-y-0.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-1.5 min-w-0">
+                <span class="font-extrabold text-[10px] ${rankColor} w-4 text-center">${i + 1}</span>
+                <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">${item[labelKey]}</span>
+              </div>
+              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 ml-2 shrink-0">${item[countKey]}</span>
+            </div>
+            <div class="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ml-5">
+              <div class="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderActivityFeed(events) {
+      const el = document.getElementById('analyticsActivityFeed');
+      if (!el) return;
+      if (!events || events.length === 0) {
+        el.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No recent activity.</p>`;
+        return;
+      }
+      const actionConfig = {
+        login: { icon: 'fa-right-to-bracket', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30', label: 'Signed in' },
+        register: { icon: 'fa-user-plus', color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30', label: 'Registered' }
+      };
+      el.innerHTML = events.map(ev => {
+        const cfg = actionConfig[ev.action] || { icon: 'fa-circle', color: 'text-slate-400 bg-slate-100 dark:bg-slate-800', label: ev.action };
+        const time = ev.timestamp ? new Date(ev.timestamp).toLocaleString('en-BD', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        return `
+          <div class="flex items-center space-x-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 hover:border-indigo-200 dark:hover:border-indigo-800/50 transition">
+            <div class="w-7 h-7 rounded-lg ${cfg.color} flex items-center justify-center shrink-0">
+              <i class="fa-solid ${cfg.icon} text-[10px]"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center space-x-1.5">
+                <span class="font-bold text-xs text-slate-900 dark:text-white truncate">${ev.name}</span>
+                <span class="text-[10px] text-slate-400">@${ev.username}</span>
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">${cfg.label} · ${ev.device || ''} ${ev.browser ? '· ' + ev.browser.split(' ')[0] : ''}</p>
+            </div>
+            <span class="text-[10px] text-slate-400 shrink-0">${time}</span>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAndRenderAnalytics() {
+      refreshIcon.classList.add('fa-spin');
+      if (lastUpdatedEl) lastUpdatedEl.textContent = 'Loading...';
+
+      try {
+        const token = localStorage.getItem('rail_auth_token') || sessionStorage.getItem('rail_auth_token') || '';
+        const res = await fetch('/api/admin/analytics', { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed');
+
+        // Overview cards
+        renderStatCards(data.overview);
+
+        // Line charts
+        makeLineChart('chartUserGrowth', data.registrationTimeline.labels, data.registrationTimeline.counts, 'rgba(99,102,241,1)');
+        makeLineChart('chartLoginActivity', data.loginActivity.labels, data.loginActivity.counts, 'rgba(16,185,129,1)');
+
+        // Doughnut: Devices
+        const devKeys = Object.keys(data.deviceBreakdown);
+        const devColors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
+        makeDoughnutChart('chartDevices', devKeys, devKeys.map(k => data.deviceBreakdown[k]), devColors);
+
+        // Doughnut: Auth Providers
+        const authKeys = Object.keys(data.authProviders);
+        makeDoughnutChart('chartAuthProvider', authKeys, authKeys.map(k => data.authProviders[k]), ['#6366f1', '#06b6d4']);
+
+        // Doughnut: Radar Alert Types
+        const radarTypeKeys = Object.keys(data.radar.alertTypeMap);
+        makeDoughnutChart('chartRadarTypes', radarTypeKeys, radarTypeKeys.map(k => data.radar.alertTypeMap[k]), ['#f59e0b', '#ef4444', '#6366f1']);
+
+        // Doughnut: User Status
+        const { active, pending, disabled } = data.userStatusBreakdown;
+        makeDoughnutChart('chartUserStatus', ['Active', 'Pending', 'Disabled'], [active, pending, disabled], ['#10b981', '#f59e0b', '#ef4444']);
+
+        // Top Lists
+        renderTopList('analyticsTopRoutes', data.radar.topRoutes, 'route', 'count', 'No radar alerts yet.');
+        renderTopList('analyticsTopTrains', data.radar.topTrains, 'train', 'count', 'No train alerts yet.');
+        renderTopList('analyticsTopClasses', data.radar.topClasses, 'cls', 'count', 'No class alerts yet.');
+
+        // Activity Feed
+        renderActivityFeed(data.recentActivity);
+
+        // Update timestamp
+        if (lastUpdatedEl) {
+          const ts = new Date(data.generatedAt).toLocaleString('en-BD', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          lastUpdatedEl.textContent = `Last updated: ${ts}`;
+        }
+      } catch (err) {
+        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Failed to load analytics.';
+        console.error('[Analytics] Load error:', err.message);
+      } finally {
+        refreshIcon.classList.remove('fa-spin');
+      }
+    }
+
+    openBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      loadAndRenderAnalytics();
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      Object.keys(chartInstances).forEach(id => destroyChart(id));
+    });
+
+    refreshBtn.addEventListener('click', () => {
+      loadAndRenderAnalytics();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        Object.keys(chartInstances).forEach(id => destroyChart(id));
+      }
+    });
+  })();
 
 });
-
-
-

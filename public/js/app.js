@@ -8854,11 +8854,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    initAnalyticsDashboard();
+  }
 
   // ====================================================
   // 📊 ADMIN ANALYTICS DASHBOARD
   // ====================================================
-  (function initAnalyticsDashboard() {
+  function initAnalyticsDashboard() {
     const modal = document.getElementById('analyticsDashboardModal');
     const openBtn = document.getElementById('openAnalyticsDashboardBtn');
     const closeBtn = document.getElementById('analyticsDashboardCloseBtn');
@@ -9094,6 +9096,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(chartInstances).forEach(id => destroyChart(id));
       }
     });
-  })();
+  }
 
 });

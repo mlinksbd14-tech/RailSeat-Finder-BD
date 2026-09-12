@@ -92,7 +92,7 @@
           <i class="fa-solid fa-chair text-emerald-500"></i>
           <span data-i18n="nav_seat_finder">Seat Finder</span>
         </button>
-        <button type="button" id="navLiveTrackerBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
+        <button type="button" id="navLiveTrackerBtn" class="hidden px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
           <span data-i18n="nav_live_radar">Live Radar</span>
           <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-cyan-500 animate-pulse"></span>
@@ -918,9 +918,9 @@
   </div>
 
   <!-- Settings & Preferences Modal -->
-  <div id="settingsDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+  <div id="settingsDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
     <!-- Modal Card -->
-    <div id="settingsModalCard" class="w-full max-w-lg max-h-[88vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
+    <div id="settingsModalCard" class="w-full max-w-lg max-h-[88vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in modal-dialog-responsive">
       
       <!-- Header -->
       <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
@@ -929,13 +929,13 @@
             <i class="fa-solid fa-gear"></i>
           </div>
           <div>
-            <h4 class="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
+            <h4 id="settingsModalTitle" class="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Settings & Preferences</h4>
             <p class="text-[10px] text-slate-400">Configure alerts, monitor, theme & account</p>
           </div>
         </div>
         <div class="flex items-center space-x-2">
           <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Auto-saved</span>
-          <button type="button" id="closeSettingsModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Close">
+          <button type="button" id="closeSettingsModalBtn" class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" aria-label="Close settings" title="Close">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -1331,8 +1331,8 @@
   </div>
 
   <!-- Live API Authentication Modal -->
-  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl sm:rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
       
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
@@ -1341,11 +1341,11 @@
             <i class="fa-solid fa-key"></i>
           </div>
           <div>
-            <h3 class="font-bold text-base text-slate-900 dark:text-white">Connect Live Shohoz API</h3>
+            <h3 id="authModalTitle" class="font-bold text-base text-slate-900 dark:text-white">Connect Live Shohoz API</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Unlock 100% real-time seat availability</p>
           </div>
         </div>
-        <button id="authModalCloseBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg cursor-pointer">
+        <button id="authModalCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer p-1" aria-label="Close modal">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -2049,19 +2049,19 @@
   </div>
 
   <!-- Targeted Seat & Train Watchlist Manager Modal -->
-  <div id="watchlistModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
+  <div id="watchlistModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="watchlistModalTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl sm:rounded-2xl max-w-lg w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
         <div class="flex items-center space-x-2.5 min-w-0">
           <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
             <i class="fa-solid fa-crosshairs"></i>
           </div>
           <div class="min-w-0">
-            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white truncate">Active Seat Watchlist Radar</h3>
+            <h3 id="watchlistModalTitle" class="font-extrabold text-sm text-slate-900 dark:text-white truncate">Active Seat Watchlist</h3>
             <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">Targeted alerts for specific trains & classes</p>
           </div>
         </div>
-        <button id="watchlistCloseBtn" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0 ml-2">
+        <button id="watchlistCloseBtn" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0 ml-2" aria-label="Close watchlist">
           <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
@@ -2073,10 +2073,10 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span class="font-extrabold text-[11px]">24/7 Server Radar: <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">Online</span></span>
+          <span class="font-extrabold text-[11px]">24/7 Background Alert: <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">Online</span></span>
           <span id="radarUserBadge" class="hidden text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-200/90 dark:bg-emerald-900/90 text-emerald-900 dark:text-emerald-100 font-bold">@user</span>
         </div>
-        <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">⚡ User-isolated 24/7 scanning</span>
+        <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">⚡ Real-time seat drop scanner</span>
       </div>
 
       <div class="p-4 overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800" id="watchlistItemsContainer">
@@ -2084,21 +2084,21 @@
       </div>
 
       <div class="p-3 bg-slate-50/80 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 shrink-0">
-        <span><i class="fa-solid fa-satellite-dish text-emerald-500 mr-1"></i> Background scan runs 24/7 on server</span>
+        <span><i class="fa-solid fa-bell text-emerald-500 mr-1"></i> Background scan runs 24/7 on server</span>
         <button id="clearWatchlistBtn" class="text-rose-500 hover:text-rose-700 font-bold cursor-pointer">Clear All</button>
       </div>
     </div>
   </div>
 
   <!-- Set Watch Target Modal -->
-  <div id="setWatchTargetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
+  <div id="setWatchTargetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="setWatchTargetTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl sm:rounded-2xl max-w-sm w-full max-h-[92vh] flex flex-col p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 overflow-y-auto modal-dialog-responsive">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
-        <h4 class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+        <h4 id="setWatchTargetTitle" class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
           <i class="fa-solid fa-bell text-emerald-600"></i>
           <span>Watch Train Target</span>
         </h4>
-        <button id="setWatchCloseBtn" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">
+        <button id="setWatchCloseBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer p-1" aria-label="Close watch modal">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -2830,7 +2830,7 @@
         <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors" data-i18n="nav_seat_finder">Seats</span>
       </button>
       <!-- Live Radar -->
-      <button type="button" id="mobileNavLiveRadarBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
+      <button type="button" id="mobileNavLiveRadarBtn" class="mobile-bottom-nav-btn hidden flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-cyan-500"></div>
         <div class="relative">
           <i class="fa-solid fa-satellite-dish text-[17px] text-slate-400 group-[.active-tab]:text-cyan-500 transition-colors"></i>

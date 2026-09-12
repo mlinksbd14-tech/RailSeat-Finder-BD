@@ -926,6 +926,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsDropdown) settingsDropdown.classList.add('hidden');
       }
     });
+
+    // Accessible Global Escape Key Listener to dismiss topmost open modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+        const activeModals = [
+          document.getElementById('authModal'),
+          document.getElementById('settingsDropdown'),
+          document.getElementById('setWatchTargetModal'),
+          document.getElementById('watchlistModal'),
+          document.getElementById('routeExplorerModal'),
+          document.getElementById('stationMatrixModal'),
+          document.getElementById('userLoginModal'),
+          document.getElementById('userManagementModal'),
+          document.getElementById('analyticsDashboardModal'),
+          document.getElementById('shareModal')
+        ];
+        for (const modal of activeModals) {
+          if (modal && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            break;
+          }
+        }
+      }
+    });
   }
 
   function updateSoundUI() {

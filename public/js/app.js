@@ -655,6 +655,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const clean = String(raw).trim();
     const lower = clean.toLowerCase();
     
+    // Check Bengali name resolution
+    if (window.i18n && window.i18n.reverseStationsMap && window.i18n.reverseStationsMap[clean]) {
+      return window.i18n.reverseStationsMap[clean];
+    }
+    if (state.stations && state.stations.length > 0) {
+      const bnMatch = state.stations.find(s => s.bn_name && (s.bn_name.trim() === clean || s.bn_name.trim().toLowerCase() === lower));
+      if (bnMatch) return bnMatch.name;
+    }
+
     if (STATION_ALIASES[lower]) {
       return STATION_ALIASES[lower];
     }
@@ -1870,20 +1879,34 @@ document.addEventListener('DOMContentLoaded', () => {
   function generateQuickDateChips() {
     dateChipsContainer.querySelectorAll('.date-chip').forEach(c => c.remove());
     const today = new Date();
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+    const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const daysBn = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
+    const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthsBn = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টে', 'অক্টো', 'নভে', 'ডিসে'];
 
     for (let i = 0; i < 5; i++) {
       const d = new Date();
       d.setDate(today.getDate() + i);
       const iso = d.toISOString().split('T')[0];
-      const label = i === 0 ? 'Today' : (i === 1 ? 'Tomorrow' : `${days[d.getDay()]} (${d.getDate()} ${months[d.getMonth()]})`);
+      
+      let label;
+      if (i === 0) {
+        label = isBn ? 'আজ' : 'Today';
+      } else if (i === 1) {
+        label = isBn ? 'আগামীকাল' : 'Tomorrow';
+      } else {
+        const dayName = isBn ? daysBn[d.getDay()] : daysEn[d.getDay()];
+        const dayNum = isBn ? (window.i18n ? window.i18n.toBnNum(d.getDate()) : d.getDate()) : d.getDate();
+        const monthName = isBn ? monthsBn[d.getMonth()] : monthsEn[d.getMonth()];
+        label = `${dayName} (${dayNum} ${monthName})`;
+      }
 
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = `date-chip px-2 py-0.5 rounded text-xs font-medium transition ${
+      chip.className = `date-chip px-2.5 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 cursor-pointer ${
         i === 0 
-          ? 'bg-emerald-600 text-white' 
+          ? 'bg-emerald-600 text-white shadow-xs' 
           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
       }`;
       chip.textContent = label;
@@ -1905,9 +1928,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateActiveDateChips(selectedIso) {
     dateChipsContainer.querySelectorAll('.date-chip').forEach(chip => {
       if (chip.dataset.date === selectedIso) {
-        chip.className = 'date-chip px-2 py-0.5 rounded text-xs font-medium bg-emerald-600 text-white transition';
+        chip.className = 'date-chip px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-xs transition whitespace-nowrap shrink-0';
       } else {
-        chip.className = 'date-chip px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition';
+        chip.className = 'date-chip px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap shrink-0';
       }
     });
   }
@@ -1963,12 +1986,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sObj) aliasMatches.push(sObj);
       }
 
-      const otherMatches = state.stations.filter(s => 
-        s.name.toLowerCase().includes(query) ||
-        (s.display_name && s.display_name.toLowerCase().includes(query)) ||
-        (s.bn_name && s.bn_name.includes(query)) ||
-        (s.alias && s.alias.toLowerCase().includes(query))
-      );
+      const otherMatches = state.stations.filter(s => {
+        const bnTranslated = window.i18n ? window.i18n.getStationName(s.name, 'bn') : '';
+        return (
+          s.name.toLowerCase().includes(query) ||
+          (s.display_name && s.display_name.toLowerCase().includes(query)) ||
+          (s.bn_name && s.bn_name.includes(query)) ||
+          (bnTranslated && bnTranslated.includes(query)) ||
+          (s.alias && s.alias.toLowerCase().includes(query))
+        );
+      });
 
       const matches = Array.from(new Set([...aliasMatches, ...otherMatches])).slice(0, 15);
 
@@ -1997,33 +2024,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderDropdownItems(items, dropdownEl, inputEl, onSelect) {
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+
     if (items.length === 0) {
       dropdownEl.innerHTML = `
         <div class="px-4 py-3 text-xs text-slate-400 text-center">
-          No matching Shohoz station found
+          ${isBn ? 'কোনো স্টেশন খুঁজে পাওয়া যায়নি' : 'No matching Shohoz station found'}
         </div>
       `;
       dropdownEl.classList.remove('hidden');
       return;
     }
 
-    dropdownEl.innerHTML = items.map(s => `
-      <div class="autocomplete-item px-3.5 py-2.5 cursor-pointer flex items-center justify-between text-xs transition" data-name="${s.name}">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-train text-emerald-500 text-[10px]"></i>
-          <span class="font-semibold text-slate-800 dark:text-slate-100">${s.display_name || s.name}</span>
-          ${s.bn_name ? `<span class="text-slate-400 font-bengali">(${s.bn_name})</span>` : ''}
+    dropdownEl.innerHTML = items.map(s => {
+      const bnName = (s.bn_name && s.bn_name !== s.name) ? s.bn_name : (window.i18n ? window.i18n.getStationName(s.name, 'bn') : '');
+      const primaryTitle = isBn && bnName ? bnName : (s.display_name || s.name);
+      const secondaryTitle = isBn ? s.name : (bnName && bnName !== s.name ? bnName : '');
+      return `
+        <div class="autocomplete-item px-3.5 py-2.5 cursor-pointer flex items-center justify-between text-xs transition hover:bg-emerald-50/80 dark:hover:bg-slate-700/60" data-name="${s.name}" data-display="${primaryTitle}">
+          <div class="flex items-center space-x-2 min-w-0">
+            <i class="fa-solid fa-location-dot text-emerald-500 text-[11px] shrink-0"></i>
+            <span class="font-bold text-slate-800 dark:text-slate-100 truncate">${primaryTitle}</span>
+            ${secondaryTitle ? `<span class="text-slate-400 font-medium text-[11px] truncate">(${secondaryTitle})</span>` : ''}
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold shrink-0 ml-2">${s.name}</span>
         </div>
-        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-semibold">${s.name}</span>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     dropdownEl.querySelectorAll('.autocomplete-item').forEach(item => {
       item.addEventListener('click', () => {
-        const name = item.dataset.name;
-        inputEl.value = name;
+        const canonical = item.dataset.name;
+        const displayVal = item.dataset.display || canonical;
+        inputEl.value = isBn ? `${displayVal} (${canonical})` : canonical;
         dropdownEl.classList.add('hidden');
-        onSelect(name);
+        onSelect(canonical);
       });
     });
 
@@ -2957,6 +2992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dojParam = formatShohozDoj(state.selectedDate);
 
     trainsGrid.innerHTML = trains.map(train => {
+      const isBn = window.i18n && window.i18n.getLang() === 'bn';
       const grandTotal = (train.seat_types || []).reduce((sum, s) => {
         return sum + Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
       }, 0);
@@ -2966,8 +3002,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const chosenClass = state.selectedClass !== 'ALL' ? state.selectedClass : (availClasses.length > 0 ? availClasses[0].type : (train.seat_types?.[0]?.type || 'S_CHAIR'));
       const bookUrl = buildShohozBookingUrl(state.selectedFrom, state.selectedTo, state.selectedDate, chosenClass);
 
+      const depStationDisplay = window.i18n ? window.i18n.getStationName(train.departure_station) : train.departure_station;
+      const arrStationDisplay = window.i18n ? window.i18n.getStationName(train.arrival_station) : train.arrival_station;
+      const depTimeDisplay = isBn ? window.i18n.toBnNum(train.departure_time) : train.departure_time;
+      const arrTimeDisplay = isBn ? window.i18n.toBnNum(train.arrival_time) : train.arrival_time;
+      const offDayDisplay = isBn ? (train.off_day === 'None' || !train.off_day ? 'নেই' : train.off_day) : (train.off_day || 'None');
+      const offDayLabel = isBn ? 'ছুটি' : 'Off';
+      const availStatusText = hasAnySeats ? (isBn ? `${window.i18n.toBnNum(grandTotal)} টি সিট উপলব্ধ` : `${grandTotal} Available`) : (isBn ? 'সব বুকড' : 'SOLD OUT');
+      const bookBtnText = isBn ? 'টিকিট কাটুন' : 'Book Now';
+      const routeBtnText = isBn ? 'রুট' : 'Routes';
+      const matrixBtnText = isBn ? 'স্টপেজ' : 'Stops Matrix';
+      const alertBtnText = isBn ? 'অ্যালার্ট' : 'Alert Me';
+
       return `
-        <div class="travel-card bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-4 border-2 border-slate-300 dark:border-slate-700/90 shadow-sm transition space-y-3">
+        <div class="travel-card bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border-2 border-slate-300 dark:border-slate-700/90 shadow-sm transition space-y-3">
           
           <!-- TOP HEADER: Train Identity & Timetable Ribbon -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b-2 border-slate-100 dark:border-slate-800">
@@ -2983,28 +3031,28 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-300 dark:border-slate-700">#${train.train_model}</span>
                 </div>
                 <p class="text-[11px] text-slate-400">
-                  Off: <span class="font-bold text-slate-600 dark:text-slate-300">${train.off_day || 'None'}</span>
+                  ${offDayLabel}: <span class="font-bold text-slate-600 dark:text-slate-300">${offDayDisplay}</span>
                 </p>
               </div>
             </div>
 
             <!-- Route Timings (Departure ➔ Duration ➔ Arrival) -->
-            <div class="flex items-center justify-between sm:justify-end space-x-3 bg-slate-50/90 dark:bg-slate-800/70 px-3 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs self-start sm:self-auto">
+            <div class="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 bg-slate-50/90 dark:bg-slate-800/70 px-2.5 sm:px-3 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs self-stretch sm:self-auto">
               <div class="text-left">
-                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.departure_time}</div>
-                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] font-medium">${train.departure_station}</div>
+                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${depTimeDisplay}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[100px] font-medium">${depStationDisplay}</div>
               </div>
 
               <div class="flex flex-col items-center px-1">
                 <span class="text-[9px] font-extrabold text-slate-400">${train.travel_time || 'Express'}</span>
-                <div class="w-10 h-0.5 bg-slate-300 dark:bg-slate-600 my-0.5 relative">
+                <div class="w-8 sm:w-10 h-0.5 bg-slate-300 dark:bg-slate-600 my-0.5 relative">
                   <i class="fa-solid fa-chevron-right text-[7px] text-emerald-500 absolute -right-1 -top-1"></i>
                 </div>
               </div>
 
               <div class="text-right">
-                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${train.arrival_time}</div>
-                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] font-medium">${train.arrival_station}</div>
+                <div class="font-black text-slate-900 dark:text-white text-xs sm:text-sm">${arrTimeDisplay}</div>
+                <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[100px] font-medium">${arrStationDisplay}</div>
               </div>
             </div>
 
@@ -3026,7 +3074,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-2 border-rose-300 dark:border-rose-800'
               }">
                 <i class="fa-solid ${hasAnySeats ? 'fa-chair text-emerald-500' : 'fa-circle-xmark text-rose-500'} text-[10px]"></i>
-                <span>${hasAnySeats ? `${grandTotal} Available` : 'SOLD OUT'}</span>
+                <span>${availStatusText}</span>
               </span>
 
               <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700 transition cursor-pointer"
@@ -3034,7 +3082,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data-train-name="${train.train_name || ''}"
                 title="View Train Route & Schedule">
                 <i class="fa-solid fa-route text-emerald-500 text-[10px]"></i>
-                <span>Routes</span>
+                <span>${routeBtnText}</span>
               </button>
 
               <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700 transition cursor-pointer"
@@ -3042,7 +3090,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data-train-name="${train.train_name || ''}"
                 title="View Single-Day All-Station Blank Seat Matrix">
                 <i class="fa-solid fa-table-cells text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
-                <span>Stops Matrix</span>
+                <span>${matrixBtnText}</span>
               </button>
 
               <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700 transition cursor-pointer"
@@ -3050,19 +3098,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 data-train-name="${train.train_name || ''}"
                 title="Set 24/7 seat drop alert">
                 <i class="fa-solid fa-bell text-amber-500 text-[10px]"></i>
-                <span>Alert Me</span>
+                <span>${alertBtnText}</span>
               </button>
             </div>
 
             <!-- Right: Direct Book Now Button -->
             <div>
               <a href="${bookUrl}" target="_blank" rel="noopener" 
-                class="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
+                class="inline-flex items-center space-x-1.5 px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
                   hasAnySeats 
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xs border border-emerald-500 active:scale-95' 
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 cursor-not-allowed opacity-60'
                 }">
-                <span>Book Now</span>
+                <span>${bookBtnText}</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
               </a>
             </div>
@@ -3078,6 +3126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Compact Seat Class Pill Renderer
   // ----------------------------------------------------
   function renderSeatPill(seat, fromCity, toCity, journeyDate) {
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
     const onlineCount = Number(seat.seats_available || 0);
     const counterCount = Number(seat.counter_seats_available || 0);
     const totalSeatCount = onlineCount + counterCount;
@@ -3087,6 +3136,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const vat = Number(seat.vat || 0);
     const totalFare = Number(seat.total_fare !== undefined ? seat.total_fare : (baseFare + vat));
 
+    const displayName = window.i18n ? window.i18n.getSeatClassName(seat.type) : seat.display_name;
+    const seatsLabel = isBn ? `${window.i18n.toBnNum(totalSeatCount)} টি সিট` : `${totalSeatCount} Seats`;
+    const soldOutLabel = isBn ? 'বুকড / শেষ' : 'Sold Out';
+    const fareLabel = isBn ? 'ভাড়া' : 'Fare';
+    const fareDisplay = isBn ? `৳${window.i18n.toBnNum(totalFare)}` : `৳${totalFare}`;
+
     const bookUrl = (fromCity && toCity && journeyDate)
       ? buildShohozBookingUrl(fromCity, toCity, journeyDate, seat.type || 'S_CHAIR')
       : '#';
@@ -3095,43 +3150,43 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <a href="${bookUrl}" target="_blank" rel="noopener"
           class="seat-pill block p-1.5 sm:p-2 rounded-xl border border-emerald-400/90 dark:border-emerald-600/90 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 hover:border-emerald-500 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 transition cursor-pointer shadow-2xs group"
-          title="Book ${seat.display_name} (${totalSeatCount} seats available)">
+          title="Book ${displayName} (${totalSeatCount} seats available)">
           
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 truncate">${seat.display_name}</span>
+            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 truncate">${displayName}</span>
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 group-hover:scale-125 transition-transform"></span>
           </div>
 
           <div class="my-1">
             <div class="py-0.5 px-1 rounded-md bg-emerald-600 text-white font-black text-[10px] sm:text-[11px] text-center shadow-2xs">
-              ${totalSeatCount} Seats
+              ${seatsLabel}
             </div>
           </div>
 
           <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-emerald-700 dark:text-emerald-300 font-mono font-bold pt-0.5 border-t border-emerald-200/60 dark:border-emerald-800/60">
-            <span>Fare</span>
-            <span class="font-black text-slate-900 dark:text-white">৳${totalFare}</span>
+            <span>${fareLabel}</span>
+            <span class="font-black text-slate-900 dark:text-white">${fareDisplay}</span>
           </div>
         </a>
       `;
     } else {
       return `
         <div class="seat-pill block p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/30 text-slate-400 opacity-60 cursor-not-allowed select-none"
-          title="${seat.display_name} (Sold Out)">
+          title="${displayName} (${soldOutLabel})">
           
           <div class="flex items-center justify-between gap-1">
-            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-500 dark:text-slate-400 truncate">${seat.display_name}</span>
+            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-500 dark:text-slate-400 truncate">${displayName}</span>
           </div>
 
           <div class="my-1">
             <div class="py-0.5 px-1 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[9px] sm:text-[10px] text-center">
-              Sold Out
+              ${soldOutLabel}
             </div>
           </div>
 
           <div class="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 font-mono font-bold pt-0.5 border-t border-slate-200/60 dark:border-slate-800/60">
-            <span>Fare</span>
-            <span class="font-bold text-slate-600 dark:text-slate-400">৳${totalFare}</span>
+            <span>${fareLabel}</span>
+            <span class="font-bold text-slate-600 dark:text-slate-400">${fareDisplay}</span>
           </div>
         </div>
       `;
@@ -8829,6 +8884,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveTrackerModule();
     initUserManagement();
     initPwaServiceWorker();
+    initLanguageSwitcher();
 
     // Delegate click for view route, watch, and station matrix buttons
     document.addEventListener('click', (e) => {
@@ -8855,6 +8911,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initAnalyticsDashboard();
+  }
+
+  // ----------------------------------------------------
+  // 🌐 Internationalization (Bangla / English) Controller
+  // ----------------------------------------------------
+  function initLanguageSwitcher() {
+    // Language toggle buttons
+    const langBtns = document.querySelectorAll('.lang-toggle-btn');
+    langBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetLang = btn.getAttribute('data-lang');
+        if (window.i18n && typeof window.i18n.setLang === 'function') {
+          window.i18n.setLang(targetLang);
+        }
+      });
+    });
+
+    // Listen to language switch event across the application
+    window.addEventListener('rail_language_changed', (e) => {
+      const newLang = e.detail?.lang || 'bn';
+      console.log(`[i18n] Language switched to: ${newLang}`);
+
+      // Re-generate quick date chips with localized days/months
+      generateQuickDateChips();
+
+      // If search results are currently displayed, re-render them localized
+      if (state.lastSearchData && Array.isArray(state.lastSearchData)) {
+        renderResults(state.lastSearchData);
+      }
+    });
   }
 
   // ====================================================

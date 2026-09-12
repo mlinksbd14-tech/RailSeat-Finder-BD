@@ -187,3 +187,54 @@ input:checked + .custom-toggle-track .custom-toggle-thumb {
 input[type="range"] {
   accent-color: #059669;
 }
+
+/* ====================================================
+   Bangla (বাংলা) Font & Typography Support
+   ==================================================== */
+.font-bengali,
+[lang="bn"] {
+  font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  line-height: 1.55;
+  letter-spacing: normal;
+}
+
+[lang="bn"] input,
+[lang="bn"] button,
+[lang="bn"] select,
+[lang="bn"] textarea {
+  font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* ====================================================
+   Mobile Responsive Modal Bottom-Sheet Styles
+   ==================================================== */
+@media (max-width: 640px) {
+  .modal-dialog-responsive {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+    animation: slideUpMobile 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-tap-target {
+    min-height: 44px;
+  }
+}

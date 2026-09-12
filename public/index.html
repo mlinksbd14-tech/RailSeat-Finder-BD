@@ -86,41 +86,51 @@
         </a>
       </div>
 
-      <!-- Quick Feature Navigation (Row 2 Full-Width on Mobile, Center on Desktop) -->
-      <nav class="w-full md:w-auto order-3 md:order-2 flex items-center justify-between sm:justify-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold shrink-0">
-        <button type="button" id="navSeatFinderBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Finder">
+      <!-- Quick Feature Navigation (Row 2 on Mobile -> Hidden, Desktop -> Center Navbar) -->
+      <nav class="hidden md:flex md:w-auto md:order-2 items-center justify-center space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/50 text-xs font-bold shrink-0">
+        <button type="button" id="navSeatFinderBtn" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Finder">
           <i class="fa-solid fa-chair text-emerald-500"></i>
-          <span>Seat Finder</span>
+          <span data-i18n="nav_seat_finder">Seat Finder</span>
         </button>
-        <button type="button" id="navLiveTrackerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
+        <button type="button" id="navLiveTrackerBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
-          <span>Live Radar</span>
+          <span data-i18n="nav_live_radar">Live Radar</span>
           <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-cyan-500 animate-pulse"></span>
         </button>
-        <button type="button" id="openRouteExplorerBtn" class="flex-1 md:flex-initial px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
+        <button type="button" id="openRouteExplorerBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Train Routes Explorer">
           <i class="fa-solid fa-route text-emerald-500"></i>
-          <span>Routes</span>
+          <span data-i18n="nav_routes">Routes</span>
         </button>
-        <button type="button" id="openWatchlistBtn" class="flex-1 md:flex-initial relative px-2 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
+        <button type="button" id="openWatchlistBtn" class="relative px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Seat Watchlist">
           <i class="fa-solid fa-crosshairs text-amber-500"></i>
-          <span>Watchlist</span>
+          <span data-i18n="nav_watchlist">Watchlist</span>
           <span id="watchlistBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0</span>
         </button>
       </nav>
 
-      <!-- Header Action Controls (Row 1 Right on Mobile, Right on Desktop) -->
-      <div class="flex items-center space-x-1 sm:space-x-2 shrink-0 order-2 md:order-3">
+      <!-- Header Action Controls (Right on Mobile & Desktop) -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0 order-2 md:order-3">
         
+        <!-- Language Switcher Pill (বাংলা / EN) -->
+        <div class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-extrabold shrink-0" id="langSwitcherContainer">
+          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-lg transition-all cursor-pointer text-xs" data-lang="bn" title="বাংলা ভাষা">
+            <span>বাংলা</span>
+          </button>
+          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-lg transition-all cursor-pointer text-xs" data-lang="en" title="English">
+            <span>EN</span>
+          </button>
+        </div>
+
         <!-- Live API Auth Connection Button -->
         <button id="authModalOpenBtn" class="flex items-center justify-center space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white cursor-pointer shrink-0" title="Manage Live Shohoz Session">
           <i class="fa-solid fa-key text-[11px]" id="authBtnIcon"></i>
-          <span id="authBtnText" class="hidden sm:inline">Connect Live API</span>
+          <span id="authBtnText" class="hidden sm:inline" data-i18n="connect_live_api">Connect Live API</span>
         </button>
 
         <!-- Install PWA Mobile/Desktop App Button -->
         <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition text-xs font-bold shadow-xs cursor-pointer animate-bounce-subtle shrink-0" title="Install RailSeat BD App">
           <i class="fa-solid fa-download text-xs"></i>
-          <span class="hidden sm:inline">Install App</span>
+          <span class="hidden sm:inline" data-i18n="install_app">Install App</span>
         </button>
 
         <!-- User Account / Login & Logout Controls -->
@@ -128,7 +138,7 @@
           <!-- State 1: When NOT Logged In -> Show "Sign In" Button -->
           <button id="headerSignInBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition text-xs font-bold shadow-xs cursor-pointer shrink-0" title="Sign In to Dashboard">
             <i class="fa-solid fa-right-to-bracket text-xs"></i>
-            <span class="text-[11px] sm:text-xs">Sign In</span>
+            <span class="text-[11px] sm:text-xs" data-i18n="sign_in">Sign In</span>
           </button>
 
           <!-- State 2: When LOGGED IN -> Show User Profile Pill with Dropdown -->
@@ -219,28 +229,28 @@
       <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-t-2xl"></div>
 
       <!-- Hero Header & Value Proposition -->
-      <div class="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <span>Find Bangladesh Railway Seats</span>
-            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border-2 border-emerald-300 dark:border-emerald-700" id="searchModeBadge">
+          <h1 class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span data-i18n="search_hero_title">Find Bangladesh Railway Seats</span>
+            <span class="text-[10px] sm:text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border-2 border-emerald-300 dark:border-emerald-700" id="searchModeBadge" data-i18n="search_hero_badge">
               Live Gateway
             </span>
           </h1>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Real-time vacant seats, train schedules, fares & 24/7 radar alerts.</p>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="search_hero_desc">Real-time vacant seats, train schedules, fares & 24/7 radar alerts.</p>
         </div>
       </div>
 
       <!-- Main Search Form (Google Flights / Travel Booking Style) -->
-      <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-3.5 items-end">
+      <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 sm:gap-3.5 items-end">
         
         <!-- From Station (3 cols) -->
         <div class="lg:col-span-3 relative z-30">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> From Station
+            <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> <span data-i18n="from_station">From Station</span>
           </label>
           <div class="relative flex items-center">
-            <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" 
+            <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" data-i18n-placeholder="from_placeholder"
               class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
             <i class="fa-solid fa-train absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
@@ -253,8 +263,8 @@
         </div>
 
         <!-- Swap Button (1 col) -->
-        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center">
-          <button type="button" id="swapStationsBtn" class="w-12 h-12 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-200 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0" title="Swap Stations">
+        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center -my-1 sm:my-0">
+          <button type="button" id="swapStationsBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-200 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-90 shrink-0" title="Swap Stations">
             <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
           </button>
         </div>
@@ -262,10 +272,10 @@
         <!-- To Station (3 cols) -->
         <div class="lg:col-span-3 relative z-30">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> Destination
+            <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> <span data-i18n="to_station">Destination</span>
           </label>
           <div class="relative flex items-center">
-            <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" 
+            <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" data-i18n-placeholder="to_placeholder"
               class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
               required>
             <i class="fa-solid fa-location-crosshairs absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
@@ -280,7 +290,7 @@
         <!-- Journey Date (2 cols) -->
         <div class="lg:col-span-2">
           <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> Journey Date
+            <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> <span data-i18n="journey_date">Journey Date</span>
           </label>
           <div class="relative flex items-center">
             <input type="date" id="journeyDateInput" 
@@ -298,7 +308,7 @@
             class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 border border-emerald-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
             title="Fast direct train seat search">
             <i class="fa-solid fa-magnifying-glass text-xs"></i>
-            <span class="whitespace-nowrap">Find Trains</span>
+            <span class="whitespace-nowrap" data-i18n="find_trains">Find Trains</span>
           </button>
 
           <!-- Deep Search Button (On-Demand Same-Train & Junction Routes) -->
@@ -306,7 +316,7 @@
             class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 border border-indigo-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
             title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
             <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
-            <span class="whitespace-nowrap">Deep Search</span>
+            <span class="whitespace-nowrap" data-i18n="deep_search">Deep Search</span>
           </button>
 
         </div>
@@ -318,7 +328,7 @@
         
         <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
         <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1">Quick Date:</span>
+          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1" data-i18n="quick_date">Quick Date:</span>
           <div class="flex items-center space-x-1" id="dateChipsContainer"></div>
           
           <!-- Calendar Matrix View Button right in Quick Date section -->
@@ -326,22 +336,22 @@
             class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
             title="Switch to 10-Day Calendar Seat Matrix View">
             <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
-            <span>10-Day Matrix</span>
+            <span data-i18n="ten_day_matrix">10-Day Matrix</span>
           </button>
         </div>
 
         <!-- Optional Train & Class Filters -->
         <div class="flex flex-wrap items-center gap-2.5 text-xs">
           <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 dark:text-slate-400 font-bold">Train:</span>
+            <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_train">Train:</span>
             <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[170px] truncate">
-              <option value="ALL">All Trains</option>
+              <option value="ALL" data-i18n="all_trains">All Trains</option>
             </select>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 dark:text-slate-400 font-bold">Class:</span>
+            <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_class">Class:</span>
             <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
-              <option value="ALL">All Classes</option>
+              <option value="ALL" data-i18n="all_classes">All Classes</option>
               <option value="S_CHAIR">Shovon Chair (S_CHAIR)</option>
               <option value="SNIGDHA">Snigdha AC (SNIGDHA)</option>
               <option value="AC_S">AC Seat (AC_S)</option>
@@ -1683,7 +1693,7 @@
 
   <!-- Single-Day All-Station Blank Seat Matrix Modal -->
   <div id="stationMatrixModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       
       <!-- Header -->
       <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
@@ -2806,43 +2816,43 @@
   <nav id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/97 dark:bg-slate-900/97 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]" style="padding-bottom: env(safe-area-inset-bottom, 0)">
     <div class="flex items-stretch justify-around px-1 pt-1 pb-2">
       <!-- Seat Finder -->
-      <button type="button" id="mobileNavSeatFinderBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+      <button type="button" id="mobileNavSeatFinderBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"></div>
         <i class="fa-solid fa-chair text-[17px] text-slate-400 group-[.active-tab]:text-emerald-500 transition-colors"></i>
-        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors">Seats</span>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors" data-i18n="nav_seat_finder">Seats</span>
       </button>
       <!-- Live Radar -->
-      <button type="button" id="mobileNavLiveRadarBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+      <button type="button" id="mobileNavLiveRadarBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-cyan-500"></div>
         <div class="relative">
           <i class="fa-solid fa-satellite-dish text-[17px] text-slate-400 group-[.active-tab]:text-cyan-500 transition-colors"></i>
           <span class="absolute -top-1 -right-2 w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
         </div>
-        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-cyan-600 dark:group-[.active-tab]:text-cyan-400 transition-colors">Radar</span>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-cyan-600 dark:group-[.active-tab]:text-cyan-400 transition-colors" data-i18n="nav_live_radar">Radar</span>
       </button>
       <!-- Routes -->
-      <button type="button" id="mobileNavRoutesBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+      <button type="button" id="mobileNavRoutesBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"></div>
         <i class="fa-solid fa-route text-[17px] text-slate-400 group-[.active-tab]:text-emerald-500 transition-colors"></i>
-        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors">Routes</span>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-emerald-600 dark:group-[.active-tab]:text-emerald-400 transition-colors" data-i18n="nav_routes">Routes</span>
       </button>
       <!-- Watchlist -->
-      <button type="button" id="mobileNavWatchlistBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+      <button type="button" id="mobileNavWatchlistBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-amber-500"></div>
         <div class="relative">
           <i class="fa-solid fa-crosshairs text-[17px] text-slate-400 group-[.active-tab]:text-amber-500 transition-colors"></i>
           <span id="mobileWatchlistBadge" class="hidden absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 bg-amber-500 text-white font-extrabold text-[8px] rounded-full flex items-center justify-center"></span>
         </div>
-        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-amber-600 dark:group-[.active-tab]:text-amber-400 transition-colors">Watchlist</span>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-amber-600 dark:group-[.active-tab]:text-amber-400 transition-colors" data-i18n="nav_watchlist">Watchlist</span>
       </button>
       <!-- Notifications -->
-      <button type="button" id="mobileNavNotifBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95">
+      <button type="button" id="mobileNavNotifBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
         <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-indigo-500"></div>
         <div class="relative">
           <i class="fa-solid fa-bell text-[17px] text-slate-400 group-[.active-tab]:text-indigo-500 transition-colors"></i>
           <span id="mobileNotifBadge" class="hidden absolute -top-1.5 -right-2 min-w-[14px] h-3.5 px-1 bg-rose-500 text-white font-extrabold text-[8px] rounded-full flex items-center justify-center"></span>
         </div>
-        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-indigo-600 dark:group-[.active-tab]:text-indigo-400 transition-colors">Alerts</span>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-indigo-600 dark:group-[.active-tab]:text-indigo-400 transition-colors" data-i18n="nav_alerts">Alerts</span>
       </button>
     </div>
   </nav>
@@ -3003,6 +3013,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC5hYf947iK55nmXRyEz-a4QRwVMapi3gE"></script>
   <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.16.0/dist/Leaflet.GoogleMutant.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

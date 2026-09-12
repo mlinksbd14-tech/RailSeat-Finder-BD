@@ -1997,10 +1997,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = `date-chip px-2.5 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 cursor-pointer ${
+      chip.className = `date-chip px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95 shadow-2xs ${
         i === 0 
-          ? 'bg-emerald-600 text-white shadow-xs' 
-          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+          ? 'bg-emerald-600 text-white shadow-xs border border-emerald-500' 
+          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
       }`;
       chip.textContent = label;
       chip.dataset.date = iso;
@@ -2021,9 +2021,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateActiveDateChips(selectedIso) {
     dateChipsContainer.querySelectorAll('.date-chip').forEach(chip => {
       if (chip.dataset.date === selectedIso) {
-        chip.className = 'date-chip px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-xs transition whitespace-nowrap shrink-0';
+        chip.className = 'date-chip px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-xs border border-emerald-500 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
       } else {
-        chip.className = 'date-chip px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap shrink-0';
+        chip.className = 'date-chip px-3 py-1.5 rounded-xl text-xs font-black bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
       }
     });
   }
@@ -2244,10 +2244,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const activeClass = isSelected
         ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
-        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-700';
+        : 'bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400';
 
       return `
-        <button type="button" class="quick-route-chip px-2.5 py-1 rounded-xl font-bold border-2 transition cursor-pointer shrink-0 ${activeClass}" 
+        <button type="button" class="quick-route-chip px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer shrink-0 active:scale-95 shadow-2xs ${activeClass}" 
           data-from="${r.from}" data-to="${r.to}">
           ${r.label || `${r.from} ⇄ ${r.to}`}
         </button>

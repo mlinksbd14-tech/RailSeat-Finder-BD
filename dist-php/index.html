@@ -223,117 +223,152 @@
       <!-- ============================================== -->
       <!-- MODERN TRAVEL HERO SEARCH CARD -->
       <!-- ============================================== -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-300 dark:border-slate-700 relative z-20">
+      <!-- MODERN TRAVEL HERO SEARCH CARD -->
+      <!-- ============================================== -->
+      <div class="dashboard-block bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/50 dark:shadow-2xl dark:shadow-emerald-950/20 border border-slate-200/80 dark:border-slate-800 relative z-20 overflow-visible">
       
-      <!-- Subtle Decorative Top Gradient Line -->
-      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-t-2xl"></div>
+      <!-- Ambient Top Gradient Glow Line -->
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 rounded-t-3xl shadow-sm shadow-emerald-500/50"></div>
 
       <!-- Hero Header & Value Proposition -->
-      <div class="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 class="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <span data-i18n="search_hero_title">Find Bangladesh Railway Seats</span>
-            <span class="text-[10px] sm:text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border-2 border-emerald-300 dark:border-emerald-700" id="searchModeBadge" data-i18n="search_hero_badge">
-              Live Gateway
-            </span>
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider mb-2 shadow-2xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span data-i18n="search_hero_badge">Live Bangladesh Railway Gateway</span>
+          </div>
+          <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight flex items-center gap-2">
+            <span data-i18n="search_hero_title">Find & Book Available Train Seats</span>
           </h1>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="search_hero_desc">Real-time vacant seats, train schedules, fares & 24/7 radar alerts.</p>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1" data-i18n="search_hero_desc">Real-time vacant seats, train schedules, fares & 24/7 seat release alerts.</p>
         </div>
       </div>
 
-      <!-- Main Search Form (Google Flights / Travel Booking Style) -->
-      <form id="searchForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 sm:gap-3.5 items-end">
+      <!-- Main Search Form (Modern Flight & High-Speed Rail App Style) -->
+      <form id="searchForm" class="space-y-4">
         
-        <!-- From Station (3 cols) -->
-        <div class="lg:col-span-3 relative z-30">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-location-dot text-emerald-500 mr-1"></i> <span data-i18n="from_station">From Station</span>
-          </label>
-          <div class="relative flex items-center">
-            <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" data-i18n-placeholder="from_placeholder"
-              class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
-              required>
-            <i class="fa-solid fa-train absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
-            <button type="button" id="clearFromBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
-              <i class="fa-solid fa-circle-xmark"></i>
-            </button>
-          </div>
-          <!-- Autocomplete Dropdown -->
-          <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
-        </div>
-
-        <!-- Swap Button (1 col) -->
-        <div class="sm:col-span-2 lg:col-span-1 flex items-center justify-center -my-1 sm:my-0">
-          <button type="button" id="swapStationsBtn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-200 hover:text-emerald-600 shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer active:scale-90 shrink-0" title="Swap Stations">
-            <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
-          </button>
-        </div>
-
-        <!-- To Station (3 cols) -->
-        <div class="lg:col-span-3 relative z-30">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-flag-checkered text-rose-500 mr-1"></i> <span data-i18n="to_station">Destination</span>
-          </label>
-          <div class="relative flex items-center">
-            <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" data-i18n-placeholder="to_placeholder"
-              class="w-full h-12 pl-10 pr-9 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition"
-              required>
-            <i class="fa-solid fa-location-crosshairs absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
-            <button type="button" id="clearToBtn" class="hidden absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
-              <i class="fa-solid fa-circle-xmark"></i>
-            </button>
-          </div>
-          <!-- Autocomplete Dropdown -->
-          <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
-        </div>
-
-        <!-- Journey Date (2 cols) -->
-        <div class="lg:col-span-2">
-          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            <i class="fa-solid fa-calendar-day text-blue-500 mr-1"></i> <span data-i18n="journey_date">Journey Date</span>
-          </label>
-          <div class="relative flex items-center">
-            <input type="date" id="journeyDateInput" 
-              class="w-full h-12 pl-10 pr-2 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/90 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-bold shadow-xs transition cursor-pointer"
-              required>
-            <i class="fa-solid fa-calendar absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
-          </div>
-        </div>
-
-        <!-- Search CTA Buttons (3 cols: Fast Direct Search + Deep Search) -->
-        <div class="sm:col-span-2 lg:col-span-3 flex items-center gap-2">
+        <!-- Primary Input Grid (Origin ⇄ Destination & Journey Date) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
           
-          <!-- Primary Find Trains Button (Fast Direct Search) -->
+          <!-- Station Pair Container (From ⇄ To) - 8 cols on Desktop -->
+          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 relative z-30">
+            
+            <!-- From Station Input Box -->
+            <div class="relative group">
+              <label class="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1.5 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span data-i18n="from_station">From Station</span>
+                </span>
+                <span class="text-[10px] font-semibold text-slate-400 normal-case hidden sm:inline">Origin</span>
+              </label>
+              <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-emerald-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-emerald-500/15 transition-all shadow-2xs">
+                <div class="w-10 h-12 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <i class="fa-solid fa-train text-sm"></i>
+                </div>
+                <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" data-i18n-placeholder="from_placeholder"
+                  class="w-full h-12 pr-9 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                  required>
+                <button type="button" id="clearFromBtn" class="hidden absolute right-3 w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <!-- Autocomplete Dropdown -->
+              <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
+            </div>
+
+            <!-- Overlapping Circular Swap Button (Centered between From & To) -->
+            <div class="flex items-center justify-center -my-2 sm:my-0 sm:pt-6 z-40">
+              <button type="button" id="swapStationsBtn" class="w-11 h-11 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500 shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer active:scale-90 shrink-0" title="Swap Stations (⇄)">
+                <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
+              </button>
+            </div>
+
+            <!-- To Station Input Box -->
+            <div class="relative group">
+              <label class="block text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1.5 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                  <span data-i18n="to_station">Destination</span>
+                </span>
+                <span class="text-[10px] font-semibold text-slate-400 normal-case hidden sm:inline">Arrival</span>
+              </label>
+              <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-rose-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-rose-500/15 transition-all shadow-2xs">
+                <div class="w-10 h-12 flex items-center justify-center text-rose-500 shrink-0">
+                  <i class="fa-solid fa-location-dot text-sm"></i>
+                </div>
+                <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" data-i18n-placeholder="to_placeholder"
+                  class="w-full h-12 pr-9 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
+                  required>
+                <button type="button" id="clearToBtn" class="hidden absolute right-3 w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <!-- Autocomplete Dropdown -->
+              <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
+            </div>
+
+          </div>
+
+          <!-- Journey Date Hub - 4 cols on Desktop -->
+          <div class="lg:col-span-4 relative group">
+            <label class="block text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1.5 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar-day text-xs"></i>
+                <span data-i18n="journey_date">Journey Date</span>
+              </span>
+              <span class="text-[10px] font-semibold text-slate-400 normal-case">Advance 10 Days</span>
+            </label>
+            <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-cyan-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-cyan-500/15 transition-all shadow-2xs">
+              <div class="w-10 h-12 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
+                <i class="fa-solid fa-calendar-days text-sm"></i>
+              </div>
+              <input type="date" id="journeyDateInput" 
+                class="w-full h-12 pr-3 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none cursor-pointer"
+                required>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action CTAs: High-Impact Radiant Find Trains & Deep Quota Scanner -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
+          
+          <!-- Primary Find Trains Button (8 cols on desktop) -->
           <button type="submit" id="searchSubmitBtn" 
-            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/25 border border-emerald-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
-            title="Fast direct train seat search">
-            <i class="fa-solid fa-magnifying-glass text-xs"></i>
-            <span class="whitespace-nowrap" data-i18n="find_trains">Find Trains</span>
+            class="sm:col-span-8 h-13 sm:h-14 px-4 sm:px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 border border-emerald-400/40 flex items-center justify-center space-x-2.5 transition-all active:scale-[0.99] cursor-pointer group"
+            title="Search real-time train seat availability">
+            <i class="fa-solid fa-magnifying-glass text-sm group-hover:scale-110 transition-transform"></i>
+            <span class="whitespace-nowrap tracking-wide" data-i18n="find_trains">Find Available Seats</span>
+            <i class="fa-solid fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 transition-transform"></i>
           </button>
 
-          <!-- Deep Search Button (On-Demand Same-Train & Junction Routes) -->
+          <!-- Deep Search Button (4 cols on desktop) -->
           <button type="button" id="deepSearchSubmitBtn" 
-            class="flex-1 h-12 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 border border-indigo-500 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] cursor-pointer"
+            class="sm:col-span-4 h-13 sm:h-14 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 border border-indigo-400/40 flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer group"
             title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
-            <i class="fa-solid fa-bolt text-amber-300 text-xs"></i>
-            <span class="whitespace-nowrap" data-i18n="deep_search">Deep Search</span>
+            <i class="fa-solid fa-bolt text-amber-300 text-xs group-hover:scale-125 transition-transform"></i>
+            <span class="whitespace-nowrap" data-i18n="deep_search">Deep Search (Quotas)</span>
           </button>
 
         </div>
 
       </form>
 
-      <!-- Quick Date Chips & Filter Row -->
-      <div class="mt-4 pt-4 flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-200 dark:border-slate-700 text-xs">
+      <!-- Quick Date Chips & Filter Strip -->
+      <div class="mt-4 pt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 dark:border-slate-800 text-xs">
         
         <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
         <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1" data-i18n="quick_date">Quick Date:</span>
+          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1 flex items-center gap-1">
+            <i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i>
+            <span data-i18n="quick_date">Quick Date:</span>
+          </span>
           <div class="flex items-center space-x-1" id="dateChipsContainer"></div>
           
           <!-- Calendar Matrix View Button right in Quick Date section -->
           <button type="button" id="quickMatrixViewBtn" 
-            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
+            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
             title="Switch to 10-Day Calendar Seat Matrix View">
             <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
             <span data-i18n="ten_day_matrix">10-Day Matrix</span>
@@ -341,16 +376,16 @@
         </div>
 
         <!-- Optional Train & Class Filters -->
-        <div class="flex flex-wrap items-center gap-2.5 text-xs">
+        <div class="flex flex-wrap items-center gap-2 text-xs">
           <div class="flex items-center space-x-1.5">
             <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_train">Train:</span>
-            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[170px] truncate">
+            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[160px] truncate">
               <option value="ALL" data-i18n="all_trains">All Trains</option>
             </select>
           </div>
           <div class="flex items-center space-x-1.5">
             <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_class">Class:</span>
-            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
               <option value="ALL" data-i18n="all_classes">All Classes</option>
               <option value="S_CHAIR">Shovon Chair (S_CHAIR)</option>
               <option value="SNIGDHA">Snigdha AC (SNIGDHA)</option>
@@ -368,7 +403,7 @@
       </div>
 
       <!-- Popular Routes Quick Bar (Sleek Horizontal Scroll with Inline Custom Route Manager) -->
-      <div class="mt-3 pt-3 border-t-2 border-slate-200 dark:border-slate-700 space-y-2.5">
+      <div class="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between gap-2 text-[11px]">
           <div class="flex items-center space-x-2 overflow-x-auto min-w-0 flex-1 py-0.5" id="popularRoutesScrollWrapper">
             <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase tracking-wider shrink-0 flex items-center gap-1">
@@ -379,11 +414,11 @@
             </div>
           </div>
           <div class="flex items-center space-x-1.5 shrink-0">
-            <button type="button" id="saveCurrentRouteChipBtn" class="px-2 py-1 rounded-xl text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition cursor-pointer flex items-center gap-1 shrink-0" title="Bookmark / Save current route to Quick Select">
+            <button type="button" id="saveCurrentRouteChipBtn" class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Bookmark / Save current route to Quick Select">
               <i class="fa-solid fa-bookmark text-[9px]"></i>
               <span class="hidden sm:inline">Save</span>
             </button>
-            <button type="button" id="managePopularRoutesBtn" class="px-2 py-1 rounded-xl text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 border-2 border-indigo-300 dark:border-indigo-700 transition cursor-pointer flex items-center gap-1 shrink-0" title="Add or delete custom quick routes">
+            <button type="button" id="managePopularRoutesBtn" class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 border border-indigo-300 dark:border-indigo-700 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Add or delete custom quick routes">
               <i class="fa-solid fa-sliders text-[9px]"></i>
               <span class="hidden sm:inline">Customize</span>
             </button>

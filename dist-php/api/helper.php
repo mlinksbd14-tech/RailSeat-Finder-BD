@@ -100,23 +100,129 @@ function getCanonicalStationName($raw) {
     return str_replace(' ', '_', $clean);
 }
 
+function getClientRequestHeaders() {
+    $headers = [];
+    if (function_exists('getallheaders')) {
+        $raw = getallheaders();
+        if (is_array($raw)) {
+            foreach ($raw as $k => $v) {
+                $headers[strtolower($k)] = $v;
+            }
+        }
+    }
+    foreach ($_SERVER as $key => $val) {
+        if (substr($key, 0, 5) === 'HTTP_') {
+            $name = strtolower(str_replace('_', '-', substr($key, 5)));
+            $headers[$name] = $val;
+        }
+    }
+    return $headers;
+}
+
+function decodeShohozProfile($token) {
+    if (!$token || !is_string($token)) return null;
+    $parts = explode('.', $token);
+    if (count($parts) >= 2) {
+        $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
+        $payload = json_decode($payloadJson, true);
+        if (is_array($payload)) {
+            return [
+                'name' => $payload['display_name'] ?? $payload['name'] ?? 'Verified Passenger',
+                'phone' => $payload['phone_number'] ?? $payload['username'] ?? '01XXXXXXXXX',
+                'email' => $payload['email'] ?? 'eticket@railway.gov.bd',
+                'nid' => $payload['nidn'] ?? '************',
+                'nidType' => $payload['nidnt'] ?? 'NID',
+                'locale' => $payload['locale'] ?? 'bn-BD',
+                'roles' => isset($payload['role']) && is_array($payload['role']) ? $payload['role'] : ['user'],
+                'expiresAt' => isset($payload['exp']) ? date('c', $payload['exp']) : null,
+                'isExpired' => isset($payload['exp']) ? (time() > $payload['exp']) : false
+            ];
+        }
+    }
+    return null;
+}
+
 function getSavedSession() {
+    $reqHeaders = getClientRequestHeaders();
+
+    // 1. Check direct client header pass-through
+    $bearerToken = '';
+    if (!empty($reqHeaders['x-shohoz-token'])) {
+        $bearerToken = trim($reqHeaders['x-shohoz-token']);
+    } elseif (!empty($_SERVER['HTTP_X_SHOHOZ_TOKEN'])) {
+        $bearerToken = trim($_SERVER['HTTP_X_SHOHOZ_TOKEN']);
+    }
+
+    $reqDeviceId = $reqHeaders['x-device-id'] ?? ($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
+    $reqDeviceKey = $reqHeaders['x-device-key'] ?? ($_SERVER['HTTP_X_DEVICE_KEY'] ?? 'web');
+
+    // 2. Check dedicated session.json file if present
     if (file_exists(SESSION_FILE)) {
         $data = json_decode(file_get_contents(SESSION_FILE), true);
         if (is_array($data) && !empty($data['token'])) {
-            return $data;
+            return [
+                'token' => $data['token'],
+                'deviceId' => $data['deviceId'] ?? $data['device_id'] ?? $reqDeviceId,
+                'deviceKey' => $data['deviceKey'] ?? $data['device_key'] ?? $reqDeviceKey,
+                'user' => $data['user'] ?? decodeShohozProfile($data['token'])
+            ];
         }
     }
+
+    // 3. Fallback: check users.json for active user with shohozSession
+    $usersFile = DATA_DIR . '/users.json';
+    if (file_exists($usersFile)) {
+        $usersData = json_decode(file_get_contents($usersFile), true);
+        if (isset($usersData['users']) && is_array($usersData['users'])) {
+            foreach ($usersData['users'] as $u) {
+                if (isset($u['shohozSession']['token']) && !empty($u['shohozSession']['token'])) {
+                    return [
+                        'token' => $u['shohozSession']['token'],
+                        'deviceId' => $u['shohozSession']['deviceId'] ?? $reqDeviceId,
+                        'deviceKey' => $u['shohozSession']['deviceKey'] ?? $reqDeviceKey,
+                        'user' => $u['shohozSession']['user'] ?? decodeShohozProfile($u['shohozSession']['token'])
+                    ];
+                }
+            }
+        }
+    }
+
+    // 4. Return client passed token if available
+    if (!empty($bearerToken)) {
+        return [
+            'token' => $bearerToken,
+            'deviceId' => $reqDeviceId,
+            'deviceKey' => $reqDeviceKey,
+            'user' => decodeShohozProfile($bearerToken)
+        ];
+    }
+
     return [
         'token' => '',
-        'deviceId' => '',
-        'deviceKey' => 'web',
+        'deviceId' => $reqDeviceId,
+        'deviceKey' => $reqDeviceKey,
         'user' => null
     ];
 }
 
 function saveSessionData($data) {
-    file_put_contents(SESSION_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    @file_put_contents(SESSION_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    
+    // Also update users.json first user's shohozSession if present so it persists in users.json
+    $usersFile = DATA_DIR . '/users.json';
+    if (file_exists($usersFile)) {
+        $usersData = json_decode(file_get_contents($usersFile), true);
+        if (isset($usersData['users']) && is_array($usersData['users']) && count($usersData['users']) > 0) {
+            $usersData['users'][0]['shohozSession'] = [
+                'token' => $data['token'] ?? '',
+                'deviceId' => $data['deviceId'] ?? '',
+                'deviceKey' => $data['deviceKey'] ?? 'web',
+                'user' => $data['user'] ?? null,
+                'lastUpdated' => date('c')
+            ];
+            @file_put_contents($usersFile, json_encode($usersData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+    }
 }
 
 function formatShohozDoj($dateStr) {
@@ -256,8 +362,9 @@ function normalizeShohozResponsePHP($data, $fromCity, $toCity, $dateStr) {
         $seatClasses = [];
 
         foreach ($rawSeatTypes as $st) {
-            $online = (int)($st['seats_available'] ?? $st['online_available_seats'] ?? $st['online_seats'] ?? 0);
-            $offline = (int)($st['counter_seats_available'] ?? $st['offline_available_seats'] ?? $st['counter_seats'] ?? 0);
+            $seatCounts = $st['seat_counts'] ?? [];
+            $online = (int)($st['seats_available'] ?? $st['online_available_seats'] ?? $st['online_seats'] ?? $seatCounts['online'] ?? 0);
+            $offline = (int)($st['counter_seats_available'] ?? $st['offline_available_seats'] ?? $st['counter_seats'] ?? $seatCounts['offline'] ?? 0);
 
             $baseFare = (float)($st['fare'] ?? $st['ticket_fare'] ?? $st['price'] ?? 0);
             $vat = (float)($st['vat'] ?? $st['vat_amount'] ?? 0);
@@ -280,14 +387,34 @@ function normalizeShohozResponsePHP($data, $fromCity, $toCity, $dateStr) {
         $totalOnline = array_sum(array_column($seatClasses, 'seats_available'));
         $totalOffline = array_sum(array_column($seatClasses, 'counter_seats_available'));
 
+        $depTime = $item['departure_time'] ?? '';
+        if (empty($depTime) && !empty($item['departure_date_time'])) {
+            $depTime = $item['departure_date_time'];
+            if (strpos($depTime, ',') !== false) {
+                $depParts = explode(',', $depTime);
+                $depTime = trim(end($depParts));
+            }
+        }
+
+        $arrTime = $item['arrival_time'] ?? '';
+        if (empty($arrTime) && !empty($item['arrival_date_time'])) {
+            $arrTime = $item['arrival_date_time'];
+            if (strpos($arrTime, ',') !== false) {
+                $arrParts = explode(',', $arrTime);
+                $arrTime = trim(end($arrParts));
+            }
+        }
+
+        $tripId = $item['trip_id'] ?? (!empty($seatClasses[0]['trip_id']) ? $seatClasses[0]['trip_id'] : 'TRIP_' . rand(1000, 9999));
+
         $trains[] = [
-            'trip_id' => $item['trip_id'] ?? 'TRIP_' . rand(1000, 9999),
+            'trip_id' => $tripId,
             'train_name' => $item['train_name'] ?? $item['trip_number'] ?? 'Intercity Train',
             'train_model' => $item['train_model'] ?? $item['train_number'] ?? 'N/A',
             'departure_station' => $item['departure_station'] ?? $fromCity,
-            'departure_time' => $item['departure_time'] ?? '--',
+            'departure_time' => $depTime ?: '--',
             'arrival_station' => $item['arrival_station'] ?? $toCity,
-            'arrival_time' => $item['arrival_time'] ?? '--',
+            'arrival_time' => $arrTime ?: '--',
             'travel_time' => $item['travel_time'] ?? $item['duration'] ?? '',
             'off_day' => $item['off_day'] ?? 'None',
             'seat_types' => $seatClasses,

@@ -61,7 +61,20 @@ switch ($path) {
     case 'user-auth/popular-routes':
     case 'user-auth/firebase-login':
     case 'user-auth/login':
+    case 'user-auth/register':
+    case 'user-auth/resend-verification':
     case 'user-auth/logout':
+        require __DIR__ . '/user-auth.php';
+        break;
+
+    case 'users':
+    case 'users/add':
+    case 'users/edit':
+    case 'users/delete':
+    case 'users/approve':
+    case 'users/toggle-status':
+    case 'users/update-password':
+    case 'users/update-settings':
         require __DIR__ . '/user-auth.php';
         break;
 

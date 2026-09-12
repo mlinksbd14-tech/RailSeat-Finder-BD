@@ -3,6 +3,12 @@
     RewriteEngine On
     RewriteBase /
 
+    # Pass Authorization Header to PHP in CGI/FastCGI environments (cPanel/Shared Hosting)
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+    <IfModule mod_rewrite.c>
+        RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    </IfModule>
+
     # Security: Protect session and data json files from direct web browsing
     RewriteRule ^data/.*\.json$ - [F,L,NC]
 

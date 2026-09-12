@@ -238,3 +238,72 @@ input[type="range"] {
     min-height: 44px;
   }
 }
+
+/* ====================================================
+   📱 Native Mobile App Styles: Cards, Table & Notifications
+   ==================================================== */
+
+/* Native App Card Styling */
+.app-ticket-card {
+  position: relative;
+  border-radius: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-ticket-card:active {
+  transform: scale(0.995);
+}
+
+/* Mobile App Seat Class Tile */
+.app-seat-tile {
+  transition: all 0.15s ease-out;
+  border-radius: 0.875rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-seat-tile:active {
+  transform: scale(0.96);
+}
+
+/* Route Timeline Line Connector */
+.route-connector-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.route-connector-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.25;
+}
+
+/* Mobile Push Banner Animation (Dynamic Island / App Push Style) */
+@keyframes slideDownAppPush {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-app-push {
+  animation: slideDownAppPush 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Mobile Table List Row Tile */
+.mobile-table-card {
+  border-radius: 1rem;
+  transition: all 0.18s ease;
+}
+.mobile-table-card:active {
+  background-color: rgba(241, 245, 249, 0.7);
+}
+.dark .mobile-table-card:active {
+  background-color: rgba(30, 41, 59, 0.7);
+}

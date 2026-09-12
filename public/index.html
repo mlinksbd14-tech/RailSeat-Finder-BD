@@ -611,22 +611,30 @@
       <!-- Train Cards Grid (Rendered by JS) -->
       <div id="trainsGrid" class="space-y-3"></div>
 
-      <!-- Table Matrix View (Rendered by JS) -->
-      <div id="trainsTableView" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden animate-fade-in">
-        <div class="table-responsive-wrapper overflow-x-auto">
-          <table class="w-full text-left text-xs min-w-[680px]">
-            <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-black text-slate-600 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700 tracking-wider">
-              <tr>
-                <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train & Model</th>
-                <th class="px-3 py-2.5 whitespace-nowrap">Departure</th>
-                <th class="px-3 py-2.5 whitespace-nowrap">Arrival</th>
-                <th class="px-3 py-2.5">Available Classes (Live Seats & Fare)</th>
-                <th class="px-3 py-2.5 text-center whitespace-nowrap">Total Seats</th>
-                <th class="px-3 py-2.5 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody" class="divide-y-2 divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-medium"></tbody>
-          </table>
+      <!-- Table Matrix View (Dual Mode: Mobile App Row Tiles on Phones, Wide Table on Desktop) -->
+      <div id="trainsTableView" class="hidden space-y-3 animate-fade-in">
+        <!-- Mobile App List View (Shown on < 768px screens) -->
+        <div id="mobileTableList" class="block md:hidden space-y-2.5">
+          <!-- Rendered dynamically by renderTableView() in app.js -->
+        </div>
+
+        <!-- Desktop Wide Spreadsheet View (Shown on >= 768px screens) -->
+        <div class="hidden md:block dashboard-block bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="table-responsive-wrapper overflow-x-auto">
+            <table class="w-full text-left text-xs min-w-[680px]">
+              <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-black text-slate-600 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700 tracking-wider">
+                <tr>
+                  <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train & Model</th>
+                  <th class="px-3 py-2.5 whitespace-nowrap">Departure</th>
+                  <th class="px-3 py-2.5 whitespace-nowrap">Arrival</th>
+                  <th class="px-3 py-2.5">Available Classes (Live Seats & Fare)</th>
+                  <th class="px-3 py-2.5 text-center whitespace-nowrap">Total Seats</th>
+                  <th class="px-3 py-2.5 text-center whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y-2 divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-medium"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -873,7 +881,7 @@
   <!-- Notification Modal Panel -->
   <div id="notifDropdown" class="hidden fixed inset-0 z-[10000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in">
     <!-- Modal Card -->
-    <div id="notifModalCard" class="w-full max-w-lg max-h-[85vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in">
+    <div id="notifModalCard" class="w-full max-w-lg max-h-[85vh] rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-fade-in modal-dialog-responsive">
       <!-- Modal Header -->
       <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 shrink-0">
         <div class="flex items-center space-x-2.5">
@@ -2857,8 +2865,8 @@
     </div>
   </nav>
 
-  <!-- Notification Toast Container -->
-  <div id="toastContainer" class="fixed bottom-20 md:bottom-5 right-5 z-50 space-y-2 max-w-sm w-full pointer-events-none"></div>
+  <!-- Notification In-App Push Banner Container (Mobile Apps Dynamic Island Style) -->
+  <div id="toastContainer" class="fixed top-3 left-3 right-3 sm:top-5 sm:right-5 sm:left-auto sm:max-w-sm z-[99999] space-y-2 pointer-events-none"></div>
 
 
   <!-- ============================================== -->

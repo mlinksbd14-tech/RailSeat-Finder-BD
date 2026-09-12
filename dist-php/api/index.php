@@ -19,6 +19,12 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = preg_replace('#^.*?/api/#', '', $uri);
 $path = trim($path, '/');
 
+// Route live-tracker endpoints directly
+if (strpos($path, 'live-tracker') === 0) {
+    require __DIR__ . '/live-tracker.php';
+    exit;
+}
+
 // Route table
 switch ($path) {
     case 'stations':

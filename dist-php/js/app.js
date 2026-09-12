@@ -2545,6 +2545,16 @@ document.addEventListener('DOMContentLoaded', () => {
         searchSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-xs"></i><span class="whitespace-nowrap">Finding Train...</span>';
         if (deepSearchSubmitBtn) deepSearchSubmitBtn.disabled = true;
       }
+
+      // Smooth auto-scroll down to loading / results section so user immediately sees search feedback
+      try {
+        const scrollTarget = document.getElementById('loadingIndicator') || document.getElementById('resultsContainer') || document.getElementById('trackerBar');
+        if (scrollTarget) {
+          scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (scrollErr) {
+        console.warn('Auto-scroll start error:', scrollErr);
+      }
     }
 
     try {
@@ -2603,6 +2613,12 @@ document.addEventListener('DOMContentLoaded', () => {
               scriptCopyTab.classList.remove('hidden');
             });
           }
+
+          setTimeout(() => {
+            try {
+              resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (e) {}
+          }, 100);
         }
 
         authModal.classList.remove('hidden');
@@ -2635,6 +2651,20 @@ document.addEventListener('DOMContentLoaded', () => {
       state.lastSearchData = data;
       renderResults(data, checkAlternates, isSilent);
       updateTrackerBar(data);
+
+      // Smooth auto-scroll down to results view
+      if (!isSilent) {
+        setTimeout(() => {
+          try {
+            const resultsTarget = document.getElementById('trackerBar') || document.getElementById('resultsContainer') || trainsGrid;
+            if (resultsTarget) {
+              resultsTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          } catch (scrollErr) {
+            console.warn('Auto-scroll results error:', scrollErr);
+          }
+        }, 120);
+      }
 
     } catch (err) {
       console.error('Live search error:', err);

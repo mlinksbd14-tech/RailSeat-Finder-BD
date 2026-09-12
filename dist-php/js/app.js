@@ -3236,7 +3236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const vat = Number(seat.vat || 0);
     const totalFare = Number(seat.total_fare !== undefined ? seat.total_fare : (baseFare + vat));
 
-    const displayName = window.i18n ? window.i18n.getSeatClassName(seat.type) : seat.display_name;
+    const displayName = window.i18n ? window.i18n.getSeatClassName(seat.type || seat.display_name) : (seat.type || seat.display_name || '').toUpperCase();
     const seatsLabel = isBn ? `${window.i18n.toBnNum(totalSeatCount)} সিট` : `${totalSeatCount} Seats`;
     const soldOutLabel = isBn ? 'বুকড / শেষ' : 'Sold Out';
     const fareDisplay = isBn ? `৳${window.i18n.toBnNum(totalFare)}` : `৳${totalFare}`;
@@ -3346,7 +3346,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${availClasses.length > 0 ? availClasses.map(s => {
                 const totalCount = Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
                 const fare = Number(s.total_fare !== undefined ? s.total_fare : ((Number(s.fare || 0)) + (Number(s.vat || 0))));
-                const classTitle = window.i18n ? window.i18n.getSeatClassName(s.type) : (s.display_name || s.type);
+                const classTitle = window.i18n ? window.i18n.getSeatClassName(s.type || s.display_name) : (s.type || s.display_name || '').toUpperCase();
                 const countDisplay = isBn ? window.i18n.toBnNum(totalCount) : totalCount;
                 const fareDisplay = isBn ? `৳${window.i18n.toBnNum(fare)}` : `৳${fare}`;
 
@@ -3426,7 +3426,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const baseFare = Number(s.fare || 0);
               const vat = Number(s.vat || 0);
               const totalFare = Number(s.total_fare !== undefined ? s.total_fare : (baseFare + vat));
-              const classTitle = window.i18n ? window.i18n.getSeatClassName(s.type) : (s.display_name || s.type);
+              const classTitle = window.i18n ? window.i18n.getSeatClassName(s.type || s.display_name) : (s.type || s.display_name || '').toUpperCase();
               const countDisplay = isBn ? window.i18n.toBnNum(totalCount) : totalCount;
               const fareDisplay = isBn ? `৳${window.i18n.toBnNum(totalFare)}` : `৳${totalFare}`;
 

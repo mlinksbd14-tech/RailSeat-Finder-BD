@@ -58,17 +58,17 @@
       filter_class: 'Class:',
       all_classes: 'All Classes',
 
-      // Seat Classes
-      class_s_chair: 'Shovon Chair (S_CHAIR)',
-      class_snigdha: 'Snigdha AC (SNIGDHA)',
-      class_ac_s: 'AC Seat (AC_S)',
-      class_ac_b: 'AC Berth (AC_B)',
-      class_shovon: 'Shovon (SHOVON)',
-      class_sulob: 'Sulob Non-AC (SULOB)',
-      class_f_berth: 'First Class Berth (F_BERTH)',
-      class_f_seat: 'First Class Seat (F_SEAT)',
-      class_f_chair: 'First Class Chair (F_CHAIR)',
-      class_ac_c: 'AC Cabin (AC_C)',
+      // Seat Classes (Same as Shohoz Server)
+      class_s_chair: 'S_CHAIR',
+      class_snigdha: 'SNIGDHA',
+      class_ac_s: 'AC_S',
+      class_ac_b: 'AC_B',
+      class_shovon: 'SHOVAN',
+      class_sulob: 'SULOB',
+      class_f_berth: 'F_BERTH',
+      class_f_seat: 'F_SEAT',
+      class_f_chair: 'F_CHAIR',
+      class_ac_c: 'AC_C',
 
       // Seat Availability Badges
       seats_available: 'Available',
@@ -140,17 +140,17 @@
       filter_class: 'শ্রেণি:',
       all_classes: 'সব শ্রেণি',
 
-      // Seat Classes
-      class_s_chair: 'শোভন চেয়ার (S_CHAIR)',
-      class_snigdha: 'স্নিগ্ধা এসি (SNIGDHA)',
-      class_ac_s: 'এসি সিট (AC_S)',
-      class_ac_b: 'এসি বার্থ (AC_B)',
-      class_shovon: 'শোভন (SHOVON)',
-      class_sulob: 'সুলভ নন-এসি (SULOB)',
-      class_f_berth: 'ফার্স্ট ক্লাস বার্থ (F_BERTH)',
-      class_f_seat: 'ফার্স্ট ক্লাস সিট (F_SEAT)',
-      class_f_chair: 'ফার্স্ট ক্লাস চেয়ার (F_CHAIR)',
-      class_ac_c: 'এসি কেবিন (AC_C)',
+      // Seat Classes (Same as Shohoz Server)
+      class_s_chair: 'S_CHAIR',
+      class_snigdha: 'SNIGDHA',
+      class_ac_s: 'AC_S',
+      class_ac_b: 'AC_B',
+      class_shovon: 'SHOVAN',
+      class_sulob: 'SULOB',
+      class_f_berth: 'F_BERTH',
+      class_f_seat: 'F_SEAT',
+      class_f_chair: 'F_CHAIR',
+      class_ac_c: 'AC_C',
 
       // Seat Availability Badges
       seats_available: 'উপলব্ধ',
@@ -350,21 +350,24 @@
     return bnToEnStation[trimmed] || trimmed;
   }
 
-  function getSeatClassName(classCode, lang = currentLang) {
-    const code = String(classCode || '').trim().toUpperCase();
+  function getSeatClassName(classCode) {
+    if (!classCode) return '';
+    const code = String(classCode).trim().toUpperCase();
     const map = {
-      'S_CHAIR': lang === 'bn' ? 'শোভন চেয়ার' : 'Shovon Chair',
-      'SNIGDHA': lang === 'bn' ? 'স্নিগ্ধা এসি' : 'Snigdha AC',
-      'AC_S': lang === 'bn' ? 'এসি সিট' : 'AC Seat',
-      'AC_B': lang === 'bn' ? 'এসি বার্থ' : 'AC Berth',
-      'SHOVON': lang === 'bn' ? 'শোভন' : 'Shovon',
-      'SULOB': lang === 'bn' ? 'সুলভ' : 'Sulob',
-      'F_BERTH': lang === 'bn' ? 'ফার্স্ট ক্লাস বার্থ' : 'First Berth',
-      'F_SEAT': lang === 'bn' ? 'ফার্স্ট ক্লাস সিট' : 'First Seat',
-      'F_CHAIR': lang === 'bn' ? 'ফার্স্ট চেয়ার' : 'First Chair',
-      'AC_C': lang === 'bn' ? 'এসি কেবিন' : 'AC Cabin'
+      'S_CHAIR': 'S_CHAIR',
+      'SNIGDHA': 'SNIGDHA',
+      'AC_S': 'AC_S',
+      'AC_B': 'AC_B',
+      'SHOVAN': 'SHOVAN',
+      'SHOVON': 'SHOVAN',
+      'SULOB': 'SULOB',
+      'F_BERTH': 'F_BERTH',
+      'F_SEAT': 'F_SEAT',
+      'F_CHAIR': 'F_CHAIR',
+      'AC_CHAIR': 'AC_CHAIR',
+      'AC_C': 'AC_C'
     };
-    return map[code] || classCode;
+    return map[code] || code;
   }
 
   // ----------------------------------------------------

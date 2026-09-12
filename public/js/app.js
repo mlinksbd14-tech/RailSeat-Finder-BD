@@ -5511,12 +5511,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const fromIdx = stoppages.findIndex(s => s.cleanCity === chosenFrom);
       const downstreamStops = stoppages.slice(fromIdx + 1).map(s => s.cleanCity);
 
-      const preferredTo = (initialTo || state.selectedTo || '').toLowerCase().trim();
-      const matchTo = downstreamStops.find(c => c.toLowerCase() === preferredTo);
-
-      if (matchTo) {
-        currentStationMatrixTarget.selectedTos = new Set([matchTo]);
+      if (initialTo) {
+        const preferredTo = initialTo.toLowerCase().trim();
+        const matchTo = downstreamStops.find(c => c.toLowerCase() === preferredTo);
+        currentStationMatrixTarget.selectedTos = matchTo ? new Set([matchTo]) : new Set(downstreamStops);
       } else {
+        // Show all stoppage stations by default for the Stops Matrix
         currentStationMatrixTarget.selectedTos = new Set(downstreamStops);
       }
 

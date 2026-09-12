@@ -434,3 +434,223 @@ function normalizeShohozResponsePHP($data, $fromCity, $toCity, $dateStr) {
         'trains' => $trains
     ];
 }
+
+/**
+ * Compute human-readable off-day name from active operating days array
+ */
+function computeOffDayFromDays($days) {
+    if (!is_array($days) || count($days) === 0) return 'None';
+    if (count($days) >= 7) return 'None';
+
+    $allDays = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+    $dayNames = [
+        'Sun' => 'Sunday',
+        'Mon' => 'Monday',
+        'Tue' => 'Tuesday',
+        'Wed' => 'Wednesday',
+        'Thu' => 'Thursday',
+        'Fri' => 'Friday',
+        'Sat' => 'Saturday'
+    ];
+
+    $missing = array_diff($allDays, $days);
+    if (empty($missing)) return 'None';
+
+    $mapped = array_map(function($d) use ($dayNames) {
+        return $dayNames[$d] ?? $d;
+    }, $missing);
+
+    return implode(', ', $mapped);
+}
+
+/**
+ * Fetch and cache train route and stoppages from Shohoz
+ */
+function getTrainRouteDataPHP($cleanModel, $session = null) {
+    if (!$session || empty($session['token'])) {
+        $session = getSavedSession();
+    }
+
+    $cleanModel = preg_replace('/\D/', '', (string)$cleanModel) ?: (string)$cleanModel;
+    if (empty($cleanModel)) return null;
+
+    $cacheFile = CACHE_DIR . "/route_{$cleanModel}.json";
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 86400)) {
+        $cached = json_decode(file_get_contents($cacheFile), true);
+        if (is_array($cached) && !empty($cached['routes'])) {
+            $cached['off_day'] = computeOffDayFromDays($cached['days'] ?? []);
+            return $cached;
+        }
+    }
+
+    $headers = [
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'Accept: application/json, text/plain, */*',
+        'Content-Type: application/json',
+        'Origin: https://eticket.railway.gov.bd',
+        'Referer: https://eticket.railway.gov.bd/train-information'
+    ];
+
+    if (!empty($session['token'])) $headers[] = 'Authorization: Bearer ' . trim($session['token']);
+    if (!empty($session['deviceId'])) $headers[] = 'x-device-id: ' . trim($session['deviceId']);
+    if (!empty($session['deviceKey'])) $headers[] = 'x-device-key: ' . trim($session['deviceKey']);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://railspaapi.shohoz.com/v1.0/web/train-routes');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['model' => $cleanModel]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+
+    $rawResponse = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $data = json_decode($rawResponse, true);
+    if ($httpCode === 200 && isset($data['data']) && is_array($data['data'])) {
+        $routeData = $data['data'];
+        $routeData['off_day'] = computeOffDayFromDays($routeData['days'] ?? []);
+        @file_put_contents($cacheFile, json_encode($routeData, JSON_UNESCAPED_UNICODE));
+        return $routeData;
+    }
+
+    return null;
+}
+
+/**
+ * Query Multiple Shohoz Trips in Parallel using curl_multi
+ * @param array $queries Array of ['key' => ..., 'from' => ..., 'to' => ..., 'date' => ...]
+ * @param array|null $session
+ * @param int $batchSize
+ * @return array Keyed by 'key' => normalized response array
+ */
+function queryShohozTripsParallel($queries, $session = null, $batchSize = 4) {
+    if (!$session || empty($session['token'])) {
+        $session = getSavedSession();
+    }
+
+    if (empty($session['token'])) {
+        $emptyResults = [];
+        foreach ($queries as $q) {
+            $key = $q['key'] ?? ($q['from'] . '_' . $q['to'] . '_' . $q['date']);
+            $emptyResults[$key] = [
+                'success' => false,
+                'auth_required' => true,
+                'error' => 'Live Shohoz session is required.',
+                'trains' => []
+            ];
+        }
+        return $emptyResults;
+    }
+
+    $results = [];
+    $toExecute = [];
+
+    // Check transient cache first
+    foreach ($queries as $q) {
+        $key = $q['key'] ?? ($q['from'] . '_' . $q['to'] . '_' . $q['date']);
+        $canonicalFrom = getCanonicalStationName($q['from']);
+        $canonicalTo = getCanonicalStationName($q['to']);
+        $formattedDate = formatShohozDoj($q['date']);
+        $cacheFile = CACHE_DIR . '/trip_' . md5("{$canonicalFrom}|{$canonicalTo}|{$formattedDate}") . '.json';
+
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 45)) {
+            $cached = json_decode(file_get_contents($cacheFile), true);
+            if (is_array($cached) && !empty($cached['success'])) {
+                $results[$key] = $cached;
+                continue;
+            }
+        }
+
+        $toExecute[] = [
+            'key' => $key,
+            'from' => $canonicalFrom,
+            'to' => $canonicalTo,
+            'date' => $formattedDate,
+            'cacheFile' => $cacheFile
+        ];
+    }
+
+    if (empty($toExecute)) {
+        return $results;
+    }
+
+    $commonHeaders = [
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'Accept: application/json, text/plain, */*',
+        'Accept-Language: en-US,en;q=0.9,bn;q=0.8',
+        'Origin: https://eticket.railway.gov.bd',
+        'Referer: https://eticket.railway.gov.bd/',
+        'Authorization: Bearer ' . trim($session['token'])
+    ];
+    if (!empty($session['deviceId'])) $commonHeaders[] = 'x-device-id: ' . trim($session['deviceId']);
+    if (!empty($session['deviceKey'])) $commonHeaders[] = 'x-device-key: ' . trim($session['deviceKey']);
+
+    // Chunk into batches of $batchSize
+    $chunks = array_chunk($toExecute, max(1, $batchSize));
+
+    foreach ($chunks as $chunk) {
+        $mh = curl_multi_init();
+        $handles = [];
+
+        foreach ($chunk as $item) {
+            $url = "https://railspaapi.shohoz.com/v1.0/web/bookings/search-trips-v2?from_city=" . urlencode($item['from']) . "&to_city=" . urlencode($item['to']) . "&date_of_journey=" . urlencode($item['date']) . "&seat_class=S_CHAIR";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $commonHeaders);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$item['key']] = [
+                'handle' => $ch,
+                'item' => $item
+            ];
+        }
+
+        $active = null;
+        do {
+            $mrc = curl_multi_exec($mh, $active);
+        } while ($mrc === CURLM_CALL_MULTI_PERFORM);
+
+        while ($active && $mrc === CURLM_OK) {
+            if (curl_multi_select($mh, 0.2) === -1) {
+                usleep(10000);
+            }
+            do {
+                $mrc = curl_multi_exec($mh, $active);
+            } while ($mrc === CURLM_CALL_MULTI_PERFORM);
+        }
+
+        foreach ($handles as $key => $hData) {
+            $ch = $hData['handle'];
+            $item = $hData['item'];
+            $raw = curl_multi_getcontent($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+
+            $decoded = json_decode($raw, true);
+            if ($httpCode === 200 && is_array($decoded)) {
+                $norm = normalizeShohozResponsePHP($decoded, $item['from'], $item['to'], $item['date']);
+                @file_put_contents($item['cacheFile'], json_encode($norm, JSON_UNESCAPED_UNICODE));
+                $results[$key] = $norm;
+            } else {
+                $results[$key] = [
+                    'success' => false,
+                    'from_city' => $item['from'],
+                    'to_city' => $item['to'],
+                    'date_of_journey' => $item['date'],
+                    'trains' => []
+                ];
+            }
+        }
+
+        curl_multi_close($mh);
+    }
+
+    return $results;
+}
+

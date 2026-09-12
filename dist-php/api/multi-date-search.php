@@ -1,9 +1,13 @@
 <?php
+/**
+ * 10-Day Availability Matrix API
+ * Queries multi-date consecutive availability across all trains in parallel
+ */
 require_once __DIR__ . '/helper.php';
 
-$fromCity = $_GET['from_city'] ?? '';
-$toCity = $_GET['to_city'] ?? '';
-$startDate = $_GET['start_date'] ?? date('Y-m-d');
+$fromCity = trim($_GET['from_city'] ?? '');
+$toCity = trim($_GET['to_city'] ?? '');
+$startDate = trim($_GET['start_date'] ?? date('Y-m-d'));
 $days = min(14, max(1, (int)($_GET['days'] ?? 10)));
 
 if (empty($fromCity) || empty($toCity)) {
@@ -27,31 +31,80 @@ if (empty($session['token'])) {
 }
 
 $baseTime = strtotime($startDate) ?: time();
-$matrix = [];
+$dates = [];
+$queries = [];
 
 for ($i = 0; $i < $days; $i++) {
-    $currentDate = date('Y-m-d', strtotime("+$i day", $baseTime));
-    $searchRes = queryShohozSearch($fromCity, $toCity, $currentDate, $session);
-    
-    $trains = $searchRes['trains'] ?? [];
-    $totalSeats = 0;
-    $onlineSeats = 0;
+    $dStr = date('Y-m-d', strtotime("+$i day", $baseTime));
+    $dates[] = $dStr;
+    $queries[] = [
+        'key' => $dStr,
+        'from' => $fromCity,
+        'to' => $toCity,
+        'date' => $dStr
+    ];
+}
+
+// Run all day queries in parallel batches using curl_multi
+$queryResults = queryShohozTripsParallel($queries, $session, 4);
+
+$matrix = [];
+foreach ($dates as $dStr) {
+    $res = $queryResults[$dStr] ?? null;
+    $trains = $res['trains'] ?? [];
+
+    $totalAvailableSeats = array_sum(array_column($trains, 'total_combined_seats'));
+    $totalOnlineSeats = array_sum(array_column($trains, 'total_online_seats'));
+
+    $mappedTrains = [];
     foreach ($trains as $t) {
-        $totalSeats += ($t['total_combined_seats'] ?? 0);
-        $onlineSeats += ($t['total_online_seats'] ?? 0);
+        $seatTypes = [];
+        foreach ($t['seat_types'] ?? [] as $st) {
+            $avail = (int)($st['seats_available'] ?? $st['online_available_seats'] ?? $st['online_seats'] ?? 0);
+            $counter = (int)($st['counter_seats_available'] ?? $st['offline_available_seats'] ?? $st['counter_seats'] ?? 0);
+            $baseFare = (float)($st['fare'] ?? $st['ticket_fare'] ?? 0);
+            $vat = (float)($st['vat'] ?? $st['vat_amount'] ?? 0);
+            $totalFare = (float)($st['total_fare'] ?? ($baseFare + $vat));
+            $type = strtoupper((string)($st['type'] ?? 'UNKNOWN'));
+
+            $seatTypes[] = [
+                'type' => $type,
+                'display_name' => $st['display_name'] ?? $type,
+                'total_seats' => $avail + $counter,
+                'online_seats' => $avail,
+                'fare' => $baseFare,
+                'vat' => $vat,
+                'total_fare' => $totalFare
+            ];
+        }
+
+        $combinedSeats = (int)($t['total_combined_seats'] ?? $t['total_seats'] ?? 0);
+        if ($combinedSeats === 0 && !empty($seatTypes)) {
+            $combinedSeats = array_sum(array_column($seatTypes, 'total_seats'));
+        }
+
+        $mappedTrains[] = [
+            'train_name' => $t['train_name'] ?? 'Intercity Train',
+            'train_model' => $t['train_model'] ?? '',
+            'departure_time' => $t['departure_time'] ?? '--',
+            'arrival_time' => $t['arrival_time'] ?? '--',
+            'off_day' => $t['off_day'] ?? 'None',
+            'total_seats' => $combinedSeats,
+            'seat_types' => $seatTypes
+        ];
     }
 
     $matrix[] = [
-        'date' => $currentDate,
-        'display_date' => formatShohozDoj($currentDate),
+        'date' => $dStr,
+        'formatted_date' => formatShohozDoj($dStr),
+        'day_name' => date('D', strtotime($dStr)),
+        'display_date' => date('M j', strtotime($dStr)),
+        'success' => !empty($res['success']),
         'total_trains' => count($trains),
-        'total_seats' => $totalSeats,
-        'online_seats' => $onlineSeats,
-        'trains' => $trains
+        'total_available_seats' => $totalAvailableSeats,
+        'total_online_seats' => $totalOnlineSeats,
+        'trains' => $mappedTrains
     ];
-
-    // Brief cooldown between day queries to prevent Shohoz IP block
-    usleep(100000);
 }
 
 echo json_encode([
@@ -59,5 +112,12 @@ echo json_encode([
     'from_city' => $fromCity,
     'to_city' => $toCity,
     'days_count' => count($matrix),
+    'route' => [
+        'from' => $fromCity,
+        'to' => $toCity,
+        'start_date' => $dates[0],
+        'end_date' => end($dates),
+        'total_days' => count($matrix)
+    ],
     'matrix' => $matrix
 ], JSON_UNESCAPED_UNICODE);

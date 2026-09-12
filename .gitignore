@@ -26,7 +26,6 @@ yarn-error.log*
 Thumbs.db
 *.zip
 *.tar.gz
-dist-php/
 scratch/
 .system_generated/
 

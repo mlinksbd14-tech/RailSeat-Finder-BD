@@ -1,0 +1,54 @@
+<?php
+require_once __DIR__ . '/helper.php';
+
+$rawInput = file_get_contents('php://input');
+$body = json_decode($rawInput, true);
+
+if (!is_array($body) || empty($body['token'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Token is required.']);
+    exit;
+}
+
+$token = trim($body['token']);
+$deviceId = trim($body['device_id'] ?? $body['deviceId'] ?? '');
+$deviceKey = trim($body['device_key'] ?? $body['deviceKey'] ?? 'web');
+
+// Try decoding payload from JWT if present
+$user = [
+    'name' => 'Verified Passenger',
+    'phone' => '01XXXXXXXXX',
+    'email' => 'eticket@railway.gov.bd',
+    'nid' => '************'
+];
+
+$parts = explode('.', $token);
+if (count($parts) >= 2) {
+    $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
+    $decoded = json_decode($payloadJson, true);
+    if (is_array($decoded)) {
+        if (!empty($decoded['name'])) $user['name'] = $decoded['name'];
+        if (!empty($decoded['phone'])) $user['phone'] = $decoded['phone'];
+        if (!empty($decoded['email'])) $user['email'] = $decoded['email'];
+        if (!empty($decoded['nid'])) $user['nid'] = $decoded['nid'];
+    }
+}
+
+$sessionData = [
+    'token' => $token,
+    'deviceId' => $deviceId,
+    'deviceKey' => $deviceKey,
+    'user' => $user,
+    'updated_at' => date('c')
+];
+
+saveSessionData($sessionData);
+
+echo json_encode([
+    'success' => true,
+    'message' => 'Live Shohoz session saved permanently on server.',
+    'user' => $user,
+    'token_preview' => substr($token, 0, 10) . '...' . substr($token, -6),
+    'device_id' => $deviceId,
+    'device_key' => $deviceKey
+], JSON_UNESCAPED_UNICODE);

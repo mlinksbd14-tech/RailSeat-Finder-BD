@@ -1,0 +1,309 @@
+/* ====================================================
+   RailSeat Finder BD — Modern, Clean & Traveler-First UI
+   ==================================================== */
+
+/* Responsive & Mobile Touch Optimizations */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth Horizontal Scrolling */
+.table-responsive-wrapper,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Sticky Column Shadow for Responsive Matrix */
+.sticky-column-shadow {
+  box-shadow: 3px 0 8px -2px rgba(0, 0, 0, 0.06);
+}
+.dark .sticky-column-shadow {
+  box-shadow: 3px 0 10px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-spin-fast {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 2s ease-in-out infinite;
+}
+
+/* Modern Card Glow & High-Contrast Bold Elevation */
+.travel-card {
+  border-width: 2px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.travel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+.dark .travel-card:hover {
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(16, 185, 129, 0.35);
+}
+
+/* Bold Dashboard Block Outlines */
+.dashboard-block {
+  border-width: 2px !important;
+}
+
+/* Class Seat Pills (Crisp Bold Borders) */
+.seat-pill {
+  border-width: 2px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.seat-pill:hover {
+  transform: translateY(-1px);
+}
+.seat-pill:active {
+  transform: scale(0.98);
+}
+
+/* Autocomplete highlight */
+.autocomplete-item {
+  transition: background-color 0.15s ease;
+}
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background-color: #ecfdf5;
+}
+.dark .autocomplete-item:hover,
+.dark .autocomplete-item.active {
+  background-color: rgba(6, 78, 59, 0.25);
+}
+
+/* Modal Responsive Centering */
+@media (max-width: 640px) {
+  .modal-dialog-responsive {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0.5rem auto !important;
+    max-height: 92vh !important;
+  }
+}
+
+/* Custom Toggle Switch */
+.custom-toggle-track {
+  position: relative !important;
+  display: inline-block !important;
+  width: 44px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  min-height: 24px !important;
+  background-color: #cbd5e1 !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+.dark .custom-toggle-track {
+  background-color: #475569 !important;
+}
+.custom-toggle-thumb {
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: #ffffff !important;
+  border-radius: 9999px !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+input:checked + .custom-toggle-track.toggle-purple {
+  background-color: #9333ea !important;
+}
+input:checked + .custom-toggle-track.toggle-emerald {
+  background-color: #059669 !important;
+}
+input:checked + .custom-toggle-track.toggle-blue {
+  background-color: #2563eb !important;
+}
+input:checked + .custom-toggle-track.toggle-amber {
+  background-color: #d97706 !important;
+}
+input:checked + .custom-toggle-track .custom-toggle-thumb {
+  transform: translateX(20px) !important;
+}
+
+/* Range input accent */
+input[type="range"] {
+  accent-color: #059669;
+}
+
+/* ====================================================
+   Bangla (বাংলা) Font & Typography Support
+   ==================================================== */
+.font-bengali,
+[lang="bn"] {
+  font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  line-height: 1.55;
+  letter-spacing: normal;
+}
+
+[lang="bn"] input,
+[lang="bn"] button,
+[lang="bn"] select,
+[lang="bn"] textarea {
+  font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* ====================================================
+   Mobile Responsive Modal Bottom-Sheet Styles
+   ==================================================== */
+@media (max-width: 640px) {
+  .modal-dialog-responsive {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+    animation: slideUpMobile 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .mobile-tap-target {
+    min-height: 44px;
+  }
+}
+
+/* ====================================================
+   📱 Native Mobile App Styles: Cards, Table & Notifications
+   ==================================================== */
+
+/* Native App Card Styling */
+.app-ticket-card {
+  position: relative;
+  border-radius: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-ticket-card:active {
+  transform: scale(0.995);
+}
+
+/* Mobile App Seat Class Tile */
+.app-seat-tile {
+  transition: all 0.15s ease-out;
+  border-radius: 0.875rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.app-seat-tile:active {
+  transform: scale(0.96);
+}
+
+/* Route Timeline Line Connector */
+.route-connector-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.route-connector-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.25;
+}
+
+/* Mobile Push Banner Animation (Dynamic Island / App Push Style) */
+@keyframes slideDownAppPush {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-app-push {
+  animation: slideDownAppPush 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Mobile Table List Row Tile */
+.mobile-table-card {
+  border-radius: 1rem;
+  transition: all 0.18s ease;
+}
+.mobile-table-card:active {
+  background-color: rgba(241, 245, 249, 0.7);
+}
+.dark .mobile-table-card:active {
+  background-color: rgba(30, 41, 59, 0.7);
+}

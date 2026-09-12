@@ -1438,7 +1438,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close dropdown on outside click (desktop mode)
     document.addEventListener('click', (e) => {
-      if (notifCenterContainer && !notifCenterContainer.contains(e.target) && !notifDropdown.contains(e.target)) {
+      const mobileNavNotifBtn = document.getElementById('mobileNavNotifBtn');
+      if (
+        notifCenterContainer && 
+        !notifCenterContainer.contains(e.target) && 
+        !notifDropdown.contains(e.target) &&
+        (!mobileNavNotifBtn || !mobileNavNotifBtn.contains(e.target))
+      ) {
         if (notifDropdown) notifDropdown.classList.add('hidden');
       }
     });
@@ -1532,6 +1538,16 @@ document.addEventListener('DOMContentLoaded', () => {
         notifBadge.classList.remove('hidden');
       } else {
         notifBadge.classList.add('hidden');
+      }
+    }
+
+    const mobileNotifBadge = document.getElementById('mobileNotifBadge');
+    if (mobileNotifBadge) {
+      if (unreadCount > 0) {
+        mobileNotifBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        mobileNotifBadge.classList.remove('hidden');
+      } else {
+        mobileNotifBadge.classList.add('hidden');
       }
     }
 
@@ -7543,16 +7559,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileNavWatchlistBtn  = document.getElementById('mobileNavWatchlistBtn');
     const mobileNavNotifBtn      = document.getElementById('mobileNavNotifBtn');
 
-    if (mobileNavSeatFinderBtn) mobileNavSeatFinderBtn.addEventListener('click', () => switchMainTab('seats'));
-    if (mobileNavLiveRadarBtn)  mobileNavLiveRadarBtn.addEventListener('click', () => switchMainTab('tracker'));
-    if (mobileNavRoutesBtn)     mobileNavRoutesBtn.addEventListener('click', () => { const btn = document.getElementById('openRouteExplorerBtn'); if (btn) btn.click(); });
-    if (mobileNavWatchlistBtn)  mobileNavWatchlistBtn.addEventListener('click', () => { const btn = document.getElementById('openWatchlistBtn'); if (btn) btn.click(); });
-    if (mobileNavNotifBtn)      mobileNavNotifBtn.addEventListener('click', () => { const btn = document.getElementById('notifBell'); if (btn) btn.click(); });
+    if (mobileNavSeatFinderBtn) {
+      mobileNavSeatFinderBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchMainTab('seats');
+      });
+    }
+    if (mobileNavLiveRadarBtn) {
+      mobileNavLiveRadarBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchMainTab('tracker');
+      });
+    }
+    if (mobileNavRoutesBtn) {
+      mobileNavRoutesBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = document.getElementById('openRouteExplorerBtn');
+        if (btn) btn.click();
+      });
+    }
+    if (mobileNavWatchlistBtn) {
+      mobileNavWatchlistBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = document.getElementById('openWatchlistBtn');
+        if (btn) btn.click();
+      });
+    }
+    if (mobileNavNotifBtn) {
+      mobileNavNotifBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (notifDropdown) {
+          const isHidden = notifDropdown.classList.contains('hidden');
+          if (settingsDropdown) settingsDropdown.classList.add('hidden');
+          if (isHidden) {
+            notifDropdown.classList.remove('hidden');
+            state.notifications.forEach(n => n.isRead = true);
+            saveStoredNotifications();
+            updateNotificationUI();
+          } else {
+            notifDropdown.classList.add('hidden');
+          }
+        } else {
+          const btn = document.getElementById('notifBellBtn');
+          if (btn) btn.click();
+        }
+      });
+    }
 
     // Sync mobile bottom nav watchlist badge whenever the top badge updates
     const topWatchlistBadge = document.getElementById('watchlistBadge');
     const mobileWatchlistBadge = document.getElementById('mobileWatchlistBadge');
-    const topNotifBadge = document.getElementById('notifCountBadge');
+    const topNotifBadge = document.getElementById('notifBadge');
     const mobileNotifBadge = document.getElementById('mobileNotifBadge');
     if (topWatchlistBadge && mobileWatchlistBadge) {
       new MutationObserver(() => {

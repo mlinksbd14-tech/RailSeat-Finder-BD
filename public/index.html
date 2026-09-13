@@ -161,6 +161,24 @@
                 <p class="text-[11px] text-purple-600 dark:text-purple-400 font-mono truncate" id="dropdownUserUsername">@admin</p>
               </div>
 
+              <!-- Dedicated Bangladesh Railway Passenger Profile Section in User Dropdown -->
+              <div id="dropdownRailwayProfileSection" class="hidden p-3 bg-emerald-50/60 dark:bg-emerald-950/40 space-y-2 border-t border-b border-emerald-100 dark:border-emerald-900/40">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                    <i class="fa-solid fa-train"></i>
+                    <span>Railway Live Profile</span>
+                  </div>
+                  <span id="dropdownRailwayStatusBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">Live Active</span>
+                </div>
+                <div class="space-y-0.5">
+                  <p id="dropdownRailPassengerName" class="text-xs font-bold text-slate-900 dark:text-white truncate">---</p>
+                  <p id="dropdownRailPassengerPhone" class="text-[11px] font-mono text-slate-600 dark:text-slate-300 truncate">---</p>
+                </div>
+                <button type="button" id="dropdownManageSessionBtn" class="w-full text-center py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition cursor-pointer shadow-2xs">
+                  <i class="fa-solid fa-id-card mr-1"></i> View Live Profile
+                </button>
+              </div>
+
               <!-- Menu Items -->
               <div class="p-1 text-xs space-y-0.5">
                 <button id="dropdownManageUsersBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 font-semibold flex items-center justify-between transition cursor-pointer">
@@ -239,6 +257,25 @@
             <span data-i18n="search_hero_title">Find & Book Available Train Seats</span>
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1" data-i18n="search_hero_desc">Real-time vacant seats, train schedules, fares & 24/7 seat release alerts.</p>
+        </div>
+
+        <!-- Connected Bangladesh Railway Passenger Profile Card on Dashboard -->
+        <div id="dashboardRailwayProfilePill" class="hidden items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/80 shadow-xs shrink-0 animate-fade-in">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-base shadow-xs shrink-0">
+            <i class="fa-solid fa-id-card-clip"></i>
+          </div>
+          <div class="min-w-0 pr-1">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Railway Profile</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 text-[9px] font-extrabold">Active Live</span>
+            </div>
+            <p id="dashboardRailName" class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">---</p>
+            <p id="dashboardRailPhone" class="text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 truncate">---</p>
+          </div>
+          <button type="button" id="dashboardRailProfileBtn" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-slate-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs" title="View Official Railway Profile & Session Details">
+            <i class="fa-solid fa-id-card mr-1"></i>Profile
+          </button>
         </div>
       </div>
 
@@ -1255,6 +1292,37 @@
               </button>
             </div>
 
+            <!-- Official Bangladesh Railway Connected Passenger Profile Card in Settings -->
+            <div id="settingRailwayProfileCard" class="hidden p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b border-emerald-200/60 dark:border-emerald-800/50">
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span class="text-xs font-black text-emerald-900 dark:text-emerald-200">Official Railway Profile</span>
+                </div>
+                <span id="settingRailBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                  <i class="fa-solid fa-circle-check mr-0.5"></i> Live Session
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase">Passenger</span>
+                  <span id="settingRailName" class="font-bold text-slate-800 dark:text-slate-200 block truncate">---</span>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase">Mobile Number</span>
+                  <span id="settingRailPhone" class="font-mono text-slate-800 dark:text-slate-200 block truncate">---</span>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase">Email</span>
+                  <span id="settingRailEmail" class="text-slate-800 dark:text-slate-200 block truncate">---</span>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase">NID Number</span>
+                  <span id="settingRailNid" class="font-mono text-slate-800 dark:text-slate-200 block truncate">---</span>
+                </div>
+              </div>
+            </div>
+
             <!-- User Feature Overview -->
             <div class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1.5 bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
               <div class="flex items-center space-x-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -1430,6 +1498,18 @@
         </div>
       </div>
 
+      <!-- Toggle Reconnect / Switch Session button (shown when already authenticated) -->
+      <div id="reconnectToggleContainer" class="hidden">
+        <button type="button" id="reconnectToggleBtn" class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-between cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
+          <span class="flex items-center space-x-1.5">
+            <i class="fa-solid fa-arrows-rotate text-emerald-500 text-xs"></i>
+            <span>Switch or Reconnect Session</span>
+          </span>
+          <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform" id="reconnectToggleIcon"></i>
+        </button>
+      </div>
+
+      <div id="authTabsContainer" class="space-y-4">
       <!-- Tab Switcher (PC Console vs Manual Paste vs Mobile Login) -->
       <div class="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl shrink-0" id="authTabsNav">
         <button id="tabScriptBtn" type="button" class="py-2 px-1 text-center rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer transition flex items-center justify-center space-x-1.5">
@@ -1627,6 +1707,7 @@
         </form>
 
       </div>
+      </div> <!-- End authTabsContainer -->
     </div>
   </div>
 

@@ -546,6 +546,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const deviceIdInput = document.getElementById('deviceIdInput');
   const deviceKeyInput = document.getElementById('deviceKeyInput');
 
+  const authTabsContainer = document.getElementById('authTabsContainer');
+  const reconnectToggleContainer = document.getElementById('reconnectToggleContainer');
+  const reconnectToggleBtn = document.getElementById('reconnectToggleBtn');
+  const reconnectToggleIcon = document.getElementById('reconnectToggleIcon');
+
+  const dashboardRailwayProfilePill = document.getElementById('dashboardRailwayProfilePill');
+  const dashboardRailName = document.getElementById('dashboardRailName');
+  const dashboardRailPhone = document.getElementById('dashboardRailPhone');
+  const dashboardRailProfileBtn = document.getElementById('dashboardRailProfileBtn');
+
+  const dropdownRailwayProfileSection = document.getElementById('dropdownRailwayProfileSection');
+  const dropdownRailPassengerName = document.getElementById('dropdownRailPassengerName');
+  const dropdownRailPassengerPhone = document.getElementById('dropdownRailPassengerPhone');
+  const dropdownManageSessionBtn = document.getElementById('dropdownManageSessionBtn');
+
+  const settingRailwayProfileCard = document.getElementById('settingRailwayProfileCard');
+  const settingRailName = document.getElementById('settingRailName');
+  const settingRailPhone = document.getElementById('settingRailPhone');
+  const settingRailEmail = document.getElementById('settingRailEmail');
+  const settingRailNid = document.getElementById('settingRailNid');
+
   // ----------------------------------------------------
   // Date & Station Canonical Helpers (100% Shohoz Compatible)
   // ----------------------------------------------------
@@ -1055,18 +1076,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deviceId && deviceIdInput) deviceIdInput.value = deviceId;
     if (deviceKey && deviceKeyInput && deviceKey.toLowerCase() !== 'web') deviceKeyInput.value = deviceKey;
 
+    const pName = user?.name || user?.display_name || 'Railway Passenger';
+    const pPhone = user?.phone || user?.mobile_number || user?.phone_number || user?.username || '---';
+    const pEmail = user?.email || '---';
+    const pNidRaw = user?.nid || user?.nidn || '';
+    const pNidType = user?.nidType || user?.nidnt || 'NID';
+    const pNid = pNidRaw ? `${pNidRaw} (${pNidType})` : '---';
+    const displayName = pName.split(' ')[0] || 'Live';
+
     if (isAuth) {
       authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white';
       authBtnIcon.className = 'fa-solid fa-circle-check text-[11px]';
-      const displayName = user?.name ? user.name.split(' ')[0] : 'Live';
       authBtnText.textContent = `🚆 ${displayName}`;
       
       liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800';
       liveBadge.textContent = '🟢 100% Live API';
       searchModeBadge.textContent = 'Shohoz Live API';
 
+      if (authModalTitle) authModalTitle.textContent = 'Bangladesh Railway Live Session & Profile';
       if (statusDescription) {
-        statusDescription.textContent = user?.name ? `Status: Connected as ${user.name}` : 'Status: Connected (Live)';
+        statusDescription.textContent = `Status: Connected as ${pName}`;
       }
       if (statusDot) {
         statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
@@ -1074,15 +1103,43 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalAuthStatusCard) modalAuthStatusCard.classList.add('hidden');
       if (modalRailwayProfileCard) {
         modalRailwayProfileCard.classList.remove('hidden');
-        if (railProfileName) railProfileName.textContent = user?.name || 'Railway Passenger';
-        if (railProfilePhone) railProfilePhone.textContent = user?.phone || user?.mobile_number || '---';
-        if (railProfileEmail) railProfileEmail.textContent = user?.email || '---';
-        if (railProfileNid) railProfileNid.textContent = user?.nid ? `${user.nid} (${user.nidType || 'NID'})` : '---';
+        if (railProfileName) railProfileName.textContent = pName;
+        if (railProfilePhone) railProfilePhone.textContent = pPhone;
+        if (railProfileEmail) railProfileEmail.textContent = pEmail;
+        if (railProfileNid) railProfileNid.textContent = pNid;
         if (railProfileExpires) {
           railProfileExpires.textContent = user?.expiresAt 
             ? 'Session valid until ' + new Date(user.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             : 'Active Live Session';
         }
+      }
+
+      // Reconnect switcher in modal (collapsed when connected)
+      if (reconnectToggleContainer) reconnectToggleContainer.classList.remove('hidden');
+      if (authTabsContainer) authTabsContainer.classList.add('hidden');
+
+      // 1. Dashboard Hero Profile Card
+      if (dashboardRailwayProfilePill) {
+        dashboardRailwayProfilePill.classList.remove('hidden');
+        dashboardRailwayProfilePill.classList.add('flex');
+        if (dashboardRailName) dashboardRailName.textContent = pName;
+        if (dashboardRailPhone) dashboardRailPhone.textContent = pPhone;
+      }
+
+      // 2. Top Header User Dropdown Railway Profile Section
+      if (dropdownRailwayProfileSection) {
+        dropdownRailwayProfileSection.classList.remove('hidden');
+        if (dropdownRailPassengerName) dropdownRailPassengerName.textContent = pName;
+        if (dropdownRailPassengerPhone) dropdownRailPassengerPhone.textContent = pPhone;
+      }
+
+      // 3. Settings Modal Category 5 Railway Profile Card
+      if (settingRailwayProfileCard) {
+        settingRailwayProfileCard.classList.remove('hidden');
+        if (settingRailName) settingRailName.textContent = pName;
+        if (settingRailPhone) settingRailPhone.textContent = pPhone;
+        if (settingRailEmail) settingRailEmail.textContent = pEmail;
+        if (settingRailNid) settingRailNid.textContent = pNid;
       }
 
       noticeBanner.classList.add('hidden');
@@ -1095,6 +1152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       liveBadge.textContent = '⚡ Connect Session';
       searchModeBadge.textContent = 'Session Required';
 
+      if (authModalTitle) authModalTitle.textContent = 'Connect Live Shohoz API';
       if (statusDescription) {
         statusDescription.textContent = 'Status: Not Connected';
       }
@@ -1104,6 +1162,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalRailwayProfileCard) modalRailwayProfileCard.classList.add('hidden');
       if (modalAuthStatusCard) modalAuthStatusCard.classList.remove('hidden');
 
+      if (reconnectToggleContainer) reconnectToggleContainer.classList.add('hidden');
+      if (authTabsContainer) authTabsContainer.classList.remove('hidden');
+
+      if (dashboardRailwayProfilePill) {
+        dashboardRailwayProfilePill.classList.add('hidden');
+        dashboardRailwayProfilePill.classList.remove('flex');
+      }
+      if (dropdownRailwayProfileSection) dropdownRailwayProfileSection.classList.add('hidden');
+      if (settingRailwayProfileCard) settingRailwayProfileCard.classList.add('hidden');
+
       noticeBanner.className = 'p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60 animate-fade-in';
       noticeText.textContent = 'Click "Connect Live API" to sync your Bangladesh Railway session. Your session will be automatically saved for future visits.';
       bannerConnectBtn.classList.remove('hidden');
@@ -1111,13 +1179,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Modal Open / Close
-  authModalOpenBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
-  bannerConnectBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
-  authModalCloseBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-  authModal.addEventListener('click', (e) => {
-    if (e.target === authModal) authModal.classList.add('hidden');
-  });
+  // Modal Open / Close with fresh session synchronization
+  function openAuthModal() {
+    checkRailwaySessionStatus();
+    if (authModal) authModal.classList.remove('hidden');
+  }
+
+  if (authModalOpenBtn) authModalOpenBtn.addEventListener('click', openAuthModal);
+  if (bannerConnectBtn) bannerConnectBtn.addEventListener('click', openAuthModal);
+  if (dashboardRailProfileBtn) dashboardRailProfileBtn.addEventListener('click', openAuthModal);
+  if (dropdownManageSessionBtn) {
+    dropdownManageSessionBtn.addEventListener('click', () => {
+      const headerUserDropdown = document.getElementById('headerUserDropdown');
+      if (headerUserDropdown) headerUserDropdown.classList.add('hidden');
+      openAuthModal();
+    });
+  }
+
+  if (authModalCloseBtn) authModalCloseBtn.addEventListener('click', () => authModal.classList.add('hidden'));
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) authModal.classList.add('hidden');
+    });
+  }
+
+  // Toggle Reconnect Tabs inside Modal
+  if (reconnectToggleBtn && authTabsContainer) {
+    reconnectToggleBtn.addEventListener('click', () => {
+      const isHidden = authTabsContainer.classList.toggle('hidden');
+      if (reconnectToggleIcon) {
+        reconnectToggleIcon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    });
+  }
 
   // Tab Switching in Modal (PC Console vs Manual Paste vs Mobile Login)
   const activeTabClass = 'py-2 px-1 text-center rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer transition flex items-center justify-center space-x-1.5';

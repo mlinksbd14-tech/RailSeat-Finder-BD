@@ -17,6 +17,24 @@ if (!is_dir(CACHE_DIR)) {
     @mkdir(CACHE_DIR, 0755, true);
 }
 
+// Global CORS & preflight options handling
+if (isset($_SERVER['REQUEST_METHOD'])) {
+    if (isset($_SERVER['HTTP_ORIGIN'])) {
+        header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+    } else {
+        header("Access-Control-Allow-Origin: *");
+    }
+    header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Max-Age: 86400");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, x-shohoz-token, x-device-id, x-device-key");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit(0);
+    }
+}
+
 // Station alias dictionary matching server.js
 $GLOBALS['STATION_ALIASES'] = [
     'airport' => 'Biman_Bandar',

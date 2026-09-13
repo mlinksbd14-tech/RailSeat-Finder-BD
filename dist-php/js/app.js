@@ -1145,10 +1145,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Helper for reliable clipboard copy across HTTP and HTTPS
+  async function copyTextToClipboard(text) {
+    if (!text) return false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        // fallback below
+      }
+    }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      ta.style.pointerEvents = 'none';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Copy Snippet Button (PC)
   if (copySnippetBtn && consoleSnippet) {
-    copySnippetBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(consoleSnippet.value);
+    consoleSnippet.addEventListener('click', () => consoleSnippet.select());
+    copySnippetBtn.addEventListener('click', async () => {
+      await copyTextToClipboard(consoleSnippet.value);
       copySnippetBtn.textContent = 'Copied!';
       setTimeout(() => copySnippetBtn.textContent = 'Copy', 2000);
       showToast('Script copied! Paste into eticket.railway.gov.bd Console.', 'info');
@@ -1157,8 +1186,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Copy Mobile Bookmarklet Snippet Button
   if (copyMobileSnippetBtn && mobileBookmarkletSnippet) {
-    copyMobileSnippetBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(mobileBookmarkletSnippet.value);
+    mobileBookmarkletSnippet.addEventListener('click', () => mobileBookmarkletSnippet.select());
+    copyMobileSnippetBtn.addEventListener('click', async () => {
+      await copyTextToClipboard(mobileBookmarkletSnippet.value);
       copyMobileSnippetBtn.textContent = 'Copied!';
       setTimeout(() => copyMobileSnippetBtn.textContent = 'Copy', 2000);
       showToast('Mobile bookmark script copied! Paste as bookmark URL.', 'info');
@@ -1174,8 +1204,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let deviceId = '';
     let deviceKey = '';
 
-    // Check if pasted cURL command from DevTools
-    if (raw.toLowerCase().includes('curl') || raw.includes('authorization:') || raw.includes('Authorization:') || raw.includes('x-device-id')) {
+    // 1. First priority: Check if pasted raw JSON or JSON within text (e.g. from PC Console / Mobile snippet)
+    let jsonParsed = false;
+    const jsonMatch = raw.match(/\{[\s\S]*"token"[\s\S]*\}/) || (raw.startsWith('{') && raw.endsWith('}') ? [raw] : null);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed && typeof parsed === 'object') {
+          token = parsed.token || parsed.authToken || parsed.access_token || parsed.accessToken || '';
+          deviceId = parsed['x-device-id'] || parsed.deviceId || parsed.device_id || parsed.device_uuid || '';
+          deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || parsed.ssdk || parsed.SSDK || '';
+          jsonParsed = true;
+        }
+      } catch (err) {
+        // Fall back to regex/cURL parsing if not valid JSON
+      }
+    }
+
+    // 2. Second priority: Check if pasted cURL command from DevTools Network Tab
+    if (!jsonParsed && (raw.toLowerCase().includes('curl') || /[-H\s]['"]?authorization:/i.test(raw))) {
       const authMatch = raw.match(/[-H\s]['"]?[Aa]uthorization:\s*(Bearer\s+)?([^'"\r\n]+)['"]?/i);
       const deviceIdMatch = raw.match(/[-H\s]['"]?x-device-id:\s*([^'"\r\n]+)['"]?/i);
       const deviceKeyMatch = raw.match(/[-H\s]['"]?x-device-key:\s*([^'"\r\n]+)['"]?/i);
@@ -1184,21 +1231,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (deviceIdMatch) deviceId = deviceIdMatch[1].trim();
       if (deviceKeyMatch) deviceKey = deviceKeyMatch[1].trim();
 
+      if (deviceKey && (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined')) {
+        deviceKey = '';
+      }
+
       await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });
       return;
     }
 
-    if (raw.startsWith('{') && raw.endsWith('}')) {
-      try {
-        const parsed = JSON.parse(raw);
-        token = parsed.token || parsed.authToken || parsed.access_token || parsed.accessToken || '';
-        deviceId = parsed['x-device-id'] || parsed.deviceId || parsed.device_id || parsed.device_uuid || '';
-        deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || parsed.ssdk || parsed.SSDK || '';
-      } catch (err) {
-        token = raw;
+    // 3. Fallback: If not parsed as JSON, extract standalone JWT token or clean raw text
+    if (!token) {
+      const jwtMatch = raw.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);
+      if (jwtMatch) {
+        token = jwtMatch[0];
+      } else {
+        token = raw.replace(/^Bearer\s+/i, '').trim();
       }
-    } else {
-      token = raw;
     }
 
     if (deviceKey && (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined')) {

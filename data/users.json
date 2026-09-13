@@ -403,29 +403,6 @@
         }
       ],
       "lastIp": "27.147.149.234",
-      "shohozSession": {
-        "cookie": null,
-        "lastUpdated": "2026-09-13T10:42:00.120Z",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b67666fffe072ed200528c204d672cedbf694cab9c233940bc3edde65fc9bad11690a314fb80f03a02fd07675e28e8ce2b13f6",
-        "deviceId": "63a630a6-39a0-4931-892c-6679a9aeb3c5",
-        "user": {
-          "roles": [
-            "user",
-            "anonymous"
-          ],
-          "isExpired": false,
-          "locale": "bn-BD",
-          "nidType": "Default",
-          "phone": "01871860487",
-          "nid": "8254236667",
-          "issuedAt": "2026-09-13T07:53:57.000Z",
-          "email": "labu3416@gmail.com",
-          "expiresAt": "2026-09-13T19:53:57.000Z",
-          "custom_token": true,
-          "name": "Live Railway Session"
-        },
-        "token": "1.1.3"
-      },
       "lastLocation": {
         "countryCode": "BD",
         "country": "Bangladesh",

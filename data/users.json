@@ -7,7 +7,7 @@
       "appId": "1:266186751082:web:ee5f2695ac16bda97e9e13",
       "updatedAt": "2026-08-27T06:04:39.285Z"
     },
-    "requireLogin": true,
+    "requireLogin": false,
     "authNotice": "Welcome to RailSeat Finder BD!",
     "authNoticeEnabled": true,
     "requireAdminApproval": false,

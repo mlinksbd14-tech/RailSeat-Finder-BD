@@ -112,23 +112,23 @@
       <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0 order-2 md:order-3">
         
         <!-- Language Switcher Pill (বাংলা / EN) -->
-        <div class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-extrabold shrink-0" id="langSwitcherContainer">
-          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-lg transition-all cursor-pointer text-xs" data-lang="bn" title="বাংলা ভাষা">
+        <div class="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold shrink-0" id="langSwitcherContainer">
+          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-md transition-all cursor-pointer text-xs" data-lang="bn" title="বাংলা ভাষা">
             <span>বাংলা</span>
           </button>
-          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-lg transition-all cursor-pointer text-xs" data-lang="en" title="English">
+          <button type="button" class="lang-toggle-btn px-2 py-1 rounded-md transition-all cursor-pointer text-xs" data-lang="en" title="English">
             <span>EN</span>
           </button>
         </div>
 
         <!-- Live API Auth Connection Button -->
-        <button id="authModalOpenBtn" class="flex items-center justify-center space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white cursor-pointer shrink-0" title="Manage Live Shohoz Session">
+        <button id="authModalOpenBtn" class="flex items-center justify-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer shrink-0" title="Manage Live Shohoz Session">
           <i class="fa-solid fa-key text-[11px]" id="authBtnIcon"></i>
           <span id="authBtnText" class="hidden sm:inline" data-i18n="connect_live_api">Connect Live API</span>
         </button>
 
         <!-- Install PWA Mobile/Desktop App Button -->
-        <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transition text-xs font-bold shadow-xs cursor-pointer animate-bounce-subtle shrink-0" title="Install RailSeat BD App">
+        <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition text-xs font-semibold shadow-xs cursor-pointer shrink-0" title="Install RailSeat BD App">
           <i class="fa-solid fa-download text-xs"></i>
           <span class="hidden sm:inline" data-i18n="install_app">Install App</span>
         </button>
@@ -136,67 +136,67 @@
         <!-- User Account / Login & Logout Controls -->
         <div class="relative shrink-0" id="userAuthContainer">
           <!-- State 1: When NOT Logged In -> Show "Sign In" Button -->
-          <button id="headerSignInBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition text-xs font-bold shadow-xs cursor-pointer shrink-0" title="Sign In to Dashboard">
+          <button id="headerSignInBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition text-xs font-semibold shadow-xs cursor-pointer shrink-0" title="Sign In to Dashboard">
             <i class="fa-solid fa-right-to-bracket text-xs"></i>
             <span class="text-[11px] sm:text-xs" data-i18n="sign_in">Sign In</span>
           </button>
 
           <!-- State 2: When LOGGED IN -> Show User Profile Pill with Dropdown -->
           <div id="headerUserMenuContainer" class="hidden relative">
-            <button id="headerUserDropdownBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/80 text-purple-900 dark:text-purple-200 hover:bg-purple-100 transition text-xs font-bold cursor-pointer shrink-0" title="Account Menu">
-              <div class="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-black relative shrink-0" id="headerUserAvatar">
+            <button id="headerUserDropdownBtn" class="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-200 transition text-xs font-semibold cursor-pointer shrink-0" title="Account Menu">
+              <div class="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center text-[10px] font-bold relative shrink-0" id="headerUserAvatar">
                 <span>A</span>
                 <span id="headerPendingBadge" class="hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
               </div>
               <span class="hidden sm:inline font-bold max-w-[100px] truncate" id="userNavLabel">Admin</span>
-              <span id="userRoleBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-purple-200/80 dark:bg-purple-900 text-purple-900 dark:text-purple-100">Admin</span>
-              <i class="fa-solid fa-chevron-down text-[9px] text-purple-400"></i>
+              <span id="userRoleBadge" class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Admin</span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
             </button>
 
             <!-- User Dropdown Menu -->
-            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
+            <div id="headerUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-[9999] overflow-hidden animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
               <!-- User Info Card -->
-              <div class="p-3 bg-purple-50/50 dark:bg-purple-950/30">
-                <p class="font-extrabold text-xs text-slate-900 dark:text-white truncate" id="dropdownUserFullName">System Administrator</p>
-                <p class="text-[11px] text-purple-600 dark:text-purple-400 font-mono truncate" id="dropdownUserUsername">@admin</p>
+              <div class="p-3 bg-slate-50 dark:bg-slate-850">
+                <p class="font-bold text-xs text-slate-900 dark:text-white truncate" id="dropdownUserFullName">System Administrator</p>
+                <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono truncate" id="dropdownUserUsername">@admin</p>
               </div>
 
               <!-- Dedicated Bangladesh Railway Passenger Profile Section in User Dropdown -->
               <div id="dropdownRailwayProfileSection" class="hidden p-3 bg-emerald-50/60 dark:bg-emerald-950/40 space-y-2 border-t border-b border-emerald-100 dark:border-emerald-900/40">
                 <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  <div class="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                     <i class="fa-solid fa-train"></i>
                     <span>Railway Live Profile</span>
                   </div>
-                  <span id="dropdownRailwayStatusBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">Live Active</span>
+                  <span id="dropdownRailwayStatusBadge" class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">Active</span>
                 </div>
                 <div class="space-y-0.5">
                   <p id="dropdownRailPassengerName" class="text-xs font-bold text-slate-900 dark:text-white truncate">---</p>
                   <p id="dropdownRailPassengerPhone" class="text-[11px] font-mono text-slate-600 dark:text-slate-300 truncate">---</p>
                 </div>
-                <button type="button" id="dropdownManageSessionBtn" class="w-full text-center py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition cursor-pointer shadow-2xs">
+                <button type="button" id="dropdownManageSessionBtn" class="w-full text-center py-1.5 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold transition cursor-pointer shadow-2xs">
                   <i class="fa-solid fa-id-card mr-1"></i> View Live Profile
                 </button>
               </div>
 
               <!-- Menu Items -->
               <div class="p-1 text-xs space-y-0.5">
-                <button id="dropdownManageUsersBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 font-semibold flex items-center justify-between transition cursor-pointer">
+                <button id="dropdownManageUsersBtn" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-700 font-semibold flex items-center justify-between transition cursor-pointer">
                   <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-users-gear text-purple-500 text-xs"></i>
+                    <i class="fa-solid fa-users-gear text-slate-500 text-xs"></i>
                     <span>Manage Users</span>
                   </div>
-                  <span id="manageUsersPendingBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-extrabold text-[9px] rounded-full">0 pending</span>
+                  <span id="manageUsersPendingBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-bold text-[9px] rounded">0 pending</span>
                 </button>
-                <a href="/support" target="_blank" rel="noopener noreferrer" class="w-full text-left px-2.5 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 hover:text-cyan-600 font-semibold flex items-center space-x-2 transition cursor-pointer">
-                  <i class="fa-solid fa-headset text-cyan-500 text-xs"></i>
+                <a href="/support" target="_blank" rel="noopener noreferrer" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-700 font-semibold flex items-center space-x-2 transition cursor-pointer">
+                  <i class="fa-solid fa-headset text-slate-500 text-xs"></i>
                   <span>Help & Live Support</span>
                 </a>
               </div>
 
               <!-- Logout Button -->
               <div class="p-1">
-                <button id="headerLogoutBtn" class="w-full text-left px-2.5 py-1.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center space-x-2 transition cursor-pointer">
+                <button id="headerLogoutBtn" class="w-full text-left px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold text-xs flex items-center space-x-2 transition cursor-pointer">
                   <i class="fa-solid fa-right-from-bracket text-rose-500 text-xs"></i>
                   <span>Sign Out / Logout</span>
                 </button>
@@ -207,21 +207,21 @@
 
         <!-- Top Menu Notification Center Button -->
         <div class="relative shrink-0" id="notifCenterContainer">
-          <button id="notifBellBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300 transition flex items-center justify-center shrink-0 cursor-pointer" title="Alert Notification Center">
+          <button id="notifBellBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center shrink-0 cursor-pointer" title="Alert Notification Center">
             <i class="fa-solid fa-bell text-xs sm:text-sm" id="notifBellIcon"></i>
-            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-600 text-white font-extrabold text-[9px] sm:text-[10px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900 animate-pulse">0</span>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-rose-600 text-white font-bold text-[9px] rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-900">0</span>
           </button>
         </div>
 
         <!-- Settings Menu Button -->
         <div class="relative shrink-0" id="settingsDropdownContainer">
-          <button id="settingsMenuBtn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center shrink-0 cursor-pointer" title="Settings & Preferences">
+          <button id="settingsMenuBtn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center justify-center shrink-0 cursor-pointer" title="Settings & Preferences">
             <i class="fa-solid fa-gear text-xs sm:text-sm" id="settingsGearIcon"></i>
           </button>
         </div>
 
         <!-- Official Link -->
-        <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
+        <a href="https://eticket.railway.gov.bd" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-xs transition">
           <span>Official Portal</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
         </a>
@@ -239,163 +239,140 @@
     <div id="seatFinderSection" class="space-y-3.5">
 
       <!-- ============================================== -->
-      <!-- MODERN TRAVEL HERO SEARCH CARD -->
+      <!-- AERO RAIL UTILITY SEARCH CARD (Concept 1) -->
       <!-- ============================================== -->
-      <div class="dashboard-block hero-search-card bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-4 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/50 dark:shadow-2xl dark:shadow-emerald-950/20 border border-slate-200/80 dark:border-slate-800 relative z-20 overflow-visible">
+      <div class="dashboard-block hero-search-card bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs relative z-20 overflow-visible">
       
-      <!-- Ambient Top Gradient Glow Line -->
-      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 rounded-t-3xl shadow-sm shadow-emerald-500/50"></div>
-
-      <!-- Hero Header & Value Proposition -->
-      <div class="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <!-- Utility Header Bar -->
+      <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider mb-2 shadow-2xs">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span data-i18n="search_hero_badge">Live Bangladesh Railway Gateway</span>
+          <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/70 text-emerald-800 dark:text-emerald-300 mb-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+            <span data-i18n="search_hero_badge">Bangladesh Railway Live Gateway</span>
           </div>
-          <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight flex items-center gap-2">
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug flex items-center gap-2">
             <span data-i18n="search_hero_title">Find & Book Available Train Seats</span>
           </h1>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1" data-i18n="search_hero_desc">Real-time vacant seats, train schedules, fares & 24/7 seat release alerts.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="search_hero_desc">Official real-time vacant berths, schedules & automated 24/7 seat release scanner.</p>
         </div>
 
         <!-- Connected Bangladesh Railway Passenger Profile Card on Dashboard -->
-        <div id="dashboardRailwayProfilePill" class="hidden items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/80 shadow-xs shrink-0 animate-fade-in">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-base shadow-xs shrink-0">
+        <div id="dashboardRailwayProfilePill" class="hidden items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 shadow-xs shrink-0 animate-fade-in">
+          <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
             <i class="fa-solid fa-id-card-clip"></i>
           </div>
           <div class="min-w-0 pr-1">
             <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Railway Profile</span>
-              <span class="px-1.5 py-0.2 rounded-full bg-emerald-200/80 dark:bg-emerald-900/80 text-emerald-900 dark:text-emerald-200 text-[9px] font-extrabold">Active Live</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Railway Profile</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active</span>
             </div>
-            <p id="dashboardRailName" class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate max-w-[180px] sm:max-w-[220px]">---</p>
-            <p id="dashboardRailPhone" class="text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 truncate">---</p>
+            <p id="dashboardRailName" class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[160px] sm:max-w-[200px] leading-tight">---</p>
+            <p id="dashboardRailPhone" class="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate leading-none mt-0.5">---</p>
           </div>
-          <button type="button" id="dashboardRailProfileBtn" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-slate-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs" title="View Official Railway Profile & Session Details">
+          <button type="button" id="dashboardRailProfileBtn" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer" title="View Official Railway Profile & Session Details">
             <i class="fa-solid fa-id-card mr-1"></i>Profile
           </button>
         </div>
       </div>
 
-      <!-- Main Search Form (Modern Flight & High-Speed Rail App Style) -->
-      <form id="searchForm" class="space-y-4">
+      <!-- Main Search Form (Aero Rail Segmented Travel Bar) -->
+      <form id="searchForm" class="space-y-3">
         
-        <!-- Primary Input Grid (Origin ⇄ Destination & Journey Date) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
+        <!-- Segmented Travel Bar (Origin ⇄ Destination ⇄ Journey Date ⇄ Search CTA) -->
+        <div class="relative grid grid-cols-1 md:grid-cols-12 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-700 shadow-xs">
           
-          <!-- Station Pair Container (From ⇄ To) - 8 cols on Desktop -->
-          <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 relative z-30">
-            
-            <!-- From Station Input Box -->
-            <div class="relative group">
-              <label class="block text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1.5 flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span data-i18n="from_station">From Station</span>
-                </span>
-                <span class="text-[10px] font-semibold text-slate-400 normal-case hidden sm:inline">Origin</span>
+          <!-- Origin Station Input Box (4 cols on Desktop) -->
+          <div class="md:col-span-4 p-2.5 sm:p-3 relative group">
+            <div class="flex items-center justify-between mb-1">
+              <label for="fromStationInput" class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                <span data-i18n="from_station">From</span>
               </label>
-              <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-emerald-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-emerald-500/15 transition-all shadow-2xs">
-                <div class="w-10 h-12 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                  <i class="fa-solid fa-train text-sm"></i>
-                </div>
-                <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" data-i18n-placeholder="from_placeholder"
-                  class="w-full h-12 pr-9 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
-                  required>
-                <button type="button" id="clearFromBtn" class="hidden absolute right-3 w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-              <!-- Autocomplete Dropdown -->
-              <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
+              <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Origin</span>
             </div>
-
-            <!-- Overlapping Circular Swap Button (Centered between From & To) -->
-            <div class="flex items-center justify-center -my-2 sm:my-0 sm:pt-6 z-40">
-              <button type="button" id="swapStationsBtn" class="w-11 h-11 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500 shadow-md hover:shadow-lg transition-all flex items-center justify-center cursor-pointer active:scale-90 shrink-0" title="Swap Stations (⇄)">
-                <i class="fa-solid fa-arrow-right-arrow-left text-xs transition-transform duration-300" id="swapIcon"></i>
+            <div class="relative flex items-center">
+              <div class="w-6 flex items-center text-slate-400 dark:text-slate-500 shrink-0">
+                <i class="fa-solid fa-train text-xs"></i>
+              </div>
+              <input type="text" id="fromStationInput" autocomplete="off" placeholder="Departure (e.g. Dhaka)" data-i18n-placeholder="from_placeholder"
+                class="w-full bg-transparent text-slate-900 dark:text-white text-sm font-semibold focus:outline-none placeholder:text-slate-400 placeholder:font-normal pr-6"
+                required>
+              <button type="button" id="clearFromBtn" class="hidden absolute right-0 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
               </button>
             </div>
-
-            <!-- To Station Input Box -->
-            <div class="relative group">
-              <label class="block text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1.5 flex items-center justify-between">
-                <span class="flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                  <span data-i18n="to_station">Destination</span>
-                </span>
-                <span class="text-[10px] font-semibold text-slate-400 normal-case hidden sm:inline">Arrival</span>
-              </label>
-              <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-rose-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-rose-500/15 transition-all shadow-2xs">
-                <div class="w-10 h-12 flex items-center justify-center text-rose-500 shrink-0">
-                  <i class="fa-solid fa-location-dot text-sm"></i>
-                </div>
-                <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" data-i18n-placeholder="to_placeholder"
-                  class="w-full h-12 pr-9 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none placeholder:text-slate-400 placeholder:font-normal"
-                  required>
-                <button type="button" id="clearToBtn" class="hidden absolute right-3 w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-              <!-- Autocomplete Dropdown -->
-              <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[80] max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar"></div>
-            </div>
-
+            <!-- Autocomplete Dropdown -->
+            <div id="fromDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[90] max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-xs custom-scrollbar"></div>
           </div>
 
-          <!-- Journey Date Hub - 4 cols on Desktop -->
-          <div class="lg:col-span-4 relative group">
-            <label class="block text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1.5 flex items-center justify-between">
-              <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-calendar-day text-xs"></i>
-                <span data-i18n="journey_date">Journey Date</span>
-              </span>
-              <span class="text-[10px] font-semibold text-slate-400 normal-case">Advance 10 Days</span>
-            </label>
-            <div class="relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-700/80 bg-slate-50/90 dark:bg-slate-800/90 group-focus-within:border-cyan-500 group-focus-within:bg-white dark:group-focus-within:bg-slate-800 group-focus-within:ring-4 group-focus-within:ring-cyan-500/15 transition-all shadow-2xs">
-              <div class="w-10 h-12 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
-                <i class="fa-solid fa-calendar-days text-sm"></i>
+          <!-- Centered Swap Stations Button (Overlapping divider) -->
+          <div class="relative z-30 flex items-center justify-center -my-3.5 md:my-0 md:absolute md:left-[33.333%] md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 pointer-events-none">
+            <button type="button" id="swapStationsBtn" class="pointer-events-auto w-7 h-7 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 hover:border-emerald-600 shadow-xs flex items-center justify-center transition cursor-pointer active:scale-90" title="Swap Stations (⇄)">
+              <i class="fa-solid fa-arrow-right-arrow-left text-[10px] transition-transform duration-300" id="swapIcon"></i>
+            </button>
+          </div>
+
+          <!-- Destination Station Input Box (4 cols on Desktop) -->
+          <div class="md:col-span-4 p-2.5 sm:p-3 relative group">
+            <div class="flex items-center justify-between mb-1">
+              <label for="toStationInput" class="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                <span data-i18n="to_station">To</span>
+              </label>
+              <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Destination</span>
+            </div>
+            <div class="relative flex items-center">
+              <div class="w-6 flex items-center text-slate-400 dark:text-slate-500 shrink-0">
+                <i class="fa-solid fa-location-dot text-xs"></i>
               </div>
+              <input type="text" id="toStationInput" autocomplete="off" placeholder="Arrival (e.g. Chattogram)" data-i18n-placeholder="to_placeholder"
+                class="w-full bg-transparent text-slate-900 dark:text-white text-sm font-semibold focus:outline-none placeholder:text-slate-400 placeholder:font-normal pr-6"
+                required>
+              <button type="button" id="clearToBtn" class="hidden absolute right-0 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Clear">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+              </button>
+            </div>
+            <!-- Autocomplete Dropdown -->
+            <div id="toDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-[90] max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 text-xs custom-scrollbar"></div>
+          </div>
+
+          <!-- Journey Date Box (2 cols on Desktop) -->
+          <div class="md:col-span-2 p-2.5 sm:p-3 relative group">
+            <div class="flex items-center justify-between mb-1">
+              <label for="journeyDateInput" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+                <i class="fa-regular fa-calendar text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                <span data-i18n="journey_date">Date</span>
+              </label>
+              <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">10 Days</span>
+            </div>
+            <div class="relative flex items-center">
               <input type="date" id="journeyDateInput" 
-                class="w-full h-12 pr-3 bg-transparent text-slate-900 dark:text-white text-sm sm:text-base font-extrabold focus:outline-none cursor-pointer"
+                class="w-full bg-transparent text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none cursor-pointer"
                 required>
             </div>
           </div>
 
-        </div>
-
-        <!-- Action CTAs: High-Impact Radiant Find Trains & Deep Quota Scanner -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-1">
-          
-          <!-- Primary Find Trains Button (8 cols on desktop) -->
-          <button type="submit" id="searchSubmitBtn" 
-            class="sm:col-span-8 h-13 sm:h-14 px-4 sm:px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 border border-emerald-400/40 flex items-center justify-center space-x-2.5 transition-all active:scale-[0.99] cursor-pointer group"
-            title="Search real-time train seat availability">
-            <i class="fa-solid fa-magnifying-glass text-sm group-hover:scale-110 transition-transform"></i>
-            <span class="whitespace-nowrap tracking-wide" data-i18n="find_trains">Find Available Seats</span>
-            <i class="fa-solid fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 transition-transform"></i>
-          </button>
-
-          <!-- Deep Search Button (4 cols on desktop) -->
-          <button type="button" id="deepSearchSubmitBtn" 
-            class="sm:col-span-4 h-13 sm:h-14 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/25 border border-indigo-400/40 flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer group"
-            title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
-            <i class="fa-solid fa-bolt text-amber-300 text-xs group-hover:scale-125 transition-transform"></i>
-            <span class="whitespace-nowrap" data-i18n="deep_search">Deep Search (Quotas)</span>
-          </button>
+          <!-- Search CTA Action (2 cols on Desktop) -->
+          <div class="md:col-span-2 p-1.5 sm:p-2 flex items-center">
+            <button type="submit" id="searchSubmitBtn" 
+              class="w-full h-full min-h-[42px] px-3 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs sm:text-sm shadow-xs flex items-center justify-center space-x-1.5 transition active:scale-[0.99] cursor-pointer"
+              title="Search real-time train seat availability">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              <span class="whitespace-nowrap font-medium" data-i18n="find_trains">Search Seats</span>
+            </button>
+          </div>
 
         </div>
 
       </form>
 
-      <!-- Quick Date Chips & Filter Strip -->
-      <div class="mt-4 pt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/80 dark:border-slate-800 text-xs">
+      <!-- Quick Date Chips, Deep Quotas Scanner & Filters Strip -->
+      <div class="mt-3 pt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 text-xs">
         
         <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
-        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-          <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[11px] whitespace-nowrap mr-1 flex items-center gap-1">
+        <div class="flex items-center space-x-1 overflow-x-auto py-0.5">
+          <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px] whitespace-nowrap mr-1 flex items-center gap-1">
             <i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i>
             <span data-i18n="quick_date">Quick Date:</span>
           </span>
@@ -403,24 +380,24 @@
           
           <!-- Calendar Matrix View Button right in Quick Date section -->
           <button type="button" id="quickMatrixViewBtn" 
-            class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/25 flex items-center space-x-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
+            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center space-x-1 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
             title="Switch to 10-Day Calendar Seat Matrix View">
-            <i class="fa-solid fa-calendar-days text-emerald-600 dark:text-emerald-400 text-xs"></i>
+            <i class="fa-solid fa-calendar-days text-indigo-600 dark:text-indigo-400 text-xs"></i>
             <span data-i18n="ten_day_matrix">10-Day Matrix</span>
           </button>
         </div>
 
-        <!-- Optional Train & Class Filters -->
+        <!-- Optional Train & Class Filters + Deep Quota Scanner -->
         <div class="flex flex-wrap items-center gap-2 text-xs">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_train">Train:</span>
-            <select id="trainFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[160px] truncate">
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px]" data-i18n="filter_train">Train:</span>
+            <select id="trainFilterSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-slate-800 dark:text-slate-200 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600 max-w-[140px] truncate">
               <option value="ALL" data-i18n="all_trains">All Trains</option>
             </select>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 dark:text-slate-400 font-bold" data-i18n="filter_class">Class:</span>
-            <select id="classFilterSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-200 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px]" data-i18n="filter_class">Class:</span>
+            <select id="classFilterSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-slate-800 dark:text-slate-200 font-semibold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-600">
               <option value="ALL" data-i18n="all_classes">All Classes</option>
               <option value="SNIGDHA" data-i18n="class_snigdha">SNIGDHA</option>
               <option value="S_CHAIR" data-i18n="class_s_chair">S_CHAIR</option>
@@ -433,27 +410,35 @@
               <option value="AC_CHAIR" data-i18n="class_ac_chair">AC_CHAIR</option>
             </select>
           </div>
+
+          <!-- Deep Search Button (Quotas Scanner) -->
+          <button type="button" id="deepSearchSubmitBtn" 
+            class="px-2.5 py-1 rounded-md bg-purple-50/70 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 font-semibold text-xs border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 flex items-center space-x-1.5 transition active:scale-[0.98] cursor-pointer"
+            title="Scan Same-Train Stoppage Quotas & Junction Routes (On-Demand)">
+            <i class="fa-solid fa-bolt text-purple-600 dark:text-purple-400 text-xs"></i>
+            <span class="whitespace-nowrap" data-i18n="deep_search">Deep Search (Quotas)</span>
+          </button>
         </div>
 
       </div>
 
       <!-- Popular Routes Quick Bar (Sleek Horizontal Scroll with Inline Custom Route Manager) -->
-      <div class="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
+      <div class="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
         <div class="flex items-center justify-between gap-2 text-[11px]">
-          <div class="flex items-center space-x-2 overflow-x-auto min-w-0 flex-1 py-0.5" id="popularRoutesScrollWrapper">
-            <span class="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase tracking-wider shrink-0 flex items-center gap-1">
-              <i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Quick:
+          <div class="flex items-center space-x-1.5 overflow-x-auto min-w-0 flex-1 py-0.5" id="popularRoutesScrollWrapper">
+            <span class="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0 flex items-center gap-1">
+              <i class="fa-regular fa-star text-amber-500 text-[10px]"></i> Quick:
             </span>
             <div class="flex items-center space-x-1.5 shrink-0" id="popularRoutesContainer">
               <!-- Dynamic Route Chips rendered from Storage/Server -->
             </div>
           </div>
-          <div class="flex items-center space-x-1.5 shrink-0">
-            <button type="button" id="saveCurrentRouteChipBtn" class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-100 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Bookmark / Save current route to Quick Select">
-              <i class="fa-solid fa-bookmark text-[9px]"></i>
+          <div class="flex items-center space-x-1 shrink-0">
+            <button type="button" id="saveCurrentRouteChipBtn" class="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Bookmark / Save current route to Quick Select">
+              <i class="fa-regular fa-bookmark text-[9px]"></i>
               <span class="hidden sm:inline">Save</span>
             </button>
-            <button type="button" id="managePopularRoutesBtn" class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 border border-indigo-300 dark:border-indigo-700 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Add or delete custom quick routes">
+            <button type="button" id="managePopularRoutesBtn" class="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs" title="Add or delete custom quick routes">
               <i class="fa-solid fa-sliders text-[9px]"></i>
               <span class="hidden sm:inline">Customize</span>
             </button>
@@ -461,46 +446,46 @@
         </div>
 
         <!-- Inline Custom Quick Routes Manager Drawer (Collapsible) -->
-        <div id="quickRoutesManagerDrawer" class="hidden p-3.5 rounded-2xl border-2 border-indigo-200 dark:border-indigo-900/70 bg-indigo-50/40 dark:bg-indigo-950/30 space-y-3 animate-fade-in text-xs">
+        <div id="quickRoutesManagerDrawer" class="hidden p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 space-y-2.5 animate-fade-in text-xs">
           <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 font-extrabold text-slate-900 dark:text-white text-xs">
-              <i class="fa-solid fa-sliders text-indigo-600 dark:text-indigo-400"></i>
+            <div class="flex items-center space-x-2 font-bold text-slate-900 dark:text-white text-xs">
+              <i class="fa-solid fa-sliders text-emerald-600 dark:text-emerald-400"></i>
               <span>Customize Quick Select Routes</span>
-              <span id="savedRoutesCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 font-mono">6 routes</span>
+              <span id="savedRoutesCountBadge" class="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">6 routes</span>
             </div>
-            <button type="button" id="closeRouteManagerBtn" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs px-2 py-0.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1" title="Close editor">
+            <button type="button" id="closeRouteManagerBtn" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs px-2 py-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1" title="Close editor">
               <i class="fa-solid fa-xmark text-xs"></i>
               <span class="text-[10px] font-bold">Done</span>
             </button>
           </div>
 
-          <p class="text-[10px] text-slate-500 dark:text-slate-400">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
             Click ✕ on any route badge to delete it, or enter departure & destination below to add a new quick route.
           </p>
 
           <!-- Saved Routes List with Delete buttons -->
-          <div id="profileSavedRoutesList" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-indigo-100 dark:border-indigo-900/60 min-h-[44px]">
+          <div id="profileSavedRoutesList" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 min-h-[40px]">
             <!-- Dynamic Route Badges with ✕ delete button -->
           </div>
 
           <!-- Add New Route Row -->
-          <div class="pt-1.5 space-y-1.5 border-t border-indigo-100 dark:border-indigo-900/50">
+          <div class="pt-1.5 space-y-1.5 border-t border-slate-200 dark:border-slate-800">
             <div class="grid grid-cols-2 gap-1.5">
               <div class="relative">
-                <input type="text" id="addRouteFromInput" placeholder="From Station..." class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none" autocomplete="off">
-                <div id="addRouteFromSuggest" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100 dark:divide-slate-800"></div>
+                <input type="text" id="addRouteFromInput" placeholder="From Station..." class="w-full px-2.5 py-1 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none" autocomplete="off">
+                <div id="addRouteFromSuggest" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-lg z-50 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100 dark:divide-slate-800"></div>
               </div>
               <div class="relative">
-                <input type="text" id="addRouteToInput" placeholder="To Station..." class="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none" autocomplete="off">
-                <div id="addRouteToSuggest" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100 dark:divide-slate-800"></div>
+                <input type="text" id="addRouteToInput" placeholder="To Station..." class="w-full px-2.5 py-1 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-emerald-500 focus:outline-none" autocomplete="off">
+                <div id="addRouteToSuggest" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-lg z-50 max-h-32 overflow-y-auto text-xs divide-y divide-slate-100 dark:divide-slate-800"></div>
               </div>
             </div>
             <div class="flex items-center space-x-1.5">
-              <button type="button" id="addNewCustomRouteBtn" class="flex-1 py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-1 cursor-pointer">
+              <button type="button" id="addNewCustomRouteBtn" class="flex-1 py-1.5 px-2.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs transition flex items-center justify-center space-x-1 cursor-pointer shadow-xs">
                 <i class="fa-solid fa-plus text-[10px]"></i>
                 <span>Add Route</span>
               </button>
-              <button type="button" id="resetDefaultRoutesBtn" class="py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-semibold transition cursor-pointer" title="Reset to default Bangladesh railway routes">
+              <button type="button" id="resetDefaultRoutesBtn" class="py-1.5 px-2.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-semibold transition cursor-pointer" title="Reset to default Bangladesh railway routes">
                 <i class="fa-solid fa-rotate-left text-[9px] mr-0.5"></i> Reset Defaults
               </button>
             </div>
@@ -511,28 +496,28 @@
     </div>
 
     <!-- Active Tracker & Controls Bar -->
-    <div id="trackerBar" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-2xl px-5 py-3.5 border-2 border-slate-300 dark:border-slate-700 shadow-sm flex flex-wrap items-center justify-between gap-4 scroll-mt-20">
+    <div id="trackerBar" class="hidden dashboard-block bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3 scroll-mt-20">
       
       <!-- Current Route & Refresh Details -->
-      <div class="flex items-center space-x-3">
-        <div class="flex items-center space-x-2 font-bold text-sm text-slate-800 dark:text-slate-200">
+      <div class="flex items-center space-x-2.5">
+        <div class="flex items-center space-x-2 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
           <span id="activeFromBadge">Dhaka</span>
-          <i class="fa-solid fa-arrow-right text-emerald-500 text-xs"></i>
+          <i class="fa-solid fa-arrow-right text-emerald-600 text-xs"></i>
           <span id="activeToBadge">Chattogram</span>
-          <span class="text-xs px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold" id="activeDateBadge">28-Aug-2026</span>
+          <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold" id="activeDateBadge">28-Aug-2026</span>
         </div>
         <span class="text-slate-300 dark:text-slate-700">|</span>
         <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          <span>Updated: <span id="lastUpdatedTime" class="font-semibold text-slate-700 dark:text-slate-300">Just now</span></span>
+          <i class="fa-regular fa-clock text-[11px]"></i>
+          <span>Updated: <span id="lastUpdatedTime" class="font-medium text-slate-700 dark:text-slate-300">Just now</span></span>
         </div>
       </div>
 
       <!-- Auto Refresh Controls, Share & View Modes -->
-      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div class="flex flex-wrap items-center gap-2">
         
         <!-- Live Countdown Ticker & Pause/Resume -->
-        <div id="monitorTickerContainer" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-700 text-xs text-emerald-800 dark:text-emerald-300 font-bold">
+        <div id="monitorTickerContainer" class="hidden flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
           <span id="monitorCountdownLabel" class="font-mono font-bold text-[11px]">28s</span>
           <div class="w-12 h-1.5 bg-emerald-200 dark:bg-emerald-800 rounded-full overflow-hidden">
@@ -545,7 +530,7 @@
 
         <!-- Auto Polling Dropdown -->
         <div class="flex items-center space-x-1.5">
-          <select id="pollingIntervalSelect" class="bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <select id="pollingIntervalSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-600">
             <option value="0">Monitor: Off</option>
             <option value="15">Monitor: 15s</option>
             <option value="30" selected>Monitor: 30s</option>
@@ -554,26 +539,26 @@
         </div>
 
         <!-- 1-Click Share Button -->
-        <button id="shareResultsBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border-2 border-slate-300 dark:border-slate-600 text-xs font-bold transition flex items-center space-x-1" title="Share Availability via WhatsApp or Copy Summary">
+        <button id="shareResultsBtn" class="px-2.5 py-1 rounded-md bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition flex items-center space-x-1 cursor-pointer" title="Share Availability via WhatsApp or Copy Summary">
           <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
           <span>Share</span>
         </button>
 
         <!-- View Switcher (Cards / Table / 10-Day Matrix) -->
-        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border-2 border-slate-300 dark:border-slate-600">
-          <button id="viewGridBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition" title="Card Grid View">
-            <i class="fa-solid fa-table-cells-large mr-0.5"></i> Cards
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+          <button id="viewGridBtn" class="px-2.5 py-1 rounded text-xs font-semibold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs transition cursor-pointer" title="Card Grid View">
+            <i class="fa-solid fa-table-cells-large mr-0.5 text-xs"></i> Cards
           </button>
-          <button id="viewTableBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Compact Table View">
-            <i class="fa-solid fa-table-list mr-0.5"></i> Table
+          <button id="viewTableBtn" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer" title="Compact Table View">
+            <i class="fa-solid fa-table-list mr-0.5 text-xs"></i> Table
           </button>
-          <button id="viewMatrixBtn" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" title="Customizable Calendar Matrix View">
-            <i class="fa-solid fa-calendar-days mr-0.5 text-emerald-600 dark:text-emerald-400"></i> Matrix
+          <button id="viewMatrixBtn" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer" title="Customizable Calendar Matrix View">
+            <i class="fa-solid fa-calendar-days mr-0.5 text-emerald-600 dark:text-emerald-400 text-xs"></i> Matrix
           </button>
         </div>
 
         <!-- Manual Refresh Button -->
-        <button id="manualRefreshBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-slate-300 hover:text-emerald-600 border-2 border-slate-300 dark:border-slate-600 transition" title="Refresh Now">
+        <button id="manualRefreshBtn" class="p-1.5 rounded-md bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer" title="Refresh Now">
           <i class="fa-solid fa-rotate text-xs" id="refreshIcon"></i>
         </button>
       </div>
@@ -602,73 +587,73 @@
     </div>
 
     <!-- Summary Stats Ribbon -->
-    <div id="statsRibbon" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+    <div id="statsRibbon" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
       
       <!-- Total Trains -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-300 dark:border-slate-700 flex items-center space-x-3.5 shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xl shadow-sm">
-          <i class="fa-solid fa-train"></i>
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-xl p-3.5 border border-slate-200 dark:border-slate-800 flex items-center space-x-3 shadow-xs">
+        <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-lg shadow-2xs">
+          <i class="fa-solid fa-train text-emerald-600 dark:text-emerald-400"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">Total Running Trains</p>
-          <p id="statTotalTrains" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">0</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Total Running Trains</p>
+          <p id="statTotalTrains" class="text-xl font-bold text-slate-900 dark:text-white tnum">0</p>
         </div>
       </div>
 
       <!-- Total Available Seats (Sum of Online + Counter) -->
-      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 border-slate-300 dark:border-slate-700 flex items-center space-x-3.5 shadow-sm">
-        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xl shadow-sm">
+      <div class="dashboard-block bg-white dark:bg-slate-900 rounded-xl p-3.5 border border-slate-200 dark:border-slate-800 flex items-center space-x-3 shadow-xs">
+        <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 flex items-center justify-center text-lg shadow-2xs">
           <i class="fa-solid fa-chair"></i>
         </div>
         <div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total Available Seats</p>
-          <p id="statCombinedSeats" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">0</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Total Available Seats</p>
+          <p id="statCombinedSeats" class="text-xl font-bold text-emerald-700 dark:text-emerald-400 tnum">0</p>
         </div>
       </div>
 
     </div>
 
     <!-- Notice / Status Banner -->
-    <div id="noticeBanner" class="hidden p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-      <div class="flex items-center space-x-2.5">
-        <i class="fa-solid fa-circle-info text-sm flex-shrink-0"></i>
-        <span id="noticeText" class="font-medium"></span>
+    <div id="noticeBanner" class="hidden p-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-circle-info text-amber-600 dark:text-amber-400 text-sm flex-shrink-0"></i>
+        <span id="noticeText" class="font-medium text-slate-800 dark:text-slate-200"></span>
       </div>
-      <button id="bannerConnectBtn" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm flex-shrink-0 transition">
+      <button id="bannerConnectBtn" class="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs shadow-xs flex-shrink-0 transition cursor-pointer">
         <i class="fa-solid fa-key text-[10px]"></i>
         <span>Connect Live Account</span>
       </button>
     </div>
 
     <!-- Main Results Display Area -->
-    <div id="resultsContainer" class="space-y-4 scroll-mt-20">
+    <div id="resultsContainer" class="space-y-3.5 scroll-mt-20">
       
       <!-- Initial State Welcome Card -->
-      <div id="initialStateCard" class="dashboard-block bg-white dark:bg-slate-900 rounded-2xl p-10 sm:p-14 border-2 border-dashed border-slate-300 dark:border-slate-700 text-center space-y-4 shadow-sm">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-2xl mx-auto">
-          <i class="fa-solid fa-magnifying-glass-location"></i>
+      <div id="initialStateCard" class="dashboard-block bg-white dark:bg-slate-900 rounded-xl p-8 sm:p-12 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xl mx-auto">
+          <i class="fa-solid fa-magnifying-glass-location text-emerald-600 dark:text-emerald-400"></i>
         </div>
-        <div class="max-w-md mx-auto space-y-1.5">
-          <h3 class="text-lg font-black text-slate-900 dark:text-white">Ready to Check Train Availability</h3>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+        <div class="max-w-md mx-auto space-y-1">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Ready to Check Train Availability</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
             Pick your departure station, arrival destination, and journey date above. The dashboard will query Shohoz to list all trains, departure times, fares, and class-wise vacant seats.
           </p>
         </div>
       </div>
 
       <!-- Loading Skeleton Indicator -->
-      <div id="loadingIndicator" class="hidden space-y-4 scroll-mt-20">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border-2 border-slate-300 dark:border-slate-700 animate-pulse space-y-4">
+      <div id="loadingIndicator" class="hidden space-y-3 scroll-mt-20">
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3">
           <div class="flex justify-between items-center">
-            <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
-            <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/6"></div>
+            <div class="h-5 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+            <div class="h-5 bg-slate-200 dark:bg-slate-800 rounded w-1/6"></div>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
-            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
-            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
-            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
-            <div class="h-16 bg-slate-100 dark:bg-slate-800/60 rounded-xl"></div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+            <div class="h-14 bg-slate-100 dark:bg-slate-800/60 rounded-lg"></div>
+            <div class="h-14 bg-slate-100 dark:bg-slate-800/60 rounded-lg"></div>
+            <div class="h-14 bg-slate-100 dark:bg-slate-800/60 rounded-lg"></div>
+            <div class="h-14 bg-slate-100 dark:bg-slate-800/60 rounded-lg"></div>
+            <div class="h-14 bg-slate-100 dark:bg-slate-800/60 rounded-lg"></div>
           </div>
         </div>
       </div>
@@ -689,10 +674,10 @@
         </div>
 
         <!-- Desktop Wide Spreadsheet View (Shown on >= 768px screens) -->
-        <div class="hidden md:block dashboard-block bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="hidden md:block dashboard-block bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
           <div class="table-responsive-wrapper overflow-x-auto">
             <table class="w-full text-left text-xs min-w-[680px]">
-              <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-black text-slate-600 dark:text-slate-300 border-b-2 border-slate-200 dark:border-slate-700 tracking-wider">
+              <thead class="bg-slate-50 dark:bg-slate-850 text-[11px] uppercase font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 tracking-wider">
                 <tr>
                   <th class="px-3 py-2.5 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train & Model</th>
                   <th class="px-3 py-2.5 whitespace-nowrap">Departure</th>

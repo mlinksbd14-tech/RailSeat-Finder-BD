@@ -42,9 +42,26 @@
         "query": "103.59.178.232",
         "region": "Barisal Division"
       },
-      "lastIp": "27.147.149.234",
-      "lastLogin": "2026-09-13T08:47:31.145Z",
+      "lastIp": "::1",
+      "lastLogin": "2026-09-13T10:11:00.784Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T10:11:00.784Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-13T08:47:31.145Z",
@@ -361,13 +378,13 @@
           "browser": "Edge 151"
         }
       ],
-      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-      "loginCount": 20,
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+      "loginCount": 21,
       "lastDevice": {
-        "os": "Android 10",
-        "browser": "Chrome 153",
-        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-        "device": "Mobile"
+        "browser": "Edge 153",
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "shohozSession": {
         "cookie": null,

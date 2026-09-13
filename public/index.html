@@ -371,16 +371,16 @@
       <div class="mt-3 pt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 text-xs">
         
         <!-- Day Shortcuts & 10-Day Calendar Matrix View Button -->
-        <div class="flex items-center space-x-1 overflow-x-auto py-0.5">
+        <div class="flex flex-wrap items-center gap-1.5 py-0.5">
           <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px] whitespace-nowrap mr-1 flex items-center gap-1">
             <i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i>
             <span data-i18n="quick_date">Quick Date:</span>
           </span>
-          <div class="flex items-center space-x-1" id="dateChipsContainer"></div>
+          <div class="flex flex-wrap items-center gap-1" id="dateChipsContainer"></div>
           
           <!-- Calendar Matrix View Button right in Quick Date section -->
           <button type="button" id="quickMatrixViewBtn" 
-            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center space-x-1 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95 ml-1" 
+            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center space-x-1 transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 active:scale-95" 
             title="Switch to 10-Day Calendar Seat Matrix View">
             <i class="fa-solid fa-calendar-days text-indigo-600 dark:text-indigo-400 text-xs"></i>
             <span data-i18n="ten_day_matrix">10-Day Matrix</span>
@@ -422,14 +422,14 @@
 
       </div>
 
-      <!-- Popular Routes Quick Bar (Sleek Horizontal Scroll with Inline Custom Route Manager) -->
+      <!-- Popular Routes Quick Bar (Wrap on mobile instead of horizontal scroll) -->
       <div class="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
-        <div class="flex items-center justify-between gap-2 text-[11px]">
-          <div class="flex items-center space-x-1.5 overflow-x-auto min-w-0 flex-1 py-0.5" id="popularRoutesScrollWrapper">
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 py-0.5" id="popularRoutesScrollWrapper">
             <span class="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0 flex items-center gap-1">
               <i class="fa-regular fa-star text-amber-500 text-[10px]"></i> Quick:
             </span>
-            <div class="flex items-center space-x-1.5 shrink-0" id="popularRoutesContainer">
+            <div class="flex flex-wrap items-center gap-1.5" id="popularRoutesContainer">
               <!-- Dynamic Route Chips rendered from Storage/Server -->
             </div>
           </div>

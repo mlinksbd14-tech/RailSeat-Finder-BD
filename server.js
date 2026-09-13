@@ -1222,6 +1222,11 @@ function normalizeShohozResponse(data, from_city, to_city, date_of_journey) {
 
 // 1. Get Auth Status (User-Specific or Fallback)
 app.get('/api/auth/status', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
   const session = getUserShohozSession(req);
   res.json({
     authenticated: !!session.token,

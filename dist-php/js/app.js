@@ -507,6 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auth Modal Elements
   const authModal = document.getElementById('authModal');
+  const authModalTitle = document.getElementById('authModalTitle');
   const authModalOpenBtn = document.getElementById('authModalOpenBtn');
   const authModalCloseBtn = document.getElementById('authModalCloseBtn');
   const authBtnIcon = document.getElementById('authBtnIcon');
@@ -1059,10 +1060,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function checkRailwaySessionStatus() {
     try {
       const token = getAuthToken();
-      const res = await fetch('/api/auth/status', {
+      const res = await fetch(`/api/auth/status?_t=${Date.now()}`, {
+        cache: 'no-store',
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const data = await res.json();
+      console.log('[Shohoz Auth Sync]', data);
       updateAuthUI(data.authenticated, data.user, data.token_preview, data.device_id, data.device_key, data.has_saved_session);
     } catch (err) {
       console.warn('Could not check auth status:', err);

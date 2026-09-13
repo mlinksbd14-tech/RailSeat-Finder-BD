@@ -43,8 +43,25 @@
         "region": "Barisal Division"
       },
       "lastIp": "::1",
-      "lastLogin": "2026-09-13T10:11:00.784Z",
+      "lastLogin": "2026-09-13T11:00:07.470Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T11:00:07.470Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-13T10:11:00.784Z",
@@ -379,7 +396,7 @@
         }
       ],
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
-      "loginCount": 21,
+      "loginCount": 22,
       "lastDevice": {
         "browser": "Edge 153",
         "os": "Windows 10/11",

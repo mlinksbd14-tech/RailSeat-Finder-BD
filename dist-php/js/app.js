@@ -4394,12 +4394,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const uniqueTrains = Array.from(trainMap.values());
 
     let tableHtml = `
-      <table class="w-full text-left text-xs border-collapse min-w-[650px]">
+      <table class="w-full text-left text-xs border-separate border-spacing-0 min-w-[650px]">
         <thead>
-          <tr class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold border-b-2 border-slate-200 dark:border-slate-700">
-            <th class="p-3 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">Train</th>
+          <tr class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold">
+            <th class="p-3 whitespace-nowrap sticky left-0 bg-slate-100 dark:bg-slate-800 z-20 sticky-column-shadow border-r-2 border-b-2 border-slate-200 dark:border-slate-700">Train</th>
             ${matrixDays.map(d => `
-              <th class="p-2.5 text-center whitespace-nowrap cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition matrix-header-date border-r border-slate-200 dark:border-slate-800" data-date="${d.date}" title="Switch to this date">
+              <th class="p-2.5 text-center whitespace-nowrap cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition matrix-header-date border-r border-b-2 border-slate-200 dark:border-slate-700" data-date="${d.date}" title="Switch to this date">
                 <div class="text-[10px] text-slate-400 font-mono">${d.day_name}</div>
                 <div class="text-xs font-black text-slate-900 dark:text-white">${d.display_date}</div>
                 <div class="text-[9px] font-black ${d.total_available_seats > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}">
@@ -4409,13 +4409,13 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
           </tr>
         </thead>
-        <tbody class="divide-y-2 divide-slate-100 dark:divide-slate-800 font-medium">
+        <tbody class="font-medium">
     `;
 
     uniqueTrains.forEach(train => {
       tableHtml += `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="p-3 font-bold text-slate-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r-2 border-slate-200 dark:border-slate-700">
+          <td class="p-3 font-bold text-slate-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-slate-900 z-10 sticky-column-shadow border-r-2 border-b-2 border-slate-200 dark:border-slate-700">
             <div class="text-xs font-black">${train.name}</div>
             <div class="text-[10px] text-slate-400 font-normal">#${train.model} &bull; ${train.departure_time} &bull; Off: ${train.off_day || 'None'}</div>
           </td>
@@ -4425,7 +4425,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const trainOnDay = (d.trains || []).find(t => t.train_model === train.model);
         if (!trainOnDay) {
           tableHtml += `
-            <td class="p-2 text-center text-[10px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/20 font-medium border-r border-slate-100 dark:border-slate-800/60">
+            <td class="p-2 text-center text-[10px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/20 font-medium border-r border-b border-slate-100 dark:border-slate-800/60">
               Off Day
             </td>
           `;
@@ -4448,7 +4448,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const classBreakdown = (trainOnDay.seat_types || []).map(st => `${st.display_name}: ${st.total_seats} (৳${st.total_fare})`).join('\n');
 
           tableHtml += `
-            <td class="p-1.5 text-center cursor-pointer matrix-cell-click border-r border-slate-100 dark:border-slate-800/60" data-date="${d.date}" data-train-model="${train.model}" title="${classBreakdown}">
+            <td class="p-1.5 text-center cursor-pointer matrix-cell-click border-r border-b border-slate-100 dark:border-slate-800/60" data-date="${d.date}" data-train-model="${train.model}" title="${classBreakdown}">
               <div class="px-2 py-1 rounded-lg text-[11px] font-black shadow-2xs transition ${cellBg}">
                 ${badgeText}
               </div>

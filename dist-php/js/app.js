@@ -2819,6 +2819,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // Handle Session Expiration / Authentication Failure
       if (data.session_expired || data.auth_error || data.auth_required) {
         updateAuthUI(false, null, null, null, null, false);
+
+        if (isSilent) {
+          console.warn('[Search] Silent auto-refresh hit expired Shohoz session; pausing monitor instead of auto-logout.');
+          showToast('⚠️ Live Shohoz session expired. Auto-monitor paused — connect a fresh token to resume.', 'error');
+          return;
+        }
+
         showToast(data.error || '⚠️ Your Shohoz session has expired. Please refresh your credentials.', 'error');
         
         if (resultsContainer) {

@@ -33,8 +33,25 @@
         "::1",
         "103.177.220.164"
       ],
-      "lastLogin": "2026-09-13T11:00:21.985Z",
+      "lastLogin": "2026-09-13T12:14:31.765Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T12:14:31.765Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-13T11:00:21.985Z",
@@ -402,7 +419,7 @@
           "browser": "Edge 151"
         }
       ],
-      "lastIp": "27.147.149.234",
+      "lastIp": "::1",
       "lastLocation": {
         "countryCode": "BD",
         "country": "Bangladesh",
@@ -412,13 +429,13 @@
         "query": "103.59.178.232",
         "region": "Barisal Division"
       },
-      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-      "loginCount": 23,
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+      "loginCount": 24,
       "lastDevice": {
-        "os": "Android 10",
-        "browser": "Chrome 153",
-        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-        "device": "Mobile"
+        "browser": "Edge 153",
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODkyODIzODAsImV4cCI6MTc4OTMyNTU4MCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImNkY2UyNjFlLWRiZjctNDVlZC1iZDk0LTFiMmJlOGViZjUyNCIsImF1dGhfdGltZSI6MTc4OTI4MjM4MCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTY3OTE0NTI1NyIsImVtYWlsIjoic3JzaGF3b240MjFAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTY3OTE0NTI1NyIsImRpc3BsYXlfbmFtZSI6Ik1EIFNBSURVUiBSQUhBTUFOIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiNTU1NzExNjQ4OSIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.nFfIrMnl6wpyCxy_7fbV-2PJf0GGQfdXNKvrZP4Tzk_QK8VFOV3A8k9ldvv4GcnKFVP-sCwYpdpHZPvuwA4yNQzYaEiI3iC6YalEuMyawRltgZ3HkEFk-CEzj9-VUjgPhnBCQOMam0N6hPChCndiLD6tsA-ETdxUuIR6LmXJC5OTAyPtf1foO_hEgMCMKC9Uw8_wgKxMZMlkFSJdxzhjsyQVxhJnpM3iRrQzwOFfojKKzq1PEZ7bAGrgxfIRjfKX5aokOrUvMgDMtgoNgCW9DMoPMyIDglKK2hnqIVBuFDzLNGq-ny2U5PorlVyd-Nl7EGMRgE-UdjDMSrpPnTvMGw",

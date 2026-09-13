@@ -1182,10 +1182,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Modal Open / Close with fresh session synchronization
+  // Modal Open / Close — immediately reflect cached auth state, then refresh from server
   function openAuthModal() {
-    checkRailwaySessionStatus();
+    // Immediately show correct state from cache (no flicker)
+    updateAuthUI(state.isAuthenticated, state.authUserData, null, null, null, state.isAuthenticated);
     if (authModal) authModal.classList.remove('hidden');
+    // Then refresh from server in background
+    checkRailwaySessionStatus();
   }
 
   if (authModalOpenBtn) authModalOpenBtn.addEventListener('click', openAuthModal);
@@ -1203,26 +1206,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (authModal) {
     authModal.addEventListener('click', (e) => {
       if (e.target === authModal) authModal.classList.add('hidden');
-    });
-  }
-
-  // Disconnect Session Button (in profile card)
-  if (disconnectTokenBtn) {
-    disconnectTokenBtn.addEventListener('click', async () => {
-      if (!confirm('Disconnect your Bangladesh Railway session? You can reconnect anytime.')) return;
-      try {
-        const res = await fetch('/api/auth/logout', { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-          updateAuthUI(false, null, null, null, null, false);
-          showToast('Railway session disconnected.', 'success');
-          if (authModal) authModal.classList.add('hidden');
-        } else {
-          showToast('Could not disconnect. Try again.', 'error');
-        }
-      } catch (err) {
-        showToast('Disconnect failed: ' + err.message, 'error');
-      }
     });
   }
 

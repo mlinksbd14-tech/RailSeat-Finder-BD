@@ -589,8 +589,30 @@ function getUserShohozSession(req) {
         username: user.username
       };
     }
-    // Authenticated user with NO Shohoz session connected:
-    // STRICT ISOLATION: Never fall back to another user's session!
+    // If logged-in user has no specific shohozSession, fallback to system/active authCredentials or session.json
+    if (authCredentials && authCredentials.token) {
+      let devKey = authCredentials.deviceKey;
+      if (!devKey || devKey.toLowerCase() === 'web' || devKey.length < 32) {
+        devKey = generateShohozDeviceKey(authCredentials.token);
+        authCredentials.deviceKey = devKey;
+      }
+      if (user) {
+        user.shohozSession = {
+          token: authCredentials.token,
+          deviceId: authCredentials.deviceId,
+          deviceKey: devKey,
+          user: authCredentials.user,
+          lastUpdated: authCredentials.lastUpdated || new Date().toISOString()
+        };
+        try { saveUsersData(data); } catch (e) {}
+      }
+      return {
+        ...authCredentials,
+        deviceKey: devKey,
+        userId: user ? user.id : authUser.userId,
+        username: user ? user.username : authUser.username
+      };
+    }
     return {
       token: null,
       deviceId: null,

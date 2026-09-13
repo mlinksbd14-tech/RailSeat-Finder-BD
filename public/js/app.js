@@ -512,6 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const authBtnIcon = document.getElementById('authBtnIcon');
   const authBtnText = document.getElementById('authBtnText');
   const statusDot = document.getElementById('statusDot');
+  const statusDescription = document.getElementById('statusDescription');
   const disconnectTokenBtn = document.getElementById('disconnectTokenBtn');
   const modalAuthStatusCard = document.getElementById('modalAuthStatusCard');
   const modalRailwayProfileCard = document.getElementById('modalRailwayProfileCard');
@@ -533,11 +534,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const copySnippetBtn = document.getElementById('copySnippetBtn');
   const scriptPasteForm = document.getElementById('scriptPasteForm');
   const scriptPasteInput = document.getElementById('scriptPasteInput');
+  const pcClipboardPasteBtn = document.getElementById('pcClipboardPasteBtn');
 
   const mobileBookmarkletSnippet = document.getElementById('mobileBookmarkletSnippet');
   const copyMobileSnippetBtn = document.getElementById('copyMobileSnippetBtn');
   const mobilePasteForm = document.getElementById('mobilePasteForm');
   const mobilePasteInput = document.getElementById('mobilePasteInput');
+  const mobileClipboardPasteBtn = document.getElementById('mobileClipboardPasteBtn');
   
   const tokenPasteInput = document.getElementById('tokenPasteInput');
   const deviceIdInput = document.getElementById('deviceIdInput');
@@ -1062,6 +1065,12 @@ document.addEventListener('DOMContentLoaded', () => {
       liveBadge.textContent = '🟢 100% Live API';
       searchModeBadge.textContent = 'Shohoz Live API';
 
+      if (statusDescription) {
+        statusDescription.textContent = user?.name ? `Status: Connected as ${user.name}` : 'Status: Connected (Live)';
+      }
+      if (statusDot) {
+        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+      }
       if (modalAuthStatusCard) modalAuthStatusCard.classList.add('hidden');
       if (modalRailwayProfileCard) {
         modalRailwayProfileCard.classList.remove('hidden');
@@ -1086,6 +1095,12 @@ document.addEventListener('DOMContentLoaded', () => {
       liveBadge.textContent = '⚡ Connect Session';
       searchModeBadge.textContent = 'Session Required';
 
+      if (statusDescription) {
+        statusDescription.textContent = 'Status: Not Connected';
+      }
+      if (statusDot) {
+        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
+      }
       if (modalRailwayProfileCard) modalRailwayProfileCard.classList.add('hidden');
       if (modalAuthStatusCard) modalAuthStatusCard.classList.remove('hidden');
 
@@ -1173,6 +1188,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper for 1-tap clipboard paste & activate
+  async function pasteClipboardAndConnect(targetInput) {
+    let clipText = '';
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      try {
+        clipText = await navigator.clipboard.readText();
+      } catch (err) {
+        console.warn('Clipboard read error or permission denied:', err);
+      }
+    }
+    if (!clipText && targetInput && targetInput.value) {
+      clipText = targetInput.value;
+    }
+    if (!clipText) {
+      showToast('Please paste your session JSON or cURL into the box.', 'info');
+      if (targetInput) targetInput.focus();
+      return;
+    }
+    if (targetInput) targetInput.value = clipText;
+    await handleTokenActivation(clipText);
+  }
+
+  // PC 1-Tap Clipboard Paste Button
+  if (pcClipboardPasteBtn) {
+    pcClipboardPasteBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await pasteClipboardAndConnect(scriptPasteInput);
+    });
+  }
+
+  // Mobile 1-Tap Clipboard Paste Button
+  if (mobileClipboardPasteBtn) {
+    mobileClipboardPasteBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await pasteClipboardAndConnect(mobilePasteInput);
+    });
+  }
+
   // Copy Snippet Button (PC)
   if (copySnippetBtn && consoleSnippet) {
     consoleSnippet.addEventListener('click', () => consoleSnippet.select());
@@ -1198,55 +1251,60 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper to Parse & Activate JSON / Token / cURL
   async function handleTokenActivation(rawString) {
     const raw = (rawString || '').trim();
-    if (!raw) return;
+    if (!raw) {
+      showToast('Please paste the JSON or cURL script output.', 'error');
+      return;
+    }
 
     let token = '';
     let deviceId = '';
     let deviceKey = '';
 
-    // 1. First priority: Check if pasted raw JSON or JSON within text (e.g. from PC Console / Mobile snippet)
-    let jsonParsed = false;
-    const jsonMatch = raw.match(/\{[\s\S]*"token"[\s\S]*\}/) || (raw.startsWith('{') && raw.endsWith('}') ? [raw] : null);
-    if (jsonMatch) {
+    // If it is pure JSON string
+    if (raw.startsWith('{') && raw.endsWith('}')) {
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed && typeof parsed === 'object') {
-          token = parsed.token || parsed.authToken || parsed.access_token || parsed.accessToken || '';
-          deviceId = parsed['x-device-id'] || parsed.deviceId || parsed.device_id || parsed.device_uuid || '';
-          deviceKey = parsed['x-device-key'] || parsed.deviceKey || parsed.device_key || parsed.sdkKey || parsed.ssdk || parsed.SSDK || '';
-          jsonParsed = true;
-        }
-      } catch (err) {
-        // Fall back to regex/cURL parsing if not valid JSON
+        const obj = JSON.parse(raw);
+        token = obj.token || obj.access_token || obj.authToken || '';
+        deviceId = obj['x-device-id'] || obj.device_id || obj.deviceId || '';
+        deviceKey = obj['x-device-key'] || obj.device_key || obj.deviceKey || obj.ssdk || obj._ssdk || '';
+      } catch (e) {
+        // Fallback to regex
       }
     }
 
-    // 2. Second priority: Check if pasted cURL command from DevTools Network Tab
-    if (!jsonParsed && (raw.toLowerCase().includes('curl') || /[-H\s]['"]?authorization:/i.test(raw))) {
-      const authMatch = raw.match(/[-H\s]['"]?[Aa]uthorization:\s*(Bearer\s+)?([^'"\r\n]+)['"]?/i);
-      const deviceIdMatch = raw.match(/[-H\s]['"]?x-device-id:\s*([^'"\r\n]+)['"]?/i);
-      const deviceKeyMatch = raw.match(/[-H\s]['"]?x-device-key:\s*([^'"\r\n]+)['"]?/i);
-
-      if (authMatch) token = authMatch[2].trim();
-      if (deviceIdMatch) deviceId = deviceIdMatch[1].trim();
-      if (deviceKeyMatch) deviceKey = deviceKeyMatch[1].trim();
-
-      if (deviceKey && (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined')) {
-        deviceKey = '';
-      }
-
-      await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });
-      return;
-    }
-
-    // 3. Fallback: If not parsed as JSON, extract standalone JWT token or clean raw text
+    // If not found yet, check regex for JSON-like properties or cURL headers
     if (!token) {
-      const jwtMatch = raw.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);
-      if (jwtMatch) {
-        token = jwtMatch[0];
-      } else {
-        token = raw.replace(/^Bearer\s+/i, '').trim();
-      }
+      const tm = raw.match(/["']?token["']?\s*:\s*["']([^"']+)["']/i) || 
+                 raw.match(/[-H\s]['"]?[Aa]uthorization:\s*(?:Bearer\s+)?([^'"\r\n]+)['"]?/i);
+      if (tm) token = tm[1];
+    }
+    if (!token) {
+      const jm = raw.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);
+      if (jm) token = jm[0];
+    }
+
+    if (!deviceId) {
+      const dm = raw.match(/["']?x-device-id["']?\s*:\s*["']([^"']+)["']/i) ||
+                 raw.match(/["']?device_id["']?\s*:\s*["']([^"']+)["']/i) ||
+                 raw.match(/[-H\s]['"]?x-device-id:\s*([^'"\r\n]+)['"]?/i);
+      if (dm) deviceId = dm[1];
+    }
+
+    if (!deviceKey) {
+      const km = raw.match(/["']?x-device-key["']?\s*:\s*["']([^"']+)["']/i) ||
+                 raw.match(/["']?device_key["']?\s*:\s*["']([^"']+)["']/i) ||
+                 raw.match(/["']?_?ssdk["']?\s*:\s*["']([^"']+)["']/i) ||
+                 raw.match(/[-H\s]['"]?x-device-key:\s*([^'"\r\n]+)['"]?/i);
+      if (km) deviceKey = km[1];
+    }
+
+    token = (token || '').replace(/^Bearer\s+/i, '').trim();
+    deviceId = (deviceId || '').trim();
+    deviceKey = (deviceKey || '').trim();
+
+    if (!token) {
+      showToast('Could not find a valid Railway token in the pasted text.', 'error');
+      return;
     }
 
     if (deviceKey && (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined')) {
@@ -1307,10 +1365,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (data.success) {
-        showToast('Live Railway session saved permanently and activated!', 'success');
+        const userName = data.user?.name || 'Railway Passenger';
+        showToast(`✅ Live Railway session connected as ${userName}!`, 'success');
         updateAuthUI(true, data.user, data.token_preview, data.device_id, data.device_key, true);
-        authModal.classList.add('hidden');
-        scriptPasteInput.value = '';
+        if (scriptPasteInput) scriptPasteInput.value = '';
+        if (mobilePasteInput) mobilePasteInput.value = '';
+        // Give the user a brief moment to see verified profile details before auto-closing
+        setTimeout(() => {
+          if (authModal && !authModal.classList.contains('hidden')) {
+            authModal.classList.add('hidden');
+          }
+        }, 1500);
         if (state.selectedFrom && state.selectedTo) {
           executeSearch();
         }

@@ -2363,9 +2363,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     dropdownEl.innerHTML = items.map(s => {
-      const bnName = (s.bn_name && s.bn_name !== s.name) ? s.bn_name : (window.i18n ? window.i18n.getStationName(s.name, 'bn') : '');
-      const primaryTitle = isBn && bnName ? bnName : (s.display_name || s.name);
-      const secondaryTitle = isBn ? s.name : (bnName && bnName !== s.name ? bnName : '');
+      const bnName = (s.bn_name && s.bn_name !== s.name) ? s.bn_name : '';
+      // Primary title is always canonical English name; show Bangla secondary hint only if available
+      const primaryTitle = s.display_name || s.name;
+      const secondaryTitle = bnName;
       return `
         <div class="autocomplete-item px-3.5 py-2.5 cursor-pointer flex items-center justify-between text-xs transition hover:bg-emerald-50/80 dark:hover:bg-slate-700/60" data-name="${s.name}" data-display="${primaryTitle}">
           <div class="flex items-center space-x-2 min-w-0">
@@ -2381,8 +2382,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdownEl.querySelectorAll('.autocomplete-item').forEach(item => {
       item.addEventListener('click', () => {
         const canonical = item.dataset.name;
-        const displayVal = item.dataset.display || canonical;
-        inputEl.value = isBn ? `${displayVal} (${canonical})` : canonical;
+        // Origin and Destination input must strictly stay in English
+        inputEl.value = canonical;
         dropdownEl.classList.add('hidden');
         onSelect(canonical);
       });
@@ -9432,6 +9433,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('rail_language_changed', (e) => {
       const newLang = e.detail?.lang || 'bn';
       console.log(`[i18n] Language switched to: ${newLang}`);
+
+      // Ensure station inputs stay strictly English canonical
+      if (fromStationInput && state.selectedFrom) {
+        fromStationInput.value = state.selectedFrom;
+      }
+      if (toStationInput && state.selectedTo) {
+        toStationInput.value = state.selectedTo;
+      }
 
       // Re-generate quick date chips with localized days/months
       generateQuickDateChips();

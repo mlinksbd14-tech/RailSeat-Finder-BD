@@ -68,6 +68,7 @@
       class_f_berth: 'F_BERTH',
       class_f_seat: 'F_SEAT',
       class_f_chair: 'F_CHAIR',
+      class_ac_chair: 'AC_CHAIR',
       class_ac_c: 'AC_C',
 
       // Seat Availability Badges
@@ -123,10 +124,10 @@
       search_hero_title: 'বাংলাদেশ রেলওয়ের সিট খুঁজুন',
       search_hero_badge: 'সরাসরি গেটওয়ে',
       search_hero_desc: 'রিয়েল-টাইম খালি সিট, ট্রেনের সময়সূচি, ভাড়া ও ২৪/৭ রাডার অ্যালার্ট।',
-      from_station: 'ছাড়ার স্টেশন',
-      from_placeholder: 'কোথা থেকে যাবেন (যেমন ঢাকা)',
-      to_station: 'গন্তব্য স্টেশন',
-      to_placeholder: 'কোথায় যাবেন (যেমন চট্টগ্রাম)',
+      from_station: 'From',
+      from_placeholder: 'Departure (e.g. Dhaka)',
+      to_station: 'To',
+      to_placeholder: 'Arrival (e.g. Chattogram)',
       swap_stations: 'স্টেশন অদলবদল',
       journey_date: 'ভ্রমণের তারিখ',
       find_trains: 'ট্রেন খুঁজুন',
@@ -150,6 +151,7 @@
       class_f_berth: 'F_BERTH',
       class_f_seat: 'F_SEAT',
       class_f_chair: 'F_CHAIR',
+      class_ac_chair: 'AC_CHAIR',
       class_ac_c: 'AC_C',
 
       // Seat Availability Badges
@@ -344,9 +346,7 @@
   function getStationName(station, lang = currentLang) {
     if (!station) return '';
     const trimmed = String(station).trim();
-    if (lang === 'bn') {
-      return stationTranslations[trimmed] || trimmed;
-    }
+    // Keep Origin, Destination and station names strictly in English even in Bangla mode
     return bnToEnStation[trimmed] || trimmed;
   }
 

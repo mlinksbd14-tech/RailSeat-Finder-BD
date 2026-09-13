@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deviceId && deviceIdInput) deviceIdInput.value = deviceId;
     if (deviceKey && deviceKeyInput && deviceKey.toLowerCase() !== 'web') deviceKeyInput.value = deviceKey;
 
-    const pName = user?.name || user?.display_name || 'Railway Passenger';
+    const pName = user?.name || user?.display_name || user?.phone || user?.phone_number || user?.username || '---';
     const pPhone = user?.phone || user?.mobile_number || user?.phone_number || user?.username || '---';
     const pEmail = user?.email || '---';
     const pNidRaw = user?.nid || user?.nidn || '';

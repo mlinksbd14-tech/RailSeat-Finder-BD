@@ -642,8 +642,8 @@
       "email": null,
       "status": "active",
       "username": "test",
-      "lastLogin": "2026-09-13T09:50:54.860Z",
-      "lastIp": "27.147.149.234",
+      "lastLogin": "2026-09-13T12:14:46.875Z",
+      "lastIp": "::1",
       "lastLocation": {
         "country": "Bangladesh",
         "flag": "🇧🇩",
@@ -655,16 +655,34 @@
       },
       "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
       "ips": [
+        "::1",
         "27.147.149.234"
       ],
-      "loginCount": 1,
+      "loginCount": 2,
       "lastDevice": {
-        "os": "Windows 10/11",
         "browser": "Edge 153",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
-        "device": "Desktop"
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T12:14:46.875Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Dhaka",
+            "countryCode": "BD",
+            "isp": "Link3 Technologies Limited",
+            "query": "27.147.149.234",
+            "region": "Dhaka Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-13T09:50:54.860Z",

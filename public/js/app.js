@@ -1088,11 +1088,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const displayName = pName.split(' ')[0] || 'Live';
 
     if (isAuth) {
-      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white';
+      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer shrink-0';
       authBtnIcon.className = 'fa-solid fa-circle-check text-[11px]';
       authBtnText.textContent = `🚆 ${displayName}`;
       
-      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800';
+      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800';
       liveBadge.textContent = '🟢 100% Live API';
       searchModeBadge.textContent = 'Shohoz Live API';
 
@@ -1101,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusDescription.textContent = `Status: Connected as ${pName}`;
       }
       if (statusDot) {
-        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
       }
       if (modalAuthStatusCard) modalAuthStatusCard.classList.add('hidden');
       if (modalRailwayProfileCard) {
@@ -1147,11 +1147,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       noticeBanner.classList.add('hidden');
     } else {
-      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white';
+      authModalOpenBtn.className = 'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer shrink-0';
       authBtnIcon.className = 'fa-solid fa-key text-[11px]';
       authBtnText.textContent = 'Connect Live API';
       
-      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800';
+      liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800';
       liveBadge.textContent = '⚡ Connect Session';
       searchModeBadge.textContent = 'Session Required';
 
@@ -2230,10 +2230,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = `date-chip px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95 shadow-2xs ${
+      chip.className = `date-chip px-2.5 py-1 rounded-md text-xs font-medium transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95 shadow-2xs ${
         i === 0 
-          ? 'bg-emerald-600 text-white shadow-xs border border-emerald-500' 
-          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+          ? 'bg-emerald-700 text-white shadow-xs border border-emerald-700 font-semibold' 
+          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'
       }`;
       chip.textContent = label;
       chip.dataset.date = iso;
@@ -2254,9 +2254,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateActiveDateChips(selectedIso) {
     dateChipsContainer.querySelectorAll('.date-chip').forEach(chip => {
       if (chip.dataset.date === selectedIso) {
-        chip.className = 'date-chip px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-xs border border-emerald-500 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
+        chip.className = 'date-chip px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-700 text-white shadow-xs border border-emerald-700 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
       } else {
-        chip.className = 'date-chip px-3 py-1.5 rounded-xl text-xs font-black bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
+        chip.className = 'date-chip px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition whitespace-nowrap shrink-0 cursor-pointer active:scale-95';
       }
     });
   }
@@ -2476,11 +2476,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedTo.toLowerCase() === r.to.toLowerCase());
 
       const activeClass = isSelected
-        ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
-        : 'bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400';
+        ? 'bg-emerald-700 text-white border-emerald-700 font-semibold shadow-xs'
+        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-400';
 
       return `
-        <button type="button" class="quick-route-chip px-3 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer shrink-0 active:scale-95 shadow-2xs ${activeClass}" 
+        <button type="button" class="quick-route-chip px-2.5 py-1 rounded-md text-xs font-medium border transition-all cursor-pointer shrink-0 active:scale-95 shadow-2xs ${activeClass}" 
           data-from="${r.from}" data-to="${r.to}">
           ${r.label || `${r.from} ⇄ ${r.to}`}
         </button>
@@ -3372,110 +3372,105 @@ document.addEventListener('DOMContentLoaded', () => {
       const alertBtnText = isBn ? 'অ্যালার্ট' : 'Alert';
 
       return `
-        <div class="app-ticket-card bg-white dark:bg-slate-900 rounded-3xl p-3.5 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition space-y-3.5">
+        <div class="app-ticket-card bg-white dark:bg-slate-900 rounded-xl p-3.5 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition space-y-3">
           
           <!-- TOP HEADER: Train Identity & Real-Time Status Pill -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${
-                hasAnySeats 
-                  ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-xs' 
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
-              } flex items-center justify-center font-black text-sm shrink-0">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
                 <i class="fa-solid fa-train"></i>
               </div>
               <div class="min-w-0">
-                <div class="flex items-center space-x-1.5 flex-wrap">
-                  <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-slate-700">#${train.train_model}</span>
+                <div class="flex items-center space-x-2">
+                  <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">${train.train_name}</h3>
+                  <span class="text-[10px] px-1.5 py-0.2 rounded font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">#${train.train_model}</span>
                 </div>
-                <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium">
-                  ${offDayLabel}: <span class="font-bold text-slate-600 dark:text-slate-300">${offDayDisplay}</span>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                  ${offDayLabel}: <span class="font-medium text-slate-700 dark:text-slate-300">${offDayDisplay}</span>
                 </p>
               </div>
             </div>
 
-            <!-- Total Seats Badge Pill (App style) -->
-            <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-black shrink-0 ${
+            <!-- Total Seats Badge Pill (Aero Rail clean status) -->
+            <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold shrink-0 ${
               hasAnySeats 
-                ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-2xs' 
-                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
             }">
-              <span class="w-2 h-2 rounded-full ${hasAnySeats ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
-              <span>${availStatusText}</span>
+              <span class="w-1.5 h-1.5 rounded-full ${hasAnySeats ? 'bg-emerald-600' : 'bg-slate-400'}"></span>
+              <span class="tnum">${availStatusText}</span>
             </span>
           </div>
 
-          <!-- ROUTE JOURNEY RIBBON (Flight/Travel App Style) -->
-          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 px-3 sm:px-4 py-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs">
+          <!-- ROUTE JOURNEY RIBBON (Flight/Travel Utility Style) -->
+          <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-850 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-100 dark:border-slate-800 text-xs">
             <div class="text-left min-w-[70px]">
-              <div class="font-black text-slate-900 dark:text-white text-sm sm:text-base leading-none">${depTimeDisplay}</div>
-              <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[110px] font-bold mt-1">${depStationDisplay}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-sm sm:text-base tnum leading-none">${depTimeDisplay}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 truncate max-w-[120px]">${depStationDisplay}</div>
             </div>
 
             <!-- Duration & Center Connector -->
-            <div class="flex flex-col items-center px-2 flex-1 max-w-[130px]">
-              <span class="text-[9px] sm:text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-tight">${train.travel_time || 'Express'}</span>
+            <div class="flex flex-col items-center px-2 flex-1 max-w-[150px]">
+              <span class="text-[10px] text-slate-400 font-medium tnum">${train.travel_time || 'Express'}</span>
               <div class="w-full flex items-center justify-center my-1 relative">
-                <div class="w-full h-0.5 bg-slate-300 dark:bg-slate-600"></div>
-                <div class="w-2 h-2 rounded-full bg-emerald-500 absolute left-0"></div>
-                <div class="w-2 h-2 rounded-full bg-teal-500 absolute right-0"></div>
-                <i class="fa-solid fa-train text-[9px] text-emerald-600 dark:text-emerald-400 absolute bg-slate-50 dark:bg-slate-800 px-1"></i>
+                <div class="w-full h-px bg-slate-300 dark:bg-slate-700"></div>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 absolute left-0"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 absolute right-0"></span>
               </div>
-              <span class="text-[8px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">${isBn ? 'সরাসরি' : 'Direct'}</span>
+              <span class="text-[9px] text-emerald-700 dark:text-emerald-400 font-semibold uppercase tracking-wider">${isBn ? 'সরাসরি' : 'Direct'}</span>
             </div>
 
             <div class="text-right min-w-[70px]">
-              <div class="font-black text-slate-900 dark:text-white text-sm sm:text-base leading-none">${arrTimeDisplay}</div>
-              <div class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[110px] font-bold mt-1">${arrStationDisplay}</div>
+              <div class="font-bold text-slate-900 dark:text-white text-sm sm:text-base tnum leading-none">${arrTimeDisplay}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 truncate max-w-[120px]">${arrStationDisplay}</div>
             </div>
           </div>
 
-          <!-- SEAT CLASSES GRID (Mobile App Interactive Class Tiles) -->
+          <!-- SEAT CLASSES GRID (Aero Rail Tabular Inventory Chips) -->
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             ${(train.seat_types || []).map(st => renderSeatPill(st, state.selectedFrom, state.selectedTo, state.selectedDate)).join('')}
           </div>
 
-          <!-- APP ACTION BAR: Secondary Controls + Full Thumb-Reach Book CTA -->
+          <!-- ACTION BAR: Secondary Controls + Flight Booking CTA -->
           <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
             
-            <!-- Quick Icon Tools (Route, Stops Matrix, 24/7 Radar Watch) -->
+            <!-- Quick Tools (Route, Stops Matrix, 24/7 Radar Watch) -->
             <div class="flex items-center space-x-1.5 justify-start">
-              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer active:scale-95"
+              <button type="button" class="view-route-btn inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="View Train Route & Schedule">
-                <i class="fa-solid fa-route text-emerald-500 text-xs"></i>
+                <i class="fa-solid fa-route text-slate-400 text-xs"></i>
                 <span>${routeBtnText}</span>
               </button>
 
-              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition cursor-pointer active:scale-95"
+              <button type="button" class="view-station-matrix-btn inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="View Single-Day All-Station Blank Seat Matrix">
-                <i class="fa-solid fa-table-cells text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                <i class="fa-solid fa-table-cells text-slate-400 text-xs"></i>
                 <span>${matrixBtnText}</span>
               </button>
 
-              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer active:scale-95"
+              <button type="button" class="set-watch-btn inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 transition cursor-pointer"
                 data-train-model="${train.train_model || ''}"
                 data-train-name="${train.train_name || ''}"
                 title="Set 24/7 seat drop alert">
-                <i class="fa-solid fa-bell text-amber-500 text-xs"></i>
+                <i class="fa-regular fa-bell text-amber-500 text-xs"></i>
                 <span>${alertBtnText}</span>
               </button>
             </div>
 
-            <!-- Primary App Booking Button -->
+            <!-- Primary Airline Utility Booking Button -->
             <a href="${bookUrl}" target="_blank" rel="noopener" 
-              class="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
+              class="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                 hasAnySeats 
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md active:scale-98 cursor-pointer' 
+                  ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs cursor-pointer' 
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-60'
               }">
               <i class="fa-solid fa-ticket text-xs"></i>
               <span>${bookBtnText}</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-0.5 opacity-80"></i>
             </a>
 
           </div>
@@ -3486,7 +3481,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ----------------------------------------------------
-  // 📱 Mobile App Seat Class Tile Renderer
+  // 📱 Aero Rail Seat Class Tile Renderer
   // ----------------------------------------------------
   function renderSeatPill(seat, fromCity, toCity, journeyDate) {
     const isBn = window.i18n && window.i18n.getLang() === 'bn';
@@ -3511,44 +3506,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isAvail) {
       return `
         <a href="${bookUrl}" target="_blank" rel="noopener"
-          class="app-seat-tile block p-2 sm:p-2.5 rounded-2xl border-2 border-emerald-400/80 dark:border-emerald-600/80 bg-gradient-to-b from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-slate-900 text-slate-900 dark:text-white hover:border-emerald-500 transition shadow-2xs group cursor-pointer"
+          class="app-seat-tile block p-2 sm:p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 hover:border-emerald-500 hover:bg-emerald-50/70 transition shadow-2xs group cursor-pointer"
           title="Book ${displayName} (${totalSeatCount} seats available)">
           
-          <div class="flex items-center justify-between gap-1 mb-1">
-            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight truncate">${displayName}</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 group-hover:scale-125 transition-transform"></span>
+          <div class="flex items-center justify-between gap-1 mb-1.5">
+            <span class="text-[11px] font-bold uppercase tracking-tight text-slate-800 dark:text-slate-200 truncate">${displayName}</span>
+            <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-medium">${fareDisplay}</span>
           </div>
 
-          <div class="my-1">
-            <div class="py-1 px-1 rounded-xl bg-emerald-600 text-white font-black text-[11px] sm:text-xs text-center shadow-xs flex items-center justify-center space-x-1">
-              <span>${seatsLabel}</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300">
-            <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">${isBn ? 'ভাড়া' : 'Fare'}</span>
-            <span class="font-black text-slate-900 dark:text-white">${fareDisplay}</span>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400 tnum">${seatsLabel}</span>
+            <span class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Avail</span>
           </div>
         </a>
       `;
     } else {
       return `
-        <div class="app-seat-tile block p-2 sm:p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20 text-slate-400 opacity-60 cursor-not-allowed select-none"
+        <div class="app-seat-tile block p-2 sm:p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-400 opacity-60 cursor-not-allowed select-none"
           title="${displayName} (${soldOutLabel})">
           
-          <div class="flex items-center justify-between gap-1 mb-1">
-            <span class="text-[10px] sm:text-[11px] font-black uppercase tracking-tight text-slate-500 dark:text-slate-400 truncate">${displayName}</span>
+          <div class="flex items-center justify-between gap-1 mb-1.5">
+            <span class="text-[11px] font-bold uppercase tracking-tight text-slate-400 truncate">${displayName}</span>
+            <span class="font-mono text-[10px] text-slate-400">${fareDisplay}</span>
           </div>
 
-          <div class="my-1">
-            <div class="py-1 px-1 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-[10px] sm:text-[11px] text-center">
-              ${soldOutLabel}
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold pt-1 border-t border-slate-200/60 dark:border-slate-800/60 text-slate-400">
-            <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">${isBn ? 'ভাড়া' : 'Fare'}</span>
-            <span class="font-bold text-slate-500 dark:text-slate-400">${fareDisplay}</span>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-xs font-medium text-slate-400">${soldOutLabel}</span>
+            <span class="text-[9px] text-slate-400 font-normal">--</span>
           </div>
         </div>
       `;
@@ -3583,29 +3567,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const arrTime = isBn ? window.i18n.toBnNum(train.arrival_time) : train.arrival_time;
 
         return `
-          <div class="mobile-table-card bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2.5">
+          <div class="mobile-table-card bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
             <!-- Row 1: Train, Model & Times -->
             <div class="flex items-center justify-between gap-2">
               <div>
                 <div class="flex items-center space-x-1.5">
-                  <h4 class="font-black text-sm text-slate-900 dark:text-white">${train.train_name}</h4>
-                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold">#${train.train_model}</span>
+                  <h4 class="font-bold text-sm text-slate-900 dark:text-white">${train.train_name}</h4>
+                  <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-slate-700">#${train.train_model}</span>
                 </div>
-                <p class="text-[11px] text-slate-400 font-medium">${depTime} &rarr; ${arrTime} &bull; ${train.travel_time || 'Express'}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${depTime} &rarr; ${arrTime} &bull; ${train.travel_time || 'Express'}</p>
               </div>
 
               <!-- Total Seats Status -->
-              <span class="px-2 py-0.5 rounded-full text-xs font-black shrink-0 ${
+              <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-semibold shrink-0 ${
                 hasAnySeats 
-                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200' 
-                  : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
               }">
-                ${hasAnySeats ? (isBn ? `🟢 ${window.i18n.toBnNum(grandTotal)} সিট` : `🟢 ${grandTotal}`) : (isBn ? '🔴 শেষ' : '🔴 0')}
+                <span class="w-1.5 h-1.5 rounded-full ${hasAnySeats ? 'bg-emerald-600' : 'bg-slate-400'}"></span>
+                <span class="tnum">${hasAnySeats ? (isBn ? `${window.i18n.toBnNum(grandTotal)} সিট` : `${grandTotal} Seats`) : (isBn ? 'শেষ' : 'Sold Out')}</span>
               </span>
             </div>
 
             <!-- Row 2: Horizontal Class Chips Scroll -->
-            <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
+            <div class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
               ${availClasses.length > 0 ? availClasses.map(s => {
                 const totalCount = Number(s.seats_available || 0) + Number(s.counter_seats_available || 0);
                 const fare = Number(s.total_fare !== undefined ? s.total_fare : ((Number(s.fare || 0)) + (Number(s.vat || 0))));
@@ -3614,48 +3599,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fareDisplay = isBn ? `৳${window.i18n.toBnNum(fare)}` : `৳${fare}`;
 
                 return `
-                  <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/80 text-xs shrink-0 shadow-2xs">
-                    <span class="font-bold text-slate-800 dark:text-slate-200">${classTitle}:</span>
-                    <span class="px-1.5 py-0.2 rounded-md bg-emerald-600 text-white font-extrabold text-[10px]">${countDisplay}</span>
-                    <span class="text-emerald-700 dark:text-emerald-300 font-bold text-[11px]">${fareDisplay}</span>
+                  <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 text-xs shrink-0">
+                    <span class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">${classTitle}:</span>
+                    <span class="font-bold text-emerald-700 dark:text-emerald-400 tnum text-[11px]">${countDisplay}</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-mono text-[10px]">${fareDisplay}</span>
                   </div>
                 `;
               }).join('') : `
-                <span class="text-xs text-rose-500 font-bold py-0.5">${isBn ? 'সকল শ্রেণির সিট শেষ' : 'All classes sold out'}</span>
+                <span class="text-xs text-rose-500 font-semibold py-0.5">${isBn ? 'সকল শ্রেণির সিট শেষ' : 'All classes sold out'}</span>
               `}
             </div>
 
             <!-- Row 3: Action Buttons Strip -->
-            <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 gap-2">
+            <div class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800 gap-2">
               <div class="flex items-center space-x-1">
-                <button type="button" class="view-route-btn p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold transition"
+                <button type="button" class="view-route-btn p-1.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition"
                   data-train-model="${train.train_model || ''}"
                   data-train-name="${train.train_name || ''}"
                   title="Route">
-                  <i class="fa-solid fa-route text-emerald-500 text-xs"></i>
+                  <i class="fa-solid fa-route text-slate-400 text-xs"></i>
                 </button>
-                <button type="button" class="view-station-matrix-btn p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-xs font-bold transition"
+                <button type="button" class="view-station-matrix-btn p-1.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition"
                   data-train-model="${train.train_model || ''}"
                   data-train-name="${train.train_name || ''}"
                   title="Stops Matrix">
-                  <i class="fa-solid fa-table-cells text-xs"></i>
+                  <i class="fa-solid fa-table-cells text-slate-400 text-xs"></i>
                 </button>
-                <button type="button" class="set-watch-btn p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 text-xs font-bold transition"
+                <button type="button" class="set-watch-btn p-1.5 rounded-md bg-amber-50/60 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/60 border border-amber-200 dark:border-amber-800/60 text-xs font-semibold transition"
                   data-train-model="${train.train_model || ''}"
                   data-train-name="${train.train_name || ''}"
                   title="Alert Watch">
-                  <i class="fa-solid fa-bell text-xs"></i>
+                  <i class="fa-regular fa-bell text-amber-500 text-xs"></i>
                 </button>
               </div>
 
               <a href="${bookUrl}" target="_blank" rel="noopener" 
-                class="px-3.5 py-1.5 rounded-xl ${
+                class="px-3 py-1.5 rounded-md ${
                   hasAnySeats 
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black shadow-xs active:scale-95' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                    ? 'bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-xs' 
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
                 } text-xs transition inline-flex items-center space-x-1.5">
                 <span>${isBn ? 'টিকিট কাটুন' : 'Book'}</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-80"></i>
               </a>
             </div>
           </div>

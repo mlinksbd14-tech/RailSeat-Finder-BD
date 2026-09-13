@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { exec, execFile } = require('child_process');
 const webPush = require('web-push');
 require('dotenv').config();
@@ -541,7 +542,24 @@ function decodeShohozJwtProfile(token) {
   try {
     const parts = token.split('.');
     if (parts.length >= 2) {
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+      const decodePart = (seg) => {
+        const b64 = seg.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (seg.length % 4)) % 4);
+        return Buffer.from(b64, 'base64');
+      };
+      let header = {};
+      try { header = JSON.parse(decodePart(parts[0]).toString('utf8')); } catch (e) {}
+      const payloadBytes = decodePart(parts[1]);
+      let payloadText = payloadBytes.toString('utf8');
+      const zipMarker = header && (header.zip || header.cty || '');
+      const needsInflate = (zipMarker && String(zipMarker).toUpperCase().indexOf('DEF') !== -1) || !payloadText.trim().startsWith('{');
+      if (needsInflate) {
+        try {
+          payloadText = zlib.inflateSync(payloadBytes).toString('utf8');
+        } catch (e) {
+          try { payloadText = zlib.inflateRawSync(payloadBytes).toString('utf8'); } catch (e2) {}
+        }
+      }
+      const payload = JSON.parse(payloadText);
       return {
         name: payload.display_name || payload.name || 'Railway Passenger',
         phone: payload.phone_number || payload.username || null,
@@ -559,6 +577,22 @@ function decodeShohozJwtProfile(token) {
     console.warn('[Profile] Error decoding Shohoz JWT:', err.message);
   }
   return null;
+}
+
+// Resolve the cleanest possible profile for a session, never leaking placeholder labels
+function getShohozUserProfile(session) {
+  const fresh = decodeShohozJwtProfile(session && session.token);
+  if (fresh) return fresh;
+  if (session && session.user && !session.user.custom_token) return session.user;
+  const stored = (session && session.user) || {};
+  return {
+    name: 'Railway Passenger',
+    phone: stored.phone || stored.mobile_number || stored.phone_number || '01XXXXXXXXX',
+    email: stored.email || null,
+    nid: stored.nid || stored.nidn || null,
+    nidType: stored.nidType || stored.nidnt || 'NID',
+    custom_token: true
+  };
 }
 
 // Generate valid 160-char Shohoz SSDK device fingerprint
@@ -1230,7 +1264,7 @@ app.get('/api/auth/status', (req, res) => {
   const session = getUserShohozSession(req);
   res.json({
     authenticated: !!session.token,
-    user: session.user,
+    user: getShohozUserProfile(session),
     token_preview: session.token ? `${session.token.substring(0, 10)}...${session.token.slice(-6)}` : null,
     device_id: session.deviceId,
     device_key: session.deviceKey,
@@ -1283,7 +1317,7 @@ app.post('/api/auth/set-token', (req, res) => {
     deviceId: cleanDeviceId,
     deviceKey: cleanDeviceKey,
     cookie: cookie || authCredentials.cookie || null,
-    user: decodedProfile || { name: 'Live Railway Session', custom_token: true },
+    user: decodedProfile || { name: 'Verified Passenger', custom_token: true },
     lastUpdated: new Date().toISOString()
   };
   
@@ -1314,7 +1348,7 @@ app.get('/api/railway-profile', (req, res) => {
     });
   }
 
-  const profile = decodeShohozJwtProfile(session.token) || session.user;
+  const profile = getShohozUserProfile(session);
 
   res.json({
     connected: true,

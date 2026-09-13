@@ -7,12 +7,12 @@
       "appId": "1:266186751082:web:ee5f2695ac16bda97e9e13",
       "updatedAt": "2026-08-27T06:04:39.285Z"
     },
-    "requireLogin": false,
     "authNotice": "Welcome to RailSeat Finder BD!",
     "authNoticeEnabled": true,
     "requireAdminApproval": false,
     "allowRegistration": true,
-    "requireEmailVerification": false
+    "requireEmailVerification": false,
+    "requireLogin": false
   },
   "users": [
     {
@@ -33,25 +33,32 @@
         "::1",
         "103.177.220.164"
       ],
-      "lastLocation": {
-        "countryCode": "BD",
-        "country": "Bangladesh",
-        "flag": "🇧🇩",
-        "city": "Barishal",
-        "isp": "Nation",
-        "query": "103.59.178.232",
-        "region": "Barisal Division"
-      },
-      "lastIp": "::1",
-      "lastLogin": "2026-09-13T11:00:07.470Z",
+      "lastLogin": "2026-09-13T11:00:21.985Z",
       "activityHistory": [
         {
           "action": "login",
-          "timestamp": "2026-09-13T11:00:07.470Z",
-          "ip": "::1",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 153",
+          "timestamp": "2026-09-13T11:00:21.985Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T10:39:57.851Z",
+          "ip": "27.147.149.234",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 153",
           "location": {
             "countryCode": "BD",
             "country": "Bangladesh",
@@ -395,35 +402,46 @@
           "browser": "Edge 151"
         }
       ],
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
-      "loginCount": 22,
-      "lastDevice": {
-        "browser": "Edge 153",
-        "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
-      },
+      "lastIp": "27.147.149.234",
       "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODkyODYwMzcsImV4cCI6MTc4OTMyOTIzNywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4OTI4NjAzNywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.BcYt_zCbiLZ4jzZWFp63vZkLCOzCGY4lHIwh8JajPY44iJ3bd5_PnAF2cEkIYQLczMerarhsDhnpSSgstKwlp7MotUqzSJ_0pU13iPTsEdvZg1xeCjBu9VVwwfFsd7GAbs_r1usW2cnyhrEZekFJD5JiQrv6in9Ob-HC3P1e1A1MzFm_7Ny6jVgs3Dv3taijh1iyQSvgaOQZPBuINqb6oVkV_T60QsnO5e8ct3IJWhABx3S5Zvnb9SWbhofc4zP6q0I_l9HbPJCvvauUV9GHRfuHi9PLnRIUdeZv7rkVmf1Q4keFUY8WlC0aMpkqootzKO2vgZAs-5kUWRoEc-WA6Q",
-        "deviceId": "b4adcf6d-ef2e-4044-8409-7d7047ac9043",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
+        "lastUpdated": "2026-09-13T10:42:00.120Z",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b67666fffe072ed200528c204d672cedbf694cab9c233940bc3edde65fc9bad11690a314fb80f03a02fd07675e28e8ce2b13f6",
+        "deviceId": "63a630a6-39a0-4931-892c-6679a9aeb3c5",
         "user": {
-          "name": "Md. Habibullah",
-          "phone": "01871860487",
-          "email": "labu3416@gmail.com",
-          "nid": "8254236667",
-          "nidType": "Default",
-          "locale": "bn-BD",
           "roles": [
             "user",
             "anonymous"
           ],
-          "expiresAt": "2026-09-13T19:53:57.000Z",
+          "isExpired": false,
+          "locale": "bn-BD",
+          "nidType": "Default",
+          "phone": "01871860487",
+          "nid": "8254236667",
           "issuedAt": "2026-09-13T07:53:57.000Z",
-          "isExpired": false
+          "email": "labu3416@gmail.com",
+          "expiresAt": "2026-09-13T19:53:57.000Z",
+          "custom_token": true,
+          "name": "Live Railway Session"
         },
-        "lastUpdated": "2026-09-13T10:26:56.358Z"
+        "token": "1.1.3"
+      },
+      "lastLocation": {
+        "countryCode": "BD",
+        "country": "Bangladesh",
+        "flag": "🇧🇩",
+        "city": "Barishal",
+        "isp": "Nation",
+        "query": "103.59.178.232",
+        "region": "Barisal Division"
+      },
+      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
+      "loginCount": 23,
+      "lastDevice": {
+        "os": "Android 10",
+        "browser": "Chrome 153",
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
+        "device": "Mobile"
       }
     },
     {
@@ -597,6 +615,73 @@
         "region": "Dhaka Division"
       },
       "loginCount": 1
+    },
+    {
+      "createdAt": "2026-09-13T09:50:42.962Z",
+      "emailVerified": true,
+      "password": "scrypt$16384$8$1$ab029dfb590ab05e68da5a743afc0c0b$189632060bb58d89c9adf481a2c588122092d9c0bb7c3a4b91ef77d4543b2a08a83922f4680d4ebbf5b05f574b7f610f3aabdefaa9b3325ad59967bad2aaee02",
+      "role": "viewer",
+      "name": "Test User",
+      "canViewDashboard": true,
+      "id": "usr_1789293042757_rghj",
+      "email": null,
+      "status": "active",
+      "username": "test",
+      "lastLogin": "2026-09-13T09:50:54.860Z",
+      "lastIp": "27.147.149.234",
+      "lastLocation": {
+        "country": "Bangladesh",
+        "flag": "🇧🇩",
+        "city": "Dhaka",
+        "countryCode": "BD",
+        "isp": "Link3 Technologies Limited",
+        "query": "27.147.149.234",
+        "region": "Dhaka Division"
+      },
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+      "ips": [
+        "27.147.149.234"
+      ],
+      "loginCount": 1,
+      "lastDevice": {
+        "os": "Windows 10/11",
+        "browser": "Edge 153",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+        "device": "Desktop"
+      },
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T09:50:54.860Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": null
+        }
+      ],
+      "shohozSession": {
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "lastUpdated": "2026-09-13T09:51:16.445Z",
+        "cookie": null,
+        "deviceId": "62e65b63-17cb-4b08-a682-70584b5ae04f",
+        "user": {
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "isExpired": false,
+          "locale": "bn-BD",
+          "nidType": "Default",
+          "phone": "01871860487",
+          "name": "Md. Habibullah",
+          "nid": "8254236667",
+          "issuedAt": "2026-09-13T07:53:57.000Z",
+          "email": "labu3416@gmail.com",
+          "expiresAt": "2026-09-13T19:53:57.000Z"
+        },
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODkyODYwMzcsImV4cCI6MTc4OTMyOTIzNywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4OTI4NjAzNywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.BcYt_zCbiLZ4jzZWFp63vZkLCOzCGY4lHIwh8JajPY44iJ3bd5_PnAF2cEkIYQLczMerarhsDhnpSSgstKwlp7MotUqzSJ_0pU13iPTsEdvZg1xeCjBu9VVwwfFsd7GAbs_r1usW2cnyhrEZekFJD5JiQrv6in9Ob-HC3P1e1A1MzFm_7Ny6jVgs3Dv3taijh1iyQSvgaOQZPBuINqb6oVkV_T60QsnO5e8ct3IJWhABx3S5Zvnb9SWbhofc4zP6q0I_l9HbPJCvvauUV9GHRfuHi9PLnRIUdeZv7rkVmf1Q4keFUY8WlC0aMpkqootzKO2vgZAs-5kUWRoEc-WA6Q"
+      }
     }
   ]
 }

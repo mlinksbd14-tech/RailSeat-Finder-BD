@@ -9,7 +9,21 @@ header('Content-Type: application/json; charset=utf-8');
 $session = getSavedSession();
 $isAuthenticated = !empty($session['token']);
 
-$user = $session['user'] ?? null;
+$profile = decodeShohozProfile($session['token']);
+if (is_array($profile)) {
+    $user = $profile;
+} elseif (!empty($session['user']) && empty($session['user']['custom_token'])) {
+    $user = $session['user'];
+} else {
+    $stored = $session['user'] ?? [];
+    $user = [
+        'name' => 'Railway Passenger',
+        'phone' => $stored['phone'] ?? '01XXXXXXXXX',
+        'email' => $stored['email'] ?? null,
+        'nid' => $stored['nid'] ?? $stored['nidn'] ?? null,
+        'custom_token' => true
+    ];
+}
 if (!$user && $isAuthenticated) {
     $user = [
         'name' => 'Live Passenger',

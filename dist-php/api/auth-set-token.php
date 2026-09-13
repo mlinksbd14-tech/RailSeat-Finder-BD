@@ -43,8 +43,7 @@ $user = [
 
 $parts = explode('.', $token);
 if (count($parts) >= 2) {
-    $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
-    $decoded = json_decode($payloadJson, true);
+    $decoded = decodeShohozPayload($parts[1]);
     if (is_array($decoded)) {
         if (!empty($decoded['name'])) $user['name'] = $decoded['name'];
         if (!empty($decoded['display_name'])) $user['name'] = $decoded['display_name'];

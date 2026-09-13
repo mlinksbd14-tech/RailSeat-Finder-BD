@@ -1094,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-semibold border border-emerald-200 dark:border-emerald-800';
       liveBadge.textContent = '🟢 100% Live API';
-      searchModeBadge.textContent = 'Shohoz Live API';
+      if (searchModeBadge) searchModeBadge.textContent = 'Shohoz Live API';
 
       if (authModalTitle) authModalTitle.textContent = 'Bangladesh Railway Live Session & Profile';
       if (statusDescription) {
@@ -1153,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       liveBadge.className = 'text-xs px-2.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800';
       liveBadge.textContent = '⚡ Connect Session';
-      searchModeBadge.textContent = 'Session Required';
+      if (searchModeBadge) searchModeBadge.textContent = 'Session Required';
 
       if (authModalTitle) authModalTitle.textContent = 'Connect Live Shohoz API';
       if (statusDescription) {

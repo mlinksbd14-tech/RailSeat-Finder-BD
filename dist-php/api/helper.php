@@ -137,12 +137,32 @@ function getClientRequestHeaders() {
     return $headers;
 }
 
+function decodeShohozPayload($segment) {
+    if (!$segment || !is_string($segment)) return null;
+    $data = base64_decode(strtr($segment, '-_', '+/'));
+    if ($data === false) return null;
+    $json = json_decode($data, true);
+    if (is_array($json)) return $json;
+    if (function_exists('gzinflate')) {
+        $inflated = @gzinflate($data);
+        if ($inflated !== false) {
+            $json = json_decode($inflated, true);
+            if (is_array($json)) return $json;
+        }
+        $inflated = @gzuncompress($data);
+        if ($inflated !== false) {
+            $json = json_decode($inflated, true);
+            if (is_array($json)) return $json;
+        }
+    }
+    return null;
+}
+
 function decodeShohozProfile($token) {
     if (!$token || !is_string($token)) return null;
     $parts = explode('.', $token);
     if (count($parts) >= 2) {
-        $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'));
-        $payload = json_decode($payloadJson, true);
+        $payload = decodeShohozPayload($parts[1]);
         if (is_array($payload)) {
             return [
                 'name' => $payload['display_name'] ?? $payload['name'] ?? 'Verified Passenger',

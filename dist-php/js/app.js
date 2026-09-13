@@ -1488,24 +1488,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Disconnect Token Handler
-  disconnectTokenBtn.addEventListener('click', async () => {
-    try {
-      const token = getAuthToken();
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      updateAuthUI(false, null, null, null, null, false);
-      showToast('Disconnected. Saved session deleted.', 'info');
-      trainsGrid.innerHTML = '';
-      trainsTableView.classList.add('hidden');
-      initialStateCard.classList.remove('hidden');
-      statsRibbon.classList.add('hidden');
-      trackerBar.classList.add('hidden');
-    } catch (err) {
-      console.warn('Logout error:', err);
-    }
-  });
+  if (disconnectTokenBtn) {
+    disconnectTokenBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const token = getAuthToken();
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        updateAuthUI(false, null, null, null, null, false);
+        showToast('Railway session disconnected.', 'success');
+        if (authModal) authModal.classList.add('hidden');
+        if (trainsGrid) trainsGrid.innerHTML = '';
+        if (trainsTableView) trainsTableView.classList.add('hidden');
+        if (initialStateCard) initialStateCard.classList.remove('hidden');
+        if (statsRibbon) statsRibbon.classList.add('hidden');
+        if (trackerBar) trackerBar.classList.add('hidden');
+      } catch (err) {
+        console.warn('Logout error:', err);
+        showToast('Failed to disconnect. Please try again.', 'error');
+      }
+    });
+  }
 
   // ----------------------------------------------------
   // Dynamic Route Train Options Manager

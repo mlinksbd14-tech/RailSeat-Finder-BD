@@ -728,6 +728,17 @@
         "isp": "Link3 Technologies Limited",
         "query": "27.147.149.234",
         "region": "Dhaka Division"
+      },
+      "shohozSession": {
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiO…rkVmf1Q4keFUY8WlC0aMpkqootzKO2vgZAs-5kUWRoEc-WA6Q",
+        "deviceId": "cef93b89-088f-4990-a014-c2ba8427f1fc",
+        "deviceKey": "473d89fb2a5d087b57509762bcc5044c6f213c4f6a15a9cf0ad193989c334c45ac0592af14c0a1d792f7e27c48ad0023cd660b5500993893e1f5e4a087d8c3f2c3306eddf9cbf51caf7684e267f85a27",
+        "cookie": null,
+        "user": {
+          "name": "Verified Passenger",
+          "custom_token": true
+        },
+        "lastUpdated": "2026-09-13T12:27:06.998Z"
       }
     }
   ]

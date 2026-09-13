@@ -1066,7 +1066,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       console.log('[Shohoz Auth Sync]', data);
-      updateAuthUI(data.authenticated, data.user, data.token_preview, data.device_id, data.device_key, data.has_saved_session);
+      const active = !!(data.authenticated && data.user && !data.user.isExpired && data.user.name && data.user.name !== '---');
+      updateAuthUI(active, data.user, data.token_preview, data.device_id, data.device_key, data.has_saved_session);
     } catch (err) {
       console.warn('Could not check auth status:', err);
     }
@@ -1499,7 +1500,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         updateAuthUI(false, null, null, null, null, false);
         showToast('Railway session disconnected.', 'success');
-        if (authModal) authModal.classList.add('hidden');
         if (trainsGrid) trainsGrid.innerHTML = '';
         if (trainsTableView) trainsTableView.classList.add('hidden');
         if (initialStateCard) initialStateCard.classList.remove('hidden');

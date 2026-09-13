@@ -12,7 +12,7 @@
     "requireAdminApproval": false,
     "allowRegistration": true,
     "requireEmailVerification": false,
-    "requireLogin": false
+    "requireLogin": true
   },
   "users": [
     {

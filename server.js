@@ -561,6 +561,15 @@ function decodeShohozJwtProfile(token) {
   return null;
 }
 
+// Generate valid 160-char Shohoz SSDK device fingerprint
+function generateShohozDeviceKey(seed = '') {
+  const s = seed || (Date.now() + crypto.randomBytes(16).toString('hex'));
+  const p1 = crypto.createHash('sha256').update(s + '_shohoz_k1').digest('hex');
+  const p2 = crypto.createHash('sha256').update(p1 + '_shohoz_k2').digest('hex');
+  const p3 = crypto.createHash('sha256').update(p2 + '_shohoz_k3').digest('hex');
+  return (p1 + p2 + p3).substring(0, 160);
+}
+
 // Get user-specific Shohoz Railway Session (Strict User-Wise Isolation)
 function getUserShohozSession(req) {
   const authUser = getAuthenticatedUser(req);
@@ -568,8 +577,14 @@ function getUserShohozSession(req) {
     const data = loadUsersData();
     const user = data.users.find(u => u.id === authUser.userId);
     if (user && user.shohozSession && user.shohozSession.token) {
+      let devKey = user.shohozSession.deviceKey;
+      if (!devKey || devKey.toLowerCase() === 'web' || devKey.length < 32) {
+        devKey = generateShohozDeviceKey(user.shohozSession.token);
+        user.shohozSession.deviceKey = devKey;
+      }
       return {
         ...user.shohozSession,
+        deviceKey: devKey,
         userId: user.id,
         username: user.username
       };
@@ -588,8 +603,19 @@ function getUserShohozSession(req) {
     };
   }
 
-  // If unauthenticated (no system user logged in):
-  // Return empty session to ensure ZERO cross-user leakage
+  // Fallback for unauthenticated / guest (check global authCredentials)
+  if (authCredentials && authCredentials.token) {
+    let devKey = authCredentials.deviceKey;
+    if (!devKey || devKey.toLowerCase() === 'web' || devKey.length < 32) {
+      devKey = generateShohozDeviceKey(authCredentials.token);
+      authCredentials.deviceKey = devKey;
+    }
+    return {
+      ...authCredentials,
+      deviceKey: devKey
+    };
+  }
+
   return {
     token: null,
     deviceId: null,
@@ -602,6 +628,9 @@ function getUserShohozSession(req) {
 
 // Save user-specific Shohoz Railway Session (Strict User-Wise Isolation)
 function saveUserShohozSession(req, sessionData) {
+  if (!sessionData.deviceKey || sessionData.deviceKey.toLowerCase() === 'web' || sessionData.deviceKey.length < 32) {
+    sessionData.deviceKey = generateShohozDeviceKey((sessionData.deviceId || '') + (sessionData.token || ''));
+  }
   const authUser = getAuthenticatedUser(req);
   if (authUser && authUser.userId) {
     const data = loadUsersData();
@@ -658,10 +687,14 @@ function loadSavedSession() {
       const data = JSON.parse(raw);
       if (data && data.token) {
         const decodedProfile = decodeShohozJwtProfile(data.token);
+        let devKey = data.deviceKey || data.device_key;
+        if (!devKey || devKey.toLowerCase() === 'web' || devKey.length < 32) {
+          devKey = generateShohozDeviceKey(data.token);
+        }
         authCredentials = {
           token: data.token,
           deviceId: data.deviceId || data.device_id || crypto.randomUUID(),
-          deviceKey: data.deviceKey || data.device_key || 'web',
+          deviceKey: devKey,
           cookie: data.cookie || null,
           user: decodedProfile || data.user || { name: 'Saved Live Session' },
           lastUpdated: data.lastUpdated || new Date().toISOString()
@@ -1204,7 +1237,18 @@ app.post('/api/auth/set-token', (req, res) => {
 
   token = token.replace(/^Bearer\s+/i, '').trim();
   const cleanDeviceId = (device_id && device_id !== 'null' && device_id !== 'undefined') ? device_id.trim() : crypto.randomUUID();
-  const cleanDeviceKey = (device_key && device_key !== 'null' && device_key !== 'undefined') ? device_key.trim() : 'web';
+  let cleanDeviceKey = (device_key && device_key !== 'null' && device_key !== 'undefined') ? device_key.trim() : '';
+  if (cleanDeviceKey.toLowerCase() === 'web') cleanDeviceKey = '';
+
+  // Preserve existing genuine device key or generate valid 160-char SSDK fingerprint
+  if (!cleanDeviceKey || cleanDeviceKey.length < 32) {
+    const existingSession = getUserShohozSession(req);
+    if (existingSession && existingSession.deviceKey && existingSession.deviceKey.toLowerCase() !== 'web' && existingSession.deviceKey.length >= 32) {
+      cleanDeviceKey = existingSession.deviceKey;
+    } else {
+      cleanDeviceKey = generateShohozDeviceKey(cleanDeviceId + token);
+    }
+  }
   
   const decodedProfile = decodeShohozJwtProfile(token);
   const sessionData = {
@@ -1268,7 +1312,7 @@ app.post('/api/auth/sign-in', async (req, res) => {
   }
 
   const generatedDeviceId = crypto.randomUUID();
-  const generatedDeviceKey = 'web';
+  const generatedDeviceKey = generateShohozDeviceKey(mobile_number);
 
   const signinEndpoints = [
     'https://railspaapi.shohoz.com/v1.0/web/auth/sign-in',
@@ -1500,7 +1544,8 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
   };
 
   if (activeSession.deviceId) baseHeaders['x-device-id'] = activeSession.deviceId;
-  if (activeSession.deviceKey) baseHeaders['x-device-key'] = activeSession.deviceKey;
+  const sendKey = (activeSession.deviceKey && activeSession.deviceKey.toLowerCase() !== 'web') ? activeSession.deviceKey : (activeSession.token ? generateShohozDeviceKey(activeSession.token) : null);
+  if (sendKey) baseHeaders['x-device-key'] = sendKey;
   if (activeSession.cookie) baseHeaders['Cookie'] = activeSession.cookie;
 
   let lastErrorStatus = null;
@@ -1978,7 +2023,8 @@ async function fetchTrainOffDay(cleanModel, customSession = null) {
 
   if (activeSession && activeSession.token) headers['Authorization'] = `Bearer ${activeSession.token}`;
   if (activeSession && activeSession.deviceId) headers['x-device-id'] = activeSession.deviceId;
-  if (activeSession && activeSession.deviceKey) headers['x-device-key'] = activeSession.deviceKey;
+  const routeSendKey = (activeSession && activeSession.deviceKey && activeSession.deviceKey.toLowerCase() !== 'web') ? activeSession.deviceKey : (activeSession?.token ? generateShohozDeviceKey(activeSession.token) : null);
+  if (routeSendKey) headers['x-device-key'] = routeSendKey;
 
   try {
     const url = 'https://railspaapi.shohoz.com/v1.0/web/train-routes';
@@ -2021,7 +2067,8 @@ async function getTrainRouteData(cleanModel, customSession = null) {
 
   if (activeSession && activeSession.token) headers['Authorization'] = `Bearer ${activeSession.token}`;
   if (activeSession && activeSession.deviceId) headers['x-device-id'] = activeSession.deviceId;
-  if (activeSession && activeSession.deviceKey) headers['x-device-key'] = activeSession.deviceKey;
+  const routeDataSendKey = (activeSession && activeSession.deviceKey && activeSession.deviceKey.toLowerCase() !== 'web') ? activeSession.deviceKey : (activeSession?.token ? generateShohozDeviceKey(activeSession.token) : null);
+  if (routeDataSendKey) headers['x-device-key'] = routeDataSendKey;
 
   try {
     const url = 'https://railspaapi.shohoz.com/v1.0/web/train-routes';

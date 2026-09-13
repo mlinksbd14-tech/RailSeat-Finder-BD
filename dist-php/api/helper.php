@@ -142,6 +142,24 @@ function decodeShohozProfile($token) {
     return null;
 }
 
+function generateShohozDeviceId() {
+    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,
+        mt_rand(0, 0x3fff) | 0x8000,
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+}
+
+function generateShohozDeviceKey($seed = '') {
+    $s = !empty($seed) ? $seed : (microtime(true) . bin2hex(random_bytes(16)));
+    $p1 = hash('sha256', $s . '_shohoz_k1');
+    $p2 = hash('sha256', $p1 . '_shohoz_k2');
+    $p3 = hash('sha256', $p2 . '_shohoz_k3');
+    return substr($p1 . $p2 . $p3, 0, 160);
+}
+
 function getSavedSession() {
     $reqHeaders = getClientRequestHeaders();
 
@@ -154,16 +172,23 @@ function getSavedSession() {
     }
 
     $reqDeviceId = $reqHeaders['x-device-id'] ?? ($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
-    $reqDeviceKey = $reqHeaders['x-device-key'] ?? ($_SERVER['HTTP_X_DEVICE_KEY'] ?? 'web');
+    $reqDeviceKey = $reqHeaders['x-device-key'] ?? ($_SERVER['HTTP_X_DEVICE_KEY'] ?? '');
+    if (strtolower($reqDeviceKey) === 'web') {
+        $reqDeviceKey = '';
+    }
 
     // 2. Check dedicated session.json file if present
     if (file_exists(SESSION_FILE)) {
         $data = json_decode(file_get_contents(SESSION_FILE), true);
         if (is_array($data) && !empty($data['token'])) {
+            $sessKey = $data['deviceKey'] ?? $data['device_key'] ?? '';
+            if (empty($sessKey) || strtolower($sessKey) === 'web' || strlen($sessKey) < 32) {
+                $sessKey = (!empty($reqDeviceKey) && strlen($reqDeviceKey) >= 32) ? $reqDeviceKey : generateShohozDeviceKey($data['token']);
+            }
             return [
                 'token' => $data['token'],
-                'deviceId' => $data['deviceId'] ?? $data['device_id'] ?? $reqDeviceId,
-                'deviceKey' => $data['deviceKey'] ?? $data['device_key'] ?? $reqDeviceKey,
+                'deviceId' => $data['deviceId'] ?? $data['device_id'] ?? ($reqDeviceId ?: '34a817c48b87571632d2a7a1d50575a4'),
+                'deviceKey' => $sessKey,
                 'user' => $data['user'] ?? decodeShohozProfile($data['token'])
             ];
         }
@@ -176,10 +201,14 @@ function getSavedSession() {
         if (isset($usersData['users']) && is_array($usersData['users'])) {
             foreach ($usersData['users'] as $u) {
                 if (isset($u['shohozSession']['token']) && !empty($u['shohozSession']['token'])) {
+                    $uKey = $u['shohozSession']['deviceKey'] ?? '';
+                    if (empty($uKey) || strtolower($uKey) === 'web' || strlen($uKey) < 32) {
+                        $uKey = (!empty($reqDeviceKey) && strlen($reqDeviceKey) >= 32) ? $reqDeviceKey : generateShohozDeviceKey($u['shohozSession']['token']);
+                    }
                     return [
                         'token' => $u['shohozSession']['token'],
-                        'deviceId' => $u['shohozSession']['deviceId'] ?? $reqDeviceId,
-                        'deviceKey' => $u['shohozSession']['deviceKey'] ?? $reqDeviceKey,
+                        'deviceId' => $u['shohozSession']['deviceId'] ?? ($reqDeviceId ?: '34a817c48b87571632d2a7a1d50575a4'),
+                        'deviceKey' => $uKey,
                         'user' => $u['shohozSession']['user'] ?? decodeShohozProfile($u['shohozSession']['token'])
                     ];
                 }
@@ -189,10 +218,11 @@ function getSavedSession() {
 
     // 4. Return client passed token if available
     if (!empty($bearerToken)) {
+        $clientKey = (!empty($reqDeviceKey) && strlen($reqDeviceKey) >= 32) ? $reqDeviceKey : generateShohozDeviceKey($bearerToken);
         return [
             'token' => $bearerToken,
-            'deviceId' => $reqDeviceId,
-            'deviceKey' => $reqDeviceKey,
+            'deviceId' => $reqDeviceId ?: '34a817c48b87571632d2a7a1d50575a4',
+            'deviceKey' => $clientKey,
             'user' => decodeShohozProfile($bearerToken)
         ];
     }
@@ -206,6 +236,9 @@ function getSavedSession() {
 }
 
 function saveSessionData($data) {
+    if (empty($data['deviceKey']) || strtolower($data['deviceKey']) === 'web' || strlen($data['deviceKey']) < 32) {
+        $data['deviceKey'] = generateShohozDeviceKey(($data['deviceId'] ?? '') . ($data['token'] ?? ''));
+    }
     @file_put_contents(SESSION_FILE, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     
     // Also update users.json first user's shohozSession if present so it persists in users.json
@@ -216,7 +249,7 @@ function saveSessionData($data) {
             $usersData['users'][0]['shohozSession'] = [
                 'token' => $data['token'] ?? '',
                 'deviceId' => $data['deviceId'] ?? '',
-                'deviceKey' => $data['deviceKey'] ?? 'web',
+                'deviceKey' => $data['deviceKey'],
                 'user' => $data['user'] ?? null,
                 'lastUpdated' => date('c')
             ];
@@ -281,8 +314,9 @@ function queryShohozSearch($fromCity, $toCity, $dateStr, $session = null) {
     if (!empty($session['deviceId'])) {
         $headers[] = 'x-device-id: ' . trim($session['deviceId']);
     }
-    if (!empty($session['deviceKey'])) {
-        $headers[] = 'x-device-key: ' . trim($session['deviceKey']);
+    $sendDevKey = (!empty($session['deviceKey']) && strtolower($session['deviceKey']) !== 'web') ? trim($session['deviceKey']) : (!empty($session['token']) ? generateShohozDeviceKey($session['token']) : '');
+    if (!empty($sendDevKey)) {
+        $headers[] = 'x-device-key: ' . $sendDevKey;
     }
 
     $ch = curl_init();
@@ -493,7 +527,8 @@ function getTrainRouteDataPHP($cleanModel, $session = null) {
 
     if (!empty($session['token'])) $headers[] = 'Authorization: Bearer ' . trim($session['token']);
     if (!empty($session['deviceId'])) $headers[] = 'x-device-id: ' . trim($session['deviceId']);
-    if (!empty($session['deviceKey'])) $headers[] = 'x-device-key: ' . trim($session['deviceKey']);
+    $routeDevKey = (!empty($session['deviceKey']) && strtolower($session['deviceKey']) !== 'web') ? trim($session['deviceKey']) : (!empty($session['token']) ? generateShohozDeviceKey($session['token']) : '');
+    if (!empty($routeDevKey)) $headers[] = 'x-device-key: ' . $routeDevKey;
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, 'https://railspaapi.shohoz.com/v1.0/web/train-routes');
@@ -586,7 +621,8 @@ function queryShohozTripsParallel($queries, $session = null, $batchSize = 4) {
         'Authorization: Bearer ' . trim($session['token'])
     ];
     if (!empty($session['deviceId'])) $commonHeaders[] = 'x-device-id: ' . trim($session['deviceId']);
-    if (!empty($session['deviceKey'])) $commonHeaders[] = 'x-device-key: ' . trim($session['deviceKey']);
+    $multiDevKey = (!empty($session['deviceKey']) && strtolower($session['deviceKey']) !== 'web') ? trim($session['deviceKey']) : (!empty($session['token']) ? generateShohozDeviceKey($session['token']) : '');
+    if (!empty($multiDevKey)) $commonHeaders[] = 'x-device-key: ' . $multiDevKey;
 
     // Chunk into batches of $batchSize
     $chunks = array_chunk($toExecute, max(1, $batchSize));

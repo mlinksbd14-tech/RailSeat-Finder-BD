@@ -22,5 +22,5 @@ echo json_encode([
     'user' => $user,
     'token_preview' => $tokenPreview,
     'device_id' => $session['deviceId'] ?? '',
-    'device_key' => $session['deviceKey'] ?? 'web'
+    'device_key' => (!empty($session['deviceKey']) && strtolower($session['deviceKey']) !== 'web') ? $session['deviceKey'] : (!empty($session['token']) ? generateShohozDeviceKey($session['token']) : '')
 ], JSON_UNESCAPED_UNICODE);

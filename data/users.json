@@ -42,8 +42,60 @@
         "query": "103.59.178.232",
         "region": "Barisal Division"
       },
-      "lastLogin": "2026-09-12T03:38:26.528Z",
+      "lastIp": "27.147.149.234",
+      "lastLogin": "2026-09-13T06:54:24.254Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T06:54:24.254Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-12T08:21:35.842Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-12T08:02:21.531Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 152",
+          "location": {
+            "countryCode": "BD",
+            "country": "Bangladesh",
+            "flag": "🇧🇩",
+            "city": "Barishal",
+            "isp": "Nation",
+            "query": "103.59.178.232",
+            "region": "Barisal Division"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-12T03:38:26.528Z",
@@ -292,20 +344,19 @@
           "browser": "Edge 151"
         }
       ],
-      "lastIp": "27.147.149.234",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "loginCount": 16,
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+      "loginCount": 19,
       "lastDevice": {
         "os": "Windows 10/11",
-        "browser": "Edge 152",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-        "device": "Desktop"
+        "device": "Desktop",
+        "browser": "Edge 153",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
       },
       "shohozSession": {
         "cookie": null,
-        "lastUpdated": "2026-09-12T03:38:49.259Z",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "lastUpdated": "2026-09-13T06:55:45.380Z",
         "user": {
           "roles": [
             "user",
@@ -313,15 +364,15 @@
           ],
           "isExpired": false,
           "locale": "bn-BD",
-          "nidType": "Default",
-          "phone": "01871860487",
-          "name": "Md. Habibullah",
-          "nid": "8254236667",
-          "issuedAt": "2026-09-12T03:29:51.000Z",
-          "email": "labu3416@gmail.com",
-          "expiresAt": "2026-09-12T15:29:51.000Z"
+          "nidType": "NID",
+          "phone": "01679145257",
+          "name": "MD SAIDUR RAHAMAN",
+          "nid": "5557116489",
+          "issuedAt": "2026-09-13T06:53:00.000Z",
+          "email": "srshawon421@gmail.com",
+          "expiresAt": "2026-09-13T18:53:00.000Z"
         },
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODkxODM3OTEsImV4cCI6MTc4OTIyNjk5MSwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4OTE4Mzc5MSwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.M3TAd3uzVtQki4bLz0hWRahzOk1HaOTAsjyUA-CQnWP6M0AeWsdomR_wWgBX1mD8-2q5e39MmvStgPtwGUIfPDg-_Pu-vmIT4JHiC9MXD1xwwLWrpTtHdtSVkBpVvRj22XPmRDsgUFebfmkn9K20UsUZ8xw4ndrHPNYgJLUI3GrUCQFeuXIkMLqlfZ-rCDB98PMTyF10OaKMqfkteLLt6blhDUM7HIjhABY6nhoRSN9KRy-jWr1slUt1kcmhjE5hKP67XdhdyGTDIhrVurN03bvulv1I_UlD1RNQ_up-CnMmrkB3-a8xEseRf6OwU5s_hAVeKgtma2x3PKSSENAWFg"
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODkyODIzODAsImV4cCI6MTc4OTMyNTU4MCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImNkY2UyNjFlLWRiZjctNDVlZC1iZDk0LTFiMmJlOGViZjUyNCIsImF1dGhfdGltZSI6MTc4OTI4MjM4MCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTY3OTE0NTI1NyIsImVtYWlsIjoic3JzaGF3b240MjFAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTY3OTE0NTI1NyIsImRpc3BsYXlfbmFtZSI6Ik1EIFNBSURVUiBSQUhBTUFOIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiNTU1NzExNjQ4OSIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.nFfIrMnl6wpyCxy_7fbV-2PJf0GGQfdXNKvrZP4Tzk_QK8VFOV3A8k9ldvv4GcnKFVP-sCwYpdpHZPvuwA4yNQzYaEiI3iC6YalEuMyawRltgZ3HkEFk-CEzj9-VUjgPhnBCQOMam0N6hPChCndiLD6tsA-ETdxUuIR6LmXJC5OTAyPtf1foO_hEgMCMKC9Uw8_wgKxMZMlkFSJdxzhjsyQVxhJnpM3iRrQzwOFfojKKzq1PEZ7bAGrgxfIRjfKX5aokOrUvMgDMtgoNgCW9DMoPMyIDglKK2hnqIVBuFDzLNGq-ny2U5PorlVyd-Nl7EGMRgE-UdjDMSrpPnTvMGw"
       }
     },
     {
@@ -428,6 +479,70 @@
         "countryCode": "BD",
         "isp": "Windstream Communication Limited",
         "query": "103.153.66.54",
+        "region": "Dhaka Division"
+      },
+      "loginCount": 1
+    },
+    {
+      "role": "viewer",
+      "lastIp": "118.179.32.161",
+      "canViewDashboard": true,
+      "ips": [
+        "118.179.32.161"
+      ],
+      "authProvider": "password",
+      "createdAt": "2026-09-13T04:58:01.690Z",
+      "emailVerified": true,
+      "firebaseUid": null,
+      "password": "scrypt$16384$8$1$4254b24c1062d8f1adacee40d19e4592$1bbe0c1eb89e759660a4120dd46ff32e9ac481b03e6594f91d7df24e917d6bc2cd526c16d2a9d56160d2cc14fe8da594c3d02f02990012f572c1fe9216089619",
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+      "name": "eldestelissa@uberip.com",
+      "id": "usr_1789275481430_s2zl",
+      "email": "eldestelissa@uberip.com",
+      "status": "active",
+      "username": "eldestelissa",
+      "lastDevice": {
+        "os": "Windows 10/11",
+        "browser": "Chrome 153",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "device": "Desktop"
+      },
+      "lastLogin": "2026-09-13T04:58:10.102Z",
+      "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-13T04:58:10.102Z",
+          "ip": "118.179.32.161",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Chrome 153",
+          "location": {
+            "city": "Dhaka",
+            "region": "Dhaka Division",
+            "country": "Bangladesh",
+            "countryCode": "BD",
+            "flag": "🇧🇩",
+            "isp": "AmberIT Limited",
+            "query": "118.179.32.161"
+          }
+        },
+        {
+          "action": "register",
+          "timestamp": "2026-09-13T04:58:01.690Z",
+          "ip": "118.179.32.161",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Chrome 153",
+          "location": null
+        }
+      ],
+      "lastLocation": {
+        "country": "Bangladesh",
+        "flag": "🇧🇩",
+        "city": "Dhaka",
+        "countryCode": "BD",
+        "isp": "AmberIT Limited",
+        "query": "118.179.32.161",
         "region": "Dhaka Division"
       },
       "loginCount": 1

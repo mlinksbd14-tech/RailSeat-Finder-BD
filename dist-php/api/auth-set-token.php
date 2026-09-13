@@ -11,8 +11,27 @@ if (!is_array($body) || empty($body['token'])) {
 }
 
 $token = trim($body['token']);
+$token = preg_replace('/^Bearer\s+/i', '', $token);
+
 $deviceId = trim($body['device_id'] ?? $body['deviceId'] ?? '');
-$deviceKey = trim($body['device_key'] ?? $body['deviceKey'] ?? 'web');
+if (empty($deviceId) || $deviceId === 'null' || $deviceId === 'undefined') {
+    $deviceId = generateShohozDeviceId();
+}
+
+$deviceKey = trim($body['device_key'] ?? $body['deviceKey'] ?? '');
+if (strtolower($deviceKey) === 'web' || $deviceKey === 'null' || $deviceKey === 'undefined') {
+    $deviceKey = '';
+}
+
+// Preserve genuine device key if already saved on server, or generate valid 160-char SSDK fingerprint
+if (empty($deviceKey) || strlen($deviceKey) < 32) {
+    $existingSession = getSavedSession();
+    if (!empty($existingSession['deviceKey']) && strtolower($existingSession['deviceKey']) !== 'web' && strlen($existingSession['deviceKey']) >= 32) {
+        $deviceKey = $existingSession['deviceKey'];
+    } else {
+        $deviceKey = generateShohozDeviceKey($deviceId . $token);
+    }
+}
 
 // Try decoding payload from JWT if present
 $user = [
@@ -28,9 +47,14 @@ if (count($parts) >= 2) {
     $decoded = json_decode($payloadJson, true);
     if (is_array($decoded)) {
         if (!empty($decoded['name'])) $user['name'] = $decoded['name'];
-        if (!empty($decoded['phone'])) $user['phone'] = $decoded['phone'];
+        if (!empty($decoded['display_name'])) $user['name'] = $decoded['display_name'];
+        if (!empty($decoded['phone_number'])) $user['phone'] = $decoded['phone_number'];
+        elseif (!empty($decoded['phone'])) $user['phone'] = $decoded['phone'];
         if (!empty($decoded['email'])) $user['email'] = $decoded['email'];
-        if (!empty($decoded['nid'])) $user['nid'] = $decoded['nid'];
+        if (!empty($decoded['nida'])) $user['nid'] = $decoded['nida'];
+        elseif (!empty($decoded['nid'])) $user['nid'] = $decoded['nid'];
+        elseif (!empty($decoded['nidn'])) $user['nid'] = $decoded['nidn'];
+        if (!empty($decoded['exp'])) $user['expiresAt'] = date('c', $decoded['exp']);
     }
 }
 

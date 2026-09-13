@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.authUserData = user;
 
     if (deviceId && deviceIdInput) deviceIdInput.value = deviceId;
-    if (deviceKey && deviceKeyInput) deviceKeyInput.value = deviceKey;
+    if (deviceKey && deviceKeyInput && deviceKey.toLowerCase() !== 'web') deviceKeyInput.value = deviceKey;
 
     if (isAuth) {
       authModalOpenBtn.className = 'flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white';
@@ -1201,6 +1201,10 @@ document.addEventListener('DOMContentLoaded', () => {
       token = raw;
     }
 
+    if (deviceKey && (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined')) {
+      deviceKey = '';
+    }
+
     await saveCredentials({ token, device_id: deviceId, device_key: deviceKey, raw_curl: raw });
   }
 
@@ -1226,7 +1230,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const token = tokenPasteInput.value.trim();
       const deviceId = deviceIdInput.value.trim();
-      const deviceKey = deviceKeyInput.value.trim();
+      let deviceKey = deviceKeyInput.value.trim();
+      if (deviceKey.toLowerCase() === 'web' || deviceKey === 'null' || deviceKey === 'undefined') {
+        deviceKey = '';
+      }
 
       if (!token) {
         showToast('Please enter your Bearer token.', 'error');

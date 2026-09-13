@@ -3506,23 +3506,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isAvail) {
       return `
         <a href="${bookUrl}" target="_blank" rel="noopener"
-          class="app-seat-tile block p-2 sm:p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 hover:border-emerald-500 hover:bg-emerald-50/70 transition shadow-2xs group cursor-pointer"
-          title="Book ${displayName} (${totalSeatCount} seats available)">
+          class="app-seat-tile relative block p-2.5 sm:p-3 rounded-lg border-2 border-emerald-500/80 dark:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 hover:border-emerald-600 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 transition-all shadow-xs hover:shadow-sm group cursor-pointer"
+          title="Book ${displayName} (${totalSeatCount} seats available - ${fareDisplay})">
           
-          <div class="flex items-center justify-between gap-1 mb-1.5">
-            <span class="text-[11px] font-bold uppercase tracking-tight text-slate-800 dark:text-slate-200 truncate">${displayName}</span>
-            <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-medium">${fareDisplay}</span>
+          <div class="flex items-center justify-between gap-1.5 mb-1.5">
+            <span class="text-[11px] font-bold uppercase tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition truncate">${displayName}</span>
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-600 dark:bg-emerald-500 text-white font-mono text-[11px] font-bold shadow-2xs leading-none shrink-0">${fareDisplay}</span>
           </div>
 
-          <div class="flex items-baseline justify-between mt-1">
-            <span class="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400 tnum">${seatsLabel}</span>
-            <span class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Avail</span>
+          <div class="flex items-baseline justify-between mt-1 pt-1 border-t border-emerald-200/80 dark:border-emerald-800/60">
+            <span class="text-sm sm:text-base font-extrabold text-emerald-800 dark:text-emerald-300 tnum leading-tight">${seatsLabel}</span>
+            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span>Avail</span>
+            </span>
           </div>
         </a>
       `;
     } else {
       return `
-        <div class="app-seat-tile block p-2 sm:p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-slate-400 opacity-60 cursor-not-allowed select-none"
+        <div class="app-seat-tile block p-2.5 sm:p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/40 text-slate-400 opacity-60 cursor-not-allowed select-none"
           title="${displayName} (${soldOutLabel})">
           
           <div class="flex items-center justify-between gap-1 mb-1.5">
@@ -3530,7 +3533,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="font-mono text-[10px] text-slate-400">${fareDisplay}</span>
           </div>
 
-          <div class="flex items-baseline justify-between mt-1">
+          <div class="flex items-baseline justify-between mt-1 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
             <span class="text-xs font-medium text-slate-400">${soldOutLabel}</span>
             <span class="text-[9px] text-slate-400 font-normal">--</span>
           </div>
@@ -3599,10 +3602,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const fareDisplay = isBn ? `৳${window.i18n.toBnNum(fare)}` : `৳${fare}`;
 
                 return `
-                  <div class="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 text-xs shrink-0">
-                    <span class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">${classTitle}:</span>
-                    <span class="font-bold text-emerald-700 dark:text-emerald-400 tnum text-[11px]">${countDisplay}</span>
-                    <span class="text-slate-500 dark:text-slate-400 font-mono text-[10px]">${fareDisplay}</span>
+                  <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 text-xs shrink-0 shadow-2xs">
+                    <span class="font-bold text-slate-900 dark:text-white text-[11px]">${classTitle}:</span>
+                    <span class="font-extrabold text-emerald-800 dark:text-emerald-300 tnum text-xs">${countDisplay}</span>
+                    <span class="px-1.5 py-0.2 rounded bg-emerald-600 dark:bg-emerald-500 text-white font-mono text-[10px] font-bold shadow-2xs">${fareDisplay}</span>
                   </div>
                 `;
               }).join('') : `
@@ -3679,10 +3682,10 @@ document.addEventListener('DOMContentLoaded', () => {
               const fareDisplay = isBn ? `৳${window.i18n.toBnNum(totalFare)}` : `৳${totalFare}`;
 
               return `
-                <div class="inline-flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/70 text-xs shadow-2xs whitespace-nowrap">
-                  <span class="font-bold text-slate-900 dark:text-white">${classTitle}:</span>
-                  <span class="px-1.5 py-0.2 rounded bg-emerald-600 text-white font-extrabold text-[10px]">🟢 ${countDisplay}</span>
-                  <span class="text-emerald-700 dark:text-emerald-300 font-bold text-[11px]">${fareDisplay}</span>
+                <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/80 text-xs shadow-2xs whitespace-nowrap">
+                  <span class="font-bold text-slate-900 dark:text-white text-[11px]">${classTitle}:</span>
+                  <span class="font-extrabold text-emerald-800 dark:text-emerald-300 tnum text-xs">${countDisplay}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-600 dark:bg-emerald-500 text-white font-mono text-[10px] font-bold shadow-2xs">${fareDisplay}</span>
                 </div>
               `;
             }).join('')}

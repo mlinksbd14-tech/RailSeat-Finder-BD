@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const watchTargetClassSelect = document.getElementById('watchTargetClassSelect');
   const watchMultiDateGrid = document.getElementById('watchMultiDateGrid');
   const watchSelectedDatesCount = document.getElementById('watchSelectedDatesCount');
+  const watchSelectAdvanceDatesBtn = document.getElementById('watchSelectAdvanceDatesBtn');
   const watchSelectAllDatesBtn = document.getElementById('watchSelectAllDatesBtn');
   const watchResetTodayDateBtn = document.getElementById('watchResetTodayDateBtn');
   const saveWatchTargetBtn = document.getElementById('saveWatchTargetBtn');
@@ -2196,18 +2197,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // ----------------------------------------------------
   // Date Picker & Quick Day Shortcuts
   // ----------------------------------------------------
+  // Helper to format Date object into local YYYY-MM-DD string
+  function getLocalDateIso(d = new Date()) {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   function setupDateLimits() {
     const today = new Date();
-    const maxDate = new Date();
+    const maxDate = new Date(today);
+    // 10 days advance ticket without today (Today + 10 calendar days ahead)
     maxDate.setDate(today.getDate() + 10);
 
-    const todayFormatted = today.toISOString().split('T')[0];
-    const maxDateFormatted = maxDate.toISOString().split('T')[0];
+    const todayFormatted = getLocalDateIso(today);
+    const maxDateFormatted = getLocalDateIso(maxDate);
 
     journeyDateInput.min = todayFormatted;
     journeyDateInput.max = maxDateFormatted;
-    journeyDateInput.value = todayFormatted;
-    state.selectedDate = todayFormatted;
+    if (!journeyDateInput.value || journeyDateInput.value < todayFormatted || journeyDateInput.value > maxDateFormatted) {
+      journeyDateInput.value = todayFormatted;
+      state.selectedDate = todayFormatted;
+    }
+
+    if (matrixStartDateInput) {
+      matrixStartDateInput.min = todayFormatted;
+      matrixStartDateInput.max = maxDateFormatted;
+      if (!matrixStartDateInput.value) {
+        matrixStartDateInput.value = todayFormatted;
+      }
+    }
   }
 
   function generateQuickDateChips() {
@@ -4882,6 +4902,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    if (watchSelectAdvanceDatesBtn) {
+      watchSelectAdvanceDatesBtn.addEventListener('click', () => {
+        if (state.pendingWatchTarget && state.pendingWatchTarget.availableDates) {
+          // Select only the 10 advance booking days (without today)
+          state.pendingWatchTarget.dates = state.pendingWatchTarget.availableDates.slice(1);
+          renderWatchMultiDateGrid();
+        }
+      });
+    }
+
     if (watchSelectAllDatesBtn) {
       watchSelectAllDatesBtn.addEventListener('click', () => {
         if (state.pendingWatchTarget && state.pendingWatchTarget.availableDates) {
@@ -5044,41 +5074,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const selected = state.pendingWatchTarget.dates || [];
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const todayStr = getLocalDateIso(new Date());
 
-    watchMultiDateGrid.innerHTML = state.pendingWatchTarget.availableDates.map(dateStr => {
+    watchMultiDateGrid.innerHTML = state.pendingWatchTarget.availableDates.map((dateStr, idx) => {
       const isSelected = selected.includes(dateStr);
       const parts = dateStr.split('-');
       const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
       const dayName = days[d.getDay()];
       const dayNum = d.getDate();
       const monthName = months[d.getMonth()];
+      const isToday = (dateStr === todayStr || idx === 0);
+      const advanceDay = idx; // 1 to 10 for advance days
 
       const activeClass = isSelected
         ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-bold ring-2 ring-emerald-400/40'
         : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-800 font-medium';
+
+      const badge = isToday
+        ? `<span class="text-[8px] font-extrabold px-1 rounded mt-0.5 ${isSelected ? 'bg-white/20 text-white' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}">Today</span>`
+        : `<span class="text-[8px] font-extrabold px-1 rounded mt-0.5 ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'}">+${advanceDay}D Adv</span>`;
 
       return `
         <button type="button" class="watch-date-chip flex flex-col items-center justify-center p-1.5 rounded-xl border text-center transition cursor-pointer select-none ${activeClass}" data-date="${dateStr}">
           <span class="text-[9px] uppercase tracking-wider opacity-80">${dayName}</span>
           <span class="text-xs font-black">${dayNum}</span>
           <span class="text-[9px] opacity-80">${monthName}</span>
+          ${badge}
         </button>
       `;
     }).join('');
 
     if (watchSelectedDatesCount) {
       const count = selected.length;
-      watchSelectedDatesCount.textContent = `Selected: ${count} date${count === 1 ? '' : 's'}`;
+      const firstDate = state.pendingWatchTarget.availableDates[0];
+      const hasToday = selected.includes(firstDate);
+      let extraTag = '';
+      if (count === 10 && !hasToday) {
+        extraTag = ' (10 Advance Days)';
+      } else if (count === 11) {
+        extraTag = ' (Today + 10 Advance Days)';
+      }
+      watchSelectedDatesCount.textContent = `Selected: ${count} date${count === 1 ? '' : 's'}${extraTag}`;
     }
   }
 
   function openSetWatchModal(train) {
     if (!train) return;
     
-    // Generate next 10 booking days in local time
+    // Generate Today + 10 advance booking days in local time (11 dates total)
     const availableDates = [];
     const now = new Date();
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i <= 10; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
       const yyyy = d.getFullYear();

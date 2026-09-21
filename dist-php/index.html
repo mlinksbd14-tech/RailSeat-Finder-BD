@@ -2234,15 +2234,17 @@
               <span>Target Journey Dates</span>
             </label>
             <div class="flex items-center space-x-1.5 text-[10px]">
-              <button type="button" id="watchSelectAllDatesBtn" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer">All 10 Days</button>
+              <button type="button" id="watchSelectAdvanceDatesBtn" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer" title="Select 10 advance ticket days (without today)">10 Advance Days</button>
+              <span class="text-slate-300 dark:text-slate-700">|</span>
+              <button type="button" id="watchSelectAllDatesBtn" class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer" title="Select all 11 days (Today + 10 advance days)">All 11 Days</button>
               <span class="text-slate-300 dark:text-slate-700">|</span>
               <button type="button" id="watchResetTodayDateBtn" class="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold cursor-pointer">Single Date</button>
             </div>
           </div>
           
-          <!-- Interactive Multi-Date Chip Grid -->
-          <div id="watchMultiDateGrid" class="grid grid-cols-5 gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 max-h-36 overflow-y-auto">
-            <!-- Rendered by JS: 10 selectable dates with month/day & day-of-week -->
+          <!-- Interactive Multi-Date Chip Grid (Today + 10 Advance Booking Days) -->
+          <div id="watchMultiDateGrid" class="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 max-h-44 overflow-y-auto">
+            <!-- Rendered by JS: Today + 10 advance selectable dates with month/day & advance badges -->
           </div>
           <div class="flex items-center justify-between mt-1 text-[10px] text-slate-400">
             <span id="watchSelectedDatesCount" class="font-bold text-emerald-700 dark:text-emerald-300">Selected: 1 date</span>

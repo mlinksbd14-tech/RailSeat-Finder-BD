@@ -35,46 +35,91 @@
       ],
       "lastLocation": {
         "countryCode": "BD",
-        "country": "Bangladesh",
-        "flag": "🇧🇩",
-        "city": "Barishal",
-        "isp": "Nation",
-        "query": "103.59.178.232",
-        "region": "Barisal Division"
+        "country": "Development",
+        "flag": "💻",
+        "city": "Localhost",
+        "isp": "Internal Loopback / Dev",
+        "query": "::1",
+        "region": "Local Network"
       },
-      "lastIp": "::1",
-      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+      "lastIp": "103.59.178.232",
+      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
       "lastDevice": {
-        "browser": "Edge 153",
-        "os": "Windows 10/11",
-        "device": "Desktop",
-        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0"
+        "os": "Android 10",
+        "browser": "Chrome 153",
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
+        "device": "Mobile"
       },
-      "shohozSession": {
-        "cookie": null,
-        "lastUpdated": "2026-09-21T04:35:57.798Z",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
-        "deviceId": "0147ef63-cca0-4603-9d04-ba4442dd3f11",
-        "user": {
-          "roles": [
-            "user",
-            "anonymous"
-          ],
-          "isExpired": false,
-          "locale": "bn-BD",
-          "custom_token": true,
-          "nidType": "Default",
-          "phone": "01871860487",
-          "name": "Md. Habibullah",
-          "nid": "8254236667",
-          "issuedAt": "2026-09-21T04:35:37.000Z",
-          "email": "labu3416@gmail.com",
-          "expiresAt": "2026-09-21T16:35:37.000Z"
-        },
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3ODk5NjUzMzcsImV4cCI6MTc5MDAwODUzNywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc4OTk2NTMzNywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.LzsnxTBrF8QUo_KNQHBWSMRd3YyW5dwVkYtd-cUF33PQpmvlK7CfNpPvZbwBS2qAeJAkYNVF80uldKfrTwGTuXdq9jMOIM-EDBqE4CS9WCr2jzSDwHZuTId6kIwIUm6BQeq06otmv5PRxnIB7Fsi7NzgM-GBTUhi-rYVy9VYLJxvUeGf-r8Kq2lrYESu5aao7076IOO-y558hA5POC7DH49MEzmxhVSsKqHltAjKonnqGx0wiFYDgwLfIqUefzmRO5hwmDKg1oFdEhtzUm1AITE4G5KWGyp-ibL99u4W22yaqAvw6uUPwzVKw7zdmGO_HHoUUSaKNoqcRL-k5pY8vA"
-      },
-      "lastLogin": "2026-09-21T05:00:05.732Z",
+      "lastLogin": "2026-09-23T14:42:37.737Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-23T14:42:37.737Z",
+          "ip": "103.59.178.232",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-22T14:12:12.316Z",
+          "ip": "103.59.178.232",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-22T10:28:09.887Z",
+          "ip": "27.147.149.234",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-21T16:17:08.403Z",
+          "ip": "103.59.178.232",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 153",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-21T05:00:05.732Z",
@@ -83,13 +128,13 @@
           "os": "Windows 10/11",
           "browser": "Edge 153",
           "location": {
+            "city": "Localhost",
+            "region": "Local Network",
+            "country": "Development",
             "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Barishal",
-            "isp": "Nation",
-            "query": "103.59.178.232",
-            "region": "Barisal Division"
+            "flag": "💻",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1"
           }
         },
         {
@@ -431,77 +476,31 @@
             "query": "103.59.178.232",
             "region": "Barisal Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-09T17:03:35.560Z",
-          "ip": "103.59.178.232",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Barishal",
-            "isp": "Nation",
-            "query": "103.59.178.232",
-            "region": "Barisal Division"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-07T16:36:17.183Z",
-          "ip": "103.59.178.232",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "city": "Barishal",
-            "region": "Barisal Division",
-            "country": "Bangladesh",
-            "countryCode": "BD",
-            "flag": "🇧🇩",
-            "isp": "Nation",
-            "query": "103.59.178.232"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-07T16:23:30.287Z",
-          "ip": "103.59.178.232",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 151",
-          "location": {
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "countryCode": "BD",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-02T06:35:58.496Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 152",
-          "location": {
-            "country": "Development",
-            "flag": "💻",
-            "city": "Localhost",
-            "countryCode": "BD",
-            "isp": "Internal Loopback / Dev",
-            "query": "::1",
-            "region": "Local Network"
-          }
         }
       ],
-      "loginCount": 36
+      "loginCount": 40,
+      "shohozSession": {
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA0MTMzODMsImV4cCI6MTc5MDQ1NjU4MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDQxMzM4MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.Zw_RQjReVouOMCytqqKcrYfR__1vx_wsfZa9mdiRnHnonJAPFzD_F-EVCfZdlz-M6GZ_crdh2oRA1nIaHnPOLzJDO3IJb8ecGPyRL__BBUeoGivIgg_xOuSd1VX7wWmJvR1oLOdNcvQ_CI3jsl7pcJ359wWlrrMHfBoKi6X9_EzUfm3o8xLh7J0F8EoVu-frcYxmKZAcKnrI6PzwEpbZ5TXnuM5KiOI1HW0slYn3AvEeybhkGOclAFM-P9GakxjQkOBgYhpi5iA_gQJ5_LgWZn0gGei6V2qR4cKtzFcPDkAswVSkOzBQ5UG-5LCtY4Lnztf-J3Oi9pMiNQBnjhhqgg",
+        "deviceId": "d1b101fb-683d-4d74-a1e5-0cdfbd087ae3",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "cookie": null,
+        "user": {
+          "name": "Md. Habibullah",
+          "phone": "01871860487",
+          "email": "labu3416@gmail.com",
+          "nid": "8254236667",
+          "nidType": "Default",
+          "locale": "bn-BD",
+          "roles": [
+            "user",
+            "anonymous"
+          ],
+          "expiresAt": "2026-09-26T21:03:03.000Z",
+          "issuedAt": "2026-09-26T09:03:03.000Z",
+          "isExpired": false
+        },
+        "lastUpdated": "2026-09-26T09:03:11.882Z"
+      }
     },
     {
       "createdAt": "2026-08-27T09:53:19.298Z",

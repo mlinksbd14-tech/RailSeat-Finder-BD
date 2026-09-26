@@ -42,16 +42,33 @@
         "query": "::1",
         "region": "Local Network"
       },
-      "lastIp": "103.59.178.232",
-      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
+      "lastIp": "::1",
+      "lastUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
       "lastDevice": {
-        "os": "Android 10",
-        "browser": "Chrome 153",
-        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Mobile Safari/537.36",
-        "device": "Mobile"
+        "browser": "Edge 154",
+        "os": "Windows 10/11",
+        "device": "Desktop",
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0"
       },
-      "lastLogin": "2026-09-23T14:42:37.737Z",
+      "lastLogin": "2026-09-26T11:19:11.825Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-26T11:19:11.825Z",
+          "ip": "::1",
+          "device": "Desktop",
+          "os": "Windows 10/11",
+          "browser": "Edge 154",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-23T14:42:37.737Z",
@@ -459,47 +476,31 @@
             "query": "103.59.178.232",
             "region": "Barisal Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-12T03:38:26.528Z",
-          "ip": "27.147.149.234",
-          "device": "Desktop",
-          "os": "Windows 10/11",
-          "browser": "Edge 152",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Barishal",
-            "isp": "Nation",
-            "query": "103.59.178.232",
-            "region": "Barisal Division"
-          }
         }
       ],
-      "loginCount": 40,
+      "loginCount": 41,
       "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA0MTMzODMsImV4cCI6MTc5MDQ1NjU4MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDQxMzM4MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.Zw_RQjReVouOMCytqqKcrYfR__1vx_wsfZa9mdiRnHnonJAPFzD_F-EVCfZdlz-M6GZ_crdh2oRA1nIaHnPOLzJDO3IJb8ecGPyRL__BBUeoGivIgg_xOuSd1VX7wWmJvR1oLOdNcvQ_CI3jsl7pcJ359wWlrrMHfBoKi6X9_EzUfm3o8xLh7J0F8EoVu-frcYxmKZAcKnrI6PzwEpbZ5TXnuM5KiOI1HW0slYn3AvEeybhkGOclAFM-P9GakxjQkOBgYhpi5iA_gQJ5_LgWZn0gGei6V2qR4cKtzFcPDkAswVSkOzBQ5UG-5LCtY4Lnztf-J3Oi9pMiNQBnjhhqgg",
-        "deviceId": "d1b101fb-683d-4d74-a1e5-0cdfbd087ae3",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
+        "lastUpdated": "2026-09-26T09:03:11.882Z",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "deviceId": "d1b101fb-683d-4d74-a1e5-0cdfbd087ae3",
         "user": {
-          "name": "Md. Habibullah",
-          "phone": "01871860487",
-          "email": "labu3416@gmail.com",
-          "nid": "8254236667",
-          "nidType": "Default",
-          "locale": "bn-BD",
           "roles": [
             "user",
             "anonymous"
           ],
-          "expiresAt": "2026-09-26T21:03:03.000Z",
+          "isExpired": false,
+          "locale": "bn-BD",
+          "custom_token": true,
+          "nidType": "Default",
+          "phone": "01871860487",
+          "name": "Md. Habibullah",
+          "nid": "8254236667",
           "issuedAt": "2026-09-26T09:03:03.000Z",
-          "isExpired": false
+          "email": "labu3416@gmail.com",
+          "expiresAt": "2026-09-26T21:03:03.000Z"
         },
-        "lastUpdated": "2026-09-26T09:03:11.882Z"
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA0MTMzODMsImV4cCI6MTc5MDQ1NjU4MywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDQxMzM4MywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.Zw_RQjReVouOMCytqqKcrYfR__1vx_wsfZa9mdiRnHnonJAPFzD_F-EVCfZdlz-M6GZ_crdh2oRA1nIaHnPOLzJDO3IJb8ecGPyRL__BBUeoGivIgg_xOuSd1VX7wWmJvR1oLOdNcvQ_CI3jsl7pcJ359wWlrrMHfBoKi6X9_EzUfm3o8xLh7J0F8EoVu-frcYxmKZAcKnrI6PzwEpbZ5TXnuM5KiOI1HW0slYn3AvEeybhkGOclAFM-P9GakxjQkOBgYhpi5iA_gQJ5_LgWZn0gGei6V2qR4cKtzFcPDkAswVSkOzBQ5UG-5LCtY4Lnztf-J3Oi9pMiNQBnjhhqgg"
       }
     },
     {

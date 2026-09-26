@@ -1969,6 +1969,10 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
                 <span>Live Railway Server</span>
               </span>
+              <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
+                <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                <span>Fetching live layout…</span>
+              </span>
             </div>
             <p id="seatLayoutSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
               Live carriage layout direct from Bangladesh Railway Shohoz API
@@ -2031,6 +2035,14 @@
           <div class="flex items-center space-x-1.5">
             <span class="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/50 border border-amber-400 inline-block"></span>
             <span>In Process</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 inline-block"></span>
+            <span>Status Unknown</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 inline-block"></span>
+            <span>Blank Seat</span>
           </div>
           <div class="flex items-center space-x-1 text-slate-400">
             <i class="fa-solid fa-border-all text-[11px]"></i>

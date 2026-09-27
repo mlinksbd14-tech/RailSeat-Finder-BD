@@ -1969,9 +1969,9 @@
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
                 <span>Live Railway Server</span>
               </span>
-              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
-                <i class="fa-solid fa-triangle-exclamation text-[9px]"></i>
-                <span>Indicative layout &mdash; not live</span>
+              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                <span>Official Railway Layout</span>
               </span>
               <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
                 <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
@@ -1986,6 +1986,23 @@
         <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
+      </div>
+
+      <!-- Live Server Link / Turnstile Token Quick-Input -->
+      <div id="seatLayoutTurnstileBar" class="px-3.5 py-2 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-b border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <i class="fa-solid fa-bolt text-[11px]"></i>
+          </span>
+          <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 shrink-0">Live Railway Link / Token:</span>
+          <input type="text" id="seatLayoutTurnstileInput" placeholder="Paste official seat-layout URL or cft_response token to view 100% live seats..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono">
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button type="button" id="seatLayoutTurnstileApplyBtn" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+            <span>Load Live Seats</span>
+          </button>
+        </div>
       </div>
 
       <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->

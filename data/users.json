@@ -484,7 +484,7 @@
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": null,
+        "cftResponse": "1.0zzNVsfcABLzNmic-wPdTW72MMtQJH2py8nU0iBtUmvl_mlIbRVdeY6hMMCEIXxsSOxiwDNZdERQkaBda0TWC10b_R_x75qyCoAK2me3betjDxqFBWeOqIyGtoyopUA0qZdiGse9cnF6NQHmrCMUlZitt9hSkvw37DCkYR1g7Hh6geDmmsBfxQXit5gz0gYhW0RI983ZtS9lFyQKAEtghy4QtLGkuqsWPq9xx8K4-0iyFKUaH_QJwD90P-ziCAQvkhktla3GIRgBDT_-8T5mzx3isUq60GnUG9g2mtyGwUOgLy9SSZJelfa5skWd4yzIwW7J8vHo1AnJfBv6ZHpOgVjfwkr30GsfDqu0m5_4-NthR_XjvHC8QT7Ek8VnnHZGmvZwn-DyYxQR_Coq-xI2WDBchQPV-cjjLF_GqCuYrnA9X_srl8qC9frMgdCvH_U8wNx8vaWg1WKzcu070ic7pcZNTlWSHeoIwXMFN6vPg48RCZaOrsF1kdhKPKRGDiBMmxVGpUaZoRuBES-eP8DzGoz27juhNXbx8dA3-qjZohA_plOm0C4dkUQYLjiYOAuUkLXpLC7sntxsoJ8cPkO_pxQPAbRiKiFsrZweCoHsaIVPzuk37fmXlkxTsgegf0Gc1s_BocZU_FbRNzbA8Oj5LyF-Tpr6CK01CsNEqI1ATV2sTNkCQLe1v4U0cK6aUhA7P3c28q4QfrLKTi5iSeC2MA.6i6PFjfNvn_CXzCIs3t3KQ.d0a1998a7ba1f0c98aa9a6fc7ad8e69c2a27eef3488098c3e4f6c01f714656c4",
         "user": {
           "name": "Md. Habibullah",
           "phone": "01871860487",
@@ -500,7 +500,9 @@
           "issuedAt": "2026-09-27T04:49:58.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-09-27T06:19:11.375Z"
+        "lastUpdated": "2026-09-27T06:19:11.375Z",
+        "userId": "usr_1787812528386_taky",
+        "username": "shawon421"
       }
     },
     {

@@ -480,29 +480,27 @@
         "device": "Desktop"
       },
       "shohozSession": {
-        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA1MTA1ODAsImV4cCI6MTc5MDU1Mzc4MCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImMxMDIwZmQ5LWI0NDQtNDJlYi05MzZhLWY5NTNmMTFhY2RjZSIsImF1dGhfdGltZSI6MTc5MDUxMDU4MCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTUxNTI3OTk1NyIsImVtYWlsIjoiaWh0YXNoYW11bGFiaXIwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6IjAxNTE1Mjc5OTU3IiwiZGlzcGxheV9uYW1lIjoiSUhUQVNIQU1VTCBIQVFVRSBBQklSIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiMzc0MzAyMjY1MyIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.neRHRCY28PDiHjmslTOh3V3Zpf1PYk9JR0Ria6V8jgPY_KzRPn_AFed4KfMHCsynQunuQBs3i_20R9fUgINzUvUXmFzmV0cxMrdre8wd6igzkBVscXoBlT1BzmqcGl9R8L5m5nyod-iL8fBBqmi-1kLDT_iNo5_i8zkDQ7b1-6X975L_38RmMoKJQh8bt7DMUHFeXayXql-JjazBdGrGcNXUk4SQi6h6XAQNLk_s_oF8SsBVWQJBfQ33cvJ_wAgxi-JR3W3y5ppasRifgYwjxFnvT8NrhVRP00Dp4YR0bdjGxTnsIl5xnGbJ1lo46hCJagYLKaX0KSb2M1U0WfH3Gw",
+        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA1MTM2NTIsImV4cCI6MTc5MDU1Njg1MiwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDUxMzY1MiwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.FRSnuvwKq5lCkG91MwCeW3VQBEYpsSqDIWt-iY9tHPcNL2d8bGlngovW5uuKDfyGqNv2dBVfTt8pz2JXCjI0I83OMpDBMw8fD4ZnqlJkeN4dfFVYjIFHfcufeAfs-egLoHwWg4EHm3mLQbtGvkoY3O9ngWUsiG-BV5dd_umLjRMIRQOO_AFjV2zT6XyFKQVHYzhEnq0nvLh2hgMQ-pLR864M1tP71Sp18FMczt3DuGUJqboTcswP6xERqjn-b_PhPeOs29qpiouzJZelqZsGPN1unlUFhyU2i-Zms7QE6FS5ePLYucnvfyPqOJgoTLgAJOQ8MKfOzpkpmxLiXAL9Dg",
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
         "cftResponse": "1.b4vwXpyMNkyaPVxijac6O37zVFXD1lGjw6ghhek3HGwUWxgE4fAyG6T7tl1h0HTAWcz1w_pQt1S5kb-Pon4RJtXWPioVxywolwp_ImQkWRtBq6PRfYz4icpdM2HA4-QYHyR5Hw5JBf_6DbhjhV6_0CDgRDkzQUt8cV4_fqOqSbYTK9RsTsmiOmqFCECPrSUkr12Gv6WR_RbfXPZJK2xYrKRvMi3aTr748S4WtrG02YeGBbN_9HLKsgOwYYz5XLKjIpVEZRCXofGYQ2KF7IKIdWyXMJlj0QTCOshiXpCI0KVzSBTGI3LbC9TQyoplr_6XpEe5_dhIAaLwN8PYMdLQL2kGl6qi5-2I525pxhrkcZitupz0uMc86Ty0YvNd72vF96HfzAIkf53pHOPjs2al7Hn--ju6FtYb7z-JE_u1yiKv_aWUy3cK26RiTsDxDOLg8zDDJGFaKxdhiL5_oj4yBYzZP4FGf8JnUjPT7QspPogsysJfa-kH5PER4kmGpI0Tj_RY3mdVNA4nSgSjrBsYjL_UdCSQb9T3yh6PCvASq8YUCNc5E0vL3dcIYJ2MnrQnAmDEwINF4rEXBsSYOdChGsGkVloJlOGzQtJmjRJQwrMOFALEJ53GO24ItB2QGCXNU9kIj_kQrsiFUOXbOX18S9M4atY_nnlXKuGO9BWtTAmah-SycbYNift2jbQ1eK8C25OR9Uko0zQryz4rxAbq_g.2z0NWvrdSh5o1NEPh9IKEw.5ade3d02a0d8009d41eac2c58b052968ab1eae58f91d489656051314e3e4de26",
         "user": {
-          "name": "IHTASHAMUL HAQUE ABIR",
-          "phone": "01515279957",
-          "email": "ihtashamulabir01@gmail.com",
-          "nid": "3743022653",
-          "nidType": "NID",
+          "name": "Md. Habibullah",
+          "phone": "01871860487",
+          "email": "labu3416@gmail.com",
+          "nid": "8254236667",
+          "nidType": "Default",
           "locale": "bn-BD",
           "roles": [
             "user",
             "anonymous"
           ],
-          "expiresAt": "2026-09-28T00:03:00.000Z",
-          "issuedAt": "2026-09-27T12:03:00.000Z",
+          "expiresAt": "2026-09-28T00:54:12.000Z",
+          "issuedAt": "2026-09-27T12:54:12.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-09-27T12:52:34.261Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-09-27T12:54:52.141Z"
       }
     },
     {

@@ -985,8 +985,8 @@
           </button>
         </div>
 
-        <!-- Form Grid Row 1: Stations, Boarding Point & Date -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Form Grid Row 1: Stations & Date -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           
           <!-- From Station -->
           <div class="relative space-y-1">
@@ -1018,34 +1018,14 @@
             </div>
           </div>
 
-          <!-- Boarding Station (Dynamic Override) -->
-          <div class="relative space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="boarding_point">Boarding Point</label>
-              <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">Auto-Synced</span>
-            </div>
-            <div class="relative">
-              <input type="text" id="autoBookBoardingInput" placeholder="Boarding (Default: Departure)" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
-              <button type="button" id="autoBookBoardingClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-              <div id="autoBookBoardingDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
-            </div>
-          </div>
-
           <!-- Journey Date -->
           <div class="space-y-1">
             <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Journey Date</label>
             <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
-            <div class="flex items-center gap-1 pt-1 overflow-x-auto no-scrollbar" id="autoBookQuickDateChips"></div>
+            <div class="flex items-center gap-1 pt-1" id="autoBookQuickDateChips"></div>
           </div>
 
-        </div>
-
-        <!-- Form Grid Row 2: Train, Primary Class, Backup Class, Seat Quantity -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          
-          <!-- Preferred Train -->
+          <!-- Train Selector -->
           <div class="space-y-1">
             <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Preferred Train</label>
             <select id="autoBookTrainSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
@@ -1053,10 +1033,16 @@
             </select>
           </div>
 
-          <!-- Seat Class (1st Choice) -->
+        </div>
+
+        <!-- Form Grid Row 2: Class & Quantity & Preferences -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          
+          <!-- Seat Class -->
           <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Seat Class (1st Choice)</label>
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Seat Class</label>
             <select id="autoBookClassSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="ANY" selected>Any Available Class (যেকোনো ক্লাস)</option>
               <option value="S_CHAIR">SHOVAN CHAIR (S_CHAIR)</option>
               <option value="SNIGDHA">SNIGDHA (AC CHAIR)</option>
               <option value="AC_B">AC BERTH (AC_B)</option>
@@ -1064,22 +1050,6 @@
               <option value="F_BERTH">FIRST CLASS BERTH (F_BERTH)</option>
               <option value="F_SEAT">FIRST CLASS SEAT (F_SEAT)</option>
               <option value="SHOVAN">SHOVAN</option>
-            </select>
-          </div>
-
-          <!-- Emergency Fallback Class (2nd Choice) -->
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="fallback_class_label">Backup Class</label>
-              <span class="text-[9px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">Auto-Fallback</span>
-            </div>
-            <select id="autoBookFallbackClassSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="NONE">None (Strict 1st Choice Only)</option>
-              <option value="ANY">Any Available Class (যেকোনো বিকল্প)</option>
-              <option value="S_CHAIR">S_CHAIR (Shovan Chair)</option>
-              <option value="SNIGDHA">SNIGDHA (AC Chair)</option>
-              <option value="AC_B">AC_B (AC Berth)</option>
-              <option value="AC_S">AC_S (AC Seat)</option>
             </select>
           </div>
 
@@ -1094,11 +1064,6 @@
             </div>
           </div>
 
-        </div>
-
-        <!-- Form Grid Row 3: Position, Coach Preference, Sniper Speed Engine -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          
           <!-- Position Preference -->
           <div class="space-y-1">
             <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Position Preference</label>
@@ -1106,54 +1071,18 @@
               <option value="any">Any Available Seat (যেকোনো সিট)</option>
               <option value="window">Window Preferred (জানালা)</option>
               <option value="aisle">Aisle / Corridor (আইল)</option>
-              <option value="cabin">Cabin / Berth Compartment (কেবিন)</option>
-            </select>
-          </div>
-
-          <!-- Coach / Bogie Preference -->
-          <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="coach_pref_label">Coach / Bogie Preference</label>
-            <div class="flex items-center gap-1.5">
-              <select id="autoBookCoachPrefSelect" class="flex-1 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-                <option value="ANY">Auto (Highest Vacancy Coach)</option>
-                <option value="FRONT">Front Bogies (KA, KHA, GA)</option>
-                <option value="MIDDLE">Middle Bogies (GHA, UMA, CHA)</option>
-                <option value="REAR">Rear Bogies (JA, JHA, TTA)</option>
-                <option value="CUSTOM">Specific Bogie Name...</option>
-              </select>
-              <input type="text" id="autoBookCoachCustomInput" placeholder="e.g. KHA" class="hidden w-24 text-xs font-bold px-2.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden uppercase" maxlength="8" />
-            </div>
-          </div>
-
-          <!-- Sniper Speed Engine -->
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="speed_mode_label">Sniper Speed Engine</label>
-              <span class="text-[9px] text-cyan-600 dark:text-cyan-400 font-extrabold bg-cyan-50 dark:bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-200 dark:border-cyan-800">Ultra-Fast</span>
-            </div>
-            <select id="autoBookSpeedEngineSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="turbo">🚀 Turbo Sniper (120ms tick, parallel clicks, instant OTP)</option>
-              <option value="balanced">⚡ Balanced (400ms tick, standard pacing)</option>
             </select>
           </div>
 
         </div>
 
-        <!-- Row 4: Customization Checkboxes / Toggles & Continuous Retry -->
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3">
-          <div class="flex items-center justify-between">
-            <p class="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-sliders text-amber-500"></i>
-              <span>Smart Customization & Auto-Drop Sniper</span>
-            </p>
-            <button type="button" id="autoBookPassengerToggleBtn" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
-              <i class="fa-solid fa-user-check"></i>
-              <span data-i18n="passenger_autofill_title">Passenger Fast-Fill (Optional)</span>
-              <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200" id="autoBookPassengerChevron"></i>
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Row 3: Customization Checkboxes / Toggles -->
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2">
+          <p class="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-amber-500"></i>
+            <span>Smart Customization Options</span>
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             
             <!-- Keep Seats Together Toggle -->
             <label class="flex items-center space-x-2.5 cursor-pointer">
@@ -1182,34 +1111,6 @@
               </div>
             </label>
 
-            <!-- Continuous Auto-Retry Toggle -->
-            <label class="flex items-center space-x-2.5 cursor-pointer">
-              <input type="checkbox" id="autoBookContinuousRetryToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <div>
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Continuous Drop Sniper</span>
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Auto-retry until seats release</span>
-              </div>
-            </label>
-
-          </div>
-
-          <!-- Collapsible Passenger Fast-Fill Profile -->
-          <div id="autoBookPassengerPanel" class="hidden pt-3 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Pre-fill passenger details so the automation bridge can bypass the passenger details form and focus the OTP verification input immediately:</p>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div>
-                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">Passenger Mobile</label>
-                <input type="tel" id="autoBookPassengerPhone" placeholder="e.g. 01712345678" class="w-full text-xs font-mono font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">Passenger Full Name</label>
-                <input type="text" id="autoBookPassengerName" placeholder="e.g. MD. RAHIM" class="w-full text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white uppercase" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">NID / Passport (Optional)</label>
-                <input type="text" id="autoBookPassengerNid" placeholder="e.g. 1990123456789" class="w-full text-xs font-mono font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
-              </div>
-            </div>
           </div>
         </div>
 

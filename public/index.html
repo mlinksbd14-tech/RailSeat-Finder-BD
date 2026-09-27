@@ -92,6 +92,11 @@
           <i class="fa-solid fa-chair text-emerald-500"></i>
           <span data-i18n="nav_seat_finder">Seat Finder</span>
         </button>
+        <button type="button" id="navAutoBookBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Auto Book Seat">
+          <i class="fa-solid fa-bolt text-amber-500"></i>
+          <span data-i18n="nav_autobook">Auto Book</span>
+          <span class="px-1.5 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold text-[9px] rounded-full shadow-2xs">PRO</span>
+        </button>
         <button type="button" id="navLiveTrackerBtn" class="hidden px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
           <span data-i18n="nav_live_radar">Live Radar</span>
@@ -3073,6 +3078,12 @@
           <span class="absolute -top-1 -right-2 w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
         </div>
         <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-cyan-600 dark:group-[.active-tab]:text-cyan-400 transition-colors" data-i18n="nav_live_radar">Radar</span>
+      </button>
+      <!-- Auto Book -->
+      <button type="button" id="mobileNavAutoBookBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-amber-500"></div>
+        <i class="fa-solid fa-bolt text-[17px] text-slate-400 group-[.active-tab]:text-amber-500 transition-colors"></i>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-amber-600 dark:group-[.active-tab]:text-amber-400 transition-colors" data-i18n="nav_autobook">Auto Book</span>
       </button>
       <!-- Routes -->
       <button type="button" id="mobileNavRoutesBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">

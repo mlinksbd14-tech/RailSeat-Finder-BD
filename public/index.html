@@ -1093,14 +1093,43 @@
               </div>
             </label>
 
-            <!-- Auto-Proceed to OTP Toggle -->
-            <label class="flex items-center space-x-2.5 cursor-pointer">
-              <input type="checkbox" id="autoBookAutoProceedToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <div>
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Auto-Click Continue Purchase</span>
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Advance directly to Railway OTP page</span>
+            <!-- Hold / Buy Mode Selector -->
+            <div class="sm:col-span-3 mt-1">
+              <label class="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-hand-pointer text-amber-500"></i>
+                <span>After Seat Selection Mode</span>
+              </label>
+              <div class="grid grid-cols-2 gap-2" id="autoBookModeSelector">
+                <!-- Hold Mode -->
+                <label class="relative cursor-pointer" id="autoBookHoldModeLabel">
+                  <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" class="sr-only peer" />
+                  <div class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all cursor-pointer select-none">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 peer-checked:bg-blue-500 text-blue-600 dark:text-blue-400 text-base">
+                      <i class="fa-solid fa-hand-paper"></i>
+                    </div>
+                    <div class="text-center">
+                      <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Hold Only</span>
+                      <span class="block text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Select seat &amp; stop — no OTP</span>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-[9px] font-black uppercase tracking-wide">সিট ধরে রাখুন</span>
+                  </div>
+                </label>
+                <!-- Buy Mode -->
+                <label class="relative cursor-pointer" id="autoBookBuyModeLabel">
+                  <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" checked class="sr-only peer" />
+                  <div class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all cursor-pointer select-none">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 text-base">
+                      <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <div class="text-center">
+                      <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Buy Now</span>
+                      <span class="block text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Auto-proceed to OTP page</span>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wide">সরাসরি কিনুন</span>
+                  </div>
+                </label>
               </div>
-            </label>
+            </div>
 
             <!-- Sound Alarm on Grab Toggle -->
             <label class="flex items-center space-x-2.5 cursor-pointer">

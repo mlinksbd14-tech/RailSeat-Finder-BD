@@ -936,6 +936,237 @@
 
     </div>
 
+    <!-- ============================================== -->
+    <!-- ⚡ AUTO BOOK SEAT SECTION (GRAB & SCHEDULE)     -->
+    <!-- ============================================== -->
+    <div id="autoBookSection" class="hidden space-y-4 animate-fade-in">
+      
+      <!-- Top Hero Banner with Live 8:00 AM Ticket Drop Countdown -->
+      <div class="dashboard-block bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-emerald-500/10 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-emerald-950/30 rounded-2xl p-4 sm:p-5 border-2 border-amber-300 dark:border-amber-700/60 shadow-xs relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
+          <div class="space-y-1">
+            <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500 text-white shadow-2xs">
+              <i class="fa-solid fa-bolt"></i>
+              <span data-i18n="autobook_badge">Automated Ticket Sniper</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <span data-i18n="autobook_hero_title">Auto Book Seat & Release Scheduler</span>
+            </h2>
+            <p class="text-xs text-slate-600 dark:text-slate-300 max-w-2xl" data-i18n="autobook_hero_desc">
+              Grab currently available seats instantly with custom seating preferences (seats together, window, coach) or schedule future date ticket drops at 08:00 AM.
+            </p>
+          </div>
+
+          <!-- Live 8:00 AM Countdown Box -->
+          <div class="flex items-center gap-3 bg-white/90 dark:bg-slate-900/90 rounded-2xl p-3 border border-amber-200 dark:border-amber-800 shadow-xs shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider" data-i18n="next_drop_countdown">Next 8:00 AM Drop</p>
+              <p id="autoBookCountdownTimer" class="font-mono text-base sm:text-lg font-black text-amber-600 dark:text-amber-400">--h --m --s</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Auto-Book Configuration Card -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        
+        <!-- Mode Tabs -->
+        <div class="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold w-full sm:w-auto self-start">
+          <button type="button" id="autoBookTabNow" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-bolt"></i>
+            <span data-i18n="autobook_tab_now">Auto-Grab Now (If Available)</span>
+          </button>
+          <button type="button" id="autoBookTabSchedule" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span data-i18n="autobook_tab_schedule">Schedule Future Date (08:00 AM)</span>
+          </button>
+        </div>
+
+        <!-- Form Grid Row 1: Stations & Date -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          <!-- From Station -->
+          <div class="relative space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="from_station">From Station</label>
+            <div class="relative">
+              <input type="text" id="autoBookFromInput" placeholder="Departure (e.g. Dhaka)" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+              <button type="button" id="autoBookFromClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <div id="autoBookFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+            </div>
+          </div>
+
+          <!-- To Station -->
+          <div class="relative space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="to_station">Destination</label>
+              <button type="button" id="autoBookSwapBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <span data-i18n="swap_stations">Swap</span>
+              </button>
+            </div>
+            <div class="relative">
+              <input type="text" id="autoBookToInput" placeholder="Arrival (e.g. Chattogram)" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+              <button type="button" id="autoBookToClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <div id="autoBookToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+            </div>
+          </div>
+
+          <!-- Journey Date -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Journey Date</label>
+            <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
+            <div class="flex items-center gap-1 pt-1" id="autoBookQuickDateChips"></div>
+          </div>
+
+          <!-- Train Selector -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Preferred Train</label>
+            <select id="autoBookTrainSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="ALL">Any Train on Route (যেকোনো ট্রেন)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Form Grid Row 2: Class & Quantity & Preferences -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          
+          <!-- Seat Class -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Seat Class</label>
+            <select id="autoBookClassSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="S_CHAIR">SHOVAN CHAIR (S_CHAIR)</option>
+              <option value="SNIGDHA">SNIGDHA (AC CHAIR)</option>
+              <option value="AC_B">AC BERTH (AC_B)</option>
+              <option value="AC_S">AC SEAT (AC_S)</option>
+              <option value="F_BERTH">FIRST CLASS BERTH (F_BERTH)</option>
+              <option value="F_SEAT">FIRST CLASS SEAT (F_SEAT)</option>
+              <option value="SHOVAN">SHOVAN</option>
+            </select>
+          </div>
+
+          <!-- Seat Quantity (1 to 4 Seats) -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Quantity (Max 4)</label>
+            <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
+              <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
+              <button type="button" data-seats="3" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">3</button>
+              <button type="button" data-seats="4" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">4</button>
+            </div>
+          </div>
+
+          <!-- Position Preference -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Position Preference</label>
+            <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="any">Any Available Seat (যেকোনো সিট)</option>
+              <option value="window">Window Preferred (জানালা)</option>
+              <option value="aisle">Aisle / Corridor (আইল)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Row 3: Customization Checkboxes / Toggles -->
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2">
+          <p class="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-amber-500"></i>
+            <span>Smart Customization Options</span>
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            
+            <!-- Keep Seats Together Toggle -->
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Keep Seats Together</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Adjacent seats in same row (পাশাপাশি)</span>
+              </div>
+            </label>
+
+            <!-- Auto-Proceed to OTP Toggle -->
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="autoBookAutoProceedToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Auto-Click Continue Purchase</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Advance directly to Railway OTP page</span>
+              </div>
+            </label>
+
+            <!-- Sound Alarm on Grab Toggle -->
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Loud Audio Alarm</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Play sound chime when tickets grab</span>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Action Button & Shield Note -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+            <span>Session & Turnstile token automatically synchronized with Bangladesh Railway.</span>
+          </p>
+
+          <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
+            <span id="autoBookActionText">⚡ Check & Auto-Book Now</span>
+          </button>
+        </div>
+
+        <!-- Live Activity Console -->
+        <div id="autoBookConsoleBox" class="hidden p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 space-y-1.5 shadow-inner">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-1 text-[11px] text-amber-400 font-bold">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>Auto-Book Activity Console</span>
+            </span>
+            <span id="autoBookConsoleStatus" class="text-slate-400">Idle</span>
+          </div>
+          <div id="autoBookConsoleLogs" class="space-y-1 max-h-32 overflow-y-auto text-[11px] text-slate-300"></div>
+        </div>
+
+      </div>
+
+      <!-- Active Schedules & Background Watchers Container -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+          <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white">Active Auto-Book Schedules</h3>
+            <span id="autoBookTasksBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">0</span>
+          </div>
+          <button type="button" id="autoBookClearAllTasksBtn" class="text-xs text-rose-500 hover:text-rose-600 font-bold hover:underline cursor-pointer hidden">
+            Clear Completed
+          </button>
+        </div>
+
+        <div id="autoBookTasksList" class="space-y-2">
+          <!-- Rendered dynamically by JS -->
+          <div class="py-8 text-center text-slate-400 dark:text-slate-500" id="autoBookTasksEmpty">
+            <i class="fa-solid fa-calendar-xmark text-2xl mb-1.5 block opacity-40"></i>
+            <p class="text-xs font-semibold">No scheduled auto-book tasks yet.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Use the scheduler above to set up future date 08:00 AM drops or 24/7 seat grabbers.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </main>
 
   <!-- Notification Modal Panel -->

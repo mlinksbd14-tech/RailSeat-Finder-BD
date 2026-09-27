@@ -1951,94 +1951,66 @@
   </div>
 
   <!-- Live Coach & Carriage Seat Layout Modal (Matching Shohoz / Bangladesh Railway) -->
-  <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
+  <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[96vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       
-      <!-- Modal Header -->
-      <div class="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+      <!-- Compact Modal Header -->
+      <div class="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-600 text-white flex items-center justify-center text-xs shadow-sm shrink-0">
             <i class="fa-solid fa-couch"></i>
           </div>
           <div class="min-w-0">
-            <div class="flex items-center space-x-2 flex-wrap">
-              <h3 id="seatLayoutTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Coach & Seat Details</h3>
-              <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
-              <span id="seatLayoutClassBadge" class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300">SNIGDHA</span>
-              <span id="seatLayoutLiveBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <h3 id="seatLayoutTrainName" class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate">Seat Layout</h3>
+              <span id="seatLayoutTrainModel" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
+              <span id="seatLayoutClassBadge" class="text-[10px] uppercase font-extrabold px-1.5 py-0.2 rounded bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300">SNIGDHA</span>
+              <span id="seatLayoutLiveBadge" class="hidden text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                <span>Live Railway Server</span>
+                <span>Live</span>
               </span>
-              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Official Railway Layout</span>
-              </span>
-              <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
+              <span id="seatLayoutSearchingBadge" class="hidden text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
                 <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                <span>Fetching live layout&hellip;</span>
+                <span>Loading&hellip;</span>
               </span>
             </div>
-            <p id="seatLayoutSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+            <p id="seatLayoutSubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
               Live carriage layout direct from Bangladesh Railway Shohoz API
             </p>
           </div>
         </div>
-        <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
+        <button id="seatLayoutCloseBtn" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
 
-      <!-- Live Server Link / Turnstile Token Quick-Input -->
-      <div id="seatLayoutTurnstileBar" class="px-3.5 py-2 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border-b border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex items-center gap-2 min-w-0 flex-1">
-          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-            <i class="fa-solid fa-bolt text-[11px]"></i>
+      <!-- Coach Selector Strip (Compact Horizontal Scrolling Tabs) -->
+      <div class="px-2.5 py-1.5 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80 shrink-0">
+        <div class="flex items-center justify-between gap-1.5 mb-1">
+          <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+            <i class="fa-solid fa-train-subway text-emerald-500 text-[10px]"></i>
+            <span>Coaches with available seats:</span>
           </span>
-          <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200 shrink-0">Live Railway Link / Token:</span>
-          <input type="text" id="seatLayoutTurnstileInput" placeholder="Paste official seat-layout URL or cft_response token to view 100% live seats..." class="flex-1 min-w-[200px] text-xs px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono">
+          <span id="seatLayoutCoachesSummary" class="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium"></span>
         </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button type="button" id="seatLayoutTurnstileApplyBtn" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95">
-            <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-            <span>Load Live Seats</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->
-      <div class="p-2.5 sm:p-3 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
-        <div class="flex items-center justify-between gap-2 mb-1.5">
-          <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-train-subway text-emerald-500 text-xs"></i>
-            <span>Select Coach / বগি নির্বাচন করুন:</span>
-          </span>
-          <span id="seatLayoutCoachesSummary" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium"></span>
-        </div>
-        <div id="seatLayoutCoachTabs" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
+        <div id="seatLayoutCoachTabs" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
           <!-- Rendered by JS -->
         </div>
       </div>
 
-      <!-- Active Coach Overview Strip -->
-      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex items-center space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
-          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">--</b></span>
-          <span>•</span>
-          <span>Class: <b id="seatLayoutActiveCoachClass" class="text-slate-900 dark:text-white font-bold">--</b></span>
-          <span>•</span>
-          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-bold">0</b></span>
-          <span>•</span>
-          <span>Booked: <b id="seatLayoutActiveBookedCount" class="text-slate-500 dark:text-slate-400 font-bold">0</b></span>
-        </div>
-        <div class="text-right">
-          <span class="text-slate-500 dark:text-slate-400">Fare: </span>
-          <span id="seatLayoutActiveFare" class="font-extrabold font-mono text-sm text-emerald-700 dark:text-emerald-300">--</span>
-        </div>
+      <!-- Hidden fallback input & overview elements kept for JS compatibility -->
+      <input type="hidden" id="seatLayoutTurnstileInput">
+      <div id="seatLayoutCoachInfoBanner" class="hidden">
+        <span id="seatLayoutActiveCoachName"></span>
+        <span id="seatLayoutActiveCoachClass"></span>
+        <span id="seatLayoutActiveAvailCount"></span>
+        <span id="seatLayoutActiveBookedCount"></span>
+        <span id="seatLayoutActiveFare"></span>
       </div>
 
       <!-- Carriage Body Canvas -->
-      <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
-        <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
+      <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-2 sm:p-2.5 bg-slate-50/50 dark:bg-slate-950/40">
+        <!-- Rendered by JS: Sleek, compact train carriage layout -->
       </div>
 
       <!-- Legend & Footer Action Bar -->

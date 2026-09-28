@@ -1124,14 +1124,26 @@
             </div>
           </div>
 
-          <!-- Secondary Options Row: Keep Together & Audio Alarm -->
-          <div class="pt-2.5 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Secondary Options Row: Keep Together, Keep Trying & Audio Alarm -->
+          <div class="pt-2.5 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <!-- Keep Seats Together Toggle -->
             <label class="flex items-center space-x-2.5 cursor-pointer">
               <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
               <div>
                 <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Keep Seats Together</span>
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Adjacent seats in same row (পাশাপাশি)</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Adjacent seats in row (পাশাপাশি)</span>
+              </div>
+            </label>
+
+            <!-- Keep Trying (Auto-Retry if Insufficient) Toggle -->
+            <label class="flex items-center space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block flex items-center gap-1.5">
+                  <span>Keep Trying</span>
+                  <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 font-extrabold uppercase tracking-wide">Auto-Retry</span>
+                </span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Retry if seats insufficient (পুনরায় চেষ্টা)</span>
               </div>
             </label>
 
@@ -1140,7 +1152,7 @@
               <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
               <div>
                 <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Loud Audio Alarm</span>
-                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Play sound chime when tickets grab</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Sound chime when tickets grab</span>
               </div>
             </label>
           </div>

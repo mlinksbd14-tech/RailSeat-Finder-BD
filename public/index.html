@@ -1076,14 +1076,56 @@
 
         </div>
 
-        <!-- Row 3: Customization Checkboxes / Toggles -->
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2">
-          <p class="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-sliders text-amber-500"></i>
-            <span>Smart Customization Options</span>
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            
+        <!-- Row 3: Customization Options & Hold/Buy Selector -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3">
+          
+          <!-- Hold / Buy Mode Selector (Prominent) -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-[11px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-hand-pointer text-amber-500"></i>
+                <span>Action After Seat Selection (সিট নির্বাচনের পর করণীয়)</span>
+              </label>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Choose Hold or Instant Buy</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="autoBookModeSelector">
+              <!-- Hold Mode -->
+              <label class="relative cursor-pointer group" id="autoBookHoldModeLabel">
+                <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" class="sr-only peer" />
+                <div class="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 peer-checked:border-blue-500 peer-checked:bg-blue-50/80 dark:peer-checked:bg-blue-950/40 peer-checked:ring-2 peer-checked:ring-blue-500/20 transition-all cursor-pointer select-none shadow-xs">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 text-lg shrink-0">
+                    <i class="fa-solid fa-hand"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black text-slate-900 dark:text-white">Hold Seat Only</span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">সিট ধরে রাখুন</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block truncate">Auto-selects &amp; holds seat on railway. No OTP, no payment.</span>
+                  </div>
+                </div>
+              </label>
+              <!-- Buy Mode -->
+              <label class="relative cursor-pointer group" id="autoBookBuyModeLabel">
+                <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" checked class="sr-only peer" />
+                <div class="flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/80 dark:peer-checked:bg-emerald-950/40 peer-checked:ring-2 peer-checked:ring-emerald-500/20 transition-all cursor-pointer select-none shadow-xs">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 text-lg shrink-0">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black text-slate-900 dark:text-white">Buy Now (Auto-Proceed)</span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">সরাসরি কিনুন</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block truncate">Auto-clicks Continue Purchase and jumps straight to OTP page.</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Secondary Options Row: Keep Together & Audio Alarm -->
+          <div class="pt-2.5 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <!-- Keep Seats Together Toggle -->
             <label class="flex items-center space-x-2.5 cursor-pointer">
               <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
@@ -1093,44 +1135,6 @@
               </div>
             </label>
 
-            <!-- Hold / Buy Mode Selector -->
-            <div class="sm:col-span-3 mt-1">
-              <label class="block text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-hand-pointer text-amber-500"></i>
-                <span>After Seat Selection Mode</span>
-              </label>
-              <div class="grid grid-cols-2 gap-2" id="autoBookModeSelector">
-                <!-- Hold Mode -->
-                <label class="relative cursor-pointer" id="autoBookHoldModeLabel">
-                  <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" class="sr-only peer" />
-                  <div class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all cursor-pointer select-none">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 peer-checked:bg-blue-500 text-blue-600 dark:text-blue-400 text-base">
-                      <i class="fa-solid fa-hand-paper"></i>
-                    </div>
-                    <div class="text-center">
-                      <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Hold Only</span>
-                      <span class="block text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Select seat &amp; stop — no OTP</span>
-                    </div>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-[9px] font-black uppercase tracking-wide">সিট ধরে রাখুন</span>
-                  </div>
-                </label>
-                <!-- Buy Mode -->
-                <label class="relative cursor-pointer" id="autoBookBuyModeLabel">
-                  <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" checked class="sr-only peer" />
-                  <div class="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all cursor-pointer select-none">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 text-base">
-                      <i class="fa-solid fa-credit-card"></i>
-                    </div>
-                    <div class="text-center">
-                      <span class="block text-xs font-extrabold text-slate-800 dark:text-slate-100">Buy Now</span>
-                      <span class="block text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Auto-proceed to OTP page</span>
-                    </div>
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wide">সরাসরি কিনুন</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
             <!-- Sound Alarm on Grab Toggle -->
             <label class="flex items-center space-x-2.5 cursor-pointer">
               <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
@@ -1139,7 +1143,6 @@
                 <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Play sound chime when tickets grab</span>
               </div>
             </label>
-
           </div>
         </div>
 

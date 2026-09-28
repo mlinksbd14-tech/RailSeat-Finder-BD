@@ -2298,18 +2298,32 @@
           </div>
         </div>
 
-        <!-- Action Link -->
+        <!-- Action Links: Hold Only & Buy Now -->
         <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-          <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
-            <i class="fa-solid fa-ticket text-xs"></i>
-            <span id="seatLayoutBookNowText">Book This Train on Railway</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
-          </a>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- Hold Only Button -->
+            <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-hand text-xs"></i>
+              <span id="seatLayoutHoldText">Hold Only</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+            </a>
+
+            <!-- Buy Now Button (Proceeds to OTP) -->
+            <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-bolt text-xs"></i>
+              <span id="seatLayoutBuyText">Buy Now</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+            </a>
+
+            <!-- Legacy fallback element hidden -->
+            <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
+          </div>
           <p id="seatLayoutAutoBookHint" class="hidden text-[10px] text-slate-500 dark:text-slate-400 text-right leading-tight">
             <i class="fa-solid fa-robot text-[9px] mr-1"></i>
-            <span data-i18n="autobook_hint">Opens the railway server, picks your seats and auto-clicks Continue Purchase to reach the OTP page.</span>
-            <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
+            <span id="seatLayoutAutoBookHintText">Locks exact coach and seat numbers directly into the Bangladesh Railway cart.</span>
+            <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400 ml-1" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
           </p>
         </div>
       </div>

@@ -1024,12 +1024,21 @@
             <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
           </div>
 
-          <!-- Train Selector -->
-          <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Train</label>
-            <select id="autoBookTrainSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="ALL">Any Train (যেকোনো ট্রেন)</option>
-            </select>
+          <!-- Train Selector (Multi-Select) -->
+          <div class="space-y-1 relative" id="autoBookTrainDropdownContainer">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Train</label>
+              <span id="autoBookTrainCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Train</span>
+            </div>
+            <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+              <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookTrainChevron"></i>
+            </button>
+            <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+              <div id="autoBookTrainOptionsList" class="space-y-0.5">
+                <!-- Injected dynamically via JS -->
+              </div>
+            </div>
           </div>
 
         </div>
@@ -1037,19 +1046,21 @@
         <!-- Form Grid Row 2: Class & Quantity & Position -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           
-          <!-- Seat Class -->
-          <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Class</label>
-            <select id="autoBookClassSelect" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="ANY" selected>Any Class (যেকোনো)</option>
-              <option value="S_CHAIR">SHOVAN CHAIR</option>
-              <option value="SNIGDHA">SNIGDHA</option>
-              <option value="AC_B">AC BERTH</option>
-              <option value="AC_S">AC SEAT</option>
-              <option value="F_BERTH">FIRST CLASS BERTH</option>
-              <option value="F_SEAT">FIRST CLASS SEAT</option>
-              <option value="SHOVAN">SHOVAN</option>
-            </select>
+          <!-- Seat Class (Multi-Select - Shows All Classes) -->
+          <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Class</label>
+              <span id="autoBookClassCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Class</span>
+            </div>
+            <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+              <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookClassChevron"></i>
+            </button>
+            <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+              <div id="autoBookClassOptionsList" class="space-y-0.5">
+                <!-- Injected dynamically via JS showing all BR classes -->
+              </div>
+            </div>
           </div>
 
           <!-- Seat Quantity (1 to 4 Seats) -->

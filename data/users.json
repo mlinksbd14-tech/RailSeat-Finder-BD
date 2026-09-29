@@ -484,7 +484,7 @@
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": "1.5DMjzCsQRuEtGjBdKXq17cO1CSkzkbvfjZx8thvFPEvoKb1nbkTeJr8bPq_QSmT1G5hMqQCXmUlOjSZFOpDdsAFnoDKeyoAJBfI8sA5dNdc36B2IFTfEH8GpkSP5AfpAKpVVCG4Gb1FB7IWSDeKX7s8VAQmYkS-IOVf6aNzNueGvKnTfzIPNR_PjRSC7Ao7ZV8pdmQGXL5AEP5KKE09LnMpbYTlTgG29DxF8Gq6nCDxL-Um1AcMXH84S8s753z7tMl-fItwRD4EozOciSmPEnsI2BKLEXPuwZtLENP9SulSmeGKvgtw1lf9E88XvWlXAFEA1iM0JDtgeMd2DLGb8Cfg8MqcoYpUsYfvHeEXYis6_qjHctzl7Qur9LAFQbbgyDlWTjRmwKaClMvCDPvvivetUig5-r_KzWIyyPNkhu4enh7d97H1iG8HbFNsMatrRAJQtEPuTN28Pj8vB3dR8Jow7waoGXAufhGv6U7yh-qNvnAeGVvJP5OFJK5u_up-79Fr_WZyvBQGue0ILCthL828-xgPJ4J-OSqsyzxw6qv3p5dMvcPzvW4DOB3pl1f_78ArUn_s5y08Lx_-XUmBOVw4sQcmmycFODjwbe2o07mhQJppvRf25hUFmvPzt7CAwDP1aGXZsdPkpvz_99BVcqhUm7uwQITIJ94AXotuss4JdlUavoqcvtod0ZuO79ljbGda4tMEzVEgcg8ZeBFXsjg.BxWugydyHaPPmN6-VPQoYA.d763d5ab4884e4006c822b6c6a00c60ae50db35bcf4eb39b23b33558249daeb3",
+        "cftResponse": "1.1Jb4MjJLpRIfniVkQ_nFxIbtgb2btkMKgi2DwNQNrCcjClzWhMHakdIGNd4BaW2CRJmps-Fr-cDNAl9IcIktI0dPLZ-lGZvdeSOmA0oniMoK9jxtUWgdm-reO8iGhyaVCbsRSWfTCRmok0DLo9C_IUAApX-3WAwlR1l_2E4-vOu801HGLRaWt8l45p11Z_G4HVf5wR0a9dY1QfARRdNWe_FMR7wz6hqnvNzBV_PbIj7b6Mf6owCXPp4DtW7LdcwlXOGMgRa2yETbg702XLDwkkWmrlpVPogy52WOUIu1okxryrziYTYG7fBz797UKBYyBTyBGsOE7aJQEzLfXj3KrjdQpU4l0strFVa1RygAO-srU3Xud4w7vPCNFb_lubhhT9cuNwAwrXl0LLA4e9uS085dboVZ6ULz3zm-EWLAM2PvI7h9kLV-337XC0ertr4YgLUuEVEDR1sLT51YY2jWPCxwAZ_bJSbBMN3oXeCBaw7rw9VoPsYOatVN9xtKV8BRZ-pE0pQU__NBQkW7QXmJkmK6npxwgOq8TRE-pxgY9oUkIQd4_eNZrr9qdnsSQLArSj04zSRpgrxyW92twYlb8IeMbf4sIhV0dm1ge20HewWUso-8Ip6in2P698vQqOJiCbuSA5j5QomBAZNx3JxKtj_6yhK2QBA9wj0IIC6JAnOgWh8aMfV728hqdbzwP4qNWoeJzuOOPNaGL-O8j1dreA.4z5zl3ccpAhvXEVyE4V5Uw.cc2882f871341bfc0607963ba1dcdcb15a502df1cf180447600bbd13936413f3",
         "user": {
           "name": "Md. Habibullah",
           "phone": "01871860487",
@@ -500,9 +500,7 @@
           "issuedAt": "2026-09-29T03:45:04.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-09-29T04:36:33.019Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-09-29T04:37:06.525Z"
       }
     },
     {

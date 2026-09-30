@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         RailSeat Finder BD — Automatic Background Token & Session Bridge (Multi-Domain)
 // @namespace    https://railseat-finder-bd/
-// @version      2.0
-// @description  Zero-click automatic sync of Bangladesh Railway live session, Bearer tokens, Cloudflare Turnstile tokens, and a resumable auto-book driver with on-screen progress panel. v2.0: Auto-dismisses Railway Attention / Notice dialog modals and auto-clicks OK on coach change.
+// @version      2.1
+// @description  Zero-click automatic sync of Bangladesh Railway live session, Bearer tokens, Cloudflare Turnstile tokens, and a resumable auto-book driver with on-screen progress panel. v2.1: Fixes 'requesting too frequently' rate limit cooldown with smart backoff, dialog throttle, and pacing.
 // @author       RailSeat BD
 // @match        https://eticket.railway.gov.bd/*
 // @icon         https://eticket.railway.gov.bd/favicon.ico
@@ -634,11 +634,8 @@
       } catch (e) {}
     });
 
-    // Check & auto-dismiss any prompt or modal that pops up after coach change
-    setTimeout(dismissAttentionDialogs, 50);
-    setTimeout(dismissAttentionDialogs, 150);
-    setTimeout(dismissAttentionDialogs, 350);
-    setTimeout(dismissAttentionDialogs, 700);
+    // Check & auto-dismiss prompt or modal that pops up after coach change with gentle pacing
+    setTimeout(dismissAttentionDialogs, 400);
     setTimeout(dismissAttentionDialogs, 1200);
 
     return String(select.value) === String(value);
@@ -651,13 +648,34 @@
   // This helper finds and auto-clicks OK / Agree / Confirm immediately, with deduplication.
   // -------------------------------------------------------------------------
   let lastDismissedTime = 0;
+  let rateLimitCooldownUntil = 0;
+
+  function isRateLimitActive() {
+    return Date.now() < rateLimitCooldownUntil;
+  }
+
+  function triggerRateLimitCooldown(source = 'Railway Server') {
+    const cooldownMs = 6000;
+    rateLimitCooldownUntil = Date.now() + cooldownMs;
+    console.warn(`[RailSeat AutoBook] ⚠️ Rate limit triggered by ${source}: 'You are requesting too frequently'. Cooling down for ${cooldownMs / 1000}s...`);
+    setStatus('Rate limit cooldown', 'Railway server: "You are requesting too frequently." Pausing auto-book for 6 seconds to avoid IP block...', 'wait');
+    showFloatingBadge('Railway rate limit: Cooldown active for 6 seconds. Please wait...', false);
+  }
+
   function dismissAttentionDialogs() {
     try {
       const now = Date.now();
-      if (now - lastDismissedTime < 350) return false;
+      if (now - lastDismissedTime < 450) return false;
 
       // 1. SweetAlert2 / Swal dialogs
       const swalConfirm = document.querySelector('.swal2-confirm, button.swal2-confirm, .swal-button--confirm');
+      const swalPopup = document.querySelector('.swal2-popup, .swal-modal');
+      if (swalPopup) {
+        const swalText = textOf(swalPopup).toLowerCase();
+        if (swalText.includes('too frequently') || swalText.includes('frequently') || swalText.includes('too many requests') || swalText.includes('wait and try after some time')) {
+          triggerRateLimitCooldown('SweetAlert');
+        }
+      }
       if (swalConfirm && swalConfirm.offsetParent !== null && !swalConfirm._railClicked) {
         swalConfirm._railClicked = true;
         lastDismissedTime = now;
@@ -700,10 +718,18 @@
           }
 
           const dlgText = textOf(dlg).toLowerCase();
+
+          // Check if this modal is a rate-limit / too-frequently warning from railway server
+          if (dlgText.includes('too frequently') || dlgText.includes('frequently') || dlgText.includes('too many requests') || dlgText.includes('wait and try after some time')) {
+            triggerRateLimitCooldown('Modal Dialog');
+          }
+
           const isAttention = dlgText.includes('attention') ||
                               dlgText.includes('notice') ||
                               dlgText.includes('alert') ||
                               dlgText.includes('warning') ||
+                              dlgText.includes('error') ||
+                              dlgText.includes('frequently') ||
                               dlgText.includes('সতর্কতা') ||
                               dlgText.includes('দৃষ্টি আকর্ষণ') ||
                               dlgText.includes('অনুগ্রহ করে') ||
@@ -735,6 +761,8 @@
                    txt.includes('okay') ||
                    txt.includes('agree') ||
                    txt.includes('confirm') ||
+                   txt.includes('try again') ||
+                   txt.includes('আবার চেষ্টা') ||
                    aria === 'ok' ||
                    aria === 'okay' ||
                    aria === 'close' ||
@@ -742,7 +770,7 @@
                    b.classList.contains('btn-confirm') ||
                    b.classList.contains('swal2-confirm') ||
                    b.getAttribute('data-dismiss') === 'modal';
-          }) || (isAttention ? buttons.find(b => b.classList.contains('btn-primary') || b.classList.contains('btn-success') || b.classList.contains('btn-confirm')) : null) || (isAttention ? buttons[0] : null);
+          }) || (isAttention ? buttons.find(b => b.classList.contains('btn-primary') || b.classList.contains('btn-success') || b.classList.contains('btn-confirm') || b.classList.contains('swal2-confirm')) : null) || (isAttention ? buttons[0] : null);
 
           if (okBtn && !okBtn._railClicked) {
             okBtn._railClicked = true;
@@ -1156,6 +1184,11 @@
     });
 
     for (const opt of sorted) {
+      if (isRateLimitActive()) {
+        log(`Rate limit cooldown active. Pausing coach search...`);
+        return 'loading';
+      }
+
       const optText = textOf(opt);
       if (/\(\s*0\s*\)/.test(optText) || /available:\s*0/i.test(optText)) {
         continue; // skip coaches explicitly showing 0 seats
@@ -1163,9 +1196,9 @@
 
       if (String(select.value) !== String(opt.value)) {
         railSelect(select, opt.value);
-        await sleep(200);
+        await sleep(400); // polite delay to respect Railway rate limits
         dismissAttentionDialogs();
-        await waitForSeatLayoutUpdate(layout, 1000);
+        await waitForSeatLayoutUpdate(layout, 1200);
         dismissAttentionDialogs();
       }
 
@@ -1178,13 +1211,14 @@
       }
     }
 
-    // If no option explicitly marked > 0 worked, test remaining options just in case
+    // If no option explicitly marked > 0 worked, test remaining options just in case (with rate-limiting guard)
     for (const opt of validOptions) {
+      if (isRateLimitActive()) return 'loading';
       if (String(select.value) !== String(opt.value)) {
         railSelect(select, opt.value);
-        await sleep(200);
+        await sleep(500); // polite delay
         dismissAttentionDialogs();
-        await waitForSeatLayoutUpdate(layout, 1000);
+        await waitForSeatLayoutUpdate(layout, 1200);
         dismissAttentionDialogs();
       }
       const free = getAvailableSeatButtons(layout);
@@ -1269,12 +1303,17 @@
     // 1. Try specifically requested seat names/numbers first
     if (Array.isArray(intent.seats) && intent.seats.length > 0) {
       for (const seat of intent.seats) {
+        if (isRateLimitActive()) {
+          log(`Rate limit cooldown active. Pausing seat reservation...`);
+          break;
+        }
         if (countSelectedSeats(layout) >= needed) break;
         const btn = findSeatButton(layout, seat);
         if (btn && isSeatButtonAvailable(btn)) {
           const ok = await clickAndVerifySeat(layout, btn, seat);
           if (ok) results.selected.push(seat);
           else results.missing.push(seat);
+          await sleep(300); // polite pause between seat requests
         } else {
           results.missing.push(seat);
         }
@@ -1343,6 +1382,10 @@
           }
 
           for (let i = 0; i < Math.min(stillNeed, blankButtons.length); i++) {
+            if (isRateLimitActive()) {
+              log(`Rate limit cooldown active. Pausing seat reservation...`);
+              break;
+            }
             const btn = blankButtons[i];
             const label = normalize(btn.getAttribute('title') || textOf(btn) || btn.getAttribute('data-seat') || `Seat-${i+1}`);
             const ok = await clickAndVerifySeat(layout, btn, label);
@@ -1351,6 +1394,7 @@
               currentlySelected = countSelectedSeats(layout);
               if (currentlySelected >= needed) break;
             }
+            await sleep(300); // polite pause between seat selections
           }
         }
       }
@@ -1466,14 +1510,16 @@
             } catch (e) {}
             return;
           }
-        } else if (idleTicks <= 2) {
-          setStatus('Searching', 'Asking the railway server for trains on this route/date...', 'wait');
+        } else if (isRateLimitActive()) {
+          setStatus('Rate limit cooldown', 'Railway server requested cooldown ("requesting too frequently"). Waiting 5s...', 'wait');
+          await sleep(2000);
+          continue;
         } else if (openAttempts < 30 && openCooldown <= 0) {
           const status = openSeatLayout(intent);
           if (status === 'requested') {
             openAttempts++;
-            // Give the modal time to mount before touching the button again.
-            openCooldown = 4;
+            // Give the modal time to mount before touching the button again (polite pacing).
+            openCooldown = 5;
             setStatus('Opening seat map', `Pressing Book Now${lastClassNote ? ' (' + lastClassNote + ')' : ''}...`, 'ok');
           } else if (status === 'no-train') {
             setStatus('Finding train', `Train "${intent.trainModel || intent.train}" has not appeared in the results yet. ${openAttempts}/30.`, 'wait');
@@ -1585,12 +1631,18 @@
           break;
         }
 
+        if (isRateLimitActive()) {
+          setStatus('Rate limit cooldown', 'Railway server: "You are requesting too frequently." Waiting out cooldown before continuing...', 'wait');
+          await sleep(2500);
+          continue;
+        }
+
         const result = clickContinue(layout);
         if (result === 'clicked') {
           continueWaits = 0;
           showFloatingBadge('Continue Purchase sent — opening passenger & OTP step...', true);
           setStatus('Continuing', 'Continue Purchase sent — opening the passenger & OTP step...', 'ok');
-          await sleep(1500);
+          await sleep(2000);
           continue;
         }
         if (result === 'disabled') {

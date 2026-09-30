@@ -1458,10 +1458,14 @@
                   return (a.num || 0) - (b.num || 0);
                 });
 
-                // Find contiguous or adjacent window of length stillNeed in this row
+                // Find contiguous or adjacent window of length stillNeed in this row on the SAME SIDE
                 for (let i = 0; i <= itemsInRow.length - stillNeed; i++) {
                   const run = itemsInRow.slice(i, i + stillNeed);
-                  let runScore = 100;
+                  const firstSide = getSide(run[0]);
+                  const allSameSide = run.every(st => getSide(st) === firstSide);
+                  if (!allSameSide) continue; // MUST HAVE SAME SIDE: Do not pick seats across the aisle!
+
+                  let runScore = 120;
                   run.forEach(st => { runScore += scoreItemPosition(st); });
 
                   // Check if seat numbers are contiguous e.g. 1 & 2
@@ -1481,7 +1485,7 @@
 
             if (bestRowRun && bestRowRun.length === stillNeed) {
               chosenButtons = bestRowRun;
-              log(`🎯 Found ${stillNeed} seats together in the same row!`);
+              log(`🎯 Found ${stillNeed} seats together in the same row & on the SAME SIDE!`);
             }
           }
 

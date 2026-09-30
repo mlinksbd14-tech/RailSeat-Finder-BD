@@ -12326,30 +12326,49 @@ document.addEventListener('DOMContentLoaded', () => {
             rowSeats.sort((a, b) => (Number(a.col) || 0) - (Number(b.col) || 0));
 
             // Find contiguous blocks of available seats in this row of length `count`
+            // MUST HAVE SAME SIDE: all seats in the row run must be on the SAME side of the aisle
             let currentRun = [];
             for (let i = 0; i < rowSeats.length; i++) {
               const s = rowSeats[i];
               if (s.status === 'available') {
-                currentRun.push(s);
+                const sGeo = analyzeSeatGeometry(s, coach.seat_class, maxRow, totalCoachSeats, i);
+                if (currentRun.length > 0) {
+                  const firstGeo = analyzeSeatGeometry(currentRun[0], coach.seat_class, maxRow, totalCoachSeats, 0);
+                  // If side differs (e.g. one is left and one is across the aisle on the right), reset run to this seat
+                  if (sGeo.side !== firstGeo.side) {
+                    currentRun = [s];
+                  } else {
+                    currentRun.push(s);
+                  }
+                } else {
+                  currentRun.push(s);
+                }
+
                 if (currentRun.length === count) {
-                  // Score this contiguous run
-                  let runScore = 0;
-                  currentRun.forEach((seatItem, idx) => {
-                    runScore += scoreSeatPosition(seatItem, coach.seat_class, maxRow, totalCoachSeats, idx);
-                  });
+                  // Verify that ALL seats in this run strictly have the exact same side
+                  const runSide = analyzeSeatGeometry(currentRun[0], coach.seat_class, maxRow, totalCoachSeats, 0).side;
+                  const allSameSideInRow = currentRun.every(st => analyzeSeatGeometry(st, coach.seat_class, maxRow, totalCoachSeats, 0).side === runSide);
 
-                  // Bonus: if window preferred and at least 1 seat is window, add strong bonus
-                  if (sidePref === 'window' && currentRun.some(st => analyzeSeatGeometry(st, coach.seat_class, maxRow, totalCoachSeats, 0).isWindow)) {
-                    runScore += 20;
-                  }
-                  // Bonus: if aisle preferred and at least 1 seat is aisle
-                  if (sidePref === 'aisle' && currentRun.some(st => analyzeSeatGeometry(st, coach.seat_class, maxRow, totalCoachSeats, 0).isAisle)) {
-                    runScore += 20;
-                  }
+                  if (allSameSideInRow) {
+                    // Score this contiguous run
+                    let runScore = 100;
+                    currentRun.forEach((seatItem, idx) => {
+                      runScore += scoreSeatPosition(seatItem, coach.seat_class, maxRow, totalCoachSeats, idx);
+                    });
 
-                  if (runScore > highestRunScore) {
-                    highestRunScore = runScore;
-                    bestContiguousRun = { coach, seats: [...currentRun], isContiguous: true };
+                    // Bonus: if window preferred and at least 1 seat is window, add strong bonus
+                    if (sidePref === 'window' && currentRun.some(st => analyzeSeatGeometry(st, coach.seat_class, maxRow, totalCoachSeats, 0).isWindow)) {
+                      runScore += 20;
+                    }
+                    // Bonus: if aisle preferred and at least 1 seat is aisle
+                    if (sidePref === 'aisle' && currentRun.some(st => analyzeSeatGeometry(st, coach.seat_class, maxRow, totalCoachSeats, 0).isAisle)) {
+                      runScore += 20;
+                    }
+
+                    if (runScore > highestRunScore) {
+                      highestRunScore = runScore;
+                      bestContiguousRun = { coach, seats: [...currentRun], isContiguous: true, isSameSide: true };
+                    }
                   }
 
                   // Slide by 1 seat to check overlapping runs in same row

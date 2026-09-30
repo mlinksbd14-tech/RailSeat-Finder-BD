@@ -1002,35 +1002,6 @@
       <!-- Main Auto-Book Configuration Card -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
 
-        <!-- 1-Tap Quick Route Presets -->
-        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/70 space-y-1.5">
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-bolt-lightning text-xs"></i>
-              <span>1-Tap Rush Presets:</span>
-            </span>
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:inline">Click any corridor to autofill route & preferences</span>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs" id="quickGrabPresetGroup">
-            <button type="button" class="quick-preset-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 text-left transition cursor-pointer group" data-from="Dhaka" data-to="Chattogram" data-train="Subarna Express" data-class="SNIGDHA">
-              <div class="font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate text-[11px]">Dhaka ➔ Ctg</div>
-              <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Subarna • Snigdha</div>
-            </button>
-            <button type="button" class="quick-preset-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 text-left transition cursor-pointer group" data-from="Dhaka" data-to="Cox's Bazar" data-train="Coxs Bazar Express" data-class="S_CHAIR">
-              <div class="font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate text-[11px]">Dhaka ➔ Cox's Bazar</div>
-              <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Express • S_CHAIR</div>
-            </button>
-            <button type="button" class="quick-preset-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 text-left transition cursor-pointer group" data-from="Dhaka" data-to="Sylhet" data-train="Parabat Express" data-class="SNIGDHA">
-              <div class="font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate text-[11px]">Dhaka ➔ Sylhet</div>
-              <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Parabat • Snigdha</div>
-            </button>
-            <button type="button" class="quick-preset-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 text-left transition cursor-pointer group" data-from="Chattogram" data-to="Dhaka" data-train="Sonar Bangla Express" data-class="S_CHAIR">
-              <div class="font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate text-[11px]">Ctg ➔ Dhaka</div>
-              <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Sonar Bangla • S_CHAIR</div>
-            </button>
-          </div>
-        </div>
-
         <!-- Form Grid Row 1: Stations & Date & Train -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           
@@ -1207,38 +1178,16 @@
           </button>
         </div>
 
-        <!-- Live Activity Console with Visual 4-Stage Stepper -->
-        <div id="autoBookConsoleBox" class="hidden p-3.5 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 space-y-2.5 shadow-inner">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] text-amber-400 font-bold">
+        <!-- Live Activity Console -->
+        <div id="autoBookConsoleBox" class="hidden p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs border border-slate-800 space-y-1.5 shadow-inner">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-1 text-[11px] text-amber-400 font-bold">
             <span class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span id="autoBookConsoleTitleText">Auto-Book Speed Radar</span>
+              <span>Auto-Book Activity Console</span>
             </span>
-            <span id="autoBookConsoleStatus" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">Idle</span>
+            <span id="autoBookConsoleStatus" class="text-slate-400">Idle</span>
           </div>
-
-          <!-- 4-Stage Visual Progress Stepper -->
-          <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-bold" id="autoGrabVisualStepper">
-            <div id="autoGrabStep1" class="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 transition-all">
-              <span class="block text-[9px] uppercase opacity-75">Step 1</span>
-              <span>1. Bridge Sync</span>
-            </div>
-            <div id="autoGrabStep2" class="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 transition-all">
-              <span class="block text-[9px] uppercase opacity-75">Step 2</span>
-              <span>2. Layout Scan</span>
-            </div>
-            <div id="autoGrabStep3" class="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 transition-all">
-              <span class="block text-[9px] uppercase opacity-75">Step 3</span>
-              <span>3. Smart Alloc</span>
-            </div>
-            <div id="autoGrabStep4" class="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-500 transition-all">
-              <span class="block text-[9px] uppercase opacity-75">Step 4</span>
-              <span>4. Railway Lock</span>
-            </div>
-          </div>
-
-          <!-- Activity Logs -->
-          <div id="autoBookConsoleLogs" class="space-y-1 max-h-32 overflow-y-auto text-[11px] text-slate-300 p-2 rounded-xl bg-slate-950/70 border border-slate-800/80"></div>
+          <div id="autoBookConsoleLogs" class="space-y-1 max-h-32 overflow-y-auto text-[11px] text-slate-300"></div>
         </div>
 
       </div>

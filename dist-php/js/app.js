@@ -6692,6 +6692,59 @@ document.addEventListener('DOMContentLoaded', () => {
         saveExactSeatIntent('buy');
       });
     }
+
+    // 1-Tap Smart Auto-Pick Best Window/Adjacent Seats
+    const smartAutoPickBtn = document.getElementById('seatLayoutSmartAutoPickBtn');
+    if (smartAutoPickBtn) {
+      smartAutoPickBtn.addEventListener('click', () => {
+        if (!currentSeatLayoutState) return;
+        const coach = currentSeatLayoutState.coaches?.[currentSeatLayoutState.activeCoachIndex];
+        if (!coach || !Array.isArray(coach.seats)) return;
+
+        const availSeats = coach.seats.filter(s => s && !s.is_blank && s.seat_number && s.status === 'available');
+        if (availSeats.length === 0) {
+          showToast(window.i18n?.getLang() === 'bn' ? 'এই বগিতে কোনো খালি আসন নেই!' : 'No available seats in this coach!', 'info');
+          return;
+        }
+
+        // Prioritize Window seats
+        const sorted = [...availSeats].sort((a, b) => {
+          const winA = a.is_window ? 1 : 0;
+          const winB = b.is_window ? 1 : 0;
+          return winB - winA;
+        });
+
+        // Pick top 2 (or 1 if only 1 available)
+        const toPick = sorted.slice(0, 2);
+        currentSeatLayoutState.selectedSeats = toPick.map(s => ({
+          seat_name: s.full_seat_name || s.seat_name || (coach.coach_name + '-' + s.seat_number),
+          seat_number: s.seat_number,
+          coach_name: coach.coach_name,
+          fare: Number(s.total_fare || s.fare || coach.fare || 0),
+          is_window: s.is_window
+        }));
+        currentSeatLayoutState.selectedSeat = currentSeatLayoutState.selectedSeats[currentSeatLayoutState.selectedSeats.length - 1];
+
+        const pickMsg = window.i18n?.getLang() === 'bn' 
+          ? `🎯 সেরা ${toPick.length}টি সিট (${toPick.map(s => s.seat_number).join(', ')}) নির্বাচন করা হয়েছে!`
+          : `🎯 Auto-picked best ${toPick.length} seat(s): ${toPick.map(s => s.seat_number).join(', ')}!`;
+        showToast(pickMsg, 'success');
+
+        renderActiveCoachCarriage();
+      });
+    }
+
+    // Clear Selection Button
+    const clearSelectionBtn = document.getElementById('seatLayoutClearSelectionBtn');
+    if (clearSelectionBtn) {
+      clearSelectionBtn.addEventListener('click', () => {
+        if (currentSeatLayoutState) {
+          currentSeatLayoutState.selectedSeats = [];
+          currentSeatLayoutState.selectedSeat = null;
+          renderActiveCoachCarriage();
+        }
+      });
+    }
   }
 
   // ----------------------------------------------------
@@ -7620,7 +7673,14 @@ document.addEventListener('DOMContentLoaded', () => {
       seatLayoutAutoBookHint.classList.toggle('hidden', !hasSeats);
     }
 
+    const boardingPassEl = document.getElementById('seatLayoutBoardingPass');
+    const bpSeatList = document.getElementById('seatLayoutBpSeatList');
+    const bpWindowTag = document.getElementById('seatLayoutBpWindowTag');
+    const bpTotalFare = document.getElementById('seatLayoutBpTotalFare');
+    const bpCoachTag = document.getElementById('seatLayoutBpCoachTag');
+
     if (!hasSeats) {
+      if (boardingPassEl) boardingPassEl.classList.add('hidden');
       if (seatLayoutHoldText) {
         seatLayoutHoldText.textContent = isBn ? 'সিট হোল্ড' : 'Hold Only';
       }
@@ -7644,6 +7704,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const fareBn = isBn && window.i18n ? window.i18n.toBnNum(totalFare) : totalFare;
     const seatNamesBn = isBn && window.i18n ? window.i18n.toBnNum(seatNamesJoined) : seatNamesJoined;
     const coachBn = isBn && window.i18n ? window.i18n.toBnNum(coachName) : coachName;
+
+    // Populate Modern Floating Boarding Pass Bar
+    if (boardingPassEl) {
+      boardingPassEl.classList.remove('hidden');
+      if (bpSeatList) {
+        bpSeatList.textContent = `${coachBn ? coachBn + '-' : ''}${seatNamesBn} (${countBn} ${isBn ? 'আসন' : (count > 1 ? 'Seats' : 'Seat')})`;
+      }
+      if (bpCoachTag) {
+        bpCoachTag.textContent = `${isBn ? 'বগি: ' : 'Coach: '}${coachBn || '--'}`;
+      }
+      if (bpTotalFare) {
+        bpTotalFare.textContent = isBn ? `৳${fareBn}` : `৳${totalFare}`;
+      }
+      if (bpWindowTag) {
+        const hasWindowSeat = selectedSeats.some(s => !!s.is_window);
+        const allWindowSeats = hasWindowSeat && selectedSeats.every(s => !!s.is_window);
+        bpWindowTag.classList.toggle('hidden', !hasWindowSeat);
+        if (hasWindowSeat) {
+          if (allWindowSeats && count > 1) {
+            bpWindowTag.textContent = isBn ? '🪟 সবকটি জানালা' : '🪟 All Window';
+          } else {
+            bpWindowTag.textContent = isBn ? '🪟 জানালা' : '🪟 Window';
+          }
+        }
+      }
+    }
 
     if (seatLayoutHoldText) {
       if (isBn) {
@@ -7785,24 +7871,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const isWindow = !!s.is_window;
       const windowBar = isWindow 
-        ? `<span class="w-3/5 h-[2.5px] rounded-full bg-slate-700 dark:bg-slate-300 mt-0.5"></span>` 
+        ? `<span class="w-2.5 h-[2px] rounded-full bg-cyan-500 shadow-[0_0_4px_rgba(6,182,212,0.8)] mt-0.5"></span>` 
         : '';
 
       let tileClasses = '';
       if (isSelected) {
-        tileClasses = 'bg-amber-500 text-white border-2 border-amber-600 shadow-md ring-2 ring-amber-300 font-black cursor-pointer transform scale-105';
+        tileClasses = 'bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 font-black border-2 border-amber-300 shadow-md ring-2 ring-amber-400/60 cursor-pointer transform scale-105 active:scale-95';
       } else if (isAvail) {
-        tileClasses = 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-extrabold cursor-pointer shadow-2xs hover:scale-105';
+        tileClasses = 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-500 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/80 font-black cursor-pointer shadow-xs hover:scale-105 active:scale-95';
       } else if (isProcess) {
-        tileClasses = 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 cursor-not-allowed opacity-80';
+        tileClasses = 'bg-amber-100/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/80 cursor-not-allowed opacity-80';
       } else if (isBooked) {
-        tileClasses = 'bg-[#f0eee9] dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 border border-[#e2ded6] dark:border-slate-700/60 cursor-not-allowed line-through text-[11px]';
+        tileClasses = 'bg-[#f0eee9] dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 border border-[#e2ded6] dark:border-slate-800/80 cursor-not-allowed line-through text-[11px] opacity-70';
       } else {
         tileClasses = 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-dashed border-slate-300 dark:border-slate-700 cursor-not-allowed';
       }
 
       return `
-        <button type="button" class="carriage-seat-btn aspect-square w-full rounded sm:rounded-md flex flex-col items-center justify-center p-0 transition duration-150 select-none ${tileClasses}"
+        <button type="button" class="carriage-seat-btn aspect-square w-full rounded-lg flex flex-col items-center justify-center p-0 transition-all duration-150 select-none ${tileClasses}"
           ${isAvail ? `data-seat-name="${fullSeatName}" data-seat-number="${s.seat_number}" data-seat-status="${s.status}" data-seat-fare="${s.total_fare || s.fare || coach.fare || 0}"` : ''}
           title="${fullSeatName} (${STATUS_LABEL[isAvail ? 'available' : (isBooked ? 'booked' : (isProcess ? 'process' : 'unknown'))]}${isWindow ? ' • Window' : ''})">
           <span class="text-[10px] sm:text-[11px] font-bold leading-none tracking-tight">${numDisplay}</span>
@@ -7813,14 +7899,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rowsHtml = rowsList.map((rowSeats) => {
       const rowCols = rowSeats.map(s => renderSeatTile(s)).join('');
-      return `<div class="grid gap-1 sm:gap-1.5 items-center" style="grid-template-columns: repeat(${gridCols}, minmax(0, 1fr))">${rowCols}</div>`;
+      return `<div class="grid gap-1.5 sm:gap-2 items-center" style="grid-template-columns: repeat(${gridCols}, minmax(0, 1fr))">${rowCols}</div>`;
     }).join('');
 
     const unknownCount = seats.filter(s => s.status === 'unknown').length;
     let statusNotice = '';
     if (unknownCount > 0) {
       statusNotice = `
-        <div class="flex items-start gap-2 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-[11px] text-amber-800 dark:text-amber-300 max-w-[300px] mx-auto">
+        <div class="flex items-start gap-2 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-[11px] text-amber-800 dark:text-amber-300 max-w-[340px] mx-auto">
           <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
           <span>${isBn
             ? 'রেলওয়ে সার্ভার সিটের অবস্থা এখনো সম্পূর্ণ পাঠায়নি। সেশন সিঙ্ক হলে লাইভ বুকড/খালি অবস্থা দেখা যাবে।'
@@ -7838,7 +7924,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${statusNotice}
       
       <!-- Top Legend matching railway reference -->
-      <div class="flex items-center justify-center gap-3.5 text-xs text-slate-600 dark:text-slate-300 pb-1.5">
+      <div class="flex items-center justify-center gap-3.5 text-xs text-slate-600 dark:text-slate-300 pb-1 flex-wrap">
         <div class="flex items-center gap-1.5">
           <span class="w-3.5 h-3.5 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
           <span class="font-medium text-[11px]">${isBn ? 'খালি' : 'Free'}</span>
@@ -7856,26 +7942,53 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="font-medium text-[11px]">${isBn ? 'বুকিং চলমান' : 'In Process'}</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-3.5 h-3.5 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-slate-700 dark:border-b-slate-300 inline-block"></span>
+          <span class="w-3.5 h-3.5 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-cyan-500 inline-block"></span>
           <span class="font-medium text-[11px]">${isBn ? 'জানালা' : 'Window'}</span>
         </div>
       </div>
 
-      <!-- Compact Coach Card (Direct Railway Style) -->
-      <div class="w-full max-w-[280px] sm:max-w-[300px] mx-auto bg-[#fbf9f5] dark:bg-slate-900 rounded-2xl border border-[#e8e4dc] dark:border-slate-800 p-2.5 sm:p-3 shadow-xs space-y-2">
+      <!-- Modern Train Carriage Container -->
+      <div class="w-full max-w-[340px] sm:max-w-[360px] mx-auto bg-gradient-to-b from-[#fdfbf7] to-[#f4f0e6] dark:from-slate-900 dark:to-slate-950 rounded-3xl border-2 border-slate-300 dark:border-slate-700/80 p-3 sm:p-4 shadow-xl space-y-3 relative overflow-hidden">
         
-        <!-- Coach Card Header -->
-        <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-1.5">
+        <!-- Carriage Engine Direction Indicator -->
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 text-xs">
+          <div class="flex items-center space-x-1.5 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] tracking-wide uppercase">
+            <i class="fa-solid fa-chevron-up text-amber-500 animate-bounce"></i>
+            <span>${isBn ? 'যাত্রার দিক (ইঞ্জিন)' : 'Engine / Front Direction'}</span>
+          </div>
+          <span class="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">${countDisplay}</span>
+        </div>
+
+        <!-- Front Vestibule: Door & Washroom indicators -->
+        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          <div class="py-1 px-2 rounded-lg bg-slate-200/70 dark:bg-slate-800/70 border border-slate-300/60 dark:border-slate-700/60 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-door-open text-amber-500/80 text-[11px]"></i>
+            <span>${isBn ? 'দরজা' : 'Vestibule'}</span>
+          </div>
+          <div class="py-1 px-2 rounded-lg bg-slate-200/70 dark:bg-slate-800/70 border border-slate-300/60 dark:border-slate-700/60 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-restroom text-cyan-500/80 text-[11px]"></i>
+            <span>${isBn ? 'শৌচাগার' : 'Restroom'}</span>
+          </div>
+        </div>
+
+        <!-- Coach Card Header Badge -->
+        <div class="flex items-center justify-between bg-white/80 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
           <div class="flex items-center space-x-1.5">
             <span class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight">${coach.coach_name || 'Coach'}</span>
-            ${isLive ? '<span class="px-1.5 py-0.5 rounded bg-slate-900 text-white dark:bg-emerald-600 text-[9px] font-extrabold uppercase tracking-wider">PICK</span>' : ''}
+            ${isLive ? '<span class="px-1.5 py-0.2 rounded-md bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-wider">LIVE</span>' : ''}
           </div>
-          <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">${countDisplay}</span>
+          <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 font-mono">${coachClass}</span>
         </div>
 
         <!-- Seating Plan Rows -->
-        <div class="space-y-1 sm:space-y-1.5 py-0.5">
+        <div class="space-y-1 sm:space-y-1.5 py-1">
           ${rowsHtml}
+        </div>
+
+        <!-- Rear Exit / Vestibule -->
+        <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400">
+          <i class="fa-solid fa-door-closed text-[10px]"></i>
+          <span>${isBn ? 'পেছনের দরজা' : 'Rear Exit Door'}</span>
         </div>
 
       </div>

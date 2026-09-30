@@ -14,10 +14,21 @@
 // @connect      127.0.0.1
 // @connect      *
 // @run-at       document-start
+// @noframes
 // ==/UserScript==
 
 (function() {
   'use strict';
+
+  // Guard against iframe injection and duplicate script execution in the same window
+  if (typeof window !== 'undefined') {
+    if (window.top !== window.self) return;
+    if (window.__RAILSEAT_SYNC_INITIALIZED__) {
+      console.log('[RailSeat Bridge] Already initialized in this tab, skipping duplicate run.');
+      return;
+    }
+    window.__RAILSEAT_SYNC_INITIALIZED__ = true;
+  }
 
   // -------------------------------------------------------------------------
   // 1. Multi-Domain Configuration
@@ -71,8 +82,8 @@
   function showFloatingBadge(message, isSuccess = true) {
     try {
       const now = Date.now();
-      // Suppress duplicate toasts within 3.5 seconds
-      if (message === lastBadgeText && (now - lastBadgeTime) < 3500) {
+      // Suppress duplicate toasts within 5 seconds
+      if (message === lastBadgeText && (now - lastBadgeTime) < 5000) {
         return;
       }
       lastBadgeText = message;
@@ -636,7 +647,7 @@
   function dismissAttentionDialogs() {
     try {
       const now = Date.now();
-      if (now - lastDismissedTime < 200) return false;
+      if (now - lastDismissedTime < 350) return false;
 
       // 1. SweetAlert2 / Swal dialogs
       const swalConfirm = document.querySelector('.swal2-confirm, button.swal2-confirm, .swal-button--confirm');
@@ -1624,35 +1635,51 @@
     }
   }
 
+  let autoBookWatchersAttached = false;
+
   function initAutoBookFlow() {
     const fromUrl = readAutoBookIntentFromUrl();
     if (fromUrl) {
       saveAutoBookIntent(fromUrl);
       console.log('[RailSeat AutoBook] Auto-book intent received:', fromUrl);
+
+      // Clean the autobook and seat parameters from the URL so page refreshes or navigations
+      // do not repeatedly re-trigger the intent or re-seed it unintentionally.
+      try {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('autobook');
+        cleanUrl.searchParams.delete('seats');
+        cleanUrl.searchParams.delete('coach');
+        cleanUrl.searchParams.delete('hold_only');
+        cleanUrl.searchParams.delete('exact_coach');
+        cleanUrl.searchParams.delete('mode');
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search);
+      } catch (e) {}
     }
 
     if (!loadAutoBookIntent()) return;
 
+    let kickedOff = false;
     const kickOff = () => {
+      if (kickedOff) return;
+      kickedOff = true;
       try {
         const currentIntent = loadAutoBookIntent();
         const isHold = currentIntent && currentIntent.holdOnly;
         showFloatingBadge(isHold ? 'Auto-holding seats on Railway server (Hold Only mode)...' : 'Auto-booking on the railway server...', true);
         setStatus('Starting', isHold ? 'Auto-hold mode active: will select & hold seats without proceeding to OTP.' : 'Reading the search page on eticket.railway.gov.bd...', 'wait');
       } catch (e) {}
-      // Scheduled outside the cosmetic block: a toast failure must never
-      // prevent the driver from starting.
-      setTimeout(() => startAutoBookDriver(), 1200);
+      setTimeout(() => startAutoBookDriver(), 800);
     };
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', kickOff, { once: true });
-      // Belt and braces: if DOMContentLoaded already fired in an odd order, or
-      // the Angular app takes over the document, start anyway.
-      setTimeout(() => startAutoBookDriver(), 6000);
     } else {
       kickOff();
     }
+
+    if (autoBookWatchersAttached) return;
+    autoBookWatchersAttached = true;
 
     // The railway site is an SPA, so a client-side route change never re-runs
     // this file. Keep a cheap heartbeat that relaunches the driver whenever an
@@ -1685,7 +1712,7 @@
   // Resume if the railway site performs a full page load or restores the tab
   // while an intent is still pending.
   window.addEventListener('pageshow', () => {
-    if (loadAutoBookIntent()) startAutoBookDriver();
+    if (loadAutoBookIntent() && !autoBookDriverRunning) startAutoBookDriver();
   });
 
   try {

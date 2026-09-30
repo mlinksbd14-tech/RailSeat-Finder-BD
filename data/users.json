@@ -27,12 +27,6 @@
       "canViewDashboard": true,
       "status": "active",
       "role": "admin",
-      "ips": [
-        "103.59.178.232",
-        "27.147.149.234",
-        "::1",
-        "103.177.220.164"
-      ],
       "lastLocation": {
         "countryCode": "BD",
         "country": "Development",
@@ -42,8 +36,56 @@
         "query": "::1",
         "region": "Local Network"
       },
-      "lastLogin": "2026-09-27T14:22:12.637Z",
+      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+      "lastDevice": {
+        "os": "Android 10",
+        "browser": "Chrome 154",
+        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+        "device": "Mobile"
+      },
+      "ips": [
+        "103.230.106.11",
+        "103.59.178.232",
+        "27.147.149.234",
+        "::1",
+        "103.177.220.164"
+      ],
+      "lastLogin": "2026-09-29T15:20:29.775Z",
       "activityHistory": [
+        {
+          "action": "login",
+          "timestamp": "2026-09-29T15:20:29.775Z",
+          "ip": "103.59.178.232",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 154",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
+        {
+          "action": "login",
+          "timestamp": "2026-09-29T13:32:02.564Z",
+          "ip": "103.230.106.11",
+          "device": "Mobile",
+          "os": "Android 10",
+          "browser": "Chrome 154",
+          "location": {
+            "countryCode": "BD",
+            "country": "Development",
+            "flag": "💻",
+            "city": "Localhost",
+            "isp": "Internal Loopback / Dev",
+            "query": "::1",
+            "region": "Local Network"
+          }
+        },
         {
           "action": "login",
           "timestamp": "2026-09-27T14:22:12.637Z",
@@ -434,55 +476,14 @@
             "query": "103.59.178.232",
             "region": "Barisal Division"
           }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-13T11:00:21.985Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 153",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Barishal",
-            "isp": "Nation",
-            "query": "103.59.178.232",
-            "region": "Barisal Division"
-          }
-        },
-        {
-          "action": "login",
-          "timestamp": "2026-09-13T10:39:57.851Z",
-          "ip": "27.147.149.234",
-          "device": "Mobile",
-          "os": "Android 10",
-          "browser": "Chrome 153",
-          "location": {
-            "countryCode": "BD",
-            "country": "Bangladesh",
-            "flag": "🇧🇩",
-            "city": "Barishal",
-            "isp": "Nation",
-            "query": "103.59.178.232",
-            "region": "Barisal Division"
-          }
         }
       ],
       "lastIp": "103.59.178.232",
-      "lastUserAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-      "loginCount": 46,
-      "lastDevice": {
-        "os": "Android 10",
-        "browser": "Chrome 154",
-        "raw": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
-        "device": "Mobile"
-      },
+      "loginCount": 48,
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA2NTM1MDQsImV4cCI6MTc5MDY5NjcwNCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDY1MzUwNCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.E6wGiV4rKPWqiw4-rEvZiMWdR4W5ai9RCLXNZ2ACrXDxZeQP8TA1QYNL2XBnDEXE5auT00oqt43G257VRyHoI9JSkh2w8b7y6PR8ywT8dapdu8mf-4iMcS8levSUOizApYZjMU1yOc3jjwWY1zffvFp6FXXxtqA9_Wn5iQiKapV6zCSOLuGvnuHByGknoIks0g0Nc5RaewDgP6u6y5ejZDwfvxapfwEvhCflQ8cgRcVb7GgtdNPdD8l9rskm-Dg_6N6TB4uCW42J-Afx8FbsT4UQBaTFZfceMJOqMoPcnF4Qz1PwJII-Wn3zbFEGqWEwiOtlS_wVQB2laEl2uf9irA",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
-        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
+        "deviceId": "6d4c790e-8eb2-4879-a190-919df84ca15a",
+        "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b67666fffe072ed200528c204d672cedbf694cab9c233940bc3edde65fc9bad11690a314fb80f03a02fd07675e28e8ce2b13f6",
         "cookie": null,
         "cftResponse": "1.Qg2BTYHL5xO9j1H7U75rIZ099XDQekdSmhZRigHfqvCagoj2AUFanOyX-mHaK-FIk-IjKM9wTPaH8lMqT8rh6rKdATr3tiaVfhk-2AtIG61wTBIJLn4GJxT8OUkiMS-dR0Nv2RAkzMnomr79xuEHwpAQ0ypSXAbobqNhngW19tKxXkUvHH8KmWpFPCiO9pVGJkT-AxnL5f1Za6aHNW9vrnKA0G2fZ2oh45rEmHGiyHv1wjiKEV5Im63vML_Saf2WzQat-ycw9lv-9ByQBlGl3bay2n4kNHe30PKRZVh1ybPN6QIzV4UDOst4uv7fivlikCjdrSvHniMReop4c8Sp43vFGHN_2ZpGTDvOGp5Gg1LSPmHcngdz4-72Z4YCm7anPVm3nLd0Ntn7QsfCVW_83uuPQMwt2b00V2J0hv_Alq_iBcq2ADFr9T83MPZHsB21H-Uw6aH-i_HKFPv_jdy8-9quCENHLaKe7vYFwyk56zuNlIWz1_H5-l-acDbyKTwhYF6GWIJrRpLw7Lkhjlj5dAIcddEkrQJTm0HJo5pb6e6y-lj1KRiRWvfH-LUhhEut__KGtY8E-bwmlm_NjjOYRMeVnXiJc5Jg6I5d5HX16OqnA_afLPnFNgMQQNzC9OoVYC5wpLL2z5RY-6X1QoYGiOFKNGNaPrwztDKe_LtuNzInYRfnNfEvUQXK4uLBTxvVCUHHiNBNrEcd2fMkPvmYwA.T3gX33iEmp8Xo-HyCfFDdg.d5a2eb9406410f6fa902bc8116eab8c5d295f92e2c7f644de9e79d6347de6a6d",
         "user": {
@@ -498,11 +499,9 @@
           ],
           "expiresAt": "2026-09-29T15:45:04.000Z",
           "issuedAt": "2026-09-29T03:45:04.000Z",
-          "isExpired": false
+          "isExpired": true
         },
-        "lastUpdated": "2026-09-29T12:55:35.013Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-09-30T02:54:23.340Z"
       }
     },
     {

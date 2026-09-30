@@ -12264,7 +12264,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        return { isWindow, isAisle, section };
+        return { isWindow, isAisle, side: is3Plus2 ? (hasCol ? (col <= 2 ? 'left' : 'right') : ((num - 1) % 5 <= 2 ? 'left' : 'right')) : (hasCol ? (col <= 1 ? 'left' : 'right') : ((num - 1) % 4 <= 1 ? 'left' : 'right')), section };
       }
 
       // Helper: Score individual seat against user's seat position preferences
@@ -12302,7 +12302,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Strategy A: If keepTogether is true and count > 1, evaluate ALL contiguous candidate blocks
-      // and pick the best one matching the user's position preference!
+      // in the SAME ROW first (Row-wise first priority)
       if (keepTogether && count > 1) {
         let bestContiguousRun = null;
         let highestRunScore = -Infinity;
@@ -12325,7 +12325,7 @@ document.addEventListener('DOMContentLoaded', () => {
           for (const [, rowSeats] of rowMap.entries()) {
             rowSeats.sort((a, b) => (Number(a.col) || 0) - (Number(b.col) || 0));
 
-            // Find contiguous blocks of available seats of length `count`
+            // Find contiguous blocks of available seats in this row of length `count`
             let currentRun = [];
             for (let i = 0; i < rowSeats.length; i++) {
               const s = rowSeats[i];
@@ -12364,6 +12364,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (bestContiguousRun) {
           return bestContiguousRun;
+        }
+
+        // Strategy A.2: Fallback to SAME SIDE seats (left side or right side of aisle across nearby rows)
+        let bestSameSideGroup = null;
+        let highestSideScore = -Infinity;
+
+        for (const coach of candidates) {
+          const availSeats = (coach.seats || []).filter(s => !s.is_blank && s.seat_number && s.status === 'available');
+          if (availSeats.length < count) continue;
+
+          const maxRow = Math.max(...(coach.seats || []).map(s => Number(s.row) || 1), 1);
+          const totalCoachSeats = (coach.seats || []).length || 1;
+
+          // Group by side: 'left' vs 'right'
+          const leftSeats = [];
+          const rightSeats = [];
+          availSeats.forEach((s, idx) => {
+            const geo = analyzeSeatGeometry(s, coach.seat_class, maxRow, totalCoachSeats, idx);
+            if (geo.side === 'left') leftSeats.push(s);
+            else rightSeats.push(s);
+          });
+
+          for (const sideSeats of [leftSeats, rightSeats]) {
+            if (sideSeats.length >= count) {
+              // Sort by row proximity first, then score
+              sideSeats.sort((a, b) => {
+                const rA = Number(a.row) || 1;
+                const rB = Number(b.row) || 1;
+                if (rA !== rB) return rA - rB;
+                return (Number(a.col) || 0) - (Number(b.col) || 0);
+              });
+
+              // Slide window of `count` seats to find minimal row spread
+              for (let i = 0; i <= sideSeats.length - count; i++) {
+                const group = sideSeats.slice(i, i + count);
+                const minR = Math.min(...group.map(s => Number(s.row) || 1));
+                const maxR = Math.max(...group.map(s => Number(s.row) || 1));
+                const rowSpread = maxR - minR; // closer rows are preferred!
+
+                let sideScore = 100 - (rowSpread * 10);
+                group.forEach((sItem, idx) => {
+                  sideScore += scoreSeatPosition(sItem, coach.seat_class, maxRow, totalCoachSeats, idx);
+                });
+
+                if (sideScore > highestSideScore) {
+                  highestSideScore = sideScore;
+                  bestSameSideGroup = { coach, seats: group, isContiguous: false, isSameSide: true };
+                }
+              }
+            }
+          }
+        }
+
+        if (bestSameSideGroup) {
+          return bestSameSideGroup;
         }
       }
 
@@ -12741,6 +12796,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pass class-specific trip_id so Tampermonkey can use it for direct seat-layout lookup
         if (coachTripId) urlObj.searchParams.set('trip_id', coachTripId);
         if (coachTripRouteId) urlObj.searchParams.set('trip_route_id', coachTripRouteId);
+        if (keepTogether) {
+          urlObj.searchParams.set('keep_together', '1');
+        } else {
+          urlObj.searchParams.set('keep_together', '0');
+        }
         if (positionPref && positionPref !== 'any') {
           urlObj.searchParams.set('position', positionPref);
           if (['front', 'middle', 'back'].includes(positionPref)) {
@@ -13145,6 +13205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                       urlObj.searchParams.set('auto_coach', '1');
                       if (allocation.coach.trip_id) urlObj.searchParams.set('trip_id', allocation.coach.trip_id);
                       if (allocation.coach.trip_route_id) urlObj.searchParams.set('trip_route_id', allocation.coach.trip_route_id);
+                      if (task.keepTogether) {
+                        urlObj.searchParams.set('keep_together', '1');
+                      } else {
+                        urlObj.searchParams.set('keep_together', '0');
+                      }
                       const activePos = task.positionPref || task.sectionPref || 'any';
                       if (activePos && activePos !== 'any') {
                         urlObj.searchParams.set('position', activePos);

@@ -525,7 +525,8 @@
       tripId: (params.get('trip_id') || '').trim(),
       tripRouteId: (params.get('trip_route_id') || '').trim(),
       position: (params.get('position') || params.get('pos') || 'any').toLowerCase().trim(),
-      section: (params.get('position') || params.get('section') || params.get('section_pref') || 'any').toLowerCase().trim(),
+      // Keep together preference: grab row-wise first, and if not found grab same side seat
+      keepTogether: params.get('keep_together') !== '0',
       searchUrl: window.location.origin + window.location.pathname + window.location.search,
       createdAt: Date.now()
     };
@@ -1330,63 +1331,231 @@
         let blankButtons = getAvailableSeatButtons(layout);
         if (blankButtons.length > 0) {
           const pos = (intent.position || intent.section || 'any').toLowerCase();
-          if (pos === 'window') {
-            // Window: prioritize seats on coach edges / window columns (modulo 4 in 2+2, modulo 5 in 3+2)
-            blankButtons.sort((a, b) => {
-              const numA = parseInt((textOf(a) || a.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              const numB = parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              // Check modulo 4 (standard 2+2 S_CHAIR/SHOVAN) and modulo 5 (3+2 SNIGDHA/AC_S)
-              const isWinA = (numA > 0 && (((numA - 1) % 4 === 0) || ((numA - 1) % 4 === 3) || ((numA - 1) % 5 === 0) || ((numA - 1) % 5 === 4))) ? 1 : 0;
-              const isWinB = (numB > 0 && (((numB - 1) % 4 === 0) || ((numB - 1) % 4 === 3) || ((numB - 1) % 5 === 0) || ((numB - 1) % 5 === 4))) ? 1 : 0;
-              return isWinB - isWinA;
-            });
-            log(`Auto-selecting ${stillNeed} window (জানালা 🪟) blank seat(s)...`);
-          } else if (pos === 'aisle') {
-            // Aisle: prioritize seats facing the aisle
-            blankButtons.sort((a, b) => {
-              const numA = parseInt((textOf(a) || a.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              const numB = parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              const isAisleA = (numA > 0 && (((numA - 1) % 4 === 1) || ((numA - 1) % 4 === 2) || ((numA - 1) % 5 === 2) || ((numA - 1) % 5 === 3))) ? 1 : 0;
-              const isAisleB = (numB > 0 && (((numB - 1) % 4 === 1) || ((numB - 1) % 4 === 2) || ((numB - 1) % 5 === 2) || ((numB - 1) % 5 === 3))) ? 1 : 0;
-              return isAisleB - isAisleA;
-            });
-            log(`Auto-selecting ${stillNeed} aisle (আইল 🚶) blank seat(s)...`);
-          } else if (pos === 'front') {
-            // Front: lower index/numeric seats first
-            blankButtons.sort((a, b) => {
-              const numA = parseInt((textOf(a) || a.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              const numB = parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              return numA - numB;
-            });
-            log(`Auto-selecting ${stillNeed} front-side blank seat(s)...`);
-          } else if (pos === 'back') {
-            // Back: higher index/numeric seats first
-            blankButtons.sort((a, b) => {
-              const numA = parseInt((textOf(a) || a.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              const numB = parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0;
-              return numB - numA;
-            });
-            log(`Auto-selecting ${stillNeed} back-side blank seat(s)...`);
-          } else if (pos === 'middle') {
-            // Middle: seats closest to median seat number
-            const nums = blankButtons.map(b => parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || 0).filter(n => n > 0);
-            const avg = nums.length ? (Math.min(...nums) + Math.max(...nums)) / 2 : (blankButtons.length / 2);
-            blankButtons.sort((a, b) => {
-              const numA = parseInt((textOf(a) || a.getAttribute('title') || '').replace(/\D+/g, ''), 10) || avg;
-              const numB = parseInt((textOf(b) || b.getAttribute('title') || '').replace(/\D+/g, ''), 10) || avg;
-              return Math.abs(numA - avg) - Math.abs(numB - avg);
-            });
-            log(`Auto-selecting ${stillNeed} middle-section blank seat(s)...`);
-          } else {
-            log(`Auto-selecting ${stillNeed} blank seat(s) from ${blankButtons.length} available in this coach...`);
+          const keepTogether = intent.keepTogether !== false && stillNeed > 1;
+
+          // Helper: Parse seat button properties and geometric position
+          function parseButtonInfo(btn, allButtons) {
+            const label = normalize(btn.getAttribute('title') || textOf(btn) || btn.getAttribute('data-seat') || '');
+            const num = parseInt(label.replace(/\D+/g, ''), 10) || 0;
+
+            // Row detection: Try parent element grouping or bounding client rect
+            let rowId = null;
+            let colId = null;
+            const rowParent = btn.closest('.seat-row, .row, tr, [class*="row"]');
+            if (rowParent) {
+              rowId = rowParent;
+              const siblings = Array.from(rowParent.querySelectorAll(RS.seatBtn) || []);
+              colId = siblings.indexOf(btn);
+            }
+
+            // Visual layout coordinates via getBoundingClientRect if in DOM
+            let rect = null;
+            try {
+              rect = btn.getBoundingClientRect();
+            } catch (e) {}
+
+            return { btn, label, num, rowId, colId, rect };
           }
 
-          for (let i = 0; i < Math.min(stillNeed, blankButtons.length); i++) {
+          // Group all available buttons with geometric metadata
+          const seatMetaList = blankButtons.map(b => parseButtonInfo(b, blankButtons));
+
+          // Helper: Detect coach row size (4 for 2+2, 5 for 3+2)
+          const is3Plus2 = (intent.seatClass || '').toUpperCase().includes('SNIGDHA') || (intent.seatClass || '').toUpperCase().includes('AC_S');
+          const seatsPerRow = is3Plus2 ? 5 : 4;
+
+          function getEstimatedRow(item) {
+            if (item.rect && item.rect.top > 0) {
+              // Group rows by visual Y coordinate with 16px tolerance
+              return Math.round(item.rect.top / 24);
+            }
+            if (item.num > 0) {
+              return Math.ceil(item.num / seatsPerRow);
+            }
+            return 1;
+          }
+
+          function getSide(item) {
+            if (item.rect && item.rect.left > 0) {
+              // Compare with layout center
+              try {
+                const layoutRect = layout.getBoundingClientRect();
+                const center = layoutRect.left + (layoutRect.width / 2);
+                return item.rect.left < center ? 'left' : 'right';
+              } catch (e) {}
+            }
+            if (item.num > 0) {
+              const mod = (item.num - 1) % seatsPerRow;
+              if (seatsPerRow === 5) return mod <= 2 ? 'left' : 'right';
+              return mod <= 1 ? 'left' : 'right';
+            }
+            return 'left';
+          }
+
+          function isWindowSeat(item) {
+            if (item.num > 0) {
+              const mod4 = (item.num - 1) % 4;
+              const mod5 = (item.num - 1) % 5;
+              return mod4 === 0 || mod4 === 3 || mod5 === 0 || mod5 === 4;
+            }
+            return false;
+          }
+
+          function isAisleSeat(item) {
+            if (item.num > 0) {
+              const mod4 = (item.num - 1) % 4;
+              const mod5 = (item.num - 1) % 5;
+              return mod4 === 1 || mod4 === 2 || mod5 === 2 || mod5 === 3;
+            }
+            return false;
+          }
+
+          // Helper: Score individual seat against position preference
+          function scoreItemPosition(item) {
+            let s = 0;
+            if (pos === 'window') {
+              if (isWindowSeat(item)) s += 30;
+              else if (isAisleSeat(item)) s -= 10;
+            } else if (pos === 'aisle') {
+              if (isAisleSeat(item)) s += 30;
+              else if (isWindowSeat(item)) s -= 10;
+            } else if (pos === 'front') {
+              s += (500 - (item.num || 100));
+            } else if (pos === 'back') {
+              s += (item.num || 0);
+            } else if (pos === 'middle') {
+              const mid = 45;
+              s += (100 - Math.abs((item.num || 45) - mid));
+            }
+            return s;
+          }
+
+          let chosenButtons = [];
+
+          // -------------------------------------------------------------
+          // STEP 1 (ROW-WISE FIRST): Look for seats together in the SAME ROW
+          // -------------------------------------------------------------
+          if (keepTogether) {
+            log(`Searching for ${stillNeed} seat(s) together row-wise...`);
+            const rowMap = new Map();
+
+            for (const item of seatMetaList) {
+              const rKey = item.rowId || getEstimatedRow(item);
+              if (!rowMap.has(rKey)) rowMap.set(rKey, []);
+              rowMap.get(rKey).push(item);
+            }
+
+            let bestRowRun = null;
+            let bestRowScore = -Infinity;
+
+            for (const [, itemsInRow] of rowMap.entries()) {
+              if (itemsInRow.length >= stillNeed) {
+                // Sort by col or X position or seat number
+                itemsInRow.sort((a, b) => {
+                  if (a.rect && b.rect && Math.abs(a.rect.left - b.rect.left) > 2) {
+                    return a.rect.left - b.rect.left;
+                  }
+                  return (a.num || 0) - (b.num || 0);
+                });
+
+                // Find contiguous or adjacent window of length stillNeed in this row
+                for (let i = 0; i <= itemsInRow.length - stillNeed; i++) {
+                  const run = itemsInRow.slice(i, i + stillNeed);
+                  let runScore = 100;
+                  run.forEach(st => { runScore += scoreItemPosition(st); });
+
+                  // Check if seat numbers are contiguous e.g. 1 & 2
+                  const nums = run.map(r => r.num).filter(n => n > 0);
+                  if (nums.length === stillNeed) {
+                    const isSequential = nums.every((n, idx) => idx === 0 || n === nums[idx - 1] + 1);
+                    if (isSequential) runScore += 50;
+                  }
+
+                  if (runScore > bestRowScore) {
+                    bestRowScore = runScore;
+                    bestRowRun = run.map(r => r.btn);
+                  }
+                }
+              }
+            }
+
+            if (bestRowRun && bestRowRun.length === stillNeed) {
+              chosenButtons = bestRowRun;
+              log(`🎯 Found ${stillNeed} seats together in the same row!`);
+            }
+          }
+
+          // -------------------------------------------------------------
+          // STEP 2 (SAME-SIDE FALLBACK): If not found in same row, grab seats on the SAME SIDE
+          // -------------------------------------------------------------
+          if (chosenButtons.length < stillNeed && keepTogether) {
+            log(`Seats together in same row not available. Falling back to same-side seats...`);
+            const leftSideItems = [];
+            const rightSideItems = [];
+
+            for (const item of seatMetaList) {
+              if (getSide(item) === 'left') leftSideItems.push(item);
+              else rightSideItems.push(item);
+            }
+
+            let bestSideGroup = null;
+            let bestSideScore = -Infinity;
+
+            for (const sideList of [leftSideItems, rightSideItems]) {
+              if (sideList.length >= stillNeed) {
+                // Sort by row proximity
+                sideList.sort((a, b) => {
+                  const rA = getEstimatedRow(a);
+                  const rB = getEstimatedRow(b);
+                  if (rA !== rB) return rA - rB;
+                  return (a.num || 0) - (b.num || 0);
+                });
+
+                for (let i = 0; i <= sideList.length - stillNeed; i++) {
+                  const group = sideList.slice(i, i + stillNeed);
+                  const minR = Math.min(...group.map(g => getEstimatedRow(g)));
+                  const maxR = Math.max(...group.map(g => getEstimatedRow(g)));
+                  const rowSpread = maxR - minR;
+
+                  let sideScore = 80 - (rowSpread * 10);
+                  group.forEach(g => { sideScore += scoreItemPosition(g); });
+
+                  if (sideScore > bestSideScore) {
+                    bestSideScore = sideScore;
+                    bestSideGroup = group.map(g => g.btn);
+                  }
+                }
+              }
+            }
+
+            if (bestSideGroup && bestSideGroup.length === stillNeed) {
+              chosenButtons = bestSideGroup;
+              log(`🎯 Found ${stillNeed} seats together on the same side of the carriage!`);
+            }
+          }
+
+          // -------------------------------------------------------------
+          // STEP 3 (GENERAL FALLBACK): Best available seats sorted by position
+          // -------------------------------------------------------------
+          if (chosenButtons.length < stillNeed) {
+            if (keepTogether) {
+              log(`Could not find adjacent row/side block. Picking best individual available seats...`);
+            }
+            blankButtons.sort((a, b) => {
+              const metaA = parseButtonInfo(a, blankButtons);
+              const metaB = parseButtonInfo(b, blankButtons);
+              return scoreItemPosition(metaB) - scoreItemPosition(metaA);
+            });
+            chosenButtons = blankButtons.slice(0, stillNeed);
+          }
+
+          // Click and verify the chosen seats
+          for (let i = 0; i < chosenButtons.length; i++) {
             if (isRateLimitActive()) {
               log(`Rate limit cooldown active. Pausing seat reservation...`);
               break;
             }
-            const btn = blankButtons[i];
+            const btn = chosenButtons[i];
             const label = normalize(btn.getAttribute('title') || textOf(btn) || btn.getAttribute('data-seat') || `Seat-${i+1}`);
             const ok = await clickAndVerifySeat(layout, btn, label);
             if (ok) {

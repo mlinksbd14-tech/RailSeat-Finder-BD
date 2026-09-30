@@ -482,10 +482,10 @@
       "loginCount": 48,
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTA3MzY4NzcsImV4cCI6MTc5MDc4MDA3NywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MDczNjg3NywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.BSlBoQSEV2VtkTy7NwXkiRMVNoApHYZspd4EsazVwVzn_NoQu6mkntFQ5KbDvjePjmGMZox1ns8-k5kgKRarRFB5Lsb0cYi2NLiI2MSEJ-9pMkZrxLcg6iZSv9rnexX2YX93xfKTdNuhmHTWjmvYj318VnMjRGkrdugupItcLE-ksPhEo2UC0z5GBhCRCmTErZxCVZvy-sdWUht2dA1NSoHtwCKinkBh50cdBUkNWNKM7YCLAhRQCfQHLPO5NbAZJOAqC01EcaxWEccm6ivyg1udOCM4yZ1DpSyJJodgnkFKj02vr453zPqAew2AaPck2QVmjAQfAWee7vTbZNP7_w",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "deviceId": "82041476-6586-46ae-a4f3-baf6873fb16b",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": "1.I8FChR4kRz9jvL0sPQQgpfIFz-1ymSd0zsIQpyWbABfgxpaYcCf9hoC2FI76n7nOIiOAxzRVCyJJiCMpHNZwUk3lUVJt32ARbNQkuamyxUDLYyqZllM_LMxzs6gnzcpth0_0c4LOF6Oc0D8uy0nRguGwBZED6yom1GhKlygUc4meZS0An6mX8riQ3fHAspIve3yNmtpmvotuCX-AIZ7_IYh3lrEX7SBwxW_83SZw2vvnbooBAv5g8oH5Z3k5NZT3Fz68pdbpRUBrXBRhnkkVMEINfeeIWM3x7_yZDVzrnSamoW0Rmuusba-WbKTOBY-Gg3UokgNqDQdE2KjtxrdabV9ncji_BxcVbCXZM06Len-imytu7kaNfgKLZ2jcdefxfp5ZdR0kLi0eVIanxhBQh0AX-Tq4m0kRZ4yANaM45fYI6aaRL09mB-H0AqaFa3ukeBu7fqZ4c-Wx5_mrvGujDo2zONAzCrmYdSaQqGayZgwZnzm8WKhmIwY4DvdlGUIRwKlIZqqrWZMFCt7r2qvkxLNzTOi6WocIR1yYHwuM9gWcoMVtsqqV7r3kyYEtBLr09XoQ8BfQ9BymUnAgtUGtTCKeyL82F8CFDJ-7aFy4JsZ2NpAZwtlS5Oew_8wYbcjZSgpnvXwataLawC4maf5U4dLbol37zNJ7C03QTOWX_pWdn3a0IcocBTFCUU255LmubhPVR7GU3uczWSE0EGnTSQ.mEWkepYuItuk32tLAec7XQ.baac9f03a1dd1e03b45eddcaefd1804adb580b25cf14e534665fe40fd6faf0a7",
+        "cftResponse": "1.qP1rYmfgVjtAcdAsbq3UCvpAf45f-Itvbmzshu4R49bteph2VbQPjFJIN5Sd2w0NIcjjzy4lTu7tWFLLTzyTi-qw2JpGQisuz49o8DEs4_MzsBIYHz_iQLcuujsqJAv14qd_Ih4l9iaoTSnTp073vzxzVAaZ3eHdX5U62TlglZ4d78PXqNfmANET7-h8limVYov5ZymGoSXjQAnSDs1WWAAIoWaUfO3H1PLu4ohNtlHr-sqw5GhnyVx4-BKiJK-7w0-xqVHwAterurzGjerra7wQwLQRBxX4GJJnKaNhxYEtMptpOTm8aPwRa4YFSKDAPPf3kyTCAWy3sel2sUZIxfYgpk-uuJSge4y83rnIUHlZwe8-p_r_AT2CvsPXcFJ5OFY2pYEnPEl9lCPaHbIoCYeBVgfGapMNj2Pyq_zLSoEtl7NSjMFIWeB-vLFxXa88e1HZ24ChSpg4YD2SX2DeekWRPpcIbfG4D0DgDWrmeYGBgbst8aNgL_t2nBwcMpSMN-j-Q002zBKtHoBQkcymfGhnwkFNSA7yDuXZa1ZBZ0L8xnhCm-Ap1wNytDN-dtaUVCMpk27HVsVu2eie8vm786FOxf2cUcfO7GX5zaQsn9aNKGeOQdlVUm7uTtKnwMixcjGnaQEE3SutTVYy5G1VaYnLSZ9lxwo56I-vWmGMzNA9L-QlLJH6Yxlt1tCBBxLUMQLzHH8bXrtfn8z9w6BqFQ.5Oniq5O1rEQgIbMRI8Av6A.7011105db90224ff967fb776ee077150d54e0706626f1a24d53ecf95b9a95ff2",
         "user": {
           "name": "Md. Habibullah",
           "phone": "01871860487",
@@ -501,9 +501,7 @@
           "issuedAt": "2026-09-30T02:54:37.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-09-30T06:58:25.821Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-09-30T06:59:05.735Z"
       }
     },
     {

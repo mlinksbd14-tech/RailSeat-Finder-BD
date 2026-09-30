@@ -2375,15 +2375,9 @@
             </p>
           </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0 ml-2">
-          <button type="button" id="seatLayoutSmartAutoPickBtn" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-extrabold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95">
-            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
-            <span id="seatLayoutSmartAutoPickText">Auto-Pick Best</span>
-          </button>
-          <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition cursor-pointer">
-            <i class="fa-solid fa-xmark text-sm"></i>
-          </button>
-        </div>
+        <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </div>
 
       <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->
@@ -2422,52 +2416,24 @@
         <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
       </div>
 
-      <!-- Modern Interactive Boarding Pass Bar (Flight/Uber Style Selected Seat Overview) -->
-      <div id="seatLayoutBoardingPass" class="hidden px-4 py-3 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-t border-slate-700/80 shadow-lg shrink-0">
-        <div class="flex flex-wrap items-center justify-between gap-2.5">
-          <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-sm font-black shadow-xs shrink-0">
-              <i class="fa-solid fa-ticket"></i>
-            </div>
-            <div>
-              <div class="flex items-center space-x-2 text-xs">
-                <span class="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Selected:</span>
-                <span id="seatLayoutBpSeatList" class="font-mono font-black text-amber-300 text-sm">--</span>
-                <span id="seatLayoutBpWindowTag" class="hidden px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-[9px]">🪟 Window</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-                <span>Total Fare: <strong id="seatLayoutBpTotalFare" class="text-emerald-400 font-mono text-xs font-bold">৳0</strong></span>
-                <span>•</span>
-                <span id="seatLayoutBpCoachTag" class="text-slate-300">Coach: --</span>
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button type="button" id="seatLayoutClearSelectionBtn" class="text-[11px] text-slate-400 hover:text-rose-400 font-semibold px-2 py-1 rounded transition cursor-pointer">
-              <i class="fa-solid fa-rotate-left mr-0.5"></i> Clear
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Legend & Footer Action Bar -->
       <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <!-- Legend -->
         <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-300">
           <div class="flex items-center space-x-1.5">
-            <span class="w-3.5 h-3.5 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
+            <span class="w-4 h-4 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
             <span>Free (Available)</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-3.5 h-3.5 rounded bg-amber-500 border border-amber-600 inline-block"></span>
+            <span class="w-4 h-4 rounded bg-amber-500 border border-amber-600 inline-block"></span>
             <span>Selected</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-3.5 h-3.5 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
+            <span class="w-4 h-4 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
             <span>Taken (Booked)</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-3.5 h-3.5 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-cyan-500 dark:border-b-cyan-400 inline-block"></span>
+            <span class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-slate-700 dark:border-b-slate-300 inline-block"></span>
             <span>Window</span>
           </div>
         </div>
@@ -2477,7 +2443,7 @@
           <div class="flex items-center gap-2 w-full sm:w-auto">
             <!-- Hold Only Button -->
             <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95">
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
               <i class="fa-solid fa-hand text-xs"></i>
               <span id="seatLayoutHoldText">Hold Only</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
@@ -2485,7 +2451,7 @@
 
             <!-- Buy Now Button (Proceeds to OTP) -->
             <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95">
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
               <i class="fa-solid fa-bolt text-xs"></i>
               <span id="seatLayoutBuyText">Buy Now</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>

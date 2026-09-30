@@ -1043,8 +1043,8 @@
 
         </div>
 
-        <!-- Form Grid Row 2: Class & Quantity & Position -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <!-- Form Grid Row 2: Class & Quantity & Section & Position -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           
           <!-- Seat Class (Multi-Select - Shows All Classes) -->
           <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
@@ -1074,13 +1074,30 @@
             </div>
           </div>
 
-          <!-- Position Preference -->
+          <!-- Coach Section Preference (Front, Middle, Back) -->
           <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Position</label>
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Coach Section</label>
+              <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">বগির অংশ</span>
+            </div>
+            <select id="autoBookSectionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="any">Any Section (যেকোনো অংশ)</option>
+              <option value="front">Front Side (সামনের দিক 🚅)</option>
+              <option value="middle">Middle (মাঝের অংশ 🎯)</option>
+              <option value="back">Back Side (পেছনের দিক 🚪)</option>
+            </select>
+          </div>
+
+          <!-- Position Preference (Window / Aisle) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Position</label>
+              <span class="text-[10px] text-slate-400 font-medium">আসন</span>
+            </div>
             <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
               <option value="any">Any Available (যেকোনো)</option>
-              <option value="window">Window (জানালা)</option>
-              <option value="aisle">Aisle (আইল)</option>
+              <option value="window">Window (জানালা 🪟)</option>
+              <option value="aisle">Aisle (আইল 🚶)</option>
             </select>
           </div>
 

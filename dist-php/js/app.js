@@ -13342,6 +13342,97 @@ document.addEventListener('DOMContentLoaded', () => {
     try { initLanguageSwitcher(); } catch (e) { console.warn('[Init] initLanguageSwitcher:', e.message); }
     try { initAnalyticsDashboard(); } catch (e) { console.warn('[Init] initAnalyticsDashboard:', e.message); }
     try { initAutoBookModule(); } catch (e) { console.warn('[Init] initAutoBookModule:', e.message); }
+    try { initMobileAutoBookModal(); } catch (e) { console.warn('[Init] initMobileAutoBookModal:', e.message); }
+  }
+
+  // ----------------------------------------------------
+  // 📱 Mobile Auto-Grab Multi-Option Modal Controller
+  // ----------------------------------------------------
+  function initMobileAutoBookModal() {
+    const modal = document.getElementById('mobileAutoBookModal');
+    const openBtns = [
+      document.getElementById('openMobileAutoBookSetupBtn'),
+      document.getElementById('seatLayoutMobileHelpBtn')
+    ].filter(Boolean);
+    const closeBtn = document.getElementById('closeMobileAutoBookBtn');
+    const dismissBtn = document.getElementById('dismissMobileAutoBookBtn');
+    const tabBtns = document.querySelectorAll('.mobile-autobook-tab');
+    const copyBookmarkletBtn = document.getElementById('copyAutoBookBookmarkletBtn');
+    const bookmarkletTextarea = document.getElementById('mobileAutoBookBookmarkletCode');
+    const apiSessionBadge = document.getElementById('mobileApiSessionBadge');
+
+    // 1-Tap Mobile Auto-Grab Bookmarklet Code
+    const BOOKMARKLET_CODE = `javascript:(function(){try{if(!location.hostname.includes('eticket.railway.gov.bd')){if(confirm('Please open Bangladesh Railway (eticket.railway.gov.bd) first!\\nOpen now?')){location.href='https://eticket.railway.gov.bd/booking/train/search';}return;}const s=document.createElement('script');s.src='${window.location.origin}/railseat-sync.user.js?t='+Date.now();document.head.appendChild(s);const b=document.createElement('div');b.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#064e3b;color:#fff;padding:10px 18px;border-radius:30px;font-size:12px;font-weight:bold;z-index:9999999;box-shadow:0 6px 20px rgba(0,0,0,0.4);border:1px solid #34d399;font-family:sans-serif;text-align:center;';b.innerHTML='⚡ RailSeat Mobile Auto-Grab Active!';document.body.appendChild(b);setTimeout(()=>b.remove(),4000);}catch(e){alert('RailSeat Error: '+e.message);}})();`;
+
+    if (bookmarkletTextarea) {
+      bookmarkletTextarea.value = BOOKMARKLET_CODE;
+    }
+
+    const openModal = () => {
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      // Update session badge in Tab 3
+      if (apiSessionBadge) {
+        if (state.isAuthenticated) {
+          apiSessionBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+          apiSessionBadge.textContent = 'Active & Connected ✅';
+        } else {
+          apiSessionBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+          apiSessionBadge.textContent = 'Session Not Connected ⚠️';
+        }
+      }
+    };
+
+    const closeModal = () => {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    openBtns.forEach(btn => btn.addEventListener('click', openModal));
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (dismissBtn) dismissBtn.addEventListener('click', closeModal);
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Tab Switching
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.mobileTab;
+        tabBtns.forEach(b => {
+          b.classList.remove('active-mobile-tab', 'border-b-2', 'border-amber-500', 'text-amber-600', 'dark:text-amber-400', 'font-bold');
+          b.classList.add('font-semibold', 'text-slate-500', 'dark:text-slate-400');
+        });
+        btn.classList.add('active-mobile-tab', 'border-b-2', 'border-amber-500', 'text-amber-600', 'dark:text-amber-400', 'font-bold');
+        btn.classList.remove('font-semibold', 'text-slate-500', 'dark:text-slate-400');
+
+        document.querySelectorAll('.mobile-tab-pane').forEach(pane => pane.classList.add('hidden'));
+        const activePane = document.getElementById(`mobileTabContent-${target}`);
+        if (activePane) activePane.classList.remove('hidden');
+      });
+    });
+
+    // Copy Bookmarklet Script
+    if (copyBookmarkletBtn && bookmarkletTextarea) {
+      copyBookmarkletBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(bookmarkletTextarea.value);
+          const textEl = document.getElementById('copyAutoBookBookmarkletText');
+          if (textEl) textEl.textContent = 'Copied! ✅';
+          showToast('1-Tap Mobile Bookmarklet copied! Save as bookmark in mobile browser.', 'success');
+          setTimeout(() => {
+            if (textEl) textEl.textContent = 'Copy Script';
+          }, 2500);
+        } catch (e) {
+          bookmarkletTextarea.select();
+          document.execCommand('copy');
+          showToast('1-Tap Mobile Bookmarklet copied!', 'success');
+        }
+      });
+    }
   }
 
   // ----------------------------------------------------

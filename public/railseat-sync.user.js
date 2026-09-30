@@ -43,14 +43,21 @@
   function getTargetUrls() {
     let saved = '';
     if (typeof GM_getValue === 'function') {
-      saved = GM_getValue('railseat_server_urls', '');
+      try { saved = GM_getValue('railseat_server_urls', ''); } catch (e) {}
     }
-    const rawList = saved ? saved.split(',') : DEFAULT_SERVER_URLS;
+    if (!saved && typeof localStorage !== 'undefined') {
+      try { saved = localStorage.getItem('railseat_server_urls') || ''; } catch (e) {}
+    }
+    let dynamicOrigin = '';
+    if (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) {
+      try { dynamicOrigin = new URL(document.currentScript.src).origin; } catch (e) {}
+    }
+    const rawList = saved ? saved.split(',') : (dynamicOrigin ? [dynamicOrigin, ...DEFAULT_SERVER_URLS] : DEFAULT_SERVER_URLS);
     const cleaned = rawList
       .map(u => String(u || '').trim())
       .filter(u => u.length > 0)
       .map(u => u.replace(/\/+$/, ''));
-    return cleaned.length > 0 ? cleaned : ['http://localhost:3000'];
+    return cleaned.length > 0 ? Array.from(new Set(cleaned)) : ['http://localhost:3000'];
   }
 
   // Register Tampermonkey extension menu to edit domains on the fly

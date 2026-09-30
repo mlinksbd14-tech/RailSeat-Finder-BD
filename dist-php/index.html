@@ -1170,8 +1170,13 @@
           </div>
         </div>
 
-        <!-- Action Button -->
-        <div class="flex items-center justify-end pt-1">
+        <!-- Action Button & Mobile Setup Trigger -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
+          <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <i class="fa-solid fa-mobile-screen text-amber-500"></i>
+            <span>📱 Mobile Auto-Grab Setup</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">3 Ways</span>
+          </button>
           <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer">
             <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
             <span id="autoBookActionText">⚡ Check & Auto-Book Now</span>
@@ -2389,41 +2394,6 @@
         </div>
       </div>
 
-      <!-- Quick Seat Preference & Intelligent Filter Bar (Inspired by BookMyRail BD) -->
-      <div class="px-3 py-2 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 overflow-x-auto scrollbar-thin text-xs">
-        <div class="flex items-center gap-1.5 shrink-0">
-          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1">
-            <i class="fa-solid fa-sliders text-emerald-500"></i>
-            <span>Filter:</span>
-          </span>
-          <button type="button" id="seatFilterAllBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white shadow-xs transition cursor-pointer">
-            All Seats
-          </button>
-          <button type="button" id="seatFilterWindowBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1">
-            <i class="fa-regular fa-square-full text-[9px] border-b-[2px] border-b-emerald-600"></i>
-            <span>Window Only</span>
-          </button>
-          <button type="button" id="seatFilterAisleBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1">
-            <i class="fa-solid fa-arrows-left-right text-[10px] text-cyan-600"></i>
-            <span>Aisle</span>
-          </button>
-          <button type="button" id="seatFilterTogetherBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1" title="Highlights adjacent seats available side-by-side for couples & families">
-            <i class="fa-solid fa-user-group text-[10px] text-amber-500"></i>
-            <span>Together (2+)</span>
-          </button>
-          <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
-          <button type="button" id="seatFilterFrontBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
-            Front (1-30)
-          </button>
-          <button type="button" id="seatFilterMiddleBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
-            Middle (31-70)
-          </button>
-          <button type="button" id="seatFilterBackBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
-            Back (71+)
-          </button>
-        </div>
-      </div>
-
       <!-- Active Coach Overview Strip -->
       <div id="seatLayoutCoachInfoBanner" class="px-4 py-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div class="flex items-center space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
@@ -2444,35 +2414,6 @@
       <!-- Carriage Body Canvas -->
       <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
         <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
-      </div>
-
-      <!-- Live Boarding Pass Preview Ribbon (Inspired by BookMyRail BD) -->
-      <div id="seatLayoutBoardingPass" class="hidden mx-4 my-2 p-3 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/60 shadow-md">
-        <div class="flex flex-wrap items-center justify-between gap-2.5">
-          <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-sm font-black">
-              <i class="fa-solid fa-ticket"></i>
-            </div>
-            <div>
-              <div class="flex items-center space-x-2 text-xs font-extrabold tracking-wide">
-                <span id="bpRouteCode" class="text-emerald-400 uppercase font-mono">DHK ➔ CTG</span>
-                <span class="text-slate-500">•</span>
-                <span id="bpTrainLabel" class="text-slate-200">TRAIN</span>
-                <span class="text-slate-500">•</span>
-                <span id="bpClassLabel" class="text-cyan-400 uppercase">CLASS</span>
-              </div>
-              <div class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                <span>Selected: <b id="bpSeatDetail" class="text-amber-300 font-bold">None</b></span>
-                <span>•</span>
-                <span id="bpPositionTag" class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px] font-medium border border-slate-700">Any</span>
-              </div>
-            </div>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Official Fare</span>
-            <span id="bpTotalFare" class="text-base font-black font-mono text-emerald-400">৳0</span>
-          </div>
-        </div>
       </div>
 
       <!-- Legend & Footer Action Bar -->
@@ -2523,8 +2464,166 @@
             <i class="fa-solid fa-robot text-[9px] mr-1"></i>
             <span id="seatLayoutAutoBookHintText">Locks exact coach and seat numbers directly into the Bangladesh Railway cart.</span>
             <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400 ml-1" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
+            <button type="button" id="seatLayoutMobileHelpBtn" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline ml-1.5 cursor-pointer">
+              <i class="fa-solid fa-mobile-screen"></i> 📱 Mobile setup?
+            </button>
           </p>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile Auto-Grab Setup Modal (Options 1, 2, 3) -->
+  <div id="mobileAutoBookModal" class="hidden fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="mobileAutoBookTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-fade-in">
+      
+      <!-- Modal Header -->
+      <div class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent dark:from-amber-950/40 dark:via-orange-950/20 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center text-sm shadow-md shrink-0">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <div>
+            <h3 id="mobileAutoBookTitle" class="font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Mobile Device Auto-Grab</span>
+              <span class="text-[10px] px-2 py-0.2 rounded-full font-bold bg-amber-500 text-white">3 Methods</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Run automatic seat grabber on Android & iPhone</p>
+          </div>
+        </div>
+        <button type="button" id="closeMobileAutoBookBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-xs transition cursor-pointer" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs (Method 1, 2, 3) -->
+      <div class="flex items-center border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 pt-2 gap-1 text-xs shrink-0 overflow-x-auto no-scrollbar">
+        <button type="button" data-mobile-tab="bookmarklet" class="mobile-autobook-tab active-mobile-tab px-3 py-2 rounded-t-xl font-bold transition border-b-2 border-amber-500 text-amber-600 dark:text-amber-400 flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-bookmark text-xs"></i>
+          <span>1. Bookmarklet (Chrome/Safari)</span>
+        </button>
+        <button type="button" data-mobile-tab="kiwi" class="mobile-autobook-tab px-3 py-2 rounded-t-xl font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-brands fa-android text-xs text-emerald-500"></i>
+          <span>2. Kiwi / Stay Extension</span>
+        </button>
+        <button type="button" data-mobile-tab="api" class="mobile-autobook-tab px-3 py-2 rounded-t-xl font-semibold transition text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-server text-xs text-blue-500"></i>
+          <span>3. Direct Background API</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area (Scrollable) -->
+      <div class="p-4 overflow-y-auto space-y-4 flex-1 custom-scrollbar text-xs">
+
+        <!-- TAB 1: 1-Tap Mobile Bookmarklet (Default Chrome & Safari) -->
+        <div id="mobileTabContent-bookmarklet" class="mobile-tab-pane space-y-3">
+          <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-300">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+              <span>Zero-Install 1-Tap Bookmarklet for Chrome & Safari Mobile</span>
+            </div>
+            <p class="text-[11px] text-amber-800 dark:text-amber-200/90 leading-relaxed">
+              মোবাইলে কোনো এক্সটেনশন ইনস্টল ছাড়াই সাধারণ Google Chrome বা Safari-তে সিট অটো-সিলেক্ট ও বুকিং করার জন্য নিচের বুকমার্ক স্ক্রিপ্টটি একবার সেভ করে রাখুন।
+            </p>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-slate-800 dark:text-slate-200 text-xs">Auto-Grab Mobile Bookmarklet Code:</span>
+              <button type="button" id="copyAutoBookBookmarkletBtn" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition cursor-pointer flex items-center gap-1 shadow-xs">
+                <i class="fa-solid fa-copy"></i>
+                <span id="copyAutoBookBookmarkletText">Copy Script</span>
+              </button>
+            </div>
+            <textarea id="mobileAutoBookBookmarkletCode" rows="3" readonly class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono text-[10px] text-slate-700 dark:text-slate-300 focus:outline-hidden select-all"></textarea>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 space-y-2">
+            <p class="font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-list-ol text-amber-500"></i>
+              <span>কীভাবে মোবাইলে সেটআপ করবেন (১ মিনিটের নিয়ম):</span>
+            </p>
+            <ol class="list-decimal pl-4 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-300 leading-normal">
+              <li>উপরে <strong>Copy Script</strong> বাটনে চাপ দিয়ে কোডটি কপি করুন।</li>
+              <li>আপনার মোবাইল ব্রাউজারে যেকোনো একটি পেজ বুকমার্ক করুন এবং সেটির নাম দিন <strong>RailSeat AutoGrab</strong>।</li>
+              <li>বুকমার্কটি এডিট (Edit Bookmark) করে URL বক্সে পুরো কোডটি পেস্ট করে দিন।</li>
+              <li>এরপর আমাদের ড্যাশবোর্ড থেকে যখন রেলওয়ের পেজ খুলবে, ব্রাউজারের অ্যাড্রেস বারে <strong>RailSeat AutoGrab</strong> লিখে বুকমার্কে ট্যাপ করুন — স্ক্রিপ্ট সাথে সাথে সিট সিলেক্ট ও কনফার্ম করে দেবে!</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- TAB 2: Kiwi / Lemur / Stay Userscripts (Full Auto Experience) -->
+        <div id="mobileTabContent-kiwi" class="mobile-tab-pane hidden space-y-3">
+          <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-300">
+              <i class="fa-solid fa-circle-check text-emerald-500"></i>
+              <span>100% Desktop-Grade Auto Booking on Mobile (Recommended)</span>
+            </div>
+            <p class="text-[11px] text-emerald-800 dark:text-emerald-200/90 leading-relaxed">
+              ডেস্কটপের মতোই পেজ ওপেন হওয়া মাত্র কোনো ক্লিক ছাড়াই সম্পূর্ণ স্বয়ংক্রিয়ভাবে সিট বুকিং চালানোর জন্য নিচের ব্রাউজার ব্যবহার করুন:
+            </p>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-1.5">
+              <span class="font-black text-slate-900 dark:text-white text-xs block">📱 Android Users:</span>
+              <ul class="list-disc pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <li>Play Store থেকে <strong>Kiwi Browser</strong> অথবা <strong>Lemur Browser</strong> ইনস্টল করুন।</li>
+                <li>Chrome Web Store থেকে <strong>Tampermonkey</strong> এক্সটেনশন ইনস্টল করুন।</li>
+                <li>নিচের লিংকে ক্লিক করে আমাদের ফুল স্ক্রিপ্ট এক ক্লিকে ইনস্টল করে নিন:</li>
+              </ul>
+              <div class="pt-1">
+                <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                  <i class="fa-solid fa-download"></i>
+                  <span>Install railseat-sync.user.js in Kiwi</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-1.5">
+              <span class="font-black text-slate-900 dark:text-white text-xs block">🍎 iPhone / iPad (iOS Safari) Users:</span>
+              <ul class="list-disc pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <li>App Store থেকে <strong>Stay - Userscript Extension</strong> অথবা <strong>Userscripts Safari</strong> নামিয়ে নিন।</li>
+                <li>সাফারি সেটিংসে গিয়ে এক্সটেনশন এনাবল করে আমাদের <code class="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">/railseat-sync.user.js</code> যোগ করুন।</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: Direct API & Server-Side Integration -->
+        <div id="mobileTabContent-api" class="mobile-tab-pane hidden space-y-3">
+          <div class="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-300">
+              <i class="fa-solid fa-server text-blue-500"></i>
+              <span>Server-Side Background API Seat Hold</span>
+            </div>
+            <p class="text-[11px] text-blue-800 dark:text-blue-200/90 leading-relaxed">
+              মোবাইলে স্ক্রিপ্ট না থাকলেও আপনার সেভ করা রেলওয়ে সেশনের মাধ্যমে আমাদের ব্যাকএন্ড থেকে সরাসরি রেলওয়ে এপিআই কল দিয়ে সিট লক ও হোল্ড করার ব্যবস্থা রয়েছে।
+            </p>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-2 text-[11.5px] text-slate-600 dark:text-slate-300">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 dark:text-slate-200">Live Railway Session Status:</span>
+              <span id="mobileApiSessionBadge" class="px-2 py-0.5 rounded-full font-bold text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Checking...</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              আপনার সেশনটি সংযুক্ত থাকলে যেকোনো মোবাইল থেকে <strong>⚡ Check & Auto-Book Now</strong> বাটন চাপলেই সার্ভার তাৎক্ষণিক সিট রিডাইরেকশন এবং সিট রিজার্ভেশন টোকেন পুশ করে দেয়।
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs shrink-0">
+        <span class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+          <i class="fa-solid fa-shield-check text-emerald-500"></i> 100% Anti-Bot & Notice Bypass
+        </span>
+        <button type="button" id="dismissMobileAutoBookBtn" class="px-4 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold transition cursor-pointer">
+          Done / Close
+        </button>
       </div>
 
     </div>

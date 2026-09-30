@@ -92,6 +92,11 @@
           <i class="fa-solid fa-chair text-emerald-500"></i>
           <span data-i18n="nav_seat_finder">Seat Finder</span>
         </button>
+        <button type="button" id="navAutoBookBtn" class="px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-slate-700 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Auto Book Seat">
+          <i class="fa-solid fa-bolt text-amber-500"></i>
+          <span data-i18n="nav_autobook">Auto Book</span>
+          <span class="px-1.5 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold text-[9px] rounded-full shadow-2xs">PRO</span>
+        </button>
         <button type="button" id="navLiveTrackerBtn" class="hidden px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-white dark:hover:bg-slate-700 transition items-center justify-center space-x-1.5 cursor-pointer" title="Live Train Tracker">
           <i class="fa-solid fa-satellite-dish text-cyan-500"></i>
           <span data-i18n="nav_live_radar">Live Radar</span>
@@ -232,6 +237,27 @@
 
   <!-- Main Content Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 pt-3.5 pb-6 md:pb-6 space-y-3.5">
+
+    <!-- Mobile PWA Quick-Install Banner (visible when app installable on mobile) -->
+    <div id="pwaMobileInstallBanner" class="hidden sm:hidden p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg items-center justify-between gap-3 animate-fade-in">
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-sm shrink-0">
+          <i class="fa-solid fa-mobile-screen"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-xs font-black truncate leading-tight">Install RailSeat App</p>
+          <p class="text-[10px] text-emerald-100 truncate">1-tap instant seat radar from home screen</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1.5 shrink-0">
+        <button type="button" id="pwaMobileInstallBtn" class="px-3 py-1.5 rounded-xl bg-white text-emerald-800 font-extrabold text-xs shadow-xs active:scale-95 cursor-pointer">
+          Install
+        </button>
+        <button type="button" id="pwaMobileDismissBtn" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 text-xs cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
 
     <!-- ============================================== -->
     <!-- 💺 SEAT FINDER SECTION (SEARCH, STATS, RESULTS) -->
@@ -931,6 +957,310 @@
 
     </div>
 
+    <!-- ============================================== -->
+    <!-- ⚡ AUTO BOOK SEAT SECTION (GRAB & SCHEDULE)     -->
+    <!-- ============================================== -->
+    <div id="autoBookSection" class="hidden space-y-4 animate-fade-in">
+      
+      <!-- Top Header & Live 8:00 AM Countdown -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-black shrink-0">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>Auto Book Seat</span>
+              <span id="autoBookModeTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white">Live</span>
+            </h2>
+            <p id="autoBookModeSubtext" class="text-xs text-slate-500 dark:text-slate-400">
+              Select journey date to auto-grab available seats or schedule future 08:00 AM release.
+            </p>
+          </div>
+        </div>
+
+        <!-- 8:00 AM Countdown Pill -->
+        <div class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shrink-0 self-start sm:self-auto">
+          <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
+          <div>
+            <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Next 8 AM Drop</span>
+            <span id="autoBookCountdownTimer" class="font-mono text-xs font-black text-amber-600 dark:text-amber-400">--h --m --s</span>
+          </div>
+        </div>
+
+        <!-- Hidden compatibility elements to prevent JS breaks -->
+        <div class="hidden">
+          <div id="autoBookModeBanner"></div>
+          <div id="autoBookModeBadgeIcon"></div>
+          <i id="autoBookModeIconEl"></i>
+          <span id="autoBookModeTitle"></span>
+          <button type="button" id="autoBookTabNow"></button>
+          <button type="button" id="autoBookTabSchedule"></button>
+        </div>
+      </div>
+
+      <!-- Main Auto-Book Configuration Card -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+
+        <!-- Form Grid Row 1: Stations & Date & Train -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          <!-- From Station -->
+          <div class="relative space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="from_station">From</label>
+            <div class="relative">
+              <input type="text" id="autoBookFromInput" placeholder="Departure station" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+              <button type="button" id="autoBookFromClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <div id="autoBookFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+            </div>
+          </div>
+
+          <!-- To Station -->
+          <div class="relative space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="to_station">To</label>
+              <button type="button" id="autoBookSwapBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <span data-i18n="swap_stations">Swap</span>
+              </button>
+            </div>
+            <div class="relative">
+              <input type="text" id="autoBookToInput" placeholder="Arrival station" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+              <button type="button" id="autoBookToClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <div id="autoBookToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+            </div>
+          </div>
+
+          <!-- Journey Date -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Date</label>
+              <span id="autoBookDateBadge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">⚡ Find Now</span>
+            </div>
+            <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
+            <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
+          </div>
+
+          <!-- Train Selector (Multi-Select) -->
+          <div class="space-y-1 relative" id="autoBookTrainDropdownContainer">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Train</label>
+              <span id="autoBookTrainCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Train</span>
+            </div>
+            <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+              <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookTrainChevron"></i>
+            </button>
+            <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+              <div id="autoBookTrainOptionsList" class="space-y-0.5">
+                <!-- Injected dynamically via JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Form Grid Row 2: Class & Quantity & Seat Position -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          
+          <!-- Seat Class (Multi-Select - Shows All Classes) -->
+          <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Class</label>
+              <span id="autoBookClassCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Class</span>
+            </div>
+            <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+              <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookClassChevron"></i>
+            </button>
+            <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+              <div id="autoBookClassOptionsList" class="space-y-0.5">
+                <!-- Injected dynamically via JS showing all BR classes -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Seat Quantity (1 to 4 Seats) -->
+          <div class="space-y-1">
+            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seats</label>
+            <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
+              <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
+              <button type="button" data-seats="3" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">3</button>
+              <button type="button" data-seats="4" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">4</button>
+            </div>
+          </div>
+
+          <!-- Seat Position Preference (Window, Aisle, Front, Middle, Back) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Position</label>
+              <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">সিটের অবস্থান</span>
+            </div>
+            <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+              <option value="any">Any Position (যেকোনো আসন)</option>
+              <option value="window">Window (জানালা 🪟)</option>
+              <option value="aisle">Aisle (আইল 🚶)</option>
+              <option value="front">Front Side (সামনের দিক 🚅)</option>
+              <option value="middle">Middle (মাঝের অংশ 🎯)</option>
+              <option value="back">Back Side (পেছনের দিক 🚪)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Row 3: Action Mode (Hold vs Buy) & Options -->
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2.5">
+          
+          <!-- Compact Hold / Buy Toggle -->
+          <div class="grid grid-cols-2 gap-2" id="autoBookModeSelector">
+            <!-- Hold Mode -->
+            <label class="relative cursor-pointer group" id="autoBookHoldModeLabel">
+              <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" checked class="sr-only peer" />
+              <div class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 dark:peer-checked:bg-blue-950/40 transition select-none">
+                <i class="fa-solid fa-hand text-blue-600 dark:text-blue-400 text-sm"></i>
+                <div>
+                  <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Hold Only</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Selects seat, no OTP</span>
+                </div>
+              </div>
+            </label>
+            <!-- Buy Mode -->
+            <label class="relative cursor-pointer group" id="autoBookBuyModeLabel">
+              <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" class="sr-only peer" />
+              <div class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/70 dark:peer-checked:bg-emerald-950/40 transition select-none">
+                <i class="fa-solid fa-bolt text-emerald-600 dark:text-emerald-400 text-sm"></i>
+                <div>
+                  <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Buy Now</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Proceeds directly to OTP</span>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Secondary Switches: Keep Together, Keep Trying & Sound Alarm -->
+          <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <span class="font-bold text-slate-700 dark:text-slate-300">Seats Together</span>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+              <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
+            </label>
+
+            <div class="flex items-center justify-between sm:justify-start gap-2">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+                <span class="font-bold text-slate-700 dark:text-slate-300">Alarm</span>
+              </label>
+              <select id="autoBookRingtoneSelect" class="text-[11px] py-0.5 px-1.5 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer" title="Alarm Ringtone Sound">
+                <option value="chime">🎵 Chime</option>
+                <option value="whistle">🚂 Whistle</option>
+                <option value="siren">🚨 Siren</option>
+                <option value="bell">🔔 Bell</option>
+              </select>
+              <button type="button" id="autoBookTestToneBtn" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-amber-500 hover:text-white transition cursor-pointer" title="Test Alarm Sound">Test</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex items-center justify-end pt-1">
+          <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer">
+            <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
+            <span id="autoBookActionText">⚡ Check & Auto-Book Now</span>
+          </button>
+        </div>
+
+        <!-- Live Activity Console -->
+        <div id="autoBookConsoleBox" class="hidden rounded-2xl bg-slate-950 text-slate-100 font-mono text-xs border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
+          <!-- Terminal Header Bar -->
+          <div class="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 text-[11px]">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+              </div>
+              <span class="font-bold text-amber-400 flex items-center gap-1.5 ml-1">
+                <i class="fa-solid fa-terminal text-[10px]"></i>
+                <span>Auto-Book Activity Console</span>
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="autoBookConsoleStatus" class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">Idle</span>
+              <button type="button" id="autoBookConsoleClearBtn" class="text-[10px] text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 transition cursor-pointer" title="Clear Console Logs">
+                <i class="fa-solid fa-trash-can mr-1"></i>Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Highlight Banner: Grabbed Seat & Class Showcase (Visible upon successful grab) -->
+          <div id="autoBookGrabbedBanner" class="hidden p-3 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border-b border-emerald-500/30">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-base font-black shadow-md shrink-0">
+                  <i class="fa-solid fa-chair"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-emerald-300 tracking-wide uppercase">Seat Secured!</span>
+                    <span id="grabbedTrainBadge" class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-500/40">Train</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-0.5">
+                    <span class="text-slate-200">Coach: <strong id="grabbedCoachVal" class="text-white font-black text-sm">--</strong></span>
+                    <span class="text-slate-400">•</span>
+                    <span class="text-slate-200">Class: <strong id="grabbedClassVal" class="text-emerald-400 font-black">--</strong></span>
+                    <span class="text-slate-400">•</span>
+                    <span class="text-slate-200">Seat(s): <strong id="grabbedSeatsVal" class="text-amber-300 font-mono font-black text-sm tracking-wider">--</strong></span>
+                  </div>
+                </div>
+              </div>
+              <div id="grabbedActionLinkContainer" class="shrink-0 flex items-center gap-2">
+                <!-- Action button injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Logs Stream -->
+          <div id="autoBookConsoleLogs" class="p-3 space-y-1.5 max-h-48 overflow-y-auto text-[11px] font-mono select-text divide-y divide-slate-900/60"></div>
+        </div>
+
+      </div>
+
+      <!-- Active Schedules & Background Watchers Container -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+          <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white">Active Auto-Book Schedules</h3>
+            <span id="autoBookTasksBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">0</span>
+          </div>
+          <button type="button" id="autoBookClearAllTasksBtn" class="text-xs text-rose-500 hover:text-rose-600 font-bold hover:underline cursor-pointer hidden">
+            Clear Completed
+          </button>
+        </div>
+
+        <div id="autoBookTasksList" class="space-y-2">
+          <!-- Rendered dynamically by JS -->
+          <div class="py-8 text-center text-slate-400 dark:text-slate-500" id="autoBookTasksEmpty">
+            <i class="fa-solid fa-calendar-xmark text-2xl mb-1.5 block opacity-40"></i>
+            <p class="text-xs font-semibold">No scheduled auto-book tasks yet.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Use the scheduler above to set up future date 08:00 AM drops or 24/7 seat grabbers.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </main>
 
   <!-- Notification Modal Panel -->
@@ -1523,7 +1853,7 @@
             <li>Press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold">F12</kbd> &rarr; Click <strong>Console</strong> &rarr; Paste this 1-line script & press <kbd class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono">Enter</kbd>:</li>
           </ol>
           <div class="relative mt-1">
-            <input type="text" readonly id="consoleSnippet" value="(()=&gt;{try{let t='',d='',k='';const isH=s=&gt;typeof s==='string'&amp;&amp;/^[a-f0-9]{32,160}$/i.test(s.trim())&amp;&amp;s.trim().toLowerCase()!=='web';const isJ=s=&gt;typeof s==='string'&amp;&amp;/^eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}$/.test(s.trim());const st=[typeof localStorage!=='undefined'?localStorage:null,typeof sessionStorage!=='undefined'?sessionStorage:null].filter(Boolean);for(const s of st){t=t||s.getItem('token')||s.getItem('access_token')||s.getItem('authToken')||s.getItem('id_token')||'';d=d||s.getItem('x-device-id')||s.getItem('device_id')||s.getItem('deviceId')||s.getItem('device-id')||s.getItem('uuid')||'';const ck=s.getItem('x-device-key')||s.getItem('device_key')||s.getItem('deviceKey')||s.getItem('device-key')||s.getItem('ssdk')||s.getItem('_ssdk')||s.getItem('shohoz_device_key')||'';if(isH(ck))k=ck.trim();}const ck=typeof document!=='undefined'&amp;&amp;document.cookie?document.cookie:'';if(!t){const m=ck.match(/(?:^|;\s*)(?:token|access_token|auth_token)=([^;]+)/i);if(m)t=decodeURIComponent(m[1]);}if(!d){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?id|device[-_]?id|uuid)=([^;]+)/i);if(m)d=decodeURIComponent(m[1]);}if(!k){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?key|device[-_]?key|_?ssdk|shohoz_device_key)=([^;]+)/i);if(m&amp;&amp;isH(decodeURIComponent(m[1])))k=decodeURIComponent(m[1]);}for(const s of st){for(let i=0;i&lt;s.length;i++){const ky=s.key(i)||'',v=s.getItem(ky)||'';if(!t){const jm=v.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);if(jm)t=jm[0];}try{const o=JSON.parse(v);if(o&amp;&amp;typeof o==='object'){const scan=obj=&gt;{if(!obj||typeof obj!=='object')return;for(const[p,val]of Object.entries(obj)){if(typeof val==='string'){if(!t&amp;&amp;isJ(val))t=val;if(!d&amp;&amp;/(?:device[-_]?id|uuid)/i.test(p)&amp;&amp;val.length&gt;=16)d=val;if(!k&amp;&amp;isH(val))k=val;}else if(typeof val==='object')scan(val);}};scan(o);}}catch(e){}if(!d){const rm=v.match(/(?:x-device-id|device_id|deviceId)[&quot;':=\s]+([a-zA-Z0-9_-]{16,64})/i);if(rm)d=rm[1];}if(!k){const rm=v.match(/(?:x-device-key|device_key|deviceKey|ssdk)[&quot;':=\s]+([a-f0-9]{32,160})/i);if(rm&amp;&amp;isH(rm[1]))k=rm[1];}}}try{if(typeof window!=='undefined'){t=t||window.token||window.accessToken||window.authToken||'';if(!k&amp;&amp;isH(window.SSDK))k=window.SSDK;if(!k&amp;&amp;isH(window.ssdk))k=window.ssdk;if(!k&amp;&amp;isH(window._ssdk))k=window._ssdk;if(!k&amp;&amp;isH(window.shohoz_device_key))k=window.shohoz_device_key;if(!k&amp;&amp;isH(window.__deviceKey))k=window.__deviceKey;}}catch(e){}t=(t||'').replace(/^Bearer\s+/i,'').trim();d=(d||'').trim();if(!d)d=(typeof crypto!=='undefined'&amp;&amp;crypto.randomUUID)?crypto.randomUUID():'34a817c48b87571632d2a7a1d50575a4';if(!t){console.error('%c⚠️ [RailSeat Finder BD] No Railway login token found! Please log in to eticket.railway.gov.bd first.','background:#dc2626;color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;border-radius:6px;');alert('⚠️ No Railway login token found! Please log into https://eticket.railway.gov.bd first, then run this script again.');return{error:'No token found'};}const res={token:t,'x-device-id':d};if(isH(k))res['x-device-key']=k.trim();const json=JSON.stringify(res);if(typeof copy==='function'){copy(json);}else if(typeof navigator!=='undefined'&amp;&amp;navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(json);}console.log('%c🚆 [RailSeat Finder BD] Railway Session Copied to Clipboard! ✅','background:#059669;color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;border-radius:6px;');console.log('%c📋 Session JSON:%c '+json,'color:#10b981;font-weight:bold;','color:#334155;font-family:monospace;');console.log('%c👉 Now switch back to RailSeat Finder BD, paste in the box &amp; click Activate!','color:#2563eb;font-weight:bold;');return res;}catch(err){console.error('Error extracting session:',err);return{error:err.message};}})()" 
+            <input type="text" readonly id="consoleSnippet" value="(()=&gt;{try{let t='',d='',k='',cft='';const isH=s=&gt;typeof s==='string'&amp;&amp;/^[a-f0-9]{32,160}$/i.test(s.trim())&amp;&amp;s.trim().toLowerCase()!=='web';const isJ=s=&gt;typeof s==='string'&amp;&amp;/^eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}$/.test(s.trim());const st=[typeof localStorage!=='undefined'?localStorage:null,typeof sessionStorage!=='undefined'?sessionStorage:null].filter(Boolean);for(const s of st){t=t||s.getItem('token')||s.getItem('access_token')||s.getItem('authToken')||s.getItem('id_token')||'';d=d||s.getItem('x-device-id')||s.getItem('device_id')||s.getItem('deviceId')||s.getItem('device-id')||s.getItem('uuid')||'';const ck=s.getItem('x-device-key')||s.getItem('device_key')||s.getItem('deviceKey')||s.getItem('device-key')||s.getItem('ssdk')||s.getItem('_ssdk')||s.getItem('shohoz_device_key')||'';if(isH(ck))k=ck.trim();const cf=s.getItem('cft_response')||s.getItem('cftResponse')||s.getItem('cf-turnstile-response')||'';if(cf)cft=cf.trim();}const ck=typeof document!=='undefined'&amp;&amp;document.cookie?document.cookie:'';if(!t){const m=ck.match(/(?:^|;\s*)(?:token|access_token|auth_token)=([^;]+)/i);if(m)t=decodeURIComponent(m[1]);}if(!d){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?id|device[-_]?id|uuid)=([^;]+)/i);if(m)d=decodeURIComponent(m[1]);}if(!k){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?key|device[-_]?key|_?ssdk|shohoz_device_key)=([^;]+)/i);if(m&amp;&amp;isH(decodeURIComponent(m[1])))k=decodeURIComponent(m[1]);}if(typeof document!=='undefined'){const ci=document.querySelector('[name=&quot;cf-turnstile-response&quot;], [name=&quot;cft_response&quot;], input[name*=&quot;turnstile&quot;]');if(ci&amp;&amp;ci.value)cft=ci.value.trim();}try{if(!cft&amp;&amp;typeof window!=='undefined'&amp;&amp;window.turnstile&amp;&amp;typeof window.turnstile.getResponse==='function'){cft=window.turnstile.getResponse()||'';}}catch(e){}for(const s of st){for(let i=0;i&lt;s.length;i++){const ky=s.key(i)||'',v=s.getItem(ky)||'';if(!t){const jm=v.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);if(jm)t=jm[0];}try{const o=JSON.parse(v);if(o&amp;&amp;typeof o==='object'){const scan=obj=&gt;{if(!obj||typeof obj!=='object')return;for(const[p,val]of Object.entries(obj)){if(typeof val==='string'){if(!t&amp;&amp;isJ(val))t=val;if(!d&amp;&amp;/(?:device[-_]?id|uuid)/i.test(p)&amp;&amp;val.length&gt;=16)d=val;if(!k&amp;&amp;isH(val))k=val;if(!cft&amp;&amp;/(?:cft_response|turnstile)/i.test(p)&amp;&amp;val.length&gt;20)cft=val;}else if(typeof val==='object')scan(val);}};scan(o);}}catch(e){}if(!d){const rm=v.match(/(?:x-device-id|device_id|deviceId)[&quot;':=\s]+([a-zA-Z0-9_-]{16,64})/i);if(rm)d=rm[1];}if(!k){const rm=v.match(/(?:x-device-key|device_key|deviceKey|ssdk)[&quot;':=\s]+([a-f0-9]{32,160})/i);if(rm&amp;&amp;isH(rm[1]))k=rm[1];}if(!cft){const cm=v.match(/(?:cft_response|cf-turnstile-response)[&quot;':=\s]+([a-zA-Z0-9_.-]{20,})/i);if(cm)cft=cm[1];}}}try{if(typeof window!=='undefined'){t=t||window.token||window.accessToken||window.authToken||'';if(!k&amp;&amp;isH(window.SSDK))k=window.SSDK;if(!k&amp;&amp;isH(window.ssdk))k=window.ssdk;if(!k&amp;&amp;isH(window._ssdk))k=window._ssdk;if(!k&amp;&amp;isH(window.shohoz_device_key))k=window.shohoz_device_key;if(!k&amp;&amp;isH(window.__deviceKey))k=window.__deviceKey;}}catch(e){}t=(t||'').replace(/^Bearer\s+/i,'').trim();d=(d||'').trim();if(!d)d=(typeof crypto!=='undefined'&amp;&amp;crypto.randomUUID)?crypto.randomUUID():'34a817c48b87571632d2a7a1d50575a4';if(!t){console.error('%c⚠️ [RailSeat Finder BD] No Railway login token found! Please log in to eticket.railway.gov.bd first.','background:#dc2626;color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;border-radius:6px;');alert('⚠️ No Railway login token found! Please log into https://eticket.railway.gov.bd first, then run this script again.');return{error:'No token found'};}const res={token:t,'x-device-id':d};if(isH(k))res['x-device-key']=k.trim();if(cft)res['cft_response']=cft.trim();const json=JSON.stringify(res);if(typeof copy==='function'){copy(json);}else if(typeof navigator!=='undefined'&amp;&amp;navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(json);}console.log('%c🚆 [RailSeat Finder BD] Railway Session Copied to Clipboard! ✅','background:#059669;color:#fff;font-size:12px;font-weight:bold;padding:6px 12px;border-radius:6px;');console.log('%c📋 Session JSON:%c '+json,'color:#10b981;font-weight:bold;','color:#334155;font-family:monospace;');console.log('%c👉 Now switch back to RailSeat Finder BD, paste in the box &amp; click Activate!','color:#2563eb;font-weight:bold;');return res;}catch(err){console.error('Error extracting session:',err);return{error:err.message};}})()" 
               class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
             <button type="button" id="copySnippetBtn" class="absolute right-1 top-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold transition cursor-pointer">
               Copy
@@ -1623,14 +1953,71 @@
       <!-- Tab 3: Mobile Login & Guide (For Android & iOS) -->
       <div id="mobileLoginTab" class="hidden space-y-3 text-xs">
         
-        <!-- Method 1: 1-Tap Mobile Bookmarklet -->
-        <div class="bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 space-y-2.5">
-          <div class="flex items-center justify-between flex-wrap gap-1">
-            <h4 class="font-extrabold text-emerald-950 dark:text-emerald-200 text-xs flex items-center gap-1.5">
-              <i class="fa-solid fa-bookmark text-emerald-600"></i>
-              <span>Method 1: 1-Tap Mobile Bookmarklet (Recommended)</span>
+        <!-- Primary Option: Direct Mobile Login (Cloudflare Edge Worker) -->
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 p-3.5 rounded-xl border border-emerald-300 dark:border-emerald-700/70 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-emerald-900 dark:text-emerald-200 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt text-emerald-600 dark:text-emerald-400"></i>
+              <span>Direct Railway Sign-In (No Turnstile Needed)</span>
             </h4>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 font-bold">Chrome & Safari</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold tracking-wide flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse"></span>
+              Cloudflare Edge
+            </span>
+          </div>
+
+          <p class="text-[11px] text-slate-600 dark:text-slate-300">
+            Sign in directly with your Bangladesh Railway registered mobile & password via our Cloudflare Edge Gateway (<span class="font-mono text-[10px] text-emerald-700 dark:text-emerald-300">broad-glade-2ddb</span>).
+          </p>
+
+          <form id="cfWorkerLoginForm" class="space-y-2 pt-1">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 text-[11px] mb-1">
+                Mobile Number:
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">
+                  <i class="fa-solid fa-phone"></i>
+                </span>
+                <input type="tel" id="cfWorkerMobileInput" placeholder="01XXXXXXXXX" 
+                  class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 text-[11px] mb-1">
+                Railway Account Password:
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">
+                  <i class="fa-solid fa-lock"></i>
+                </span>
+                <input type="password" id="cfWorkerPasswordInput" placeholder="••••••••" 
+                  class="w-full pl-8 pr-8 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                <button type="button" id="toggleWorkerPwdBtn" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                  <i class="fa-regular fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="cfWorkerLoginStatus" class="hidden text-[11px] p-2 rounded-lg font-medium"></div>
+
+            <button type="submit" id="cfWorkerLoginBtn" 
+              class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer text-xs">
+              <i class="fa-solid fa-cloud"></i>
+              <span>Sign In via Cloudflare Worker</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Method 2: 1-Tap Mobile Bookmarklet -->
+        <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <h4 class="font-extrabold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-bookmark text-emerald-600"></i>
+              <span>Alternative: 1-Tap Mobile Bookmarklet</span>
+            </h4>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold">Chrome & Safari</span>
           </div>
 
           <p class="text-[11px] text-slate-600 dark:text-slate-300">
@@ -1641,7 +2028,7 @@
           <div class="space-y-1">
             <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Mobile Bookmark Code (Copy this):</span>
             <div class="relative">
-              <input type="text" readonly id="mobileBookmarkletSnippet" value="javascript:(function(){try{let t='',d='',k='';const isH=s=&gt;typeof s==='string'&amp;&amp;/^[a-f0-9]{32,160}$/i.test(s.trim())&amp;&amp;s.trim().toLowerCase()!=='web';const isJ=s=&gt;typeof s==='string'&amp;&amp;/^eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}$/.test(s.trim());const st=[localStorage,sessionStorage].filter(Boolean);for(const s of st){t=t||s.getItem('token')||s.getItem('access_token')||s.getItem('authToken')||s.getItem('id_token')||'';d=d||s.getItem('x-device-id')||s.getItem('device_id')||s.getItem('deviceId')||s.getItem('device-id')||s.getItem('uuid')||'';const ck=s.getItem('x-device-key')||s.getItem('device_key')||s.getItem('deviceKey')||s.getItem('device-key')||s.getItem('ssdk')||s.getItem('_ssdk')||s.getItem('shohoz_device_key')||'';if(isH(ck))k=ck.trim();}const ck=document.cookie||'';if(!t){const m=ck.match(/(?:^|;\s*)(?:token|access_token|auth_token)=([^;]+)/i);if(m)t=decodeURIComponent(m[1]);}if(!d){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?id|device[-_]?id|uuid)=([^;]+)/i);if(m)d=decodeURIComponent(m[1]);}if(!k){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?key|device[-_]?key|_?ssdk|shohoz_device_key)=([^;]+)/i);if(m&amp;&amp;isH(decodeURIComponent(m[1])))k=decodeURIComponent(m[1]);}for(const s of st){for(let i=0;i&lt;s.length;i++){const ky=s.key(i)||'',v=s.getItem(ky)||'';if(!t){const jm=v.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);if(jm)t=jm[0];}try{const o=JSON.parse(v);if(o&amp;&amp;typeof o==='object'){const scan=obj=&gt;{if(!obj||typeof obj!=='object')return;for(const[p,val]of Object.entries(obj)){if(typeof val==='string'){if(!t&amp;&amp;isJ(val))t=val;if(!d&amp;&amp;/(?:device[-_]?id|uuid)/i.test(p)&amp;&amp;val.length&gt;=16)d=val;if(!k&amp;&amp;isH(val))k=val;}else if(typeof val==='object')scan(val);}};scan(o);}}catch(e){}if(!d){const rm=v.match(/(?:x-device-id|device_id|deviceId)[&quot;':=\s]+([a-zA-Z0-9_-]{16,64})/i);if(rm)d=rm[1];}if(!k){const rm=v.match(/(?:x-device-key|device_key|deviceKey|ssdk)[&quot;':=\s]+([a-f0-9]{32,160})/i);if(rm&amp;&amp;isH(rm[1]))k=rm[1];}}}try{if(!k&amp;&amp;isH(window.SSDK))k=window.SSDK;if(!k&amp;&amp;isH(window.ssdk))k=window.ssdk;if(!k&amp;&amp;isH(window._ssdk))k=window._ssdk;if(!k&amp;&amp;isH(window.shohoz_device_key))k=window.shohoz_device_key;if(!k&amp;&amp;isH(window.__deviceKey))k=window.__deviceKey;}catch(e){}t=(t||'').replace(/^Bearer\s+/i,'').trim();d=(d||'').trim();if(!d)d=(typeof crypto!=='undefined'&amp;&amp;crypto.randomUUID)?crypto.randomUUID():'34a817c48b87571632d2a7a1d50575a4';if(!t){alert('No Railway login token found!\nPlease log in to eticket.railway.gov.bd first, then tap this bookmark again.');return;}const res={token:t,'x-device-id':d};if(isH(k))res['x-device-key']=k.trim();const str=JSON.stringify(res);try{if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(str).catch(function(){});}}catch(e){}prompt('Tap below, Select All, Copy. Then go back to RailSeat Finder and paste:',str);}catch(err){alert('Error: '+err.message);}})();" 
+              <input type="text" readonly id="mobileBookmarkletSnippet" value="javascript:(function(){try{let t='',d='',k='',cft='';const isH=s=&gt;typeof s==='string'&amp;&amp;/^[a-f0-9]{32,160}$/i.test(s.trim())&amp;&amp;s.trim().toLowerCase()!=='web';const isJ=s=&gt;typeof s==='string'&amp;&amp;/^eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}$/.test(s.trim());const st=[localStorage,sessionStorage].filter(Boolean);for(const s of st){t=t||s.getItem('token')||s.getItem('access_token')||s.getItem('authToken')||s.getItem('id_token')||'';d=d||s.getItem('x-device-id')||s.getItem('device_id')||s.getItem('deviceId')||s.getItem('device-id')||s.getItem('uuid')||'';const ck=s.getItem('x-device-key')||s.getItem('device_key')||s.getItem('deviceKey')||s.getItem('device-key')||s.getItem('ssdk')||s.getItem('_ssdk')||s.getItem('shohoz_device_key')||'';if(isH(ck))k=ck.trim();const cf=s.getItem('cft_response')||s.getItem('cftResponse')||s.getItem('cf-turnstile-response')||'';if(cf)cft=cf.trim();}const ck=document.cookie||'';if(!t){const m=ck.match(/(?:^|;\s*)(?:token|access_token|auth_token)=([^;]+)/i);if(m)t=decodeURIComponent(m[1]);}if(!d){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?id|device[-_]?id|uuid)=([^;]+)/i);if(m)d=decodeURIComponent(m[1]);}if(!k){const m=ck.match(/(?:^|;\s*)(?:x[-_]?device[-_]?key|device[-_]?key|_?ssdk|shohoz_device_key)=([^;]+)/i);if(m&amp;&amp;isH(decodeURIComponent(m[1])))k=decodeURIComponent(m[1]);}if(typeof document!=='undefined'){const ci=document.querySelector('[name=&quot;cf-turnstile-response&quot;], [name=&quot;cft_response&quot;], input[name*=&quot;turnstile&quot;]');if(ci&amp;&amp;ci.value)cft=ci.value.trim();}try{if(!cft&amp;&amp;typeof window!=='undefined'&amp;&amp;window.turnstile&amp;&amp;typeof window.turnstile.getResponse==='function'){cft=window.turnstile.getResponse()||'';}}catch(e){}for(const s of st){for(let i=0;i&lt;s.length;i++){const ky=s.key(i)||'',v=s.getItem(ky)||'';if(!t){const jm=v.match(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.-]{10,}/);if(jm)t=jm[0];}try{const o=JSON.parse(v);if(o&amp;&amp;typeof o==='object'){const scan=obj=&gt;{if(!obj||typeof obj!=='object')return;for(const[p,val]of Object.entries(obj)){if(typeof val==='string'){if(!t&amp;&amp;isJ(val))t=val;if(!d&amp;&amp;/(?:device[-_]?id|uuid)/i.test(p)&amp;&amp;val.length&gt;=16)d=val;if(!k&amp;&amp;isH(val))k=val;if(!cft&amp;&amp;/(?:cft_response|turnstile)/i.test(p)&amp;&amp;val.length&gt;20)cft=val;}else if(typeof val==='object')scan(val);}};scan(o);}}catch(e){}if(!d){const rm=v.match(/(?:x-device-id|device_id|deviceId)[&quot;':=\s]+([a-zA-Z0-9_-]{16,64})/i);if(rm)d=rm[1];}if(!k){const rm=v.match(/(?:x-device-key|device_key|deviceKey|ssdk)[&quot;':=\s]+([a-f0-9]{32,160})/i);if(rm&amp;&amp;isH(rm[1]))k=rm[1];}if(!cft){const cm=v.match(/(?:cft_response|cf-turnstile-response)[&quot;':=\s]+([a-zA-Z0-9_.-]{20,})/i);if(cm)cft=cm[1];}}}try{if(!k&amp;&amp;isH(window.SSDK))k=window.SSDK;if(!k&amp;&amp;isH(window.ssdk))k=window.ssdk;if(!k&amp;&amp;isH(window._ssdk))k=window._ssdk;if(!k&amp;&amp;isH(window.shohoz_device_key))k=window.shohoz_device_key;if(!k&amp;&amp;isH(window.__deviceKey))k=window.__deviceKey;}catch(e){}t=(t||'').replace(/^Bearer\s+/i,'').trim();d=(d||'').trim();if(!d)d=(typeof crypto!=='undefined'&amp;&amp;crypto.randomUUID)?crypto.randomUUID():'34a817c48b87571632d2a7a1d50575a4';if(!t){alert('No Railway login token found!\nPlease log in to eticket.railway.gov.bd first, then tap this bookmark again.');return;}const res={token:t,'x-device-id':d};if(isH(k))res['x-device-key']=k.trim();if(cft)res['cft_response']=cft.trim();const str=JSON.stringify(res);try{if(navigator.clipboard&amp;&amp;navigator.clipboard.writeText){navigator.clipboard.writeText(str).catch(function(){});}}catch(e){}prompt('Tap below, Select All, Copy. Then go back to RailSeat Finder and paste:',str);}catch(err){alert('Error: '+err.message);}})();" 
                 class="w-full pl-2 pr-14 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-[10px] font-mono text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
               <button type="button" id="copyMobileSnippetBtn" class="absolute right-1 top-1 px-2.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition cursor-pointer">
                 Copy
@@ -1945,6 +2332,199 @@
       <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
         <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Live data direct from Bangladesh Railway Shohoz API</span>
         <span class="font-medium">Click "Book" to purchase on eticket portal</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Live Coach & Carriage Seat Layout Modal (Matching Shohoz / Bangladesh Railway) -->
+  <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
+      
+      <!-- Modal Header -->
+      <div class="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
+            <i class="fa-solid fa-couch"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2 flex-wrap">
+              <h3 id="seatLayoutTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Coach & Seat Details</h3>
+              <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
+              <span id="seatLayoutClassBadge" class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300">SNIGDHA</span>
+              <span id="seatLayoutLiveBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+                <span>Live Railway Server</span>
+              </span>
+              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                <span>Official Railway Layout</span>
+              </span>
+              <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
+                <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                <span>Fetching live layout&hellip;</span>
+              </span>
+            </div>
+            <p id="seatLayoutSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              Live carriage layout direct from Bangladesh Railway Shohoz API
+            </p>
+          </div>
+        </div>
+        <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->
+      <div class="p-2.5 sm:p-3 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+          <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-train-subway text-emerald-500 text-xs"></i>
+            <span>Select Coach / বগি নির্বাচন করুন:</span>
+          </span>
+          <span id="seatLayoutCoachesSummary" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium"></span>
+        </div>
+        <div id="seatLayoutCoachTabs" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Quick Seat Preference & Intelligent Filter Bar (Inspired by BookMyRail BD) -->
+      <div class="px-3 py-2 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 overflow-x-auto scrollbar-thin text-xs">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1">
+            <i class="fa-solid fa-sliders text-emerald-500"></i>
+            <span>Filter:</span>
+          </span>
+          <button type="button" id="seatFilterAllBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white shadow-xs transition cursor-pointer">
+            All Seats
+          </button>
+          <button type="button" id="seatFilterWindowBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1">
+            <i class="fa-regular fa-square-full text-[9px] border-b-[2px] border-b-emerald-600"></i>
+            <span>Window Only</span>
+          </button>
+          <button type="button" id="seatFilterAisleBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1">
+            <i class="fa-solid fa-arrows-left-right text-[10px] text-cyan-600"></i>
+            <span>Aisle</span>
+          </button>
+          <button type="button" id="seatFilterTogetherBtn" class="seat-pref-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1" title="Highlights adjacent seats available side-by-side for couples & families">
+            <i class="fa-solid fa-user-group text-[10px] text-amber-500"></i>
+            <span>Together (2+)</span>
+          </button>
+          <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
+          <button type="button" id="seatFilterFrontBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
+            Front (1-30)
+          </button>
+          <button type="button" id="seatFilterMiddleBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
+            Middle (31-70)
+          </button>
+          <button type="button" id="seatFilterBackBtn" class="seat-pref-pill px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition cursor-pointer">
+            Back (71+)
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Coach Overview Strip -->
+      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
+          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">--</b></span>
+          <span>•</span>
+          <span>Class: <b id="seatLayoutActiveCoachClass" class="text-slate-900 dark:text-white font-bold">--</b></span>
+          <span>•</span>
+          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-bold">0</b></span>
+          <span>•</span>
+          <span>Booked: <b id="seatLayoutActiveBookedCount" class="text-slate-500 dark:text-slate-400 font-bold">0</b></span>
+        </div>
+        <div class="text-right">
+          <span class="text-slate-500 dark:text-slate-400">Fare: </span>
+          <span id="seatLayoutActiveFare" class="font-extrabold font-mono text-sm text-emerald-700 dark:text-emerald-300">--</span>
+        </div>
+      </div>
+
+      <!-- Carriage Body Canvas -->
+      <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
+        <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
+      </div>
+
+      <!-- Live Boarding Pass Preview Ribbon (Inspired by BookMyRail BD) -->
+      <div id="seatLayoutBoardingPass" class="hidden mx-4 my-2 p-3 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/60 shadow-md">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-sm font-black">
+              <i class="fa-solid fa-ticket"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2 text-xs font-extrabold tracking-wide">
+                <span id="bpRouteCode" class="text-emerald-400 uppercase font-mono">DHK ➔ CTG</span>
+                <span class="text-slate-500">•</span>
+                <span id="bpTrainLabel" class="text-slate-200">TRAIN</span>
+                <span class="text-slate-500">•</span>
+                <span id="bpClassLabel" class="text-cyan-400 uppercase">CLASS</span>
+              </div>
+              <div class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <span>Selected: <b id="bpSeatDetail" class="text-amber-300 font-bold">None</b></span>
+                <span>•</span>
+                <span id="bpPositionTag" class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px] font-medium border border-slate-700">Any</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Official Fare</span>
+            <span id="bpTotalFare" class="text-base font-black font-mono text-emerald-400">৳0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend & Footer Action Bar -->
+      <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <!-- Legend -->
+        <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-300">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
+            <span>Free (Available)</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded bg-amber-500 border border-amber-600 inline-block"></span>
+            <span>Selected</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
+            <span>Taken (Booked)</span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-slate-700 dark:border-b-slate-300 inline-block"></span>
+            <span>Window</span>
+          </div>
+        </div>
+
+        <!-- Action Links: Hold Only & Buy Now -->
+        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- Hold Only Button -->
+            <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-hand text-xs"></i>
+              <span id="seatLayoutHoldText">Hold Only</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+            </a>
+
+            <!-- Buy Now Button (Proceeds to OTP) -->
+            <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-bolt text-xs"></i>
+              <span id="seatLayoutBuyText">Buy Now</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+            </a>
+
+            <!-- Legacy fallback element hidden -->
+            <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
+          </div>
+          <p id="seatLayoutAutoBookHint" class="hidden text-[10px] text-slate-500 dark:text-slate-400 text-right leading-tight">
+            <i class="fa-solid fa-robot text-[9px] mr-1"></i>
+            <span id="seatLayoutAutoBookHintText">Locks exact coach and seat numbers directly into the Bangladesh Railway cart.</span>
+            <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400 ml-1" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
+          </p>
+        </div>
       </div>
 
     </div>
@@ -2958,6 +3538,12 @@
           <span class="absolute -top-1 -right-2 w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
         </div>
         <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-cyan-600 dark:group-[.active-tab]:text-cyan-400 transition-colors" data-i18n="nav_live_radar">Radar</span>
+      </button>
+      <!-- Auto Book -->
+      <button type="button" id="mobileNavAutoBookBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">
+        <div class="mobile-nav-indicator hidden absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-amber-500"></div>
+        <i class="fa-solid fa-bolt text-[17px] text-slate-400 group-[.active-tab]:text-amber-500 transition-colors"></i>
+        <span class="text-[10px] font-bold text-slate-400 group-[.active-tab]:text-amber-600 dark:group-[.active-tab]:text-amber-400 transition-colors" data-i18n="nav_autobook">Auto Book</span>
       </button>
       <!-- Routes -->
       <button type="button" id="mobileNavRoutesBtn" class="mobile-bottom-nav-btn flex flex-col items-center justify-center gap-0.5 px-2 pt-1.5 pb-1 rounded-2xl transition-all min-w-0 flex-1 group relative active:scale-95 cursor-pointer">

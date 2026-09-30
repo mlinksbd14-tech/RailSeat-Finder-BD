@@ -31,16 +31,27 @@
 
       // Navigation
       nav_seat_finder: 'Seat Finder',
+      nav_autobook: 'Auto Book',
       nav_live_radar: 'Live Radar',
       nav_routes: 'Routes',
       nav_watchlist: 'Watchlist',
       nav_alerts: 'Alerts',
       nav_settings: 'Settings',
 
+      // Auto Book Seat
+      autobook_badge: 'Automated Ticket Sniper',
+      autobook_hero_title: 'Auto Book Seat & Release Scheduler',
+      autobook_hero_desc: 'Grab currently available seats instantly with custom seating preferences (seats together, window, coach) or schedule future date ticket drops at 08:00 AM.',
+      next_drop_countdown: 'Next 8:00 AM Drop',
+      autobook_tab_now: 'Auto-Grab Now (If Available)',
+      autobook_tab_schedule: 'Schedule Future Date (08:00 AM)',
+
       // Hero Search Card
       search_hero_title: 'Find Bangladesh Railway Seats',
       search_hero_badge: 'Live Gateway',
       search_hero_desc: 'Real-time vacant seats, train schedules, fares & 24/7 radar alerts.',
+      autobook_hint: 'Opens the railway server, picks your seats and auto-clicks Continue Purchase to reach the OTP page.',
+      autobook_helper: 'Install auto-book helper',
       from_station: 'From Station',
       from_placeholder: 'Departure (e.g. Dhaka)',
       to_station: 'Destination',
@@ -114,16 +125,27 @@
 
       // Navigation
       nav_seat_finder: 'সিট খুঁজুন',
+      nav_autobook: 'অটো বুক',
       nav_live_radar: 'লাইভ রাডার',
       nav_routes: 'রুটসমূহ',
       nav_watchlist: 'ওয়াচলিস্ট',
       nav_alerts: 'অ্যালার্ট',
       nav_settings: 'সেটিংস',
 
+      // Auto Book Seat
+      autobook_badge: 'স্বয়ংক্রিয় টিকিট স্নাইপার',
+      autobook_hero_title: 'স্বয়ংক্রিয় সিট বুকিং ও শিডিউলার',
+      autobook_hero_desc: 'পছন্দমতো আসন সুবিধা (পাশাপাশি সিট, জানালা, বগি) সহ সাথে সাথে খালি সিট কাটুন অথবা ভবিষ্যৎ তারিখের ৮:০০ ঘটিকার টিকিট রিলিজের জন্য শিডিউল করুন।',
+      next_drop_countdown: 'পরবর্তী সকাল ৮:০০ রিলিজ',
+      autobook_tab_now: 'এখনই খালি থাকলে বুক করুন',
+      autobook_tab_schedule: 'ভবিষ্যৎ তারিখের জন্য শিডিউল (সকাল ৮:০০)',
+
       // Hero Search Card
       search_hero_title: 'বাংলাদেশ রেলওয়ের সিট খুঁজুন',
       search_hero_badge: 'সরাসরি গেটওয়ে',
       search_hero_desc: 'রিয়েল-টাইম খালি সিট, ট্রেনের সময়সূচি, ভাড়া ও ২৪/৭ রাডার অ্যালার্ট।',
+      autobook_hint: 'রেলওয়ে সার্ভার খুলে আপনার সিট বেছে নিয়ে Continue Purchase চাপে OTP পেজে নিয়ে যায়।',
+      autobook_helper: 'অটো-বুক সহায়ক ইনস্টল করুন',
       from_station: 'From',
       from_placeholder: 'Departure (e.g. Dhaka)',
       to_station: 'To',

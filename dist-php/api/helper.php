@@ -207,6 +207,10 @@ function getSavedSession() {
         $bearerToken = trim($reqHeaders['x-shohoz-token']);
     } elseif (!empty($_SERVER['HTTP_X_SHOHOZ_TOKEN'])) {
         $bearerToken = trim($_SERVER['HTTP_X_SHOHOZ_TOKEN']);
+    } elseif (!empty($reqHeaders['authorization'])) {
+        $bearerToken = trim(preg_replace('/^Bearer\s+/i', '', $reqHeaders['authorization']));
+    } elseif (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+        $bearerToken = trim(preg_replace('/^Bearer\s+/i', '', $_SERVER['HTTP_AUTHORIZATION']));
     }
 
     $reqDeviceId = $reqHeaders['x-device-id'] ?? ($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
@@ -361,8 +365,9 @@ function queryShohozSearch($fromCity, $toCity, $dateStr, $session = null) {
     curl_setopt($ch, CURLOPT_URL, $targetUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 12);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
     $rawResponse = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -446,13 +451,16 @@ function normalizeShohozResponsePHP($data, $fromCity, $toCity, $dateStr) {
 
             $seatClasses[] = [
                 'type' => $type,
+                'trip_id' => $st['trip_id'] ?? $item['trip_id'] ?? null,
+                'trip_route_id' => $st['trip_route_id'] ?? $item['trip_route_id'] ?? $item['route_id'] ?? null,
                 'display_name' => $st['display_name'] ?? $st['seat_class_name'] ?? $type,
                 'fare' => $baseFare,
                 'vat' => $vat,
                 'total_fare' => $totalFare,
                 'seats_available' => $online,
                 'counter_seats_available' => $offline,
-                'is_available' => $online > 0
+                'is_available' => $online > 0,
+                'coaches' => $st['coaches'] ?? $st['coach_names'] ?? []
             ];
         }
 
@@ -478,9 +486,11 @@ function normalizeShohozResponsePHP($data, $fromCity, $toCity, $dateStr) {
         }
 
         $tripId = $item['trip_id'] ?? (!empty($seatClasses[0]['trip_id']) ? $seatClasses[0]['trip_id'] : 'TRIP_' . rand(1000, 9999));
+        $tripRouteId = $item['trip_route_id'] ?? (!empty($seatClasses[0]['trip_route_id']) ? $seatClasses[0]['trip_route_id'] : ($item['route_id'] ?? null));
 
         $trains[] = [
             'trip_id' => $tripId,
+            'trip_route_id' => $tripRouteId,
             'train_name' => $item['train_name'] ?? $item['trip_number'] ?? 'Intercity Train',
             'train_model' => $item['train_model'] ?? $item['train_number'] ?? 'N/A',
             'departure_station' => $item['departure_station'] ?? $fromCity,
@@ -574,8 +584,9 @@ function getTrainRouteDataPHP($cleanModel, $session = null) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['model' => $cleanModel]));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
     $rawResponse = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -675,8 +686,9 @@ function queryShohozTripsParallel($queries, $session = null, $batchSize = 4) {
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $commonHeaders);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_multi_add_handle($mh, $ch);
             $handles[$item['key']] = [
                 'handle' => $ch,

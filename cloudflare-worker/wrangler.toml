@@ -1,0 +1,7 @@
+name = "shohoz-mobile-gateway"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Free tier settings
+[placement]
+mode = "smart"

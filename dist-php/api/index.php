@@ -63,6 +63,17 @@ switch ($path) {
         require __DIR__ . '/train-station-matrix.php';
         break;
 
+    case 'route-trains-classes':
+        require __DIR__ . '/route-trains-classes.php';
+        break;
+
+    case 'seat-layout':
+    case 'seat-layout.php':
+    case 'bookings/seat-layout':
+    case 'bookings/seat-layout.php':
+        require __DIR__ . '/seat-layout.php';
+        break;
+
     case 'user-auth/status':
     case 'user-auth/popular-routes':
     case 'user-auth/firebase-login':

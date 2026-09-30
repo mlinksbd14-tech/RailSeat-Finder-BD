@@ -14,6 +14,9 @@ data/*.json
 !data/stations.json
 data/*.db
 data/*.sqlite
+dist-php/data/session.json
+dist-php/data/active_sessions.json
+Cloudfare Account API.txt
 
 # Logs & Debugging
 *.log

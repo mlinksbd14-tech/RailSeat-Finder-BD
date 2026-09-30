@@ -5,6 +5,21 @@ $rawInput = file_get_contents('php://input');
 $body = json_decode($rawInput, true);
 
 if (!is_array($body) || empty($body['token'])) {
+    $cft = trim($body['cft_response'] ?? $body['cftResponse'] ?? '');
+    $existing = getSavedSession();
+    if (!empty($existing['token']) && !empty($cft)) {
+        $existing['cftResponse'] = $cft;
+        saveSession($existing);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Turnstile token (cft_response) updated successfully for current session!',
+            'user' => $existing['user'] ?? ['name' => 'Verified Passenger'],
+            'token_preview' => substr($existing['token'], 0, 10) . '...' . substr($existing['token'], -6),
+            'device_id' => $existing['deviceId'] ?? '',
+            'device_key' => $existing['deviceKey'] ?? ''
+        ]);
+        exit;
+    }
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Token is required.']);
     exit;
@@ -34,6 +49,15 @@ if (empty($deviceKey) || strlen($deviceKey) < 32) {
 }
 
 // Try decoding payload from JWT if present
+$cftResponse = trim($body['cft_response'] ?? $body['cftResponse'] ?? '');
+if (!empty($body['raw_curl'])) {
+    if (preg_match('/cft_response=([^&\'"\s]+)/i', $body['raw_curl'], $cm)) {
+        $cftResponse = urldecode($cm[1]);
+    } elseif (preg_match('/[-H\s][\'"]?x-cft-response:\s*([^\'"\r\n]+)[\'"]?/i', $body['raw_curl'], $cm)) {
+        $cftResponse = trim($cm[1]);
+    }
+}
+
 $user = [
     'name' => 'Verified Passenger',
     'phone' => '01XXXXXXXXX',
@@ -61,6 +85,7 @@ $sessionData = [
     'token' => $token,
     'deviceId' => $deviceId,
     'deviceKey' => $deviceKey,
+    'cftResponse' => !empty($cftResponse) ? $cftResponse : null,
     'user' => $user,
     'updated_at' => date('c')
 ];

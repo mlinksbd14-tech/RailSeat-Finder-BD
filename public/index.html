@@ -244,6 +244,27 @@
   <!-- Main Content Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-5 lg:px-6 pt-3.5 pb-6 md:pb-6 space-y-3.5">
 
+    <!-- Mobile PWA Quick-Install Banner (visible when app installable on mobile) -->
+    <div id="pwaMobileInstallBanner" class="hidden sm:hidden p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg items-center justify-between gap-3 animate-fade-in">
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-sm shrink-0">
+          <i class="fa-solid fa-mobile-screen"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-xs font-black truncate leading-tight">Install RailSeat App</p>
+          <p class="text-[10px] text-emerald-100 truncate">1-tap instant seat radar from home screen</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1.5 shrink-0">
+        <button type="button" id="pwaMobileInstallBtn" class="px-3 py-1.5 rounded-xl bg-white text-emerald-800 font-extrabold text-xs shadow-xs active:scale-95 cursor-pointer">
+          Install
+        </button>
+        <button type="button" id="pwaMobileDismissBtn" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 text-xs cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- ============================================== -->
     <!-- 💺 SEAT FINDER SECTION (SEARCH, STATS, RESULTS) -->
     <!-- ============================================== -->

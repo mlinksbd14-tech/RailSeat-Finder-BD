@@ -2,32 +2,9 @@
   "settings": {
     "enabled": true,
     "intervalSeconds": 25,
-    "lastRunAt": "2026-10-07T08:04:19.334Z"
+    "lastRunAt": "2026-10-07T08:04:44.338Z"
   },
-  "targets": [
-    {
-      "id": "watch_1791349531680_xvr5",
-      "userId": "usr_1787812528386_taky",
-      "username": "shawon421",
-      "fromCity": "CUMILLA",
-      "toCity": "DHAKA",
-      "date": "2026-10-09",
-      "dates": [
-        "2026-10-09"
-      ],
-      "trainName": "UPAKUL EXPRESS (711)",
-      "trainModel": "711",
-      "className": "ANY",
-      "minSeats": 1,
-      "telegramChatId": "781705575",
-      "telegramUsername": "@srshawon",
-      "active": true,
-      "lastNotifiedSeats": 0,
-      "notifiedSeatsByDate": {},
-      "lastCheckedAt": "2026-10-07T08:04:19.920Z",
-      "createdAt": 1791349531680
-    }
-  ],
+  "targets": [],
   "recentAlerts": [
     {
       "id": "radar_alert_1788147996323_62ic",

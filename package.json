@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "radar:check": "node scripts/runner-radar-automation.js",
+    "puppeteer:grab": "node scripts/puppeteer-seatmap-grabber.js"
   },
   "keywords": [
     "bangladesh-railway",

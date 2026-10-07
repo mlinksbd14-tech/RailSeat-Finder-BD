@@ -1,0 +1,98 @@
+name: RailSeat 24/7 Automation & Live Radar
+
+on:
+  schedule:
+    # Runs every 15 minutes (or 30 mins) 100% free on GitHub's serverless infrastructure
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: 'Force alert delivery even if seat counts have not changed'
+        required: false
+        default: 'false'
+        type: boolean
+      run_puppeteer:
+        description: 'Run Headless Chromium / Puppeteer screenshot grabber'
+        required: false
+        default: 'false'
+        type: boolean
+      from_station:
+        description: 'Departure Station (for Puppeteer screenshot)'
+        required: false
+        default: 'Dhaka'
+      to_station:
+        description: 'Destination Station (for Puppeteer screenshot)'
+        required: false
+        default: "Cox's Bazar"
+      journey_date:
+        description: 'Journey Date (YYYY-MM-DD)'
+        required: false
+        default: ''
+
+concurrency:
+  group: railseat-automation
+  cancel-in-progress: false
+
+jobs:
+  run-radar-and-alerts:
+    name: 🚆 Scan Seats & Deliver Telegram Alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: |
+          npm ci --prefer-offline --no-audit
+
+      - name: 🚀 Run Serverless Seat Availability & Live Layout Scanner
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RAILWAY_SESSION_TOKEN: ${{ secrets.RAILWAY_SESSION_TOKEN }}
+          RAILWAY_DEVICE_ID: ${{ secrets.RAILWAY_DEVICE_ID }}
+          RAILWAY_DEVICE_KEY: ${{ secrets.RAILWAY_DEVICE_KEY }}
+          RAILWAY_CFT_RESPONSE: ${{ secrets.RAILWAY_CFT_RESPONSE }}
+          FORCE_CHECK: ${{ github.event.inputs.force_check || 'false' }}
+        run: |
+          node scripts/runner-radar-automation.js
+
+      - name: 🤖 Run Headless Chromium Puppeteer Grabber (Optional)
+        if: ${{ github.event.inputs.run_puppeteer == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FROM_STATION: ${{ github.event.inputs.from_station || 'Dhaka' }}
+          TO_STATION: ${{ github.event.inputs.to_station || "Cox's Bazar" }}
+          JOURNEY_DATE: ${{ github.event.inputs.journey_date || '' }}
+        run: |
+          npm install --no-save puppeteer form-data
+          node scripts/puppeteer-seatmap-grabber.js
+
+      - name: 💾 Commit Updated Watchlist State & Timestamps
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f data/radar_watchlist.json ]; then
+            git add data/radar_watchlist.json
+          fi
+          if [ -f data/latest_turnstile_token.json ]; then
+            git add data/latest_turnstile_token.json
+          fi
+          if git diff --staged --quiet; then
+            echo "No state changes to commit."
+          else
+            git commit -m "chore(radar): update automated check timestamps & alert state [skip ci]"
+            git push origin main
+          fi

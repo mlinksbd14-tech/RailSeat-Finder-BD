@@ -3262,10 +3262,14 @@ function summarizeCoachSeats(seats) {
 }
 
 function finalizeLiveCoach(rawCoach, coachName, coachClass) {
-  const rawSeatList = Array.isArray(rawCoach.seats)
+  let rawSeatList = Array.isArray(rawCoach.seats)
     ? rawCoach.seats
     : (Array.isArray(rawCoach.seat_list) ? rawCoach.seat_list
       : (Array.isArray(rawCoach.seat_wise) ? rawCoach.seat_wise : []));
+
+  if ((!rawSeatList || rawSeatList.length === 0) && Array.isArray(rawCoach.layout)) {
+    rawSeatList = rawCoach.layout.flat().filter(Boolean);
+  }
 
   const defaults = {
     fare: Number(rawCoach.fare || 0),
@@ -3307,7 +3311,9 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
   // Case 0: Official Bangladesh Railway / Shohoz live seat-layout schema
   // { data: { seatLayout: [ { seat_floor: 1, floor_name: "KA", layout: [ [ { ticket_id, seat_number, seat_availability }, ... ] ] } ] } }
   const officialLayoutList = Array.isArray(payload.seatLayout) ? payload.seatLayout
-    : (Array.isArray(payload.seat_layout) && payload.seat_layout[0] && (payload.seat_layout[0].layout || payload.seat_layout[0].floor_name) ? payload.seat_layout : null);
+    : (Array.isArray(payload.seat_layout) && payload.seat_layout[0] && (payload.seat_layout[0].layout || payload.seat_layout[0].floor_name) ? payload.seat_layout
+    : (Array.isArray(payload) && payload[0] && (payload[0].layout || payload[0].floor_name || payload[0].seat_floor) ? payload
+    : (payload && Array.isArray(payload.layout) ? [payload] : null)));
 
   if (officialLayoutList && officialLayoutList.length > 0) {
     const parsedCoaches = officialLayoutList.map((coachData, cIdx) => {
@@ -3324,27 +3330,26 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
         if (row.length > maxColsInRows) maxColsInRows = row.length;
         const rowSeats = [];
         row.forEach((s, ci) => {
-          if (!s) return;
-          const sNum = String(s.seat_number ?? '').trim();
-          const isBlank = !sNum || sNum === '' || s.is_blank === true || s.is_available === 'blank';
+          const sNum = String(s?.seat_number ?? '').trim();
+          const isBlank = !s || !sNum || sNum === '' || s.is_blank === true || s.is_available === 'blank';
           // Official semantics: seat_availability 0 = booked, 1 = free, 2 = free but
           // currently held by somebody mid-booking. The railway site seeds its
           // in-progress set from exactly these seats in ngOnInit, so a bare 2 is
           // authoritative rather than a guess; the trip socket only adds and
           // releases on top of it.
-          const rawAvail = s.seat_availability;
-          const tid = (s.ticket_id === null || s.ticket_id === undefined) ? null : String(s.ticket_id);
+          const rawAvail = s?.seat_availability;
+          const tid = (s?.ticket_id === null || s?.ticket_id === undefined) ? null : String(s.ticket_id);
           const heldNow = !!(socketState && tid && socketState.held && socketState.held.has(tid));
           const releasedNow = !!(socketState && tid && socketState.released && socketState.released.has(tid));
-          const processByFlag = s.in_progress === true || s.seat_availability === 'in-progress' || String(s.status || '').includes('process');
+          const processByFlag = s?.in_progress === true || s?.seat_availability === 'in-progress' || String(s?.status || '').includes('process');
           const isSold = rawAvail === 0 || rawAvail === false;
           // A 2 that the socket has since released falls back to free, matching
           // `2===seat_availability && !isInProgress(...)` on the official site.
           const isProcess = !isBlank && !isSold
             && (heldNow || processByFlag || (rawAvail === 2 && !releasedNow));
-          const isBooked = !isBlank && !isProcess && (isSold || s.is_booked === true || String(s.is_available) === '0');
+          const isBooked = !isBlank && !isProcess && (isSold || s?.is_booked === true || String(s?.is_available) === '0');
           const isAvail = !isBlank && !isProcess && !isBooked
-            && (rawAvail === 1 || rawAvail === true || (rawAvail === 2 && releasedNow) || String(s.is_available) === '1');
+            && (rawAvail === 1 || rawAvail === true || (rawAvail === 2 && releasedNow) || String(s?.is_available) === '1');
           const status = isBlank ? 'blank' : (isAvail ? 'available' : (isProcess ? 'booking-in-process' : (isBooked ? 'booked' : 'unknown')));
           
           // Outer non-blank columns are window seats
@@ -3358,15 +3363,15 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
             status: status,
             is_blank: isBlank,
             is_window: isWindow,
-            blank_reason: isBlank ? (s.blank_reason || 'empty-space') : null,
-            seat_class: s.seat_class || coachClass,
-            fare: Number(s.fare || coachData.fare || payload.fare || 0),
-            vat: Number(s.vat || coachData.vat || payload.vat || 0),
-            total_fare: Number(s.total_fare || s.fare || coachData.total_fare || coachData.fare || payload.total_fare || payload.fare || 0),
-            ticket_id: s.ticket_id || null,
+            blank_reason: isBlank ? (s?.blank_reason || 'empty-space') : null,
+            seat_class: s?.seat_class || coachClass,
+            fare: Number(s?.fare || coachData.fare || payload.fare || 0),
+            vat: Number(s?.vat || coachData.vat || payload.vat || 0),
+            total_fare: Number(s?.total_fare || s?.fare || coachData.total_fare || coachData.fare || payload.total_fare || payload.fare || 0),
+            ticket_id: s?.ticket_id || null,
             row: ri + 1,
             col: ci,
-            position: s.position || null
+            position: s?.position || null
           };
           flattenedSeats.push(seatObj);
           rowSeats.push(seatObj);
@@ -3528,12 +3533,13 @@ function buildTemplateFallback(tripId, seatClass, reqAvail, reqFare, liveSeatTyp
 // Live Coach Layout: Auto "Book Now" Search → Extract trip_id → Fetch Layout
 // Mirrors the official Railway frontend's Book Now → Seat Layout flow
 // ---------------------------------------------------------------------------
-app.get('/api/live-coach-layout', async (req, res) => {
+app.all('/api/live-coach-layout', async (req, res) => {
+  const params = { ...req.query, ...(req.body || {}) };
   const {
     from_city, to_city, date_of_journey,
     train_name, train_model, seat_class,
     available_seats, fare, trip_id: hintTripId, trip_route_id: hintTripRouteId
-  } = req.query;
+  } = params;
 
   if (!from_city || !to_city || !date_of_journey) {
     return res.status(400).json({
@@ -3545,7 +3551,10 @@ app.get('/api/live-coach-layout', async (req, res) => {
   const cleanSeatClass = (seat_class || '').toUpperCase().trim();
   let cleanModel = (train_model || '').replace(/\D/g, '');
   const cleanName = (train_name || '').toLowerCase().trim();
-  const session = getUserShohozSession(req);
+  const session = { ...getUserShohozSession(req) };
+  if (params.token) session.token = String(params.token).replace(/^Bearer\s+/i, '').trim();
+  if (params.device_id || params.deviceId) session.deviceId = params.device_id || params.deviceId;
+  if (params.device_key || params.deviceKey) session.deviceKey = params.device_key || params.deviceKey;
   const parsedAvail = (available_seats !== undefined && available_seats !== '') ? Math.max(0, parseInt(available_seats, 10)) : null;
   const parsedFare = (fare !== undefined && fare !== '') ? parseFloat(fare) : null;
 
@@ -3877,15 +3886,19 @@ app.get('/api/live-coach-layout', async (req, res) => {
   return res.json({ success: true, live: false, cached: false, status_source: 'template', searched: searchAttempted, train_name: liveTrainName || train_name || null, train_model: cleanModel || null, matched_seat_class: effectiveClass, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: buildTemplateFallback(cleanTripId, effectiveClass, effectiveAvail, effectiveFare, liveSeatTypes) });
 });
 
-app.get(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
-  const { trip_id, trip_route_id, train_name, train_model, seat_class, available_seats, fare, cft_response, from_station, to_station, journey_date } = req.query;
+app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
+  const params = { ...req.query, ...(req.body || {}) };
+  const { trip_id, trip_route_id, train_name, train_model, seat_class, available_seats, fare, cft_response, from_station, to_station, journey_date } = params;
   const parsedAvail = (available_seats !== undefined && available_seats !== null && available_seats !== '') ? Math.max(0, parseInt(available_seats, 10)) : null;
   const parsedFare = (fare !== undefined && fare !== null && fare !== '') ? parseFloat(fare) : null;
 
   const cleanTripId = trip_id && trip_id !== 'null' && trip_id !== 'undefined' ? String(trip_id).trim() : (train_model ? `TRIP_${train_model}` : 'TRIP_DEFAULT');
   const cleanTripRouteId = trip_route_id && trip_route_id !== 'null' && trip_route_id !== 'undefined' ? String(trip_route_id).trim() : cleanTripId;
 
-  const session = getUserShohozSession(req);
+  const session = { ...getUserShohozSession(req) };
+  if (params.token) session.token = String(params.token).replace(/^Bearer\s+/i, '').trim();
+  if (params.device_id || params.deviceId) session.deviceId = params.device_id || params.deviceId;
+  if (params.device_key || params.deviceKey) session.deviceKey = params.device_key || params.deviceKey;
 
   // Cache lookup (15s TTL) - only when we have real trip IDs
   if (cleanTripId) {
@@ -3933,6 +3946,7 @@ app.get(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
 
   // ── ATTEMPT 2: Web Route with Turnstile ──────────
   const cftVal = cft_response
+    || params.cft_response
     || req.headers['x-cft-response']
     || session.cftResponse
     || session.cft_response

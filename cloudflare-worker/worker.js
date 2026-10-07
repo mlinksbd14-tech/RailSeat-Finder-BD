@@ -60,7 +60,7 @@ export default {
         engine: 'Cloudflare V8 Edge Worker',
         routes: {
           'POST /api/login': 'Direct Mobile App Login (No Turnstile required)',
-          'GET /api/seat-layout': 'Live Coach & Seat Layout via /v1.0/app/bookings/seat-layout',
+          'GET, POST /api/seat-layout': 'Live Coach & Seat Layout via /v1.0/app/bookings/seat-layout',
           'GET /api/search': 'Train Search via /v1.0/web/booking/search'
         },
         documentation: 'Send mobile_number and password to /api/login to get your session token.'
@@ -153,20 +153,30 @@ export default {
     // ROUTE: Seat Layout (/api/seat-layout or /api/live-coach-layout)
     // -------------------------------------------------------------------------
     if (url.pathname === '/api/seat-layout' || url.pathname === '/api/live-coach-layout') {
-      const tripId = url.searchParams.get('trip_id');
-      const tripRouteId = url.searchParams.get('trip_route_id');
-
-      if (!tripId || !tripRouteId) {
-        return jsonResponse({ success: false, error: 'trip_id and trip_route_id query parameters are required.' }, 400);
+      let bodyData = {};
+      if (request.method === 'POST') {
+        try {
+          bodyData = await request.json();
+        } catch (_) {
+          bodyData = {};
+        }
       }
 
-      // Check authorization header or query token
+      const tripId = bodyData.trip_id || url.searchParams.get('trip_id');
+      const tripRouteId = bodyData.trip_route_id || url.searchParams.get('trip_route_id');
+
+      if (!tripId || !tripRouteId) {
+        return jsonResponse({ success: false, error: 'trip_id and trip_route_id parameters are required.' }, 400);
+      }
+
+      // Check authorization header, body token, or query token
       const authHeader = request.headers.get('Authorization') || '';
       const queryToken = url.searchParams.get('token');
-      const rawToken = authHeader.replace(/^Bearer\s+/i, '').trim() || queryToken;
+      const bodyToken = bodyData.token;
+      const rawToken = authHeader.replace(/^Bearer\s+/i, '').trim() || bodyToken || queryToken;
 
-      const deviceId = request.headers.get('x-device-id') || crypto.randomUUID();
-      const deviceKey = request.headers.get('x-device-key') || (rawToken ? await generateShohozDeviceKey(rawToken) : await generateShohozDeviceKey(deviceId));
+      const deviceId = request.headers.get('x-device-id') || bodyData.device_id || bodyData.deviceId || crypto.randomUUID();
+      const deviceKey = request.headers.get('x-device-key') || bodyData.device_key || bodyData.deviceKey || (rawToken ? await generateShohozDeviceKey(rawToken) : await generateShohozDeviceKey(deviceId));
 
       const mobileHeaders = {
         'User-Agent': 'Shohoz-Rail-App/2.2.0 (Linux; Android 13; SM-G998B Build/TP1A.220624.014; wv)',

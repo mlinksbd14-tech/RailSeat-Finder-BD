@@ -409,7 +409,7 @@
     bookNowBtn: 'button.book-now-btn, button.btn-book-now, button.book-btn',
     seatLayout: 'app-seat-layout, .seat-layout-view, .seat-plan-wrapper, .seat-layout',
     coachSelect: 'select#select-bogie, select[formcontrolname="bogie"], select[name="bogie"], select.select-bogie',
-    seatBtn: 'button.btn-seat, button.seat-btn, .btn-seat, button[title*="-"]',
+    seatBtn: 'button.btn-seat, button.seat-btn, .btn-seat, button[title*="-"], button[aria-label*="-"], button.seat',
     seatSelected: 'seat-selected',
     seatSelectedSel: '.seat-selected',
     seatBooked: 'seat-booked',
@@ -1097,9 +1097,13 @@
   function isSeatButtonAvailable(btn) {
     if (!btn) return false;
     if (btn.disabled) return false;
-    if (btn.classList.contains(RS.seatBooked)) return false;
-    if (btn.classList.contains(RS.seatDisabled)) return false;
+    if (btn.classList.contains(RS.seatBooked) || btn.classList.contains('booked') || btn.classList.contains('seat-in-progress') || btn.classList.contains('in-progress')) return false;
+    if (btn.classList.contains(RS.seatDisabled) || btn.classList.contains('disabled')) return false;
     if (btn.getAttribute('aria-disabled') === 'true') return false;
+    const txt = (btn.textContent || '').trim();
+    const title = (btn.getAttribute('title') || '').trim();
+    const aria = (btn.getAttribute('aria-label') || '').trim();
+    if (!txt && !title && !aria) return false;
     return true;
   }
 

@@ -6790,7 +6790,9 @@ document.addEventListener('DOMContentLoaded', () => {
               });
             } else {
               const label = isBerth ? `${rowNo}${BR_TIER_LABELS[tier]}` : String(seatNo);
-              const status = 'unknown';
+              const isAvail = coachAvail > 0 && seatNo <= coachAvail;
+              const isProcess = (!isAvail && seatNo === coachAvail + 1 && coachAvail > 0);
+              const status = isAvail ? 'available' : (isProcess ? 'booking-in-process' : 'booked');
 
               rowSeats.push({
                 seat_name: `${coachName}-${label}`,
@@ -7010,9 +7012,8 @@ document.addEventListener('DOMContentLoaded', () => {
       fare: fare
     });
 
-    // In layout modal only show coach where have blank (available) seat
-    const initialWithAvail = initialCoaches.filter(c => Number(c.available_seats || 0) > 0);
-    const visibleInitialCoaches = initialWithAvail.length > 0 ? initialWithAvail : initialCoaches;
+    // Keep all coaches in initial rake layout so user can view every coach tab
+    const visibleInitialCoaches = initialCoaches;
 
     // Determine default active coach index matching clicked seat class
     let initialActiveIdx = -1;
@@ -7239,11 +7240,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (json && json.success && Array.isArray(json.data?.coaches) && json.data.coaches.length > 0) {
         let liveCoaches = json.data.coaches;
 
-        // In layout modal only show coach where have blank (available) seat
-        const coachesWithAvail = liveCoaches.filter(c => Number(c.available_seats || 0) > 0);
-        if (coachesWithAvail.length > 0) {
-          liveCoaches = coachesWithAvail;
-        }
         // Ensure each coach has a valid fare from the search results if server omitted it
         const fallbackFare = Number(currentSeatLayoutState.targetFare || fare || 0);
         liveCoaches.forEach(c => {
@@ -7387,12 +7383,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (json && json.success && Array.isArray(json.data?.coaches) && json.data.coaches.length > 0) {
         let liveCoaches = json.data.coaches;
-        const coachesWithAvail = liveCoaches.filter(c => Number(c.available_seats || 0) > 0);
-        if (coachesWithAvail.length > 0) {
-          liveCoaches = coachesWithAvail;
-        }
         currentSeatLayoutState.coaches = liveCoaches;
-        currentSeatLayoutState.activeCoachIndex = 0;
+        const firstAvailIdx = liveCoaches.findIndex(c => Number(c.available_seats || 0) > 0);
+        currentSeatLayoutState.activeCoachIndex = firstAvailIdx !== -1 ? firstAvailIdx : 0;
         currentSeatLayoutState.lastFetchedClass = cleanClass;
         currentSeatLayoutState.isLive = !!json.live || !!currentSeatLayoutState.isLive;
         currentSeatLayoutState.requiresTurnstile = !json.live && !!(json.requires_turnstile || json.turnstile_required);
@@ -7704,28 +7697,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!seatLayoutContent) return;
 
-    // If live layout is currently being fetched, show clean loading skeleton rather than fake template seats
-    if (currentSeatLayoutState.fetching && coach.status_source !== 'official_railway_server') {
-      seatLayoutContent.innerHTML = `
-        <div class="py-14 flex flex-col items-center justify-center space-y-3.5 text-center">
-          <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shadow-xs">
-            <svg class="w-6 h-6 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-          </div>
-          <div class="space-y-1">
-            <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">
-              ${isBn ? 'লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map...'}
-            </h4>
-            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-              ${isBn ? 'রেলওয়ে সার্ভার থেকে আসল বগি এবং সিটের লাইভ অবস্থা যাচাই করা হচ্ছে।' : 'Connecting to Bangladesh Railway server to load exact real-time seat availability.'}
-            </p>
-          </div>
-        </div>
-      `;
-      return;
-    }
+
 
     const seats = coach.seats || [];
     if (seats.length === 0) {

@@ -633,6 +633,10 @@ function normalizeSeatLayoutPHP($rawData) {
         $officialList = $payload['seatLayout'];
     } elseif (isset($payload['seat_layout']) && is_array($payload['seat_layout']) && isset($payload['seat_layout'][0]['layout'])) {
         $officialList = $payload['seat_layout'];
+    } elseif (is_array($payload) && isset($payload[0]) && (isset($payload[0]['layout']) || isset($payload[0]['floor_name']) || isset($payload[0]['seat_floor']))) {
+        $officialList = $payload;
+    } elseif (is_array($payload) && isset($payload['layout'])) {
+        $officialList = [$payload];
     }
 
     if ($officialList !== null && !empty($officialList)) {
@@ -651,9 +655,9 @@ function normalizeSeatLayoutPHP($rawData) {
                 $rowSeats = [];
                 $rowLen = count($row);
                 foreach ($row as $ci => $s) {
-                    if (!is_array($s)) continue;
-                    $sNum = trim((string)($s['seat_number'] ?? ''));
-                    $isBlank = ($sNum === '' || !empty($s['is_blank']) || ($s['is_available'] ?? '') === 'blank');
+                    $isItemArray = is_array($s);
+                    $sNum = $isItemArray ? trim((string)($s['seat_number'] ?? '')) : '';
+                    $isBlank = (!$isItemArray || $sNum === '' || !empty($s['is_blank']) || (($s['is_available'] ?? '') === 'blank'));
                     $isAvail = !$isBlank && (($s['seat_availability'] ?? 0) === 1 || ($s['seat_availability'] ?? 0) === 2 || ($s['seat_availability'] ?? false) === true || ($s['is_available'] ?? '') === '1');
                     $isProcess = !$isBlank && !$isAvail && (($s['seat_availability'] ?? '') === 'in-progress' || !empty($s['in_progress']));
                     $isBooked = !$isBlank && !$isAvail && !$isProcess && (($s['seat_availability'] ?? 1) === 0 || ($s['seat_availability'] ?? true) === false || !empty($s['is_booked']) || ($s['is_available'] ?? '') === '0');

@@ -2603,26 +2603,59 @@
           </div>
         </div>
 
-        <!-- TAB 3: Direct API & Server-Side Integration -->
+        <!-- TAB 3: 100% Headless Mobile Grabber (3 Ways: Dashboard 1-Tap, CLI, GitHub Actions) -->
         <div id="mobileTabContent-api" class="mobile-tab-pane hidden space-y-3">
-          <div class="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-1.5">
-            <div class="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-300">
-              <i class="fa-solid fa-server text-blue-500"></i>
-              <span>Server-Side Background API Seat Hold</span>
+          <div class="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/50 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-teal-900 dark:text-teal-300">
+              <i class="fa-solid fa-bolt text-teal-500"></i>
+              <span>Method 3: 100% Headless Mobile Grabber (Zero App / Zero Userscript)</span>
             </div>
-            <p class="text-[11px] text-blue-800 dark:text-blue-200/90 leading-relaxed">
-              মোবাইলে স্ক্রিপ্ট না থাকলেও আপনার সেভ করা রেলওয়ে সেশনের মাধ্যমে আমাদের ব্যাকএন্ড থেকে সরাসরি রেলওয়ে এপিআই কল দিয়ে সিট লক ও হোল্ড করার ব্যবস্থা রয়েছে।
+            <p class="text-[11px] text-teal-800 dark:text-teal-200/90 leading-relaxed">
+              মোবাইলে কোনো এক্সটেনশন বা ব্রাউজার খোলা রাখার প্রয়োজন নেই। সার্ভার বা ক্লাউড অটোমেশন নিজে থেকেই সিট বুকিং করে আপনার রেলওয়ে কার্টে ৫ মিনিটের জন্য লক করে রাখে এবং তাৎক্ষণিক টেলিগ্রাম অ্যালার্ট পাঠায়।
             </p>
           </div>
 
-          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-2 text-[11.5px] text-slate-600 dark:text-slate-300">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-slate-800 dark:text-slate-200">Live Railway Session Status:</span>
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-3 text-[11.5px]">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-2">
+              <span class="font-bold text-slate-800 dark:text-slate-200">Railway Session Token:</span>
               <span id="mobileApiSessionBadge" class="px-2 py-0.5 rounded-full font-bold text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Checking...</span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              আপনার সেশনটি সংযুক্ত থাকলে যেকোনো মোবাইল থেকে <strong>⚡ Check & Auto-Book Now</strong> বাটন চাপলেই সার্ভার তাৎক্ষণিক সিট রিডাইরেকশন এবং সিট রিজার্ভেশন টোকেন পুশ করে দেয়।
-            </p>
+
+            <!-- Way A: Dashboard 1-Tap -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-600 dark:text-teal-400 font-extrabold flex items-center justify-center text-[10px]">1</span>
+                <span>Way A: মোবাইলের ড্যাশবোর্ড থেকে ১-ট্যাপ হেডলেস গ্র্যাব</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                ড্যাশবোর্ডে স্টেশন ও তারিখ সিলেক্ট করে <strong class="text-teal-600 dark:text-teal-400">📱 1-Tap Headless Cart Hold</strong> বাটনে চাপ দিন। ব্যাকএন্ড এপিআই ও পাপেটিয়ার ইঞ্জিন সাথে সাথে কার্টে সিট লক করে টেলিগ্রামে পেমেন্ট লিংক পাঠিয়ে দেবে।
+              </p>
+            </div>
+
+            <!-- Way B: CLI Runner -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold flex items-center justify-center text-[10px]">2</span>
+                <span>Way B: PC / VPS টার্মিনাল রানার (CLI Script)</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                আপনার কম্পিউটার বা সার্ভারে কমান্ড চালিয়ে ব্যাকগ্রাউন্ডে ওয়াচার চালু রাখুন:
+              </p>
+              <div class="pl-6 pt-1">
+                <code class="block p-2 rounded-lg bg-slate-900 text-teal-300 font-mono text-[10px] select-all overflow-x-auto">node scripts/headless-grab-cli.js --from "Dhaka" --to "Chittagong" --date "2026-10-15" --rush</code>
+              </div>
+            </div>
+
+            <!-- Way C: Serverless GitHub Actions -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 font-extrabold flex items-center justify-center text-[10px]">3</span>
+                <span>Way C: 100% Free Serverless 08:00 AM Ticket Rush (GitHub Actions)</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                GitHub মোবাইল অ্যাপ দিয়ে অথবা প্রতিদিন সকাল ০৭:৫৮ মিনিটে স্বয়ংক্রিয়ভাবে ক্লাউড রানার চালু হয়ে সকাল ৮:০০ টার টিকিট ড্রপ গ্র্যাব করে আপনার টেলিগ্রামে চেকআউট পাঠিয়ে দেয়।
+              </p>
+            </div>
           </div>
         </div>
 

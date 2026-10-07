@@ -2,7 +2,7 @@
   "settings": {
     "enabled": true,
     "intervalSeconds": 25,
-    "lastRunAt": "2026-10-07T09:00:31.337Z"
+    "lastRunAt": "2026-10-07T09:03:26.371Z"
   },
   "targets": [
     {
@@ -24,7 +24,7 @@
       "active": true,
       "lastNotifiedSeats": 0,
       "notifiedSeatsByDate": {},
-      "lastCheckedAt": "2026-10-07T09:00:32.252Z",
+      "lastCheckedAt": "2026-10-07T09:00:57.407Z",
       "createdAt": 1791362682663
     }
   ],

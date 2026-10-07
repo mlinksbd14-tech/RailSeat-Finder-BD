@@ -485,7 +485,7 @@
       },
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTEzNTAxODgsImV4cCI6MTc5MTM5MzM4OCwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6IjQ0MWFhNGNiLWRkNzYtNDJmZC05MjE2LThlYTlmNGJlNWZhZiIsImF1dGhfdGltZSI6MTc5MTM1MDE4OCwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTg3MTg2MDQ4NyIsImVtYWlsIjoibGFidTM0MTZAZ21haWwuY29tIiwidXNlcm5hbWUiOiIwMTc2MzIzODU5NyIsImRpc3BsYXlfbmFtZSI6Ik1kLiBIYWJpYnVsbGFoIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiODI1NDIzNjY2NyIsIm5pZG50IjoiRGVmYXVsdCIsInJvbGUiOlsidXNlciIsImFub255bW91cyJdLCJzY29wZSI6WyJzaG9ob3ouaWFtLnRyYWluIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbInB3ZCJdfQ.hL5Nz5ou3sNe_I_YXl5r6GUBwQ65nuiSqBftsfx1U2p2kFdB58P0nI-G-ztSAe2h1t_EpOmsudaLsyY07pM8f_1dl7fGIsCWW_DtWz1Ixy75H6V-EpvbOhIUyUyf-ExMhK0BD5p0tAcMP76jKJhgnkxCk-hM13bzPTswt0I2nZzprODsZ765XVLJPYIdaVPuF8NCiZur8AhiOdJgrUp_dFeoHXJBMRFklireM7XCkS368Qh8L6pVUjjhE__mNkyLuTMyR8jLVsw7CAFEykKQMiK-daMLXQxFoIeHOHoi1i_2Q7sXwidhd8j08WtVcXydRdDXZFhmuhB8vooJG9l-lw",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "deviceId": "ef74a4c4-159e-4d18-9902-ae48fb292ad7",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
         "cftResponse": "1.sK7EzVk6fu2EjcrQ7rySJBBeSmZhnma-VO-WSHdSxm4FqbFoCsoaclDpPSt-kCzK4mnv7-sS73DccQZVaKyjOJ-A-L25gzeTTkyQ8vy8pHdgLmBZH5OiBvgtQcnYFbUobP03DGIx627u8JfXF5VykokhIF05B-jpqU4Hp786sHKgR04XOit46h7rqrezjg_NapCkfO9KYKbCe04OmGP7hkglPBXAZhGjm3Motf5UoQMdknbkdIDEHx8WPPSZtHcDKhTZJQwpc6XEqvEQlqUG7U3gXzWdZJdmaVaxR45S9KjZPSRDE-pf3aBII7LCwooJVE0b-GItCpl7Lr7srfIk_gaBJyd9rxq2PKmDswmSNsIEHIYOwrAwYOk80u3vpySrRdRH3YvVu3eheqVxh1irGgozYeSw8Hx42vLtla_hTHHZedcyZjcPcXazzh3ywfw8ccjW5Tv7v19JdtGOLE9oCAhMrXAk2TClu6wK2JnoUVIKN_h6gogb5NkktsWUGPoNOwWwl249xaw-LymqBRGGIFNVr-IBl_oWWWLOkmoioXrfac3-O_pDkTMioPQVybDf7-lP8xGum02zlxZVzvYe7Y-dVyozGKhHwUKEeuNwjfe5TGk_jqzGWD46OaRoLAaZqSKzBmZT6Ah9wCrvL2f5SvLEINDPKy2Ckh_XFplnb5_Hj3E7EHjsmpoNtulbTXMU0VbY7rNlv4ezIB8wnZQtzw.1LlflFAUsotqEu3_Y-bV4Q.9dfec6b116de344bfb21dd01e0379a114c10933b1b3acfadc940e54cb7455877",
@@ -504,9 +504,7 @@
           "issuedAt": "2026-10-07T05:16:28.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-10-07T08:12:21.446Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-10-07T08:29:56.254Z"
       }
     },
     {

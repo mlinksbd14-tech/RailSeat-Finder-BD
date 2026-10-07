@@ -7142,16 +7142,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let json = null;
 
-      // 1. Fetch live-coach-layout (handles auto-search, class-specific trip ID, and Turnstile layout in one go)
+      // 1. Fetch live-coach-layout via POST (handles auto-search, class-specific trip ID, and Turnstile layout in one go)
       try {
-        const liveRes = await fetch(`/api/live-coach-layout?${liveParams}`, { headers });
+        const livePayload = {
+          from_city: fromCity,
+          to_city: toCity,
+          date_of_journey: journeyDate,
+          train_name: trainName,
+          train_model: cleanModel,
+          seat_class: targetClass,
+          available_seats: availableSeats !== null ? availableSeats : '',
+          fare: fare !== null ? fare : '',
+          trip_id: tripId || '',
+          trip_route_id: tripRouteId || '',
+          cft_response: cft || ''
+        };
+        const liveRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(livePayload)
+        });
         if (liveRes.ok) {
           json = await liveRes.json();
         }
 
-        // If live-coach-layout wasn't live and we have explicit trip_id, try direct seat-layout
+        // If live-coach-layout wasn't live and we have explicit trip_id, try direct seat-layout via POST
         if ((!json || !json.live) && tripId && !tripId.startsWith('TRIP_')) {
-          const directParams = new URLSearchParams({
+          const directPayload = {
             trip_id: tripId,
             trip_route_id: tripRouteId,
             train_name: trainName,
@@ -7160,8 +7177,12 @@ document.addEventListener('DOMContentLoaded', () => {
             available_seats: availableSeats !== null ? availableSeats : '',
             fare: fare !== null ? fare : '',
             cft_response: cft || ''
-          }).toString();
-          const directRes = await fetch(`/api/seat-layout?${directParams}`, { headers });
+          };
+          const directRes = await fetch('/api/seat-layout', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(directPayload)
+          });
           if (directRes.ok) {
             const directJson = await directRes.json();
             if (directJson && directJson.live) {
@@ -7190,7 +7211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window._freshBridgeCft = '';
                 try { localStorage.setItem('railway_cft_response', cft); } catch (e) {}
                 headers['x-cft-response'] = cft;
-                const retryParams = new URLSearchParams({
+                const retryPayload = {
                   trip_id: tripId,
                   trip_route_id: tripRouteId,
                   train_name: trainName,
@@ -7199,8 +7220,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   available_seats: availableSeats !== null ? availableSeats : '',
                   fare: fare !== null ? fare : '',
                   cft_response: cft
-                }).toString();
-                const retryRes = await fetch(`/api/seat-layout?${retryParams}`, { headers });
+                };
+                const retryRes = await fetch('/api/seat-layout', {
+                  method: 'POST',
+                  headers: { ...headers, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(retryPayload)
+                });
                 if (retryRes.ok) {
                   const retryJson = await retryRes.json();
                   if (retryJson.live) {
@@ -7342,7 +7367,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Try live-coach-layout first (search + layout in one step)
       let json = null;
       if (currentSeatLayoutState.fromCity && currentSeatLayoutState.toCity && currentSeatLayoutState.journeyDate) {
-        const liveParams = new URLSearchParams({
+        const livePayload = {
           from_city: currentSeatLayoutState.fromCity,
           to_city: currentSeatLayoutState.toCity,
           date_of_journey: currentSeatLayoutState.journeyDate,
@@ -7352,10 +7377,15 @@ document.addEventListener('DOMContentLoaded', () => {
           available_seats: totalAvail !== null ? totalAvail : '',
           fare: totalFare !== null ? totalFare : '',
           trip_id: st?.trip_id || currentSeatLayoutState.tripId || '',
-          trip_route_id: st?.trip_route_id || currentSeatLayoutState.tripRouteId || ''
-        }).toString();
+          trip_route_id: st?.trip_route_id || currentSeatLayoutState.tripRouteId || '',
+          cft_response: cft || ''
+        };
         try {
-          const res = await fetch(`/api/live-coach-layout?${liveParams}`, { headers });
+          const res = await fetch('/api/live-coach-layout', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(livePayload)
+          });
           if (res.ok) json = await res.json();
         } catch (e) {}
       }
@@ -7363,17 +7393,22 @@ document.addEventListener('DOMContentLoaded', () => {
       // Fallback to /api/seat-layout with known trip_id
       if (!json || !json.success || !Array.isArray(json.data?.coaches) || json.data.coaches.length === 0) {
         if (st && st.trip_id) {
-          const fallbackParams = new URLSearchParams({
+          const fallbackPayload = {
             trip_id: st.trip_id,
             trip_route_id: st.trip_route_id || st.trip_id,
             train_name: currentSeatLayoutState.trainName,
             train_model: currentSeatLayoutState.trainModel,
             seat_class: cleanClass,
             available_seats: totalAvail !== null ? totalAvail : '',
-            fare: totalFare !== null ? totalFare : ''
-          }).toString();
+            fare: totalFare !== null ? totalFare : '',
+            cft_response: cft || ''
+          };
           try {
-            const res = await fetch(`/api/seat-layout?${fallbackParams}`, { headers });
+            const res = await fetch('/api/seat-layout', {
+              method: 'POST',
+              headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify(fallbackPayload)
+            });
             if (res.ok) json = await res.json();
           } catch (e) {}
         }
@@ -12615,17 +12650,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
         if (cftToken) headers['x-cft-response'] = cftToken;
 
-        const params = new URLSearchParams({
+        const layoutPayload = {
           from_city: fromCity,
           to_city: toCity,
           date_of_journey: journeyDate,
           seat_class: primarySeatClass,
           train_name: primaryTrainName,
           cft_response: cftToken || ''
-        });
+        };
 
         addConsoleLog(`[2/4] 🚆 Querying official Railway server for live coach layout & available seats...`, 'info');
-        let res = await fetch(`/api/live-coach-layout?${params.toString()}`, { headers });
+        let res = await fetch('/api/live-coach-layout', {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(layoutPayload)
+        });
         let json = await res.json();
 
         // If turnstile was challenged, retry once with refreshed token
@@ -12637,9 +12676,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const fresh = window._freshBridgeCft || getStoredCftResponse();
             if (fresh) {
               cftToken = fresh;
-              params.set('cft_response', cftToken);
+              layoutPayload.cft_response = cftToken;
               headers['x-cft-response'] = cftToken;
-              const retryRes = await fetch(`/api/live-coach-layout?${params.toString()}`, { headers });
+              const retryRes = await fetch('/api/live-coach-layout', {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify(layoutPayload)
+              });
               if (retryRes.ok) {
                 const retryJson = await retryRes.json();
                 if (retryJson.live) {

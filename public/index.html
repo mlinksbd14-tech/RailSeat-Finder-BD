@@ -1170,17 +1170,23 @@
           </div>
         </div>
 
-        <!-- Action Button & Mobile Setup Trigger -->
+        <!-- Action Buttons: Browser Auto-Book & 1-Tap Headless Mobile Grab -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
           <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
             <i class="fa-solid fa-mobile-screen text-amber-500"></i>
-            <span>📱 Mobile Auto-Grab Setup</span>
-            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">3 Ways</span>
+            <span>📱 Mobile 3-Way Grabber</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">Setup</span>
           </button>
-          <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer">
-            <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
-            <span id="autoBookActionText">⚡ Check & Auto-Book Now</span>
-          </button>
+          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <button type="button" id="headlessGrabNowBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Directly holds seat in your Railway cart and sends instant Telegram alert to your phone (0% phone CPU/battery)">
+              <i class="fa-solid fa-cloud-arrow-down text-emerald-200" id="headlessGrabNowIcon"></i>
+              <span id="headlessGrabNowText">📱 1-Tap Headless Cart Hold</span>
+            </button>
+            <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
+              <span id="autoBookActionText">⚡ Check & Open Railway</span>
+            </button>
+          </div>
         </div>
 
         <!-- Live Activity Console -->

@@ -3849,13 +3849,18 @@ app.all('/api/live-coach-layout', async (req, res) => {
       console.log(`[LiveCoachLayout] Step 2a: Attempting native Mobile App API (/v1.0/app/) → trip_id=${cleanTripId}`);
       const appRes = await safeShohozRequest(async () => axios.get(appUrl, { headers: mobileHeaders, timeout: 8000, validateStatus: s => s < 500 }));
       if (appRes && appRes.status === 200) {
-        const mobileSuccessPayload = await processLayoutResponse(appRes, 'official_railway_mobile_app');
-        if (mobileSuccessPayload) {
-          console.log('[LiveCoachLayout] 🚀 Successfully retrieved live seat layout via native Mobile App API (Turnstile bypassed)!');
-          return res.json(mobileSuccessPayload);
+        if (appRes.data?.error?.code) {
+          console.warn(`[LiveCoachLayout] Mobile App API returned 200 with error: ${JSON.stringify(appRes.data.error)}`);
+        } else {
+          const mobileSuccessPayload = await processLayoutResponse(appRes, 'official_railway_mobile_app');
+          if (mobileSuccessPayload) {
+            console.log('[LiveCoachLayout] 🚀 Successfully retrieved live seat layout via native Mobile App API (Turnstile bypassed)!');
+            return res.json(mobileSuccessPayload);
+          }
         }
       } else {
-        console.log(`[LiveCoachLayout] Mobile App API returned status ${appRes?.status}. Falling back to web Turnstile route.`);
+        const errDetail = appRes?.data?.error?.messages?.join(', ') || appRes?.data?.message || 'Unknown';
+        console.log(`[LiveCoachLayout] Mobile App API status ${appRes?.status} (${errDetail}). Falling back to web Turnstile route.`);
       }
     } catch (mobileErr) {
       console.warn('[LiveCoachLayout] Mobile App API route check skipped:', mobileErr.message);

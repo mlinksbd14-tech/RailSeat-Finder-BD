@@ -1778,22 +1778,23 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 1. Instant local match from catalog only on initial load when unpopulated
-    if (trainFilterSelect && trainFilterSelect.options.length <= 1) {
-      const fromLower = fromCity.toLowerCase();
-      const toLower = toCity.toLowerCase();
-      const localMatches = (state.trainsCatalog || []).filter(t => {
-        const f = String(t.from || '').toLowerCase();
-        const to = String(t.to || '').toLowerCase();
-        return (f.includes(fromLower) || fromLower.includes(f)) && (to.includes(toLower) || toLower.includes(to));
-      });
-      if (localMatches.length > 0) {
-        currentMainRouteTrains = localMatches;
-        renderMainFilterTrains(localMatches);
-      }
+    // 1. Instant local match from catalog
+    const fromLower = fromCity.toLowerCase();
+    const toLower = toCity.toLowerCase();
+    const localMatches = (state.trainsCatalog || []).filter(t => {
+      const f = String(t.from || '').toLowerCase();
+      const to = String(t.to || '').toLowerCase();
+      return (f.includes(fromLower) || fromLower.includes(f)) && (to.includes(toLower) || toLower.includes(to));
+    });
+    if (localMatches.length > 0) {
+      currentMainRouteTrains = localMatches;
+      renderMainFilterTrains(localMatches);
     }
 
-    // 2. Fetch live route trains & classes from server
+    // If search is already executing or user has already populated filters, don't overwhelm server queue
+    if (state.isLoading) return;
+
+    // 2. Fetch live route trains & classes in background (aborts previous pending queries)
     if (mainRouteAbortCtrl) mainRouteAbortCtrl.abort();
     mainRouteAbortCtrl = new AbortController();
 
@@ -3167,7 +3168,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = `/api/search?from_city=${encodeURIComponent(state.selectedFrom)}&to_city=${encodeURIComponent(state.selectedTo)}&date_of_journey=${encodeURIComponent(state.selectedDate)}&check_alternates=${checkAlternates ? 'true' : 'false'}`;
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
 
       const headers = { 'Accept': 'application/json' };
       if (token) {

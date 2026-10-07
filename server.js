@@ -2295,14 +2295,58 @@ function computeOffDayFromDays(days) {
   return missing.map(d => ALL_DAYS_MAP[d] || d).join(', ');
 }
 
-// In-Memory Cache for Train Routes and Off-Days
+// Persistent Cache for Train Routes and Off-Days
 const routeCache = new Map();
 const trainOffDaysCache = new Map();
+const ROUTES_CACHE_FILE = path.join(__dirname, 'data', 'train_routes_cache.json');
+
+// Initialize persistent route cache from disk if available
+try {
+  if (fs.existsSync(ROUTES_CACHE_FILE)) {
+    const rawSavedRoutes = JSON.parse(fs.readFileSync(ROUTES_CACHE_FILE, 'utf8'));
+    if (typeof rawSavedRoutes === 'object' && rawSavedRoutes !== null) {
+      for (const [k, v] of Object.entries(rawSavedRoutes)) {
+        routeCache.set(k, v);
+        const modelClean = k.replace(/^route_/, '');
+        if (v.off_day) {
+          trainOffDaysCache.set(modelClean, v.off_day);
+        } else if (v.days) {
+          const off = computeOffDayFromDays(v.days);
+          trainOffDaysCache.set(modelClean, off);
+        }
+      }
+    }
+  }
+} catch (e) {
+  console.warn('[RouteCache] Failed to load disk routes cache:', e.message);
+}
+
+function saveRouteCacheToDisk() {
+  try {
+    const obj = {};
+    for (const [k, v] of routeCache.entries()) {
+      obj[k] = v;
+    }
+    fs.writeFileSync(ROUTES_CACHE_FILE, JSON.stringify(obj, null, 2), 'utf8');
+  } catch (e) {}
+}
 
 async function getOrFetchTrainOffDay(trainModel, customSession = null) {
   if (!trainModel || trainModel === 'N/A') return 'None';
   const cleanModel = String(trainModel).replace(/\D/g, '').trim() || String(trainModel).trim();
-  return await fetchTrainOffDay(cleanModel, customSession);
+  if (trainOffDaysCache.has(cleanModel)) {
+    return trainOffDaysCache.get(cleanModel);
+  }
+  const cacheKey = `route_${cleanModel}`;
+  if (routeCache.has(cacheKey)) {
+    const data = routeCache.get(cacheKey);
+    const offDay = computeOffDayFromDays(data.days);
+    trainOffDaysCache.set(cleanModel, offDay);
+    return offDay;
+  }
+  // Trigger background asynchronous fetch so live trip query is never delayed or timed out
+  fetchTrainOffDay(cleanModel, customSession).catch(() => {});
+  return 'None';
 }
 
 // 2. Fetch Train Route and Compute Off-Day
@@ -2341,6 +2385,7 @@ async function fetchTrainOffDay(cleanModel, customSession = null) {
       data.off_day = computeOffDayFromDays(data.days);
       routeCache.set(cacheKey, data);
       trainOffDaysCache.set(cleanModel, data.off_day);
+      saveRouteCacheToDisk();
       return data.off_day;
     }
   } catch (err) {
@@ -2385,6 +2430,7 @@ async function getTrainRouteData(cleanModel, customSession = null) {
       data.off_day = computeOffDayFromDays(data.days);
       routeCache.set(cacheKey, data);
       trainOffDaysCache.set(cleanModel, data.off_day);
+      saveRouteCacheToDisk();
       return data.off_day ? data : { ...data, off_day: 'None' };
     }
   } catch (err) {

@@ -7047,7 +7047,9 @@ document.addEventListener('DOMContentLoaded', () => {
       coaches: visibleInitialCoaches,
       activeCoachIndex: initialActiveIdx,
       selectedSeat: null,
-      selectedSeats: []
+      selectedSeats: [],
+      isLive: false,
+      fetching: true
     };
 
     if (seatLayoutTrainName) seatLayoutTrainName.textContent = trainName;
@@ -7191,10 +7193,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // If turnstile token was missing or expired, fast-poll for incoming background bridge token
+        // If turnstile token was missing or expired, auto-poll for incoming background bridge token
         if (!json || !json.live) {
-          for (let poll = 0; poll < 15; poll++) {
-            await new Promise(r => setTimeout(r, 120)); // ultra-responsive 120ms tick
+          for (let poll = 0; poll < 25; poll++) {
+            await new Promise(r => setTimeout(r, 300));
             try {
               let freshCft = window._freshBridgeCft || '';
               if (!freshCft) {
@@ -7211,20 +7213,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 window._freshBridgeCft = '';
                 try { localStorage.setItem('railway_cft_response', cft); } catch (e) {}
                 headers['x-cft-response'] = cft;
-                const retryPayload = {
-                  trip_id: tripId,
-                  trip_route_id: tripRouteId,
-                  train_name: trainName,
-                  train_model: cleanModel,
-                  seat_class: targetClass,
-                  available_seats: availableSeats !== null ? availableSeats : '',
-                  fare: fare !== null ? fare : '',
-                  cft_response: cft
-                };
-                const retryRes = await fetch('/api/seat-layout', {
+                livePayload.cft_response = cft;
+                const retryRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
                   method: 'POST',
                   headers: { ...headers, 'Content-Type': 'application/json' },
-                  body: JSON.stringify(retryPayload)
+                  body: JSON.stringify(livePayload)
                 });
                 if (retryRes.ok) {
                   const retryJson = await retryRes.json();
@@ -7324,10 +7317,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
         syncSeatLayoutSourceBadges();
+      } else {
+        if (currentSeatLayoutState) {
+          currentSeatLayoutState.isLive = false;
+          currentSeatLayoutState.fetching = false;
+          renderActiveCoachCarriage();
+          syncSeatLayoutSourceBadges();
+        }
       }
-      // If the request failed or returned a non-live/template payload, keep the
-      // current layout as-is: the template fallback still renders a usable
-      // carriage, and dropping it would leave the user with nothing.
 
     } catch (err) {
       console.warn('[SeatLayout] Background live-coach-layout error:', err);
@@ -7434,12 +7431,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
+      } else {
+        // If live fetch returned no valid live data, mark as not live and require verification
+        if (!json || !json.live) {
+          currentSeatLayoutState.isLive = false;
+          currentSeatLayoutState.requiresTurnstile = true;
+          renderActiveCoachCarriage();
+        }
       }
-      // Non-live/template payloads leave the current layout untouched: the
-      // template fallback is still a usable carriage to pick seats from.
     } catch (e) {
       console.warn('[SeatLayout] Coach class live-coach-layout fetch error:', e.message);
       if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
+      if (currentSeatLayoutState) {
+        currentSeatLayoutState.isLive = false;
+        renderActiveCoachCarriage();
+      }
     } finally {
       // Always clear the fetching flag, so the spinner cannot get stuck when a
       // request fails or returns nothing usable.
@@ -7708,7 +7714,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderActiveCoachCarriage() {
     const isBn = window.i18n && window.i18n.getLang() === 'bn';
-    const coach = currentSeatLayoutState.coaches?.[currentSeatLayoutState.activeCoachIndex];
+    const st = currentSeatLayoutState;
+    if (!st || !seatLayoutContent) return;
+
+    // Strict Live Enforcement: Only display 100% verified live results from official Railway server
+    if (!st.isLive) {
+      if (st.fetching) {
+        seatLayoutContent.innerHTML = `
+          <div class="py-14 flex flex-col items-center justify-center space-y-4 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-sm border border-emerald-200 dark:border-emerald-800">
+              <svg class="w-7 h-7 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+              </svg>
+            </div>
+            <div class="space-y-1.5 max-w-sm">
+              <h4 class="font-black text-base text-slate-800 dark:text-white">
+                ${isBn ? 'রেলওয়ে সার্ভার থেকে ১০০% লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map from Railway Server...'}
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                ${isBn ? 'স্বয়ংক্রিয়ভাবে লাইভ টোকেন যাচাই করে আসল বগি ও প্রতি সিটের অবস্থা লোড করা হচ্ছে।' : 'Auto-acquiring live token to load exact official carriage layout and real-time seat availability.'}
+              </p>
+            </div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              <span>${isBn ? 'লাইভ সার্ভার কানেকশন সক্রিয়...' : 'Live Railway Connection Active...'}</span>
+            </div>
+          </div>
+        `;
+        return;
+      } else {
+        seatLayoutContent.innerHTML = `
+          <div class="py-12 max-w-md mx-auto text-center space-y-4 px-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-2xl shadow-sm border border-amber-200 dark:border-amber-800">
+              <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <div class="space-y-1.5">
+              <h4 class="font-extrabold text-base text-slate-900 dark:text-white">
+                ${isBn ? 'রেলওয়ে লাইভ সার্ভার ভেরিফিকেশন প্রয়োজন' : 'Live Railway Verification Required'}
+              </h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                ${isBn ? 'টেমপ্লেট বা অনুমানকৃত সিট বন্ধ রাখা হয়েছে। শুধুমাত্র বাংলাদেশ রেলওয়ে সার্ভারের ১০০% আসল লাইভ সিটম্যাপ দেখতে নিচের বাটনে ক্লিক করুন:' : 'Simulated template seats are disabled. To load the 100% official live seat map directly from Bangladesh Railway:'}
+              </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5 justify-center pt-2">
+              <button type="button" id="btnLiveAutoGrab" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-bolt"></i>
+                <span>${isBn ? 'স্বয়ংক্রিয় লাইভ টোকেন সংগ্রহ করুন' : 'Auto-Grab Live Token & Retry'}</span>
+              </button>
+              <button type="button" id="btnLiveLoginModal" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-user-lock"></i>
+                <span>${isBn ? 'রেলওয়ে অ্যাকাউন্ট লগইন' : 'Railway Account Login'}</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const btnGrab = seatLayoutContent.querySelector('#btnLiveAutoGrab');
+        if (btnGrab) {
+          btnGrab.addEventListener('click', () => {
+            requestBackgroundTurnstileToken(true);
+            st.fetching = true;
+            renderActiveCoachCarriage();
+            fetchClassLiveSeatLayout(st.lastFetchedClass || 'S_CHAIR');
+          });
+        }
+        const btnLogin = seatLayoutContent.querySelector('#btnLiveLoginModal');
+        if (btnLogin) {
+          btnLogin.addEventListener('click', () => {
+            const loginModal = document.getElementById('loginModal') || document.getElementById('railwayLoginModal');
+            if (loginModal) loginModal.classList.remove('hidden');
+          });
+        }
+        return;
+      }
+    }
+
+    const coach = st.coaches?.[st.activeCoachIndex];
     if (!coach) return;
 
     const coachClass = coach.seat_class || 'S_CHAIR';

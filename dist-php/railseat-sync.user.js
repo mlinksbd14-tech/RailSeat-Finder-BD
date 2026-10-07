@@ -14,17 +14,17 @@
 // @connect      127.0.0.1
 // @connect      *
 // @run-at       document-start
-// @noframes
 // ==/UserScript==
 
 (function() {
   'use strict';
 
-  // Guard against iframe injection and duplicate script execution in the same window
+  // Guard against untargeted iframe injection, but allow background collector iframes
   if (typeof window !== 'undefined') {
-    if (window.top !== window.self) return;
+    const isCollectorIframe = window.location.href.includes('cft_collector') || (window.location.search && window.location.search.includes('cft_collector'));
+    if (window.top !== window.self && !isCollectorIframe) return;
     if (window.__RAILSEAT_SYNC_INITIALIZED__) {
-      console.log('[RailSeat Bridge] Already initialized in this tab, skipping duplicate run.');
+      console.log('[RailSeat Bridge] Already initialized in this context, skipping duplicate run.');
       return;
     }
     window.__RAILSEAT_SYNC_INITIALIZED__ = true;
@@ -334,7 +334,7 @@
 
       if (cft && cft.length > 20 && cft !== lastSentCft) {
         lastSentCft = cft;
-        sendToRailSeat({ cft_response: cft }, 'Live Turnstile Token Synced');
+        sendToRailSeat({ cft_response: cft }, 'Live Turnstile Token Synced Automatically');
 
         // Broadcast token to parent/top window (when in invisible background iframe) or window.opener (if any)
         try {
@@ -354,8 +354,34 @@
   }
 
   // Fast-polling: checks every 200ms for instant detection as soon as Turnstile completes
-  setInterval(pollTurnstileInDOM, 250);
+  setInterval(pollTurnstileInDOM, 200);
   pollTurnstileInDOM();
+
+  // Active trigger for Turnstile execution in collector iframe or when idle
+  function triggerActiveTurnstileSolve() {
+    try {
+      if (window.turnstile) {
+        if (typeof window.turnstile.execute === 'function') {
+          window.turnstile.execute();
+        } else if (typeof window.turnstile.reset === 'function') {
+          window.turnstile.reset();
+        }
+      }
+    } catch (e) {}
+  }
+
+  // If in collector mode (background bridge iframe), immediately trigger solving
+  if (typeof window !== 'undefined' && window.location.href.includes('cft_collector')) {
+    setTimeout(triggerActiveTurnstileSolve, 400);
+    setTimeout(triggerActiveTurnstileSolve, 1500);
+    setTimeout(triggerActiveTurnstileSolve, 3000);
+  }
+
+  // Continuous background token refresh every 60s while browser is open on Railway site
+  setInterval(() => {
+    triggerActiveTurnstileSolve();
+    pollTurnstileInDOM();
+  }, 60000);
 
   // MutationObserver triggers sync the exact millisecond the response input is filled
   try {
@@ -366,8 +392,8 @@
     }
   } catch (e) {}
 
-  window.addEventListener('DOMContentLoaded', pollTurnstileInDOM);
-  window.addEventListener('load', pollTurnstileInDOM);
+  window.addEventListener('DOMContentLoaded', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); });
+  window.addEventListener('load', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); });
 
   // -------------------------------------------------------------------------
   // 6. Automated Seat Selection → Continue Purchase → OTP page

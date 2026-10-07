@@ -750,6 +750,25 @@ function getUserShohozSession(req) {
     };
   }
 
+  // Fallback: check saved users in data/users.json for any active Railway session
+  try {
+    const usersData = loadUsersData();
+    const candidate = (usersData.users || []).find(u => u.shohozSession && u.shohozSession.token);
+    if (candidate && candidate.shohozSession.token) {
+      const ss = candidate.shohozSession;
+      let devKey = ss.deviceKey;
+      if (!devKey || devKey.toLowerCase() === 'web' || devKey.length < 32) {
+        devKey = generateShohozDeviceKey(ss.token);
+      }
+      return {
+        ...ss,
+        deviceKey: devKey,
+        userId: candidate.id,
+        username: candidate.username
+      };
+    }
+  } catch (e) {}
+
   return {
     token: null,
     deviceId: null,
@@ -1524,9 +1543,10 @@ app.post('/api/auth/set-token', (req, res) => {
 app.get('/api/auth/token-status', (req, res) => {
   const session = getUserShohozSession(req);
   const now = Date.now();
+  const vaultToken = (cftTokenVault && cftTokenVault.length > 0) ? cftTokenVault[0] : null;
   const cft = (session && session.cftResponse && session.cftResponse !== 'null')
     ? session.cftResponse
-    : ((globalCftResponse.token && (now - globalCftResponse.timestamp < 600000)) ? globalCftResponse.token : null);
+    : ((globalCftResponse.token && (now - globalCftResponse.timestamp < 600000)) ? globalCftResponse.token : (vaultToken || null));
   const age = globalCftResponse.timestamp ? Math.floor((now - globalCftResponse.timestamp) / 1000) : null;
   res.json({
     success: true,

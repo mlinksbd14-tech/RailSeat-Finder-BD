@@ -1045,15 +1045,18 @@
             <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
           </div>
 
-          <!-- Train Selector (Multi-Select) -->
+          <!-- Preferred Train (Multi-Select) -->
           <div class="space-y-1 relative" id="autoBookTrainDropdownContainer">
             <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Train</label>
-              <span id="autoBookTrainCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Train</span>
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Preferred Train</label>
+              <span id="autoBookTrainCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Train</span>
             </div>
             <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
               <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookTrainChevron"></i>
+              <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookTrainChevron"></i>
+              </div>
             </button>
             <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
               <div id="autoBookTrainOptionsList" class="space-y-0.5">
@@ -1064,18 +1067,21 @@
 
         </div>
 
-        <!-- Form Grid Row 2: Class & Quantity & Seat Position -->
+        <!-- Form Grid Row 2: Class & Quantity & Seating Placement -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           
-          <!-- Seat Class (Multi-Select - Shows All Classes) -->
+          <!-- Class & Seat Preferences (Multi-Select) -->
           <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
             <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Class</label>
-              <span id="autoBookClassCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Class</span>
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Class & Seat Preferences</label>
+              <span id="autoBookClassCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Class</span>
             </div>
             <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
               <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookClassChevron"></i>
+              <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookClassChevron"></i>
+              </div>
             </button>
             <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
               <div id="autoBookClassOptionsList" class="space-y-0.5">
@@ -1086,7 +1092,10 @@
 
           <!-- Seat Quantity (1 to 4 Seats) -->
           <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seats</label>
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seats</label>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">1–4 passengers</span>
+            </div>
             <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
               <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
@@ -1095,22 +1104,34 @@
             </div>
           </div>
 
-          <!-- Seat Position Preference (Window, Aisle, Front, Middle, Back) -->
+          <!-- Seating Placement option: Any, Front, Middle, Back -->
           <div class="space-y-1">
             <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Position</label>
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seating Placement</label>
               <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">সিটের অবস্থান</span>
             </div>
             <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="any">Any Position (যেকোনো আসন)</option>
-              <option value="window">Window (জানালা 🪟)</option>
-              <option value="aisle">Aisle (আইল 🚶)</option>
-              <option value="front">Front Side (সামনের দিক 🚅)</option>
-              <option value="middle">Middle (মাঝের অংশ 🎯)</option>
-              <option value="back">Back Side (পেছনের দিক 🚪)</option>
+              <option value="any">Any (যেকোনো আসন)</option>
+              <option value="front">Front (সামনের দিক)</option>
+              <option value="middle">Middle (মাঝের অংশ)</option>
+              <option value="back">Back (পেছনের দিক)</option>
             </select>
           </div>
 
+        </div>
+
+        <!-- Dynamic Group Seating Banner: Keep my group together (seats side by side) - shown only when 2-4 seats are selected -->
+        <div id="autoBookKeepTogetherContainer" class="hidden p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 transition-all duration-200">
+          <label class="flex items-center justify-between gap-3 cursor-pointer select-none">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Keep my group together (seats side by side)</span>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Picks adjacent seats in the same coach row first</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 shrink-0">Group 2–4</span>
+          </label>
         </div>
 
         <!-- Row 3: Action Mode (Hold vs Buy) & Options -->
@@ -1142,19 +1163,17 @@
             </label>
           </div>
 
-          <!-- Secondary Switches: Keep Together, Keep Trying & Sound Alarm -->
-          <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <span class="font-bold text-slate-700 dark:text-slate-300">Seats Together</span>
-            </label>
-
+          <!-- Secondary Switches: Keep Trying & Sound Alarm -->
+          <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
+              <div>
+                <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
+                <span class="text-[10px] text-slate-400 block sm:inline sm:ml-1">Retries if sold out</span>
+              </div>
             </label>
 
-            <div class="flex items-center justify-between sm:justify-start gap-2">
+            <div class="flex items-center justify-between sm:justify-end gap-2">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
                 <span class="font-bold text-slate-700 dark:text-slate-300">Alarm</span>
@@ -1165,7 +1184,7 @@
                 <option value="siren">🚨 Siren</option>
                 <option value="bell">🔔 Bell</option>
               </select>
-              <button type="button" id="autoBookTestToneBtn" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-amber-500 hover:text-white transition cursor-pointer" title="Test Alarm Sound">Test</button>
+              <button type="button" id="autoBookTestToneBtn" class="text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-amber-500 hover:text-white transition cursor-pointer" title="Test Alarm Sound">Test</button>
             </div>
           </div>
         </div>

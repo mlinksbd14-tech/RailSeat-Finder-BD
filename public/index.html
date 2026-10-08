@@ -2413,42 +2413,42 @@
   <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       
-      <!-- Modal Header -->
-      <div class="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
-            <i class="fa-solid fa-couch"></i>
+      <!-- Modal Header (Clean & Minimalist) -->
+      <div class="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 gap-3">
+        <!-- Train Info & Route -->
+        <div class="min-w-0 space-y-0.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 id="seatLayoutTrainName" class="font-black text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate">Coach & Seat Details</h3>
+            <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20">#---</span>
+            <span id="seatLayoutClassBadge" class="text-[11px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">SNIGDHA</span>
           </div>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2 flex-wrap">
-              <h3 id="seatLayoutTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Coach & Seat Details</h3>
-              <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
-              <span id="seatLayoutClassBadge" class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300">SNIGDHA</span>
-              <span id="seatLayoutLiveBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                <span>Live Railway Server</span>
-              </span>
-              <span id="seatLayoutSocketBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-700 items-center gap-1" title="Real-time WebSocket stream active">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse inline-block"></span>
-                <span>⚡ Live Stream</span>
-              </span>
-              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Official Railway Layout</span>
-              </span>
-              <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
-                <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                <span>Fetching live layout&hellip;</span>
-              </span>
-            </div>
-            <p id="seatLayoutSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              Live carriage layout direct from Bangladesh Railway Shohoz API
-            </p>
-          </div>
+          <p id="seatLayoutSubtitle" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            Dhaka ➔ Chattogram • 10-Oct-2026
+          </p>
         </div>
-        <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
-        </button>
+
+        <!-- Badges & Action -->
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="seatLayoutLiveBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live Railway</span>
+          </span>
+          <span id="seatLayoutSocketBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 items-center gap-1.5" title="Real-time WebSocket stream active">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+            <span>⚡ Live Stream</span>
+          </span>
+          <span id="seatLayoutTemplateBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            <span>Official Layout</span>
+          </span>
+          <span id="seatLayoutSearchingBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 items-center gap-1.5">
+            <svg class="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+            <span>Connecting...</span>
+          </span>
+          <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition cursor-pointer" title="Close (Esc)">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->

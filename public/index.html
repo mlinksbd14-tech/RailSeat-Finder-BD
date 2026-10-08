@@ -12,6 +12,8 @@
   <!-- Firebase App & Auth SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <!-- Cloudflare Turnstile Live Challenge SDK -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- Google Fonts: Inter & Hind Siliguri -->
@@ -2055,12 +2057,27 @@
               </div>
             </div>
 
+            <!-- Cloudflare Turnstile Live Browser Challenge Widget -->
+            <div id="cfTurnstileLoginBox" class="py-2.5 px-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center space-y-1.5">
+              <div class="flex items-center justify-between w-full text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                <span class="flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+                  <span>Cloudflare Turnstile Verification</span>
+                </span>
+                <span id="cftStatusIndicator" class="font-bold text-amber-500 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  <span>Solving...</span>
+                </span>
+              </div>
+              <div id="cfTurnstileWidgetSlot" class="min-h-[65px] flex items-center justify-center w-full"></div>
+            </div>
+
             <div id="cfWorkerLoginStatus" class="hidden text-[11px] p-2 rounded-lg font-medium"></div>
 
             <button type="submit" id="cfWorkerLoginBtn" 
               class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer text-xs">
-              <i class="fa-solid fa-cloud"></i>
-              <span>Sign In via Cloudflare Worker</span>
+              <i class="fa-solid fa-bolt"></i>
+              <span>Sign In with Active Turnstile Token</span>
             </button>
           </form>
         </div>

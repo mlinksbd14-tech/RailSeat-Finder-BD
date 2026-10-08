@@ -488,7 +488,7 @@
         "deviceId": "34a817c48b87571632d2a7a1d50575a4",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": "1.DTcaoZRpKJNaJilUM5eBgnD_VncT9VRBFxogkMm8HjAs-X-benffD3PnVz_Itwzfg6a_IX8LvIW5rIAJqlncNaGwXg-SW6RL9Q1WzZabAXcw71VIZA9kAHBXX8H1fCBue_noo0yLtBdgN4OWqxnVkDXxuJsu7B9-MqClrFfwJkxx6rKkbxYFNA1GJ9U4Z2oUV557hD5k4HGwIw6wKf535q5YOUkjiGKDej-LC6aHr9jHznL9W4Qcr-3BA574HIihkX3nW1-ZvTyf8m46k0butkid8oKTNmEIpzwIVKaw3yz3BhQ4zntaTembERXgAvXNR5yuUw5W9WV5hJAp61eHsNqEIOyNsWZpyay9bZM0XKiq2635vTs5mR3UzbOKd7hGQNkW7pT4GSUME2y9vABozIwnzhtT5KU9NV1XJKmTUAp9uEGS22kZSYFAzU8-JkCTSqvsg6Au-f-ZmIJxyFsSDHnt-3BoI6qLR-WZiUM7LuwR3bFPB94_OThg19vytgbc_GBLiVjdK1oXQ57uddSJjAQflRgL6MGeFNms56Ih0LX2RCtE8J1z8VzNtC-CdJbEiTP612UXC8hHMk8JsK0SvwXIq2y0aCvIz-RcSa0FOYfUkOGiGELvPK1aPQQt41clPAgiOy6bqUz3nPQgegKHeJ6V0noAM5RhNKZ8lXMvuxjVtghNADtyHsgZe7NfWSR1A9jQ5kjo1-aqAGDGqI1_fg.qsptMlsejgIlnpKjF54KnA.1870f354706553b5a68b771fa971164d322f390bb0ab45535ec1885dbd28e634",
+        "cftResponse": null,
         "user": {
           "name": "IHTASHAMUL HAQUE ABIR",
           "phone": "01515279957",
@@ -504,9 +504,7 @@
           "issuedAt": "2026-10-08T03:10:58.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-10-08T10:09:14.053Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-10-08T10:29:36.046Z"
       }
     },
     {

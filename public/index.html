@@ -134,6 +134,12 @@
           <span id="authBtnText" class="hidden sm:inline" data-i18n="connect_live_api">Connect Live API</span>
         </button>
 
+        <!-- 1-Second Quick-Sync Live Token Button -->
+        <button id="headerQuickSyncBtn" type="button" class="flex items-center justify-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 cursor-pointer shrink-0" title="1-Second Quick-Sync: Instantly grabs fresh Turnstile token to enable 100% live Railway seat maps">
+          <i class="fa-solid fa-bolt text-amber-500 animate-pulse"></i>
+          <span class="hidden sm:inline">⚡ 1-Sec Quick Sync</span>
+        </button>
+
         <!-- Install PWA Mobile/Desktop App Button -->
         <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition text-xs font-semibold shadow-xs cursor-pointer shrink-0" title="Install RailSeat BD App">
           <i class="fa-solid fa-download text-xs"></i>
@@ -2441,6 +2447,11 @@
             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
             <span>Official Layout</span>
           </span>
+          <!-- 1-Second Quick-Sync Live Upgrade Button -->
+          <button id="seatLayoutQuickSyncBtn" type="button" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 items-center gap-1.5 transition cursor-pointer shadow-2xs hover:scale-105 active:scale-95" title="1-Second Quick-Sync: Instantly grabs live token to upgrade this seat map to 100% Genuine Live Railway">
+            <i class="fa-solid fa-bolt text-amber-500 animate-pulse text-[11px]"></i>
+            <span>⚡ 1-Sec Live Sync</span>
+          </button>
           <span id="seatLayoutSearchingBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 items-center gap-1.5">
             <svg class="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
             <span>Connecting...</span>

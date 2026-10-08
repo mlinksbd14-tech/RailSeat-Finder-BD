@@ -2,21 +2,21 @@
   "settings": {
     "enabled": true,
     "intervalSeconds": 25,
-    "lastRunAt": "2026-10-08T04:52:54.311Z"
+    "lastRunAt": "2026-10-08T05:51:21.212Z"
   },
   "targets": [
     {
-      "id": "watch_1791362682663_58f8",
+      "id": "watch_1791438345258_u38e",
       "userId": "usr_1787812528386_taky",
       "username": "shawon421",
-      "fromCity": "CUMILLA",
+      "fromCity": "JAMALPUR_TOWN",
       "toCity": "DHAKA",
-      "date": "2026-10-09",
+      "date": "2026-10-10",
       "dates": [
-        "2026-10-09"
+        "2026-10-10"
       ],
-      "trainName": "UPAKUL EXPRESS (711)",
-      "trainModel": "711",
+      "trainName": "BHRAMMAPUTRA EXPRESS (744)",
+      "trainModel": "744",
       "className": "ANY",
       "minSeats": 1,
       "telegramChatId": "781705575",
@@ -24,8 +24,8 @@
       "active": true,
       "lastNotifiedSeats": 0,
       "notifiedSeatsByDate": {},
-      "lastCheckedAt": "2026-10-08T04:52:55.185Z",
-      "createdAt": 1791362682663
+      "lastCheckedAt": "2026-10-08T05:51:21.213Z",
+      "createdAt": 1791438345258
     }
   ],
   "recentAlerts": [

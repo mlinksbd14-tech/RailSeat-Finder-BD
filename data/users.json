@@ -487,10 +487,10 @@
       "loginCount": 59,
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTE2MTA0MjMsImV4cCI6MTc5MTY1MzYyMywiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImRjMzM5YjEyLWJkYjYtNDBiYi1hZTM4LWM3MDMzODFhZjBiYyIsImF1dGhfdGltZSI6MTc5MTYxMDQyMywiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTk3NTc4ODczOCIsImVtYWlsIjoiYXRpa2JpdGFoYXVkd3U4ODg4QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoiMDE5NzU3ODg3MzgiLCJkaXNwbGF5X25hbWUiOiJCQVNIQVIgTUlBIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiMTUyNDkzMTcxMiIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.PcuNSAB-zLGthNtcXVFFzOJG7_NySnjpy59Kd8crtS4GppCNAF5m7Gs2-Vy0Yb4dcbGI-Blwdb0ujFioNaAaA5nL5SUhrHxUxUr3qMs9NkdIHX1OxOEm40Q7zsjPyjwV8XYkchl8S-_wKOWITxF3w3EExF0gU3DgYV50fYjhMVhEHnWNAe8fTd0lzoTDd58N7mv8lkxNogCFOgkXv7d1cJANmViWKKz6_pfPJf6ByCzbAA6B9LLGsG7X9044G3bwUIE_Xl5RDDX9ywgfh6Szz96JWsaK8n9y0V9vFYmkMVmxcy7X52C-skpGIJM7cHaOK6stqVzJ9G3EMbpCkLPIXw",
-        "deviceId": "34a817c48b87571632d2a7a1d50575a4",
+        "deviceId": "6f8d071c-5377-4c51-9bc5-f8be18aefb77",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": "1.rUqRg4b5NEeqX_sKsFeMAgiGuE6jHg8wR-q1RcFAGutW-adSsB5q6wmXhWZFBuq62v-toBWWudO__IULDL2JkYcZMM43u8_82C713eWWElj_yzh4YexrjGoOu_DldFqz65rTCtpsM1zc4VoYgKjCqiCuHGv5iLgNtisbOerldZPotVm_40eN5_R07nbHy7kRTOhOtVwPDPOOyy2F4JpIsLJOPNW0le0c-fPeoi3qyPKzLuCXPJTC9yuPaQ_3GoRPqH3uwe8kdj5CeCzYirqYpyfyvQ2CC8BAevIn8mcuYc4_dqZ7022erJCx8_NP-7BQT7VRZxXLp31rEQJtrbysZuASUG8WOuCu98wU0zkWe7TAQZISc8lDLSoJZFvs3RkLwgfVvRkkbBkjLLb2AQu55Lfe81Ccgh1MKYQBp5YTOJ1Y5P4gNDbc8Ojq4lO-lzRdOnq8ek9ZivaMO1JRNjw3GW7v96NQ0Kmsu6GTUMKUMz-5euyatqGYYtWimgRvaoP-WBQAlGPdDF2ayW5oyp17spqkS__tmmoMhizrrRWeSHJ01DYRfReuckaa35JmK3cj.msAQCLPJKlu8HOLbCdtk2A.b479837efbb5f7473c0e41c0e3aa41ba7299c98dba9d9924cbbd31b2eaddcd5e",
+        "cftResponse": null,
         "user": {
           "name": "BASHAR MIA",
           "phone": "01975788738",
@@ -506,9 +506,7 @@
           "issuedAt": "2026-10-10T05:33:43.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-10-10T06:00:48.794Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-10-10T06:11:30.609Z"
       }
     },
     {

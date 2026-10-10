@@ -487,10 +487,10 @@
       "loginCount": 59,
       "shohozSession": {
         "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE3OTE1OTk4MjUsImV4cCI6MTc5MTY0MzAyNSwiaXNzIjoiaHR0cDovL3RyYWluLWlhbS5zaG9ob3ouY29tIiwiYXVkIjoic2hvaG96LmlhbS50cmFpbiIsImNsaWVudF9pZCI6InRyYWluLXRpY2tldC11c2VyIiwiY2xpZW50X3RlbmFudF9pZCI6IjY3YTUxNjNjLTU2NWQtNGNhMC1iMTE3LTg3YzcwMWY2NTRmOSIsImNsaWVudF92ZXJ0aWNhbF9pZCI6IjA2OGU4MDRmLTJkYjctNDQ4OS05OTYzLTc4OWZiN2UwMmJkZiIsInN1YiI6ImMxMDIwZmQ5LWI0NDQtNDJlYi05MzZhLWY5NTNmMTFhY2RjZSIsImF1dGhfdGltZSI6MTc5MTU5OTgyNSwiaWRwIjoibG9jYWwiLCJwaG9uZV9udW1iZXIiOiIwMTUxNTI3OTk1NyIsImVtYWlsIjoiaWh0YXNoYW11bGFiaXIwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6IjAxNTE1Mjc5OTU3IiwiZGlzcGxheV9uYW1lIjoiSUhUQVNIQU1VTCBIQVFVRSBBQklSIiwibG9jYWxlIjoiYm4tQkQiLCJuaWRuIjoiMzc0MzAyMjY1MyIsIm5pZG50IjoiTklEIiwicm9sZSI6WyJ1c2VyIiwiYW5vbnltb3VzIl0sInNjb3BlIjpbInNob2hvei5pYW0udHJhaW4iLCJvZmZsaW5lX2FjY2VzcyJdLCJhbXIiOlsicHdkIl19.OME9f9pj8JETA6-NBHfVUzTi1VKLSHHid8Dd7_cxOvp3a08QuUrjT9GUhuU-mBB-bvVhD_CTaBQZo5R8xXqN_j9RDKHQRA0ejsE2UytlzHXmnQfX-MYzO3oKpgWs71dx_QhpqwX0Egmi2uURhIc0O-VhxrO384gJq-rvIIzVlr_x6QNhU6aZG-95tN7s1i5x7l19BuuLJ4H8rSlq3UxcZPPlTdhkjj-FMIrX73fcNiEjP6D0VieqNJyp11dPVJBVEwAl_lrov5FQ3iNAFa0SUtf7e57e4V2txNP3DAdT-HEIJfxhqg51eGU_7iYfvl1uaP3hpE675Mlsv2C64lWVeg",
-        "deviceId": "5cfe4414-0f21-4a89-ba4f-0d71b758dbcc",
+        "deviceId": "41545f75-def9-4634-8642-09dbd0b925d9",
         "deviceKey": "b20211d0901587165e0e466fe9d760a3867d92d4ef5e3baf42a291f5c3b676662b1a816ea006c6200bb3ee8de35011fcb6d0dc18b8382ba531ca97daf96146d8485fe4d3d72220a93d68c1e640b313a6",
         "cookie": null,
-        "cftResponse": "1.J7imLmX5F4YffmX6IP79pWzMWNqsZ5Fqxv3NC8V1jmSppsUJ_cy_Ux4zR3uv9IJR_Qh2u7ZGypBvn6DtuodZwmgc9pjM-W1HdNOQ9n6SO7HY9odrCvj6esKJEa8i95U3nrQ2MA2FL1SgrihAvlPV6S9I3-WikRiXeG_hnwG7E04E4_yRB-6TyJ_jny1OPV2MNtACb7WKJP4eJt-FrGrffsMp9UK218i3f7N_zNH_H9yiue0uii1S5T_AYleW67f-V0zzdrALVfMlgoyyZxZYeq2zTAND-Sp0KnqGeWsEvqxQD5p2Ku00JilyP5kSJpx9uIqntrrqm4RWxbwR3yNA9LNa_azI-XE60-j8iBnS7Zm7Q-gnVIOd-_mbLpRdxr51rAXQsqw1OAJ9QORcVGa_iwncVvFvJ5RDyXScap1TGLBt5zvwISH6sEafniho5cqk3-28BwN9Wh5i8UxBqS3O_ySnFIXubLb7Yx2FqZF4RF69oW-3l86TWyYpK34snVqPNqNs1-Aj09DlWRWVX0CnoNhZYA-5usXnnL--sAg2Dff2IO0FokAqHWCj4noddqtu.2U8DFXx2g2IvyWeuhYQDcQ.acc67575411e4a2c610e5b8e203cf90c9aa136b0c4a140c14d14e97d6e87840a",
+        "cftResponse": null,
         "user": {
           "name": "IHTASHAMUL HAQUE ABIR",
           "phone": "01515279957",
@@ -506,9 +506,7 @@
           "issuedAt": "2026-10-10T02:37:05.000Z",
           "isExpired": false
         },
-        "lastUpdated": "2026-10-10T04:16:10.586Z",
-        "userId": "usr_1787812528386_taky",
-        "username": "shawon421"
+        "lastUpdated": "2026-10-10T04:31:07.631Z"
       }
     },
     {

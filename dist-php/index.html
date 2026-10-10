@@ -1249,58 +1249,174 @@
 
       </div>
 
-        <!-- Live Activity Console -->
-        <div id="autoBookConsoleBox" class="hidden rounded-2xl bg-slate-950 text-slate-100 font-mono text-xs border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
-          <!-- Terminal Header Bar -->
-          <div class="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 text-[11px]">
-            <div class="flex items-center gap-2">
-              <div class="flex items-center space-x-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+        <!-- Live Activity Console (Redesigned Mission Control Radar & Telemetry Hub) -->
+        <div id="autoBookConsoleBox" class="hidden rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 font-mono text-xs border border-slate-800/90 shadow-2xl overflow-hidden transition-all duration-300 relative">
+          <!-- Top Neon Edge Glow -->
+          <div class="h-0.5 w-full bg-gradient-to-r from-teal-500 via-emerald-400 via-amber-400 to-teal-500 opacity-80"></div>
+
+          <!-- Mission Control Header Bar -->
+          <div class="flex flex-wrap items-center justify-between px-3.5 py-2.5 bg-slate-900/95 border-b border-slate-800/80 gap-2">
+            <!-- Left: Terminal Brand & Radar Pulse -->
+            <div class="flex items-center gap-2.5">
+              <!-- macOS Window Control Dots -->
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block shadow-xs shadow-rose-500/30"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block shadow-xs shadow-amber-500/30"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block shadow-xs shadow-emerald-500/30"></span>
               </div>
-              <span class="font-bold text-amber-400 flex items-center gap-1.5 ml-1">
-                <i class="fa-solid fa-terminal text-[10px]"></i>
-                <span>Auto-Book Activity Console</span>
-              </span>
+              <div class="flex items-center gap-1.5 ml-1">
+                <div class="relative flex items-center justify-center">
+                  <i class="fa-solid fa-satellite-dish text-[11px] text-teal-400"></i>
+                  <span id="autoBookRadarPulse" class="hidden absolute w-3 h-3 rounded-full bg-teal-400/40 animate-ping"></span>
+                </div>
+                <span class="font-extrabold text-white tracking-wide text-[11px] flex items-center gap-1.5">
+                  <span class="bg-gradient-to-r from-teal-300 via-amber-300 to-emerald-300 bg-clip-text text-transparent">Auto-Book Activity Console</span>
+                  <span class="text-[9px] px-1.5 py-0.2 rounded bg-teal-950 text-teal-300 border border-teal-800/60 font-semibold uppercase tracking-wider hidden sm:inline-block">Telemetry Live</span>
+                </span>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span id="autoBookConsoleStatus" class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">Idle</span>
-              <button type="button" id="autoBookConsoleClearBtn" class="text-[10px] text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 transition cursor-pointer" title="Clear Console Logs">
-                <i class="fa-solid fa-trash-can mr-1"></i>Clear
+
+            <!-- Right: Status Pill & Action Buttons -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <!-- Dynamic Status Pill -->
+              <span id="autoBookConsoleStatus" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700/80 flex items-center gap-1 shadow-xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                <span>Idle</span>
+              </span>
+
+              <!-- Copy Logs Button -->
+              <button type="button" id="autoBookConsoleCopyBtn" class="text-[10px] text-slate-400 hover:text-slate-100 px-2 py-0.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700/50 transition cursor-pointer flex items-center gap-1" title="Copy Console Logs to Clipboard">
+                <i class="fa-regular fa-copy text-[10px]"></i>
+                <span class="hidden sm:inline">Copy</span>
+              </button>
+
+              <!-- Expand / Collapse Height Button -->
+              <button type="button" id="autoBookConsoleExpandBtn" class="text-[10px] text-slate-400 hover:text-slate-100 px-2 py-0.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700/50 transition cursor-pointer flex items-center gap-1" title="Toggle Terminal Height">
+                <i class="fa-solid fa-up-right-and-down-left-from-center text-[9px]" id="autoBookConsoleExpandIcon"></i>
+              </button>
+
+              <!-- Clear Logs Button -->
+              <button type="button" id="autoBookConsoleClearBtn" class="text-[10px] text-slate-400 hover:text-rose-300 px-2 py-0.5 rounded-lg bg-slate-800/80 hover:bg-rose-950/40 border border-slate-700/50 hover:border-rose-800/50 transition cursor-pointer flex items-center gap-1" title="Clear Console Logs">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                <span class="hidden sm:inline">Clear</span>
               </button>
             </div>
           </div>
 
-          <!-- Highlight Banner: Grabbed Seat & Class Showcase (Visible upon successful grab) -->
-          <div id="autoBookGrabbedBanner" class="hidden p-3 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border-b border-emerald-500/30">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-base font-black shadow-md shrink-0">
-                  <i class="fa-solid fa-chair"></i>
-                </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-emerald-300 tracking-wide uppercase">Seat Secured!</span>
-                    <span id="grabbedTrainBadge" class="text-[10px] font-bold px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-500/40">Train</span>
-                  </div>
-                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-0.5">
-                    <span class="text-slate-200">Coach: <strong id="grabbedCoachVal" class="text-white font-black text-sm">--</strong></span>
-                    <span class="text-slate-400">•</span>
-                    <span class="text-slate-200">Class: <strong id="grabbedClassVal" class="text-emerald-400 font-black">--</strong></span>
-                    <span class="text-slate-400">•</span>
-                    <span class="text-slate-200">Seat(s): <strong id="grabbedSeatsVal" class="text-amber-300 font-mono font-black text-sm tracking-wider">--</strong></span>
-                  </div>
-                </div>
+          <!-- Telemetry & Pipeline Stepper Bar -->
+          <div id="autoBookConsolePipelineBar" class="px-3.5 py-2 bg-slate-950/90 border-b border-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+            <!-- Live Pipeline 4-Stage Tracker -->
+            <div class="flex items-center gap-1 sm:gap-2 flex-wrap" id="autoBookPipelineSteps">
+              <span class="text-slate-500 font-bold uppercase tracking-wider text-[9px] mr-0.5">Pipeline:</span>
+              <div id="pipelineStepScan" class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 transition-all">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-500 step-dot"></span>
+                <span>1. Radar Scan</span>
               </div>
-              <div id="grabbedActionLinkContainer" class="shrink-0 flex items-center gap-2">
-                <!-- Action button injected via JS -->
+              <span class="text-slate-600 text-[9px]">➔</span>
+              <div id="pipelineStepToken" class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 transition-all">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-500 step-dot"></span>
+                <span>2. Token Vault</span>
               </div>
+              <span class="text-slate-600 text-[9px]">➔</span>
+              <div id="pipelineStepHold" class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 transition-all">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-500 step-dot"></span>
+                <span>3. Cart Hold</span>
+              </div>
+              <span class="text-slate-600 text-[9px]">➔</span>
+              <div id="pipelineStepDone" class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 transition-all">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-500 step-dot"></span>
+                <span>4. 5m Checkout</span>
+              </div>
+            </div>
+
+            <!-- Route & Engine Telemetry Pills -->
+            <div class="flex items-center gap-2 ml-auto text-slate-400 text-[10px]">
+              <span id="autoBookTelemetryRoute" class="truncate max-w-[150px] sm:max-w-none text-slate-300 font-semibold">Ready</span>
+              <span class="text-slate-700">•</span>
+              <span class="text-emerald-400 flex items-center gap-1">
+                <i class="fa-solid fa-bolt text-[9px]"></i>
+                <span class="hidden sm:inline">Dual-Gateway</span>
+              </span>
             </div>
           </div>
 
-          <!-- Terminal Logs Stream -->
-          <div id="autoBookConsoleLogs" class="p-3 space-y-1.5 max-h-48 overflow-y-auto text-[11px] font-mono select-text divide-y divide-slate-900/60"></div>
+          <!-- Highlight Banner: Grabbed Seat & Cart Hold Showcase (Visible upon successful grab) -->
+          <div id="autoBookGrabbedBanner" class="hidden p-3.5 bg-gradient-to-r from-emerald-950/95 via-slate-900/90 to-teal-950/95 border-b border-emerald-500/40 relative overflow-hidden">
+            <!-- Subtle Radial Victory Glow -->
+            <div class="absolute -right-8 -top-8 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 relative z-10">
+              <!-- Left: Seat Showcase & Train Badge -->
+              <div class="flex items-start sm:items-center space-x-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 flex items-center justify-center text-lg font-black shadow-lg shadow-emerald-500/20 shrink-0">
+                  <i class="fa-solid fa-ticket-simple"></i>
+                </div>
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-black text-emerald-300 tracking-wider uppercase flex items-center gap-1.5">
+                      <i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>
+                      <span>Seats Locked in Official Cart!</span>
+                    </span>
+                    <span id="grabbedTrainBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 shadow-xs">Train</span>
+                  </div>
+
+                  <!-- Details Pill Grid -->
+                  <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs mt-1.5">
+                    <div class="px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-700/60 text-slate-300">
+                      Coach: <strong id="grabbedCoachVal" class="text-white font-black text-sm ml-0.5">--</strong>
+                    </div>
+                    <div class="px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-700/60 text-slate-300">
+                      Class: <strong id="grabbedClassVal" class="text-teal-300 font-black ml-0.5">--</strong>
+                    </div>
+                    <div class="px-2 py-0.5 rounded-md bg-slate-900/80 border border-amber-500/40 text-slate-300 shadow-xs shadow-amber-500/10">
+                      Seat(s): <strong id="grabbedSeatsVal" class="text-amber-300 font-mono font-black text-sm tracking-wider ml-0.5">--</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Cart Expiry Countdown Timer & 1-Tap Checkout Button -->
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                <!-- 5-Minute Cart Expiry Countdown Card -->
+                <div id="cartExpiryCountdownBox" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-500/40 text-amber-300 shadow-xs">
+                  <i class="fa-solid fa-stopwatch text-amber-400 text-sm animate-pulse"></i>
+                  <div>
+                    <span class="text-[8px] uppercase tracking-wider text-slate-400 font-bold block leading-none">Hold Expiry</span>
+                    <span id="cartExpiryCountdownText" class="text-xs font-mono font-black text-amber-300 tracking-wider">05:00</span>
+                  </div>
+                </div>
+
+                <!-- Action Button Link Container -->
+                <div id="grabbedActionLinkContainer" class="flex items-center gap-2">
+                  <!-- Dynamically injected checkout button -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Animated Cart Expiry Progress Bar -->
+            <div class="w-full bg-slate-950/80 h-1 rounded-full mt-2.5 overflow-hidden border border-slate-800/80">
+              <div id="cartExpiryProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full transition-all duration-1000" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Terminal Logs Stream Area -->
+          <div id="autoBookConsoleLogs" class="p-3.5 space-y-1.5 max-h-56 overflow-y-auto text-[11px] font-mono select-text divide-y divide-slate-900/70 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            <!-- Dynamic Log Stream Injected Here -->
+          </div>
+
+          <!-- Terminal Status Footer Line -->
+          <div class="px-3.5 py-1.5 bg-slate-950 border-t border-slate-900 flex items-center justify-between text-[10px] text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <span class="text-teal-400 font-bold">❯</span>
+              <span id="autoBookConsoleFootPrompt">Terminal stream ready</span>
+              <span class="animate-pulse text-teal-400">_</span>
+            </div>
+            <div class="flex items-center gap-2 text-[9px] text-slate-600 font-mono">
+              <span id="autoBookConsoleAttemptCounter">Attempts: 0</span>
+              <span>•</span>
+              <span id="autoBookConsoleTimeElapsed">00:00</span>
+            </div>
+          </div>
         </div>
 
       </div>

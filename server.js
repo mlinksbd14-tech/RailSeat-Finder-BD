@@ -7942,6 +7942,47 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
   }
 });
 
+// 🔓 Release Held Seat in Shohoz Cart (Method 1)
+app.post(['/api/seat-release', '/api/seat-release.php'], async (req, res) => {
+  try {
+    const { ticket_ids, ticket_id, route_id, trip_route_id } = req.body || {};
+    const tIds = (ticket_ids && Array.isArray(ticket_ids) ? ticket_ids : (ticket_id ? [ticket_id] : [])).map(Number).filter(Boolean);
+    const rId = Number(route_id || trip_route_id);
+
+    if (!tIds.length || !rId) {
+      return res.status(400).json({ success: false, error: 'ticket_id(s) and route_id are required to release seats.' });
+    }
+
+    const session = getUserShohozSession(req);
+    if (!session || !session.token) {
+      return res.status(401).json({ success: false, error: 'No active Railway session found.' });
+    }
+
+    const devId = session.deviceId || session.device_id || '34a817c48b87571632d2a7a1d50575a4';
+    const devKey = session.deviceKey || session.device_key || generateShohozDeviceKey(session.token);
+
+    const relRes = await axios.patch('https://railspaapi.shohoz.com/v1.0/web/bookings/bulk-release-seat', {
+      ticket_id: tIds,
+      route_id: rId
+    }, {
+      headers: {
+        'Authorization': `Bearer ${session.token}`,
+        'x-device-id': devId,
+        'x-device-key': devKey,
+        'Content-Type': 'application/json'
+      },
+      timeout: 6000
+    });
+
+    console.log(`[SeatRelease] 🔓 Successfully released ticket(s) ${tIds.join(', ')} from route ${rId}`);
+    return res.json({ success: true, data: relRes.data });
+  } catch (err) {
+    const errMsg = err.response?.data?.error?.messages?.[0] || err.message;
+    console.warn(`[SeatRelease] Error releasing seats:`, errMsg);
+    return res.status(500).json({ success: false, error: errMsg });
+  }
+});
+
 // ====================================================
 // 9. 📲 Web Push (Service Worker Closed-Browser Alerts) Endpoints
 // ====================================================

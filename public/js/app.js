@@ -13392,41 +13392,270 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAutoBookActionState();
     }
 
-    // 8. Console Logging Helper
+    // 8. Auto-Book Activity Console & Telemetry Engine (Mission Control Hub)
+    let cartExpiryInterval = null;
+    let consoleStartTime = null;
+    let consoleElapsedInterval = null;
+    let isConsoleExpanded = false;
+
+    function updateConsolePipeline(stage) {
+      const steps = {
+        scan: document.getElementById('pipelineStepScan'),
+        token: document.getElementById('pipelineStepToken'),
+        hold: document.getElementById('pipelineStepHold'),
+        done: document.getElementById('pipelineStepDone')
+      };
+      const pulseEl = document.getElementById('autoBookRadarPulse');
+
+      const activeClass = 'bg-teal-950/90 text-teal-300 border-teal-600/80 shadow-xs shadow-teal-500/20';
+      const doneClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-600/60';
+      const baseClass = 'bg-slate-900 border-slate-800 text-slate-400';
+
+      Object.values(steps).forEach(s => {
+        if (s) {
+          s.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${baseClass}`;
+          const dot = s.querySelector('.step-dot');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-600 step-dot';
+        }
+      });
+
+      if (pulseEl) {
+        if (stage === 'scan' || stage === 'token' || stage === 'hold') {
+          pulseEl.classList.remove('hidden');
+        } else {
+          pulseEl.classList.add('hidden');
+        }
+      }
+
+      if (stage === 'scan') {
+        if (steps.scan) {
+          steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
+          const dot = steps.scan.querySelector('.step-dot');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400 step-dot';
+        }
+      } else if (stage === 'token') {
+        if (steps.scan) {
+          steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
+          const dot = steps.scan.querySelector('.step-dot');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 step-dot';
+        }
+        if (steps.token) {
+          steps.token.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
+          const dot = steps.token.querySelector('.step-dot');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400 step-dot';
+        }
+      } else if (stage === 'hold') {
+        if (steps.scan) steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
+        if (steps.token) steps.token.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
+        if (steps.hold) {
+          steps.hold.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
+          const dot = steps.hold.querySelector('.step-dot');
+          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 step-dot';
+        }
+      } else if (stage === 'done') {
+        Object.values(steps).forEach(s => {
+          if (s) {
+            s.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
+            const dot = s.querySelector('.step-dot');
+            if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 step-dot';
+          }
+        });
+      }
+    }
+
+    function startCartExpiryCountdown(totalSeconds = 300) {
+      if (cartExpiryInterval) clearInterval(cartExpiryInterval);
+
+      let remaining = totalSeconds;
+      const textEl = document.getElementById('cartExpiryCountdownText');
+      const boxEl = document.getElementById('cartExpiryCountdownBox');
+      const barEl = document.getElementById('cartExpiryProgressBar');
+
+      function render() {
+        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+        const secs = (remaining % 60).toString().padStart(2, '0');
+        if (textEl) textEl.textContent = `${mins}:${secs}`;
+
+        const pct = Math.max(0, Math.min(100, (remaining / totalSeconds) * 100));
+        if (barEl) {
+          barEl.style.width = `${pct}%`;
+          if (remaining <= 60) {
+            barEl.className = 'h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-all duration-1000 animate-pulse';
+            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/90 border border-rose-500 text-rose-300 shadow-md shadow-rose-900/30 animate-pulse';
+          } else if (remaining <= 120) {
+            barEl.className = 'h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000';
+            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/90 border border-amber-500 text-amber-300 shadow-xs';
+          } else {
+            barEl.className = 'h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-1000';
+            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-500/40 text-amber-300 shadow-xs';
+          }
+        }
+
+        if (remaining <= 0) {
+          clearInterval(cartExpiryInterval);
+          if (textEl) textEl.textContent = 'EXPIRED';
+          addConsoleLog('⏳ <b>Cart Hold Expired:</b> 5-minute Shohoz cart lock time has elapsed. Re-scan required.', 'warn');
+        }
+        remaining--;
+      }
+
+      render();
+      cartExpiryInterval = setInterval(render, 1000);
+    }
+
+    function stopCartExpiryCountdown() {
+      if (cartExpiryInterval) {
+        clearInterval(cartExpiryInterval);
+        cartExpiryInterval = null;
+      }
+      const textEl = document.getElementById('cartExpiryCountdownText');
+      const barEl = document.getElementById('cartExpiryProgressBar');
+      const boxEl = document.getElementById('cartExpiryCountdownBox');
+      if (textEl) textEl.textContent = '05:00';
+      if (barEl) {
+        barEl.style.width = '100%';
+        barEl.className = 'h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full transition-all duration-1000';
+      }
+      if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-500/40 text-amber-300 shadow-xs';
+    }
+
+    function startConsoleStopwatch() {
+      if (!consoleStartTime) consoleStartTime = Date.now();
+      if (!consoleElapsedInterval) {
+        consoleElapsedInterval = setInterval(() => {
+          const el = document.getElementById('autoBookConsoleTimeElapsed');
+          if (el && consoleStartTime) {
+            const secs = Math.floor((Date.now() - consoleStartTime) / 1000);
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = (secs % 60).toString().padStart(2, '0');
+            el.textContent = `${m}:${s}`;
+          }
+        }, 1000);
+      }
+    }
+
+    function resetConsoleStopwatch() {
+      if (consoleElapsedInterval) clearInterval(consoleElapsedInterval);
+      consoleElapsedInterval = null;
+      consoleStartTime = null;
+      const el = document.getElementById('autoBookConsoleTimeElapsed');
+      if (el) el.textContent = '00:00';
+    }
+
+    // Clear Console Logs Button
     const autoBookConsoleClearBtn = document.getElementById('autoBookConsoleClearBtn');
     if (autoBookConsoleClearBtn) {
       autoBookConsoleClearBtn.addEventListener('click', () => {
         if (autoBookConsoleLogs) autoBookConsoleLogs.innerHTML = '';
         const banner = document.getElementById('autoBookGrabbedBanner');
         if (banner) banner.classList.add('hidden');
+        stopCartExpiryCountdown();
+        resetConsoleStopwatch();
+        updateConsolePipeline('idle');
+        const counterEl = document.getElementById('autoBookConsoleAttemptCounter');
+        if (counterEl) counterEl.textContent = 'Attempts: 0';
+        const promptEl = document.getElementById('autoBookConsoleFootPrompt');
+        if (promptEl) promptEl.textContent = 'Terminal stream reset';
+      });
+    }
+
+    // Copy Logs Button
+    const autoBookConsoleCopyBtn = document.getElementById('autoBookConsoleCopyBtn');
+    if (autoBookConsoleCopyBtn) {
+      autoBookConsoleCopyBtn.addEventListener('click', async () => {
+        if (!autoBookConsoleLogs) return;
+        const text = autoBookConsoleLogs.innerText;
+        if (!text.trim()) {
+          showToast(isBn() ? 'লগ খালি।' : 'Console log is empty.', 'info');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast(isBn() ? '📋 কনসোল লগ কপি করা হয়েছে!' : '📋 Console logs copied to clipboard!', 'success');
+        } catch (e) {
+          showToast('Failed to copy logs', 'error');
+        }
+      });
+    }
+
+    // Expand / Collapse Height Button
+    const autoBookConsoleExpandBtn = document.getElementById('autoBookConsoleExpandBtn');
+    const autoBookConsoleExpandIcon = document.getElementById('autoBookConsoleExpandIcon');
+    if (autoBookConsoleExpandBtn) {
+      autoBookConsoleExpandBtn.addEventListener('click', () => {
+        isConsoleExpanded = !isConsoleExpanded;
+        if (autoBookConsoleLogs) {
+          if (isConsoleExpanded) {
+            autoBookConsoleLogs.classList.remove('max-h-56');
+            autoBookConsoleLogs.classList.add('max-h-96');
+            if (autoBookConsoleExpandIcon) autoBookConsoleExpandIcon.className = 'fa-solid fa-down-left-and-up-right-to-center text-[9px] text-teal-400';
+          } else {
+            autoBookConsoleLogs.classList.remove('max-h-96');
+            autoBookConsoleLogs.classList.add('max-h-56');
+            if (autoBookConsoleExpandIcon) autoBookConsoleExpandIcon.className = 'fa-solid fa-up-right-and-down-left-from-center text-[9px]';
+          }
+        }
       });
     }
 
     function addConsoleLog(msg, type = 'info') {
       if (!autoBookConsoleBox || !autoBookConsoleLogs) return;
       autoBookConsoleBox.classList.remove('hidden');
+      startConsoleStopwatch();
       const time = new Date().toLocaleTimeString();
 
       let colorClass = 'text-slate-300';
-      let icon = '<i class="fa-solid fa-angle-right text-[9px] text-slate-500 mt-0.5"></i>';
-      let badge = '';
+      let badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-900 text-slate-400 border border-slate-800 shrink-0">LOG</span>';
 
-      if (type === 'success') {
+      const lower = msg.toLowerCase();
+      if (lower.includes('100% success') || lower.includes('secured') || type === 'success') {
         colorClass = 'text-emerald-300 font-semibold';
-        icon = '<i class="fa-solid fa-circle-check text-xs text-emerald-400 mt-0.5"></i>';
-        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">OK</span>';
+        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 shadow-xs shadow-emerald-500/20 shrink-0">OK</span>';
+        updateConsolePipeline('done');
+      } else if (lower.includes('radar active') || lower.includes('executing 1-tap') || lower.includes('scanning')) {
+        colorClass = 'text-teal-300';
+        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-teal-950 text-teal-300 border border-teal-800 shadow-xs shadow-teal-500/20 shrink-0">RADAR</span>';
+        updateConsolePipeline('scan');
+      } else if (lower.includes('turnstile') || lower.includes('token')) {
+        colorClass = 'text-purple-300';
+        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shrink-0">TOKEN</span>';
+        updateConsolePipeline('token');
+      } else if (lower.includes('locked in cart') || lower.includes('holding in cart')) {
+        colorClass = 'text-amber-300';
+        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-800 shrink-0">HOLD</span>';
+        updateConsolePipeline('hold');
       } else if (type === 'warn') {
         colorClass = 'text-amber-300';
-        icon = '<i class="fa-solid fa-triangle-exclamation text-xs text-amber-400 mt-0.5"></i>';
         badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-800 shrink-0">WAIT</span>';
       } else if (type === 'error') {
         colorClass = 'text-rose-300 font-bold';
-        icon = '<i class="fa-solid fa-circle-xmark text-xs text-rose-400 mt-0.5"></i>';
         badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-950 text-rose-300 border border-rose-800 shrink-0">ERR</span>';
       }
 
+      // Update terminal prompt footer
+      const promptEl = document.getElementById('autoBookConsoleFootPrompt');
+      if (promptEl) {
+        const plainText = msg.replace(/<[^>]*>/g, '').trim();
+        promptEl.textContent = plainText.length > 50 ? plainText.substring(0, 47) + '...' : plainText;
+      }
+
+      // Update telemetry route if visible
+      const fromVal = (autoBookFromInput?.value || document.getElementById('fromInput')?.value || '').trim();
+      const toVal = (autoBookToInput?.value || document.getElementById('toInput')?.value || '').trim();
+      const telemRoute = document.getElementById('autoBookTelemetryRoute');
+      if (telemRoute && fromVal && toVal) {
+        telemRoute.textContent = `${fromVal} ➔ ${toVal}`;
+      }
+
+      // Update attempt counter if attempt text detected
+      const attemptMatch = msg.match(/Attempt #(\d+)/i) || msg.match(/attempt #(\d+)/i);
+      if (attemptMatch) {
+        const counterEl = document.getElementById('autoBookConsoleAttemptCounter');
+        if (counterEl) counterEl.textContent = `Attempts: ${attemptMatch[1]}`;
+      }
+
       const line = document.createElement('div');
-      line.className = `pt-1 pb-1 flex items-start gap-2 ${colorClass}`;
+      line.className = `pt-1.5 pb-1.5 flex items-start gap-2.5 ${colorClass} hover:bg-slate-900/40 rounded px-1 transition-colors`;
       line.innerHTML = `
         <span class="text-slate-500 text-[10px] select-none shrink-0 font-mono">[${time}]</span>
         ${badge}
@@ -14420,6 +14649,9 @@ document.addEventListener('DOMContentLoaded', () => {
           addConsoleLog(`[3/3] ⏳ <b>LOCKED IN CART FOR ~5 MINUTES!</b> Complete payment before the timer expires.`, 'warn');
           addConsoleLog(`[3/3] 📱 <b>Telegram Alert Dispatched:</b> Instant notification with 1-tap checkout button sent to your phone!`, 'info');
 
+          // Start 5-minute Cart Expiry Countdown Timer
+          startCartExpiryCountdown(det.expiresInSeconds || 300);
+
           // Highlight Banner inside Activity Console
           const grabBanner = document.getElementById('autoBookGrabbedBanner');
           if (grabBanner) {
@@ -14433,14 +14665,65 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clVal) clVal.textContent = det.seatClass || grabPayload.seat_class;
             if (sVal) sVal.textContent = seatsStr;
             if (tBadge) tBadge.textContent = displayTrainName;
+
+            const tIds = det.ticketIds || (det.ticketId ? [det.ticketId] : []);
+            const rId = det.tripRouteId || det.routeId;
+            let releaseBtnHtml = '';
+            if (tIds.length && rId) {
+              releaseBtnHtml = `
+                <button type="button" id="autoBookReleaseSeatBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/80 hover:text-rose-300 text-slate-300 border border-slate-700 hover:border-rose-700/60 font-bold text-xs transition cursor-pointer" title="Release seat back to Railway inventory">
+                  <i class="fa-solid fa-lock-open text-[10px]"></i>
+                  <span>Release</span>
+                </button>
+              `;
+            }
+
             if (linkBox) {
-              linkBox.innerHTML = `<a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow transition cursor-pointer">💳 Pay Now (Checkout)</a>`;
+              linkBox.innerHTML = `
+                <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer hover:scale-[1.02] active:scale-95">💳 Pay Now (Checkout)</a>
+                ${releaseBtnHtml}
+              `;
+
+              const relBtn = document.getElementById('autoBookReleaseSeatBtn');
+              if (relBtn) {
+                relBtn.addEventListener('click', async () => {
+                  relBtn.disabled = true;
+                  relBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Releasing...';
+                  try {
+                    const relRes = await fetch('/api/seat-release', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ticket_ids: tIds, route_id: rId })
+                    });
+                    const relData = await relRes.json();
+                    if (relRes.ok && relData.success) {
+                      stopCartExpiryCountdown();
+                      addConsoleLog('[3/3] 🔓 <b>Held seat successfully released</b> back into Railway inventory.', 'info');
+                      showToast('Held seat released successfully.', 'info');
+                      if (grabBanner) grabBanner.classList.add('hidden');
+                      if (autoBookConsoleStatus) {
+                        autoBookConsoleStatus.textContent = 'Released';
+                        autoBookConsoleStatus.className = 'px-2.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700';
+                      }
+                      updateConsolePipeline('idle');
+                    } else {
+                      showToast(relData.error || 'Failed to release seat', 'error');
+                      relBtn.disabled = false;
+                      relBtn.innerHTML = '<i class="fa-solid fa-lock-open text-[10px]"></i> Release';
+                    }
+                  } catch (e) {
+                    showToast('Failed to release seat: ' + e.message, 'error');
+                    relBtn.disabled = false;
+                    relBtn.innerHTML = '<i class="fa-solid fa-lock-open text-[10px]"></i> Release';
+                  }
+                });
+              }
             }
           }
 
           if (autoBookConsoleStatus) {
             autoBookConsoleStatus.textContent = 'Held in Cart! 🛒';
-            autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-emerald-900/80 text-[10px] font-bold text-emerald-300 border border-emerald-700 animate-pulse';
+            autoBookConsoleStatus.className = 'px-2.5 py-0.5 rounded-full bg-emerald-950/90 text-[10px] font-bold text-emerald-300 border border-emerald-600/60 shadow-xs shadow-emerald-500/20 animate-pulse';
           }
 
           if (autoBookSoundAlarmToggle && autoBookSoundAlarmToggle.checked) {

@@ -147,18 +147,19 @@ def fetch_live_seat_layout(
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
-                        if (res.ok) {
-                            return await res.json();
-                        }
-                        return null;
+                        const text = await res.text();
+                        let json = null;
+                        try { json = JSON.parse(text); } catch(e) {}
+                        return { status: res.status, ok: res.ok, data: json, raw: text.substring(0, 200) };
                     } catch(e) {
-                        return null;
+                        return { error: e.message };
                     }
                 }
             """, {"tripId": trip_id, "tripRouteId": trip_route_id, "cft": captured_cft})
 
-            if api_res and (api_res.get("data") or api_res.get("coaches")):
-                captured_layout = api_res
+            print(f"[CamoufoxSeatFetcher] in-page fetch result: status={api_res.get('status')}, ok={api_res.get('ok')}, error={api_res.get('error')}")
+            if api_res and api_res.get("data") and (api_res["data"].get("data") or api_res["data"].get("coaches")):
+                captured_layout = api_res["data"]
                 print(f"[CamoufoxSeatFetcher] 🚀 Direct in-page layout retrieval succeeded in record time!")
 
         # If layout not yet captured, click the button on the UI using expect_response

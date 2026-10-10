@@ -2419,149 +2419,104 @@
   <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       
-      <!-- Modal Header (Clean & Minimalist) -->
+      <!-- Modal Header (Simple & Clean: Only Train Name & Close) -->
       <div class="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 gap-3">
-        <!-- Train Info & Route -->
-        <div class="min-w-0 space-y-0.5">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h3 id="seatLayoutTrainName" class="font-black text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate">Coach & Seat Details</h3>
-            <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-bold border border-emerald-500/20">#---</span>
-            <span id="seatLayoutClassBadge" class="text-[11px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">SNIGDHA</span>
-          </div>
-          <p id="seatLayoutSubtitle" class="text-xs text-slate-500 dark:text-slate-400 truncate">
-            Dhaka ➔ Chattogram • 10-Oct-2026
-          </p>
-        </div>
-
-        <!-- Badges & Action -->
+        <h3 id="seatLayoutTrainName" class="font-black text-base sm:text-lg text-slate-900 dark:text-white tracking-tight truncate">Train Name</h3>
+        
         <div class="flex items-center gap-2 shrink-0">
-          <span id="seatLayoutLiveBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Live Railway</span>
-          </span>
-          <span id="seatLayoutSocketBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 items-center gap-1.5" title="Real-time WebSocket stream active">
-            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
-            <span>⚡ Live Stream</span>
-          </span>
-          <span id="seatLayoutTemplateBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-            <span>Official Layout</span>
-          </span>
-          <!-- 1-Second Quick-Sync Live Upgrade Button -->
-          <button id="seatLayoutQuickSyncBtn" type="button" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 items-center gap-1.5 transition cursor-pointer shadow-2xs hover:scale-105 active:scale-95" title="1-Second Quick-Sync: Instantly grabs live token to upgrade this seat map to 100% Genuine Live Railway">
-            <i class="fa-solid fa-bolt text-amber-500 animate-pulse text-[11px]"></i>
-            <span>⚡ 1-Sec Live Sync</span>
-          </button>
-          <span id="seatLayoutSearchingBadge" class="hidden text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 items-center gap-1.5">
-            <svg class="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-            <span>Connecting...</span>
-          </span>
+          <!-- Hidden tags kept for DOM/JS backward-compatibility -->
+          <div class="hidden" aria-hidden="true">
+            <span id="seatLayoutTrainModel"></span>
+            <span id="seatLayoutClassBadge"></span>
+            <p id="seatLayoutSubtitle"></p>
+            <span id="seatLayoutLiveBadge"></span>
+            <span id="seatLayoutSocketBadge"><span></span><span></span></span>
+            <span id="seatLayoutTemplateBadge"></span>
+            <button id="seatLayoutQuickSyncBtn" type="button"></button>
+            <span id="seatLayoutSearchingBadge"></span>
+          </div>
           <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition cursor-pointer" title="Close (Esc)">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
         </div>
       </div>
 
-      <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->
-      <div class="p-2.5 sm:p-3 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
-        <div class="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-          <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-              <i class="fa-solid fa-train-subway text-emerald-500 text-xs"></i>
-              <span>Select Coach / বগি নির্বাচন করুন:</span>
-            </span>
-            <button id="seatLayoutAvailableOnlyToggle" type="button" class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer" title="Toggle between showing only coaches with available seats or all coaches">
-              <i class="fa-solid fa-filter text-[9px]"></i>
-              <span id="seatLayoutAvailableOnlyToggleText">Available Only</span>
-            </button>
+      <!-- Coach Selector Strip -->
+      <div class="px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 overflow-hidden">
+        <div class="flex items-center gap-2 flex-1 overflow-hidden">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Coach:</span>
+          <div id="seatLayoutCoachTabs" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+            <!-- Rendered by JS -->
           </div>
-          <span id="seatLayoutCoachesSummary" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium"></span>
         </div>
-        <div id="seatLayoutCoachTabs" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
-          <!-- Rendered by JS -->
-        </div>
+        <button id="seatLayoutAvailableOnlyToggle" type="button" class="hidden">
+          <span id="seatLayoutAvailableOnlyToggleText"></span>
+        </button>
+        <span id="seatLayoutCoachesSummary" class="hidden"></span>
       </div>
 
-      <!-- Active Coach Overview Strip -->
-      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex items-center space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
-          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">--</b></span>
-          <span>•</span>
+      <!-- Active Coach Overview Strip (Coach • Class • Total • Booked • Available • Fare) -->
+      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2.5 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs sm:text-sm">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
+          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-slate-900 dark:text-white font-black text-sm sm:text-base">--</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
           <span>Class: <b id="seatLayoutActiveCoachClass" class="text-slate-900 dark:text-white font-bold">--</b></span>
-          <span>•</span>
-          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-bold">0</b></span>
-          <span>•</span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
+          <span>Total: <b id="seatLayoutActiveTotalCount" class="text-slate-900 dark:text-white font-bold">--</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
           <span>Booked: <b id="seatLayoutActiveBookedCount" class="text-slate-500 dark:text-slate-400 font-bold">0</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
+          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-black text-sm sm:text-base">0</b></span>
         </div>
         <div class="text-right">
           <span class="text-slate-500 dark:text-slate-400">Fare: </span>
-          <span id="seatLayoutActiveFare" class="font-extrabold font-mono text-sm text-emerald-700 dark:text-emerald-300">--</span>
+          <span id="seatLayoutActiveFare" class="font-black font-mono text-sm sm:text-base text-emerald-600 dark:text-emerald-400">--</span>
         </div>
       </div>
 
       <!-- Carriage Body Canvas -->
       <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
-        <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
+        <!-- Rendered by JS -->
       </div>
 
       <!-- Legend & Footer Action Bar -->
-      <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div class="p-3 sm:p-3.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <!-- Legend -->
-        <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-300">
+        <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-400">
           <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
-            <span>Free (Available)</span>
+            <span class="w-3.5 h-3.5 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
+            <span>Available</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded bg-amber-500 border border-amber-600 inline-block"></span>
+            <span class="w-3.5 h-3.5 rounded bg-amber-500 border border-amber-600 inline-block"></span>
             <span>Selected</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 flex items-center justify-center text-[9px] font-black inline-flex">
-              <i class="fa-regular fa-clock text-[9px]"></i>
-            </span>
-            <span class="font-medium text-amber-700 dark:text-amber-400">In Progress (Held 5-Min)</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
-            <span>Taken (Booked)</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-slate-700 dark:border-b-slate-300 inline-block"></span>
-            <span>Window</span>
+            <span class="w-3.5 h-3.5 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
+            <span>Booked</span>
           </div>
         </div>
 
         <!-- Action Links: Hold Only & Buy Now -->
-        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <!-- Hold Only Button -->
-            <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
-              <i class="fa-solid fa-hand text-xs"></i>
-              <span id="seatLayoutHoldText">Hold Only</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
-            </a>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <!-- Hold Only Button -->
+          <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+            class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-hand text-xs"></i>
+            <span id="seatLayoutHoldText">Hold Only</span>
+          </a>
 
-            <!-- Buy Now Button (Proceeds to OTP) -->
-            <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
-              <i class="fa-solid fa-bolt text-xs"></i>
-              <span id="seatLayoutBuyText">Buy Now</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
-            </a>
+          <!-- Buy Now Button -->
+          <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+            class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-bolt text-xs"></i>
+            <span id="seatLayoutBuyText">Buy Now</span>
+          </a>
 
-            <!-- Legacy fallback element hidden -->
-            <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
-          </div>
-          <p id="seatLayoutAutoBookHint" class="hidden text-[10px] text-slate-500 dark:text-slate-400 text-right leading-tight">
-            <i class="fa-solid fa-robot text-[9px] mr-1"></i>
-            <span id="seatLayoutAutoBookHintText">Locks exact coach and seat numbers directly into the Bangladesh Railway cart.</span>
-            <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400 ml-1" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
-            <button type="button" id="seatLayoutMobileHelpBtn" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline ml-1.5 cursor-pointer">
-              <i class="fa-solid fa-mobile-screen"></i> 📱 Mobile setup?
-            </button>
-          </p>
+          <!-- Hidden compatibility elements -->
+          <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
+          <span id="seatLayoutBookNowText" class="hidden"></span>
+          <p id="seatLayoutAutoBookHint" class="hidden"><span id="seatLayoutAutoBookHintText"></span></p>
         </div>
       </div>
 

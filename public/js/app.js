@@ -13821,9 +13821,9 @@ document.addEventListener('DOMContentLoaded', () => {
         requestBackgroundTurnstileToken();
       }
 
-      // Fast-poll for up to 3.5 seconds (checking every 200ms)
-      for (let poll = 0; poll < 18; poll++) {
-        await new Promise(r => setTimeout(r, 200));
+      // Fast-poll for up to 800ms (checking every 150ms)
+      for (let poll = 0; poll < 6; poll++) {
+        await new Promise(r => setTimeout(r, 150));
 
         // 1. Instant check from bridge postMessage
         let fresh = window._freshBridgeCft || '';
@@ -13859,18 +13859,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return '';
     }
 
-    // Helper: Adaptive smart retry delay (08:00-08:05 AM ticket rush = 1.6s fast poll; off-peak = 2.5s to 3.5s with slight jitter to prevent WAF throttling)
+    // Helper: Adaptive smart retry delay (08:00 AM rush = 1.0s turbo scan; off-peak = 1.5s to 2.2s for fastest seat capture)
     function getAdaptiveRetryDelay(attempt) {
       const now = new Date();
       const hr = now.getHours();
       const min = now.getMinutes();
-      const isRushHour = (hr === 7 && min >= 59) || (hr === 8 && min <= 6);
+      const isRushHour = (hr === 7 && min >= 58) || (hr === 8 && min <= 8);
       if (isRushHour) {
-        return 1600; // Ultra-fast 1.6s retry during 8:00 AM ticket drop rush
+        return 1000; // Turbo 1.0s retry during 8:00 AM ticket drop rush
       }
-      // Off-peak adaptive: start at 2500ms, gently back off up to 4000ms
-      const base = Math.min(4000, 2500 + Math.floor((attempt || 1) / 5) * 500);
-      const jitter = Math.floor(Math.random() * 300); // 0-300ms jitter
+      // Off-peak fast adaptive: 1500ms base with slight 0-200ms jitter
+      const base = Math.min(2200, 1500 + Math.floor((attempt || 1) / 8) * 200);
+      const jitter = Math.floor(Math.random() * 200);
       return base + jitter;
     }
 

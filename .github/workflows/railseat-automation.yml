@@ -1,33 +1,57 @@
-name: RailSeat 24/7 Automation & Live Radar
+name: RailSeat 24/7 Automation & Headless Mobile Grabber
 
 on:
   schedule:
-    # Runs every 15 minutes (or 30 mins) 100% free on GitHub's serverless infrastructure
+    # 1. Runs every 15 minutes 24/7 for regular seat radar scanning
     - cron: '*/15 * * * *'
+    # 2. Daily 08:00 AM BD Ticket Drop Rush (01:58 AM UTC = 07:58 AM BST)
+    - cron: '58 1 * * *'
+
   workflow_dispatch:
     inputs:
-      force_check:
-        description: 'Force alert delivery even if seat counts have not changed'
+      auto_grab:
+        description: '⚡ Execute 1-Tap Headless Mobile Grab (Hold in Cart & Telegram Alert)'
         required: false
-        default: 'false'
-        type: boolean
-      run_puppeteer:
-        description: 'Run Headless Chromium / Puppeteer screenshot grabber'
-        required: false
-        default: 'false'
+        default: false
         type: boolean
       from_station:
-        description: 'Departure Station (for Puppeteer screenshot)'
+        description: 'Departure Station (e.g. Dhaka)'
         required: false
         default: 'Dhaka'
       to_station:
-        description: 'Destination Station (for Puppeteer screenshot)'
+        description: 'Destination Station (e.g. Chittagong, Coxs Bazar)'
         required: false
-        default: "Cox's Bazar"
+        default: 'Chittagong'
       journey_date:
         description: 'Journey Date (YYYY-MM-DD)'
         required: false
         default: ''
+      seat_class:
+        description: 'Seat Class (S_CHAIR, SNIGDHA, AC_S, AC_B)'
+        required: false
+        default: 'S_CHAIR'
+      train_name:
+        description: 'Target Train Name (leave empty for any available train)'
+        required: false
+        default: ''
+      seats_count:
+        description: 'Number of Seats (1-4)'
+        required: false
+        default: '1'
+      grab_method:
+        description: 'Grab Method'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - api
+          - puppeteer
+      force_check:
+        description: 'Force alert delivery even if seat counts have not changed'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: railseat-automation
@@ -35,9 +59,9 @@ concurrency:
 
 jobs:
   run-radar-and-alerts:
-    name: 🚆 Scan Seats & Deliver Telegram Alerts
+    name: 🚆 Scan Seats & Headless Grabber Worker
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: 📥 Checkout Repository
@@ -56,7 +80,29 @@ jobs:
         run: |
           npm ci --prefer-offline --no-audit
 
-      - name: 🚀 Run Serverless Seat Availability & Live Layout Scanner
+      # ── WAY 3A: 1-Tap Mobile Headless Grabber (Triggered from GitHub Mobile or Manual Dispatch) ──
+      - name: 🚀 Execute 1-Tap Headless Mobile Grabber
+        if: ${{ github.event.inputs.auto_grab == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RAILWAY_SESSION_TOKEN: ${{ secrets.RAILWAY_SESSION_TOKEN }}
+          RAILWAY_DEVICE_ID: ${{ secrets.RAILWAY_DEVICE_ID }}
+          RAILWAY_DEVICE_KEY: ${{ secrets.RAILWAY_DEVICE_KEY }}
+          RAILWAY_CFT_RESPONSE: ${{ secrets.RAILWAY_CFT_RESPONSE }}
+          FROM: ${{ github.event.inputs.from_station }}
+          TO: ${{ github.event.inputs.to_station }}
+          DOJ: ${{ github.event.inputs.journey_date }}
+          CLASS: ${{ github.event.inputs.seat_class }}
+          TRAIN: ${{ github.event.inputs.train_name }}
+          SEATS: ${{ github.event.inputs.seats_count }}
+          METHOD: ${{ github.event.inputs.grab_method }}
+        run: |
+          node scripts/headless-grab-cli.js --retries 10
+
+      # ── WAY 3B: Scheduled 08:00 AM Ticket Drop Rush Auto-Grab & 24/7 Radar Scanner ──
+      - name: 🔍 Run Radar & Scheduled Rush Watcher
+        if: ${{ github.event.inputs.auto_grab != 'true' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -65,20 +111,9 @@ jobs:
           RAILWAY_DEVICE_KEY: ${{ secrets.RAILWAY_DEVICE_KEY }}
           RAILWAY_CFT_RESPONSE: ${{ secrets.RAILWAY_CFT_RESPONSE }}
           FORCE_CHECK: ${{ github.event.inputs.force_check || 'false' }}
+          AUTO_GRAB: 'true'
         run: |
           node scripts/runner-radar-automation.js
-
-      - name: 🤖 Run Headless Chromium Puppeteer Grabber (Optional)
-        if: ${{ github.event.inputs.run_puppeteer == 'true' }}
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          FROM_STATION: ${{ github.event.inputs.from_station || 'Dhaka' }}
-          TO_STATION: ${{ github.event.inputs.to_station || "Cox's Bazar" }}
-          JOURNEY_DATE: ${{ github.event.inputs.journey_date || '' }}
-        run: |
-          npm install --no-save puppeteer form-data
-          node scripts/puppeteer-seatmap-grabber.js
 
       - name: 💾 Commit Updated Watchlist State & Timestamps
         run: |

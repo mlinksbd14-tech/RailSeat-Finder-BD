@@ -21,7 +21,12 @@
 
   // Guard against untargeted iframe injection, but allow background collector iframes
   if (typeof window !== 'undefined') {
-    const isCollectorIframe = window.location.href.includes('cft_collector') || (window.location.search && window.location.search.includes('cft_collector'));
+    const isCollectorIframe = window.location.href.includes('cft_collector') || 
+      (window.location.search && window.location.search.includes('cft_collector')) ||
+      (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('railseat_cft_collector') === '1');
+    if (window.location.href.includes('cft_collector') || (window.location.search && window.location.search.includes('cft_collector'))) {
+      try { sessionStorage.setItem('railseat_cft_collector', '1'); } catch (e) {}
+    }
     if (window.top !== window.self && !isCollectorIframe) return;
     if (window.__RAILSEAT_SYNC_INITIALIZED__) {
       console.log('[RailSeat Bridge] Already initialized in this context, skipping duplicate run.');
@@ -29,6 +34,7 @@
     }
     window.__RAILSEAT_SYNC_INITIALIZED__ = true;
   }
+
 
   // -------------------------------------------------------------------------
   // 1. Multi-Domain Configuration
@@ -155,8 +161,9 @@
   // -------------------------------------------------------------------------
   // 3. Multi-Domain Broadcast Dispatcher
   // -------------------------------------------------------------------------
-  function sendToRailSeat(payload, successMsg = 'Token Synced') {
-    // 0ms instant sync to parent dashboard window when inside bridge iframe
+  function sendToRailSeat(payload, successMsg = 'Session Data Synced', endpoint = '/api/auth/set-token') {
+    if (!payload) return;
+
     if (window.top !== window.self) {
       try {
         window.parent.postMessage({ type: 'RAILSEAT_CFT_TOKEN', ...payload }, '*');
@@ -168,7 +175,7 @@
     let successCount = 0;
 
     urls.forEach((baseUrl) => {
-      const targetUrl = `${baseUrl}/api/auth/set-token`;
+      const targetUrl = `${baseUrl}${endpoint}`;
 
       if (typeof GM_xmlhttpRequest === 'function') {
         GM_xmlhttpRequest({
@@ -211,11 +218,11 @@
   // -------------------------------------------------------------------------
   const originalFetch = window.fetch;
   window.fetch = async function(...args) {
-    try {
-      const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
-      const opts = args[1] || {};
-      const headers = opts.headers || {};
+    const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+    const opts = args[1] || {};
+    const headers = opts.headers || {};
 
+    try {
       let token = '';
       if (headers instanceof Headers) {
         token = headers.get('authorization') || '';
@@ -240,7 +247,28 @@
       }
     } catch (e) {}
 
-    return originalFetch.apply(this, args);
+    const response = await originalFetch.apply(this, args);
+
+    // Fast-capture 100% genuine live seat layout directly from network response
+    if (url.includes('/bookings/seat-layout')) {
+      try {
+        const clone = response.clone();
+        clone.json().then(data => {
+          if (data && (data.data || data.coaches)) {
+            const tripMatch = url.match(/[?&]trip_id=([^&]+)/i);
+            const routeMatch = url.match(/[?&]trip_route_id=([^&]+)/i);
+            sendToRailSeat({
+              trip_id: tripMatch ? tripMatch[1] : '',
+              trip_route_id: routeMatch ? routeMatch[1] : '',
+              layout: data,
+              cft_response: lastSentCft
+            }, 'Live Seat Layout Synced Directly', '/api/seat-layout/save');
+          }
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    return response;
   };
 
   const originalOpen = XMLHttpRequest.prototype.open;
@@ -349,6 +377,14 @@
             window.opener.postMessage(msgPayload, '*');
           }
         } catch (e) {}
+
+        // If running in auto-collector background window, close window immediately after syncing
+        if (typeof window !== 'undefined' && (window.location.href.includes('cft_collector') || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('railseat_cft_collector') === '1'))) {
+          try { sessionStorage.removeItem('railseat_cft_collector'); } catch (e) {}
+          setTimeout(() => {
+            try { window.close(); } catch (e) {}
+          }, 600);
+        }
       }
     } catch (e) {}
   }
@@ -357,7 +393,8 @@
   setInterval(pollTurnstileInDOM, 200);
   pollTurnstileInDOM();
 
-  // Active trigger for Turnstile execution in collector iframe or when idle
+  // Active trigger for Turnstile execution & invisible rendering
+  let activeInvisibleWidgetId = null;
   function triggerActiveTurnstileSolve() {
     try {
       if (window.turnstile) {
@@ -366,15 +403,54 @@
         } else if (typeof window.turnstile.reset === 'function') {
           window.turnstile.reset();
         }
+
+        // Render invisible verification slot using Railway's invisible booking site key
+        if (activeInvisibleWidgetId === null && typeof window.turnstile.render === 'function') {
+          let slot = document.getElementById('railseat-cft-auto-slot');
+          if (!slot) {
+            slot = document.createElement('div');
+            slot.id = 'railseat-cft-auto-slot';
+            slot.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;';
+            (document.body || document.documentElement).appendChild(slot);
+          }
+          activeInvisibleWidgetId = window.turnstile.render(slot, {
+            sitekey: '0x4AAAAAACNkZ_TxQr_zpcZW',
+            size: 'invisible',
+            callback: function(token) {
+              if (token && token.length > 20 && token !== lastSentCft) {
+                lastSentCft = token;
+                sendToRailSeat({ cft_response: token }, '⚡ Live Turnstile Token Synced (Invisible)');
+                try {
+                  const msgPayload = { type: 'RAILSEAT_CFT_TOKEN', cft_response: token };
+                  if (window.opener && !window.opener.closed) window.opener.postMessage(msgPayload, '*');
+                  if (window.parent && window.parent !== window) window.parent.postMessage(msgPayload, '*');
+                } catch (e) {}
+                if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('railseat_cft_collector') === '1') {
+                  sessionStorage.removeItem('railseat_cft_collector');
+                  setTimeout(() => { try { window.close(); } catch (e) {} }, 600);
+                }
+              }
+            },
+            'expired-callback': function() {
+              if (activeInvisibleWidgetId !== null && window.turnstile?.reset) {
+                try { window.turnstile.reset(activeInvisibleWidgetId); } catch (e) {}
+              }
+            }
+          });
+        }
       }
     } catch (e) {}
   }
 
-  // If in collector mode (background bridge iframe), immediately trigger solving
-  if (typeof window !== 'undefined' && window.location.href.includes('cft_collector')) {
-    setTimeout(triggerActiveTurnstileSolve, 400);
-    setTimeout(triggerActiveTurnstileSolve, 1500);
-    setTimeout(triggerActiveTurnstileSolve, 3000);
+  // If in collector mode (background bridge popup/window), immediately trigger solving and close when done
+  if (typeof window !== 'undefined' && (window.location.href.includes('cft_collector') || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('railseat_cft_collector') === '1'))) {
+    setTimeout(triggerActiveTurnstileSolve, 200);
+    setTimeout(triggerActiveTurnstileSolve, 1000);
+    setTimeout(triggerActiveTurnstileSolve, 2500);
+    // Safety auto-close after 6 seconds
+    setTimeout(() => {
+      try { window.close(); } catch (e) {}
+    }, 6000);
   }
 
   // Continuous background token refresh every 60s while browser is open on Railway site
@@ -383,46 +459,149 @@
     pollTurnstileInDOM();
   }, 60000);
 
-  // MutationObserver triggers sync the exact millisecond the response input is filled
+  // -------------------------------------------------------------------------
+  // 5b. Automatic Railway Disclaimer ("I AGREE") Dismissal
+  // When opening eticket.railway.gov.bd, an official Disclaimer bottom sheet
+  // appears with an "I AGREE" button (.agree-btn). It blocks interaction and Turnstile.
+  // This automatically dismisses the Disclaimer immediately and pre-sets sessionStorage.
+  // -------------------------------------------------------------------------
+  function autoDismissRailwayDisclaimer() {
+    try {
+      // 1. Pre-set sessionStorage and localStorage to suppress disclaimer
+      try {
+        if (sessionStorage.getItem('disclaimer_agreed_for_home') !== '1') {
+          sessionStorage.setItem('disclaimer_agreed_for_home', '1');
+        }
+        if (localStorage.getItem('disclaimer_agreed_for_home') !== '1') {
+          localStorage.setItem('disclaimer_agreed_for_home', '1');
+        }
+      } catch (e) {}
+
+      // 2. Query any visible "I AGREE" buttons in DOM
+      const agreeSelectors = [
+        '.agree-btn',
+        'button.agree-btn',
+        '.disclaimer-bottom-sheet-action-btn button',
+        '.disclaimer-bottom-sheet button',
+        'button[class*="agree-btn"]',
+        '.disclaimer-modal button',
+        'app-disclaimer button'
+      ];
+
+      for (const sel of agreeSelectors) {
+        const btn = document.querySelector(sel);
+        if (btn && btn.offsetParent !== null && !btn._disclaimerAutoClicked) {
+          btn._disclaimerAutoClicked = true;
+          console.log('[RailSeat Bridge] 🎯 Auto-clicked "I AGREE" disclaimer popup button!');
+          btn.click();
+          triggerActiveTurnstileSolve();
+          return true;
+        }
+      }
+
+      // 3. Fallback: Search all buttons for text "I AGREE", "AGREE", "আমি সম্মত"
+      const allButtons = document.querySelectorAll('button, a.btn');
+      for (const btn of allButtons) {
+        const txt = (btn.textContent || '').trim().toUpperCase();
+        if ((txt === 'I AGREE' || txt === 'AGREE' || txt === 'আমি সম্মত') && btn.offsetParent !== null && !btn._disclaimerAutoClicked) {
+          btn._disclaimerAutoClicked = true;
+          console.log('[RailSeat Bridge] 🎯 Auto-clicked disclaimer text button:', txt);
+          btn.click();
+          triggerActiveTurnstileSolve();
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  // Run disclaimer auto-dismissal continuously on page load
+  autoDismissRailwayDisclaimer();
+  setInterval(autoDismissRailwayDisclaimer, 250);
+
+  // -------------------------------------------------------------------------
+  // 5c. Direct API Turbo-Grab (Bypasses UI Rendering Completely)
+  // If URL contains trip_id & trip_route_id (or ?turbo_grab=1), it fires direct
+  // fetch to Shohoz API as soon as Turnstile resolves, completely skipping the DOM!
+  // -------------------------------------------------------------------------
+  async function checkAndExecuteDirectApiGrab() {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const tripId = params.get('trip_id') || params.get('tripId');
+      const tripRouteId = params.get('trip_route_id') || params.get('tripRouteId');
+      const turboGrab = params.get('turbo_grab') === '1' || params.get('quick_sync') === '1' || params.get('cft_collector') === '1';
+
+      if ((tripId && tripRouteId) || turboGrab) {
+        console.log('[RailSeat Turbo] ⚡ Turbo Grab mode active! Intercepting direct data stream...');
+        let waitCount = 0;
+        const grabTimer = setInterval(async () => {
+          waitCount++;
+          const cft = lastSentCft || (window.turnstile && typeof window.turnstile.getResponse === 'function' && window.turnstile.getResponse());
+          const authToken = localStorage.getItem('token') || '';
+
+          if (cft && cft.length > 20) {
+            clearInterval(grabTimer);
+
+            if (tripId && tripRouteId) {
+              try {
+                showFloatingBadge('⚡ Turbo Fetching Live Layout directly via API...', true);
+                const apiUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}&cft_response=${encodeURIComponent(cft)}`;
+                const headers = { 'Accept': 'application/json, text/plain, */*' };
+                if (authToken) headers['Authorization'] = authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+
+                const apiResp = await fetch(apiUrl, { headers });
+                if (apiResp.ok) {
+                  const layoutJson = await apiResp.json();
+                  sendToRailSeat({
+                    trip_id: tripId,
+                    trip_route_id: tripRouteId,
+                    layout: layoutJson,
+                    cft_response: cft
+                  }, '⚡ Live Seat Layout Synced (UI Bypassed)', '/api/seat-layout/save');
+                }
+              } catch (err) {
+                console.warn('[RailSeat Turbo] Direct API fetch notice:', err);
+              }
+            }
+
+            if (turboGrab && (window.location.href.includes('cft_collector') || params.get('auto_close') === '1')) {
+              setTimeout(() => { try { window.close(); } catch (e) {} }, 500);
+            }
+          }
+
+          if (waitCount > 50) clearInterval(grabTimer);
+        }, 120);
+      }
+    } catch (e) {}
+  }
+
+  // MutationObserver triggers sync, disclaimer dismissal & turbo execution the exact millisecond elements appear
   try {
-    const observer = new MutationObserver(() => pollTurnstileInDOM());
+    const observer = new MutationObserver(() => {
+      pollTurnstileInDOM();
+      autoDismissRailwayDisclaimer();
+      if (typeof autoBookDriverRunning !== 'undefined' && autoBookDriverRunning) {
+        // Fast-path: wake up autobook driver immediately upon DOM changes
+        if (typeof kickAutoBookDriverNow === 'function') kickAutoBookDriverNow();
+      }
+    });
     const targetNode = document.documentElement || document.body;
     if (targetNode) {
       observer.observe(targetNode, { childList: true, subtree: true, attributes: true });
     }
   } catch (e) {}
 
-  window.addEventListener('DOMContentLoaded', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); });
-  window.addEventListener('load', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); });
+  window.addEventListener('DOMContentLoaded', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); autoDismissRailwayDisclaimer(); checkAndExecuteDirectApiGrab(); });
+  window.addEventListener('load', () => { pollTurnstileInDOM(); triggerActiveTurnstileSolve(); autoDismissRailwayDisclaimer(); checkAndExecuteDirectApiGrab(); });
+  checkAndExecuteDirectApiGrab();
 
   // -------------------------------------------------------------------------
   // 6. Automated Seat Selection → Continue Purchase → OTP page
-  //
-  // eticket.railway.gov.bd is an Angular SPA. The DOM contract we drive is:
-  //   /booking/train/search   ->  app-search-result
-  //                                app-single-trip                  (one per train)
-  //                                  .trip-name h2                   (train number)
-  //                                  .single-seat-class             (one per class)
-  //                                    .seat-class-name              ("S_CHAIR" ...)
-  //                                    button.book-now-btn            (loads layout)
-  //   seat layout (modal, same route)
-  //                              app-seat-layout > .seat-layout-view
-  //                                select#select-bogie              (coach / floor)
-  //                                button.btn-seat[title="<seat>"] (.seat-selected)
-  //                                select#boardingpoint            (REQUIRED)
-  //                                button.continue-btn             (Continue Purchase)
-  //   /booking/train/trip-info  ->  passenger details + app-confirm-booking-otp
-  //
-  // The intent travels in the URL *and* in sessionStorage, because the official
-  // site re-renders (and sometimes fully reloads) between the search page, the
-  // seat layout and the purchase page, which would otherwise drop the query
-  // string. The driver below is a resumable state machine: it re-inspects the
-  // DOM on every tick and only performs the step that is still missing.
   // -------------------------------------------------------------------------
   const AUTOBOOK_STORAGE_KEY = 'railseat_autobook_intent';
   const AUTOBOOK_TTL_MS = 60 * 60 * 1000;
-  const AUTOBOOK_TICK_MS = 800;
-  const AUTOBOOK_MAX_TICKS = 900;
+  const AUTOBOOK_TICK_MS = 100; // Accelerated 8x from 800ms to 100ms for sub-second execution
+  const AUTOBOOK_MAX_TICKS = 3000;
   const RAILWAY_LS_TOKEN = 'token';
   const RAILWAY_LS_USER = 'user';
 
@@ -848,28 +1027,28 @@
     'KHA': ['খ', 'KHA'],
     'GA': ['গ', 'GA'],
     'GHA': ['ঘ', 'GHA'],
-    'UMA': ['ঙ', 'UMA'],
+    'UMA': ['ঙ', 'UMA', 'UNG'],
     'CHA': ['চ', 'CHA'],
-    'SCHA': ['ছ', 'SCHA', 'CHHA'],
-    'JA': ['জ', 'JA'],
+    'SCHA': ['ছ', 'SCHA', 'CHHA', 'S-CHA', 'CHH'],
+    'JA': ['জ', 'য', 'JA', 'YA'],
     'JHA': ['ঝ', 'JHA'],
-    'NEO': ['ঞ', 'NEO', 'IO'],
+    'NEO': ['ঞ', 'NEO', 'IO', 'NYA'],
     'TA': ['ট', 'TA'],
     'THA': ['ঠ', 'THA'],
     'DA': ['ড', 'DA'],
     'DHA': ['ঢ', 'DHA'],
-    'NA': ['ণ', 'ন', 'NA'],
-    'TO': ['ত', 'TO', 'TA'],
-    'THO': ['থ', 'THO', 'THA'],
-    'DO': ['দ', 'DO', 'DA'],
-    'DHO': ['ধ', 'DHO', 'DHA'],
-    'NO': ['ন', 'NO', 'NA'],
+    'NA': ['ণ', 'NA'],
+    'TO': ['ত', 'TO'],
+    'THO': ['থ', 'THO'],
+    'DO': ['দ', 'DO'],
+    'DHO': ['ধ', 'DHO'],
+    'NO': ['ন', 'NO'],
     'PA': ['প', 'PA'],
     'PHA': ['ফ', 'PHA', 'FA'],
     'BA': ['ব', 'BA'],
     'BHA': ['ভ', 'BHA', 'VA'],
     'MA': ['ম', 'MA'],
-    'JA': ['য', 'জ', 'JA', 'YA'],
+    'YA': ['য', 'YA'],
     'RA': ['র', 'RA'],
     'LA': ['ল', 'LA'],
     'XTR1': ['XTR1', 'XTR-1', 'EXTRA1', 'EXTRA-1', 'এক্সট্রা ১', 'এক্সট্রা-১'],
@@ -880,40 +1059,79 @@
     'XTR6': ['XTR6', 'XTR-6', 'EXTRA6', 'EXTRA-6', 'এক্সট্রা ৬', 'এক্সট্রা-৬']
   };
 
+  // Comprehensive Bangladesh Railway Intercity Train Name & Number Catalog
+  const BD_TRAIN_NAME_MAP = [
+    { en: 'SUBORNO', bn: 'সুবর্ণ', num: '701,702' },
+    { en: 'MOHANAGAR PROBHATI', alt: ['PROBHATI', 'PROVATI'], bn: 'মহানগর প্রভাতী', num: '704' },
+    { en: 'MOHANAGAR GODHULI', alt: ['GODHULI'], bn: 'মহানগর গোধূলী', num: '703' },
+    { en: 'MOHANAGAR', bn: 'মহানগর', num: '721,722' },
+    { en: 'EKOTA', bn: 'একতা', num: '705,706' },
+    { en: 'TISTA', bn: 'তিস্তা', num: '707,708' },
+    { en: 'PARABAT', bn: 'পারাবত', num: '709,710' },
+    { en: 'UPABAN', bn: 'উপবন', num: '739,740' },
+    { en: 'JAYANTIKA', bn: 'জয়ন্তিকা', num: '717,718' },
+    { en: 'KALNI', bn: 'কালনী', num: '773,774' },
+    { en: 'TURNA', bn: 'তূর্ণা', num: '741,742' },
+    { en: 'SONAR BANGLA', bn: 'সোনার বাংলা', num: '787,788' },
+    { en: 'DRUTOJAN', bn: 'দ্রুতযান', num: '757,758' },
+    { en: 'PANCHAGARH', bn: 'পঞ্চগড়', num: '793,794' },
+    { en: 'BENAPOLE', bn: 'বেনাপোল', num: '795,796' },
+    { en: 'SUNDARBAN', bn: 'সুন্দরবন', num: '725,726' },
+    { en: 'CHITRA', bn: 'চিত্রা', num: '763,764' },
+    { en: 'PADMA', bn: 'পদ্মা', num: '759,760' },
+    { en: 'DHUMKETU', bn: 'ধূমকেতু', num: '769,770' },
+    { en: 'SILKCITY', alt: ['SILK CITY'], bn: 'সিল্কসিটি', num: '753,754' },
+    { en: 'BANALATA', bn: 'বনলতা', num: '791,792' },
+    { en: 'BRAHMAPUTRA', bn: 'ব্রহ্মপুত্র', num: '743,744' },
+    { en: 'JAMUNA', bn: 'যমুনা', num: '745,746' },
+    { en: 'AGRIBINA', alt: ['AGNI BEENA'], bn: 'অগ্নিবীণা', num: '735,736' },
+    { en: 'KURIGRAM', bn: 'কুড়িগ্রাম', num: '797,798' },
+    { en: 'RANGPUR', bn: 'রংপুর', num: '771,772' },
+    { en: 'LALMONI', bn: 'লালমণি', num: '751,752' },
+    { en: 'CHILAHATI', bn: 'চিলাহাটি', num: '805,806' },
+    { en: 'BURIMARI', bn: 'বুড়িমারী', num: '809,810' },
+    { en: 'MODHUMOTI', alt: ['MADHUMATI'], bn: 'মধুমতি', num: '755,756' },
+    { en: 'TUNGIPARA', bn: 'টুঙ্গিপাড়া', num: '783,784' },
+    { en: 'RUPSHA', bn: 'রূপসা', num: '727,728' },
+    { en: 'SIMANTA', alt: ['SEMA'], bn: 'সীমান্ত', num: '747,748' },
+    { en: 'KAPOTAKKHO', bn: 'কপোতাক্ষ', num: '715,716' },
+    { en: 'SAGARDARI', bn: 'সাগরদাঁড়ি', num: '761,762' },
+    { en: 'BIJOY', bn: 'বিজয়', num: '785,786' },
+    { en: 'MEGHNA', bn: 'মেঘনা', num: '729,730' },
+    { en: 'KISHORGANJ', bn: 'কিশোরগঞ্জ', num: '781,782' },
+    { en: 'EGAROSINDHUR', bn: 'এগারসিন্দুর', num: '737,738' },
+    { en: 'MOHONGANJ', bn: 'মোহনগঞ্জ', num: '789,790' },
+    { en: 'HAOR', bn: 'হাওর', num: '777,778' },
+    { en: 'JAMALPUR', bn: 'জামালপুর', num: '799,800' },
+    { en: 'DHAKA', bn: 'ঢাকা', num: '765,766' },
+    { en: 'COXS BAZAR', alt: ["COX'S BAZAR"], bn: 'কক্সবাজার', num: '813,814' },
+    { en: 'TOURIST', bn: 'ট্যুরিস্ট', num: '815,816' }
+  ];
+
   function coachTokens(coach) {
     if (!coach) return [];
-    const raw = String(coach).trim().toUpperCase();
-    const engDigits = toEnglishDigits(raw);
+    const cleanCoach = String(coach).trim().toUpperCase()
+      .replace(/^(COACH|BOGIE|BOGI)[-_\s]*/i, '')
+      .replace(/[\s\-_\/()]/g, '');
+    const engDigits = toEnglishDigits(cleanCoach);
     const tokens = new Set();
-    tokens.add(raw);
+    tokens.add(cleanCoach);
     tokens.add(engDigits);
 
     // Check Bengali/English bogie alias mapping
     for (const [key, aliases] of Object.entries(BN_EN_COACH_MAP)) {
-      if (aliases.some(a => raw === a || engDigits === a || raw.startsWith(a + '-') || raw.endsWith('-' + a) || engDigits.startsWith(a + '-') || engDigits.endsWith('-' + a))) {
+      if (aliases.some(a => {
+        const cleanA = a.toUpperCase().replace(/[\s\-_\/()]/g, '');
+        return cleanCoach === cleanA || engDigits === cleanA;
+      })) {
         aliases.forEach(a => {
-          tokens.add(a);
-          tokens.add(a.toUpperCase());
+          tokens.add(a.trim());
+          tokens.add(a.toUpperCase().trim());
         });
         break;
       }
     }
 
-    raw.split(/[\s\-_\/()]+/).forEach(part => {
-      if (part.length >= 1) {
-        tokens.add(part);
-        tokens.add(toEnglishDigits(part));
-      }
-    });
-
-    const m = engDigits.match(/([A-Z\u0980-\u09FF]{1,4})\s*[-_]?\s*(\d{1,3})/);
-    if (m) {
-      tokens.add(m[1]);
-      tokens.add(m[2]);
-      tokens.add(m[1] + m[2]);
-    }
-    const cleanNoPunct = engDigits.replace(/[\s\-_\/()]/g, '');
-    if (cleanNoPunct) tokens.add(cleanNoPunct);
     return Array.from(tokens);
   }
 
@@ -923,46 +1141,87 @@
 
     const rawTrain = normalize(intent.train);
     const model = normalize(intent.trainModel);
-    const name = rawTrain.replace(/\s*EXPRESS.*$/, '').replace(/\(\d+\)/, '').trim();
-    const number = (rawTrain.match(/\b(\d{2,4})\b/) || [])[1] || (model.match(/\b(\d{2,4})\b/) || [])[1] || '';
+    
+    // Extract target train number (e.g. 701, 704, 788)
+    const targetNumber = (model.match(/\b(\d{2,4})\b/) || [])[1] || (rawTrain.match(/\b(\d{2,4})\b/) || [])[1] || '';
+    
+    // Clean train name (strip "EXPRESS", "INTERCITY", "TRAIN #", digits)
+    const cleanName = rawTrain
+      .replace(/^TRAIN\s*#?\s*/i, '')
+      .replace(/\s*EXPRESS.*$/i, '')
+      .replace(/\s*INTERCITY.*$/i, '')
+      .replace(/\(\d+\)/g, '')
+      .trim();
 
-    // If intent has no train preference or "ALL", pick the first card
+    // If intent has no train preference or explicitly "ALL", pick first available card
     if (!rawTrain || rawTrain === 'ALL') {
       return cards[0] || null;
     }
 
-    // 1. Numeric train number (e.g. 704, 788)
-    if (number) {
-      const byNumber = cards.find(card => {
-        const titleText = textOf(card.querySelector(RS.tripTitle) || card.querySelector('.trip-name') || card);
-        return titleText.includes(number);
+    // Prepare list of card objects with normalized titles and text
+    const parsedCards = cards.map(card => {
+      const titleEl = card.querySelector(RS.tripTitle) ||
+        card.querySelector('.trip-name') ||
+        card.querySelector('.train-name') ||
+        card.querySelector('.single-trip-wrapper h2, .single-trip-wrapper h3, app-single-trip h2, app-single-trip h3, h2, h3');
+      
+      const rawTitle = textOf(titleEl) || '';
+      const engTitle = toEnglishDigits(rawTitle).toUpperCase();
+      const engFull = toEnglishDigits(card.textContent || '').toUpperCase();
+      
+      // Extract any 3-4 digit train number from title e.g. "(701)" or "701"
+      const numMatch = engTitle.match(/\b(\d{2,4})\b/) || engFull.match(/#\s*(\d{2,4})\b/);
+      const cardNum = numMatch ? numMatch[1] : '';
+
+      return { card, rawTitle, engTitle, engFull, cardNum };
+    });
+
+    // Strategy 1: EXACT MATCH ON TRAIN NUMBER (Most Reliable)
+    if (targetNumber) {
+      // 1a. Number found in title
+      const byTitleNum = parsedCards.find(c => c.cardNum === targetNumber || c.engTitle.includes(`(${targetNumber})`) || c.engTitle.includes(` ${targetNumber}`) || c.engTitle.includes(`#${targetNumber}`));
+      if (byTitleNum) return byTitleNum.card;
+
+      // 1b. Number found in full card text with boundary
+      const byFullNum = parsedCards.find(c => {
+        const regex = new RegExp(`\\b${targetNumber}\\b`);
+        return regex.test(c.engTitle) || regex.test(c.engFull);
       });
-      if (byNumber) return byNumber;
+      if (byFullNum) return byFullNum.card;
     }
 
-    // 2. Model match
+    // Strategy 2: MATCH BY TRAIN NAME (English or Bengali alias)
+    if (cleanName) {
+      // Find dictionary entries matching cleanName
+      const dictMatches = BD_TRAIN_NAME_MAP.filter(entry => {
+        if (cleanName.includes(entry.en) || entry.en.includes(cleanName)) return true;
+        if (entry.alt && entry.alt.some(a => cleanName.includes(a) || a.includes(cleanName))) return true;
+        return false;
+      });
+
+      for (const c of parsedCards) {
+        // Direct English substring
+        if (c.engTitle.includes(cleanName)) return c.card;
+
+        // Check dictionary English, Bengali, and associated train numbers
+        for (const entry of dictMatches) {
+          if (c.engTitle.includes(entry.en) || c.rawTitle.includes(entry.bn)) return c.card;
+          if (entry.alt && entry.alt.some(a => c.engTitle.includes(a))) return c.card;
+          if (entry.num && entry.num.split(',').some(n => c.cardNum === n || c.engTitle.includes(n))) return c.card;
+        }
+      }
+    }
+
+    // Strategy 3: Loose match on model keyword
     if (model) {
-      const byModel = cards.find(card => {
-        const titleText = textOf(card.querySelector(RS.tripTitle) || card.querySelector('.trip-name') || card);
-        return titleText.toUpperCase().includes(model);
-      });
-      if (byModel) return byModel;
+      const byModel = parsedCards.find(c => c.engTitle.includes(model) || c.engFull.includes(model));
+      if (byModel) return byModel.card;
     }
 
-    // 3. Name match
-    if (name) {
-      const byName = cards.find(card => {
-        const titleText = normalize(textOf(card.querySelector(RS.tripTitle) || card.querySelector('.trip-name') || card));
-        return titleText.includes(name) || name.includes(titleText);
-      });
-      if (byName) return byName;
-    }
-
-    // 4. Loose match in full text content
-    return cards.find(card => {
-      const fullText = normalize(card.textContent);
-      return (number && fullText.includes(number)) || (name && fullText.includes(name));
-    }) || cards[0] || null;
+    // CRITICAL: DO NOT FALL BACK TO cards[0] IF A SPECIFIC TRAIN WAS REQUESTED!
+    // Return null so the caller waits for the train card to appear or renders a clear warning.
+    console.warn(`[RailSeat AutoBook] ⚠️ Target train "${intent.train}" (#${targetNumber || model}) not matched in ${cards.length} loaded cards.`);
+    return null;
   }
 
   let lastClassNote = '';
@@ -978,13 +1237,14 @@
     lastClassNote = '';
 
     const classAliases = {
-      'S_CHAIR': ['S_CHAIR', 'SHOVON CHAIR', 'S-CHAIR', 'SCHAIR', 'SHOVON'],
-      'SNIGDHA': ['SNIGDHA', 'AC CHAIR', 'SNIGDHA (AC CHAIR)', 'AC_C'],
-      'F_SEAT': ['F_SEAT', 'FIRST SEAT', 'FIRST CLASS SEAT', 'F-SEAT'],
-      'F_BERTH': ['F_BERTH', 'FIRST BERTH', 'FIRST CLASS BERTH', 'F-BERTH'],
-      'AC_B': ['AC_B', 'AC BERTH', 'AC-B'],
-      'AC_S': ['AC_S', 'AC SEAT', 'AC-S'],
-      'SHOVON': ['SHOVON', 'SHOVON CHAIR', 'S_CHAIR']
+      'S_CHAIR': ['S_CHAIR', 'SHOVON CHAIR', 'S-CHAIR', 'SCHAIR', 'SHOVON', 'শোভন চেয়ার', 'শোভন'],
+      'SNIGDHA': ['SNIGDHA', 'AC CHAIR', 'SNIGDHA (AC CHAIR)', 'AC_C', 'স্নিগ্ধা', 'এসি চেয়ার', 'এসি_সি'],
+      'F_SEAT': ['F_SEAT', 'FIRST SEAT', 'FIRST CLASS SEAT', 'F-SEAT', 'প্রথম আসন', 'এফ_সিট'],
+      'F_BERTH': ['F_BERTH', 'FIRST BERTH', 'FIRST CLASS BERTH', 'F-BERTH', 'প্রথম বার্থ', 'এফ_বার্থ'],
+      'AC_B': ['AC_B', 'AC BERTH', 'AC-B', 'এসি বার্থ', 'এসি_বি'],
+      'AC_S': ['AC_S', 'AC SEAT', 'AC-S', 'এসি সিট', 'এসি_এস'],
+      'SHOVON': ['SHOVON', 'SHOVON CHAIR', 'S_CHAIR', 'শোভন', 'শোভন চেয়ার'],
+      'SULOB': ['SULOB', 'SULAV', 'SHULOBH', 'সুলভ']
     };
 
     const targetAliases = (wanted && classAliases[wanted]) || (wanted ? [wanted] : []);
@@ -1042,9 +1302,29 @@
 
   function matchCoachOption(select, coachName) {
     if (!select || !select.options || !coachName) return null;
-    const tokens = coachTokens(coachName);
-    const cleanedCoach = toEnglishDigits(String(coachName).trim().toUpperCase()).replace(/[\s\-_\/()]/g, '');
-    if (cleanedCoach && !tokens.includes(cleanedCoach)) tokens.push(cleanedCoach);
+    
+    // Normalize requested coach: strip "Coach-", "Bogie-", whitespace
+    const cleanReq = String(coachName).trim().toUpperCase()
+      .replace(/^(COACH|BOGIE|BOGI)[-_\s]*/i, '')
+      .replace(/[\s\-_\/()]/g, '');
+    
+    const tokens = new Set();
+    tokens.add(cleanReq);
+    tokens.add(toEnglishDigits(cleanReq));
+
+    // Lookup aliases from BN_EN_COACH_MAP
+    for (const [key, aliases] of Object.entries(BN_EN_COACH_MAP)) {
+      if (aliases.some(a => {
+        const cleanA = a.toUpperCase().replace(/[\s\-_\/()]/g, '');
+        return cleanReq === cleanA;
+      })) {
+        aliases.forEach(a => {
+          tokens.add(a.trim());
+          tokens.add(a.toUpperCase().trim());
+        });
+        break;
+      }
+    }
 
     const options = Array.from(select.options).filter(o => o && o.value && String(o.value).trim() !== '');
     if (!options.length) return null;
@@ -1055,54 +1335,34 @@
     for (const option of options) {
       const origText = textOf(option);
       const text = toEnglishDigits(origText).toUpperCase().trim();
-      const cleanText = text.replace(/[\s\-_\/()]/g, '');
       const val = toEnglishDigits(String(option.value || '')).toUpperCase().trim();
-      const cleanVal = val.replace(/[\s\-_\/()]/g, '');
+
+      // Extract leading coach identifier (e.g. "SCHA", "CHA", "KA", "ক", "ছ")
+      const optMatch = text.match(/^([A-Z\u0980-\u09FF0-9]+)/);
+      const optLead = optMatch ? optMatch[1].toUpperCase() : '';
+      const cleanOptText = text.replace(/[\s\-_\/()]/g, '');
 
       let score = 0;
-
-      // Extract leading coach identifier (e.g., "XTR1", "CHA", "KA", "1")
-      const optCoachMatch = text.match(/^([A-Z\u0980-\u09FF0-9]+)/);
-      const optLeadingName = optCoachMatch ? optCoachMatch[1] : '';
 
       for (const token of tokens) {
         const t = token.toUpperCase();
         const cleanT = t.replace(/[\s\-_\/()]/g, '');
 
-        // 1. Exact match on coach name / leading identifier (e.g. "XTR1 (12)" or "XTR-1" matches "XTR1")
-        if (optLeadingName === t || optLeadingName === cleanT) {
+        // 1. EXACT match on leading identifier (e.g. "CHA (12)" with "CHA" or "ছ (5)" with "ছ")
+        if (optLead === t || optLead === cleanT) {
           score = Math.max(score, 100);
         }
-        // 2. Exact match on full option text or value
-        else if (text === t || val === t || cleanText === cleanT || cleanVal === cleanT) {
+        // 2. Exact match on clean option or value
+        else if (cleanOptText === cleanT || val === cleanT) {
           score = Math.max(score, 95);
         }
-        // 3. Option text starts with token followed by delimiter
+        // 3. Option starts with token followed by delimiter (e.g. "CHA (", "CHA-", "CHA ")
         else if (text.startsWith(t + ' ') || text.startsWith(t + '(') || text.startsWith(t + '-') || text.startsWith(t + ':')) {
           score = Math.max(score, 90);
         }
-        // 4. Token enclosed in parentheses or surrounded by spaces
-        else if (text.includes(' ' + t + ' ') || text.includes('(' + t + ')') || text.includes('-' + t + '-') || text.includes(' ' + t + '(')) {
+        // 4. Token enclosed in parens or spaces
+        else if (text.includes(' ' + t + ' ') || text.includes('(' + t + ')') || text.includes('-' + t + '-')) {
           score = Math.max(score, 85);
-        }
-        // 5. Clean text prefix match
-        else if (cleanText.startsWith(cleanT) || cleanVal.startsWith(cleanT)) {
-          score = Math.max(score, 75);
-        }
-        // 6. Substring match
-        else if (origText.includes(token) || text.includes(t)) {
-          score = Math.max(score, 60);
-        }
-      }
-
-      // Check cleaned coach directly
-      if (cleanedCoach) {
-        if (optLeadingName === cleanedCoach) {
-          score = Math.max(score, 100);
-        } else if (cleanText.startsWith(cleanedCoach)) {
-          score = Math.max(score, 80);
-        } else if (cleanText.includes(cleanedCoach)) {
-          score = Math.max(score, 65);
         }
       }
 
@@ -1112,8 +1372,8 @@
       }
     }
 
-    if (bestScore >= 60) {
-      console.log(`[RailSeat AutoBook] 🎯 Matched coach "${coachName}" to option "${textOf(bestOption)}" (score: ${bestScore})`);
+    if (bestScore >= 85) {
+      console.log(`[RailSeat AutoBook] 🎯 Matched coach "${coachName}" to dropdown option "${textOf(bestOption)}" (score: ${bestScore})`);
       return bestOption;
     }
 

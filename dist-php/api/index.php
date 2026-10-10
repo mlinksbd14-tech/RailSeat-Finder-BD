@@ -74,6 +74,11 @@ switch ($path) {
         require __DIR__ . '/seat-layout.php';
         break;
 
+    case 'seat-grab':
+    case 'seat-grab.php':
+        require __DIR__ . '/seat-grab.php';
+        break;
+
     case 'user-auth/status':
     case 'user-auth/popular-routes':
     case 'user-auth/firebase-login':

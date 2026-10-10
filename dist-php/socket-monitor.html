@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shohoz WebSocket Live Monitor — RailSeat BD Admin</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    @keyframes pulse-fast {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .animate-pulse-fast {
+      animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Page Title -->
+      <div class="flex items-center space-x-3">
+        <a href="/" class="flex items-center space-x-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center text-base shadow-md group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-satellite-dish"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-extrabold text-sm sm:text-base text-white block leading-tight">Shohoz WebSocket Monitor</span>
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-widest">Admin Only</span>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-mono font-semibold">wss://train-websocket.shohoz.com</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Controls & Status -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Live Connection Pill -->
+        <div id="liveStreamBadge" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="liveStatusText">Live Feed Active</span>
+        </div>
+
+        <!-- Pause / Resume Toggle -->
+        <button type="button" id="togglePauseBtn" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+          <i class="fa-solid fa-pause text-xs" id="pauseBtnIcon"></i>
+          <span id="pauseBtnText">Pause</span>
+        </button>
+
+        <!-- Clear Logs -->
+        <button type="button" id="clearLogsBtn" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-rose-950/60 hover:border-rose-700 hover:text-rose-300 text-slate-300 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+          <span>Clear</span>
+        </button>
+
+        <!-- Exit to Dashboard -->
+        <a href="/" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4">
+
+    <!-- Top Telemetry Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      
+      <!-- Card 1: Active Rooms Subscriptions -->
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Active Trip Rooms</span>
+          <span id="statActiveRooms" class="text-xl sm:text-2xl font-black font-mono text-emerald-400">0</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-network-wired"></i>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Events Captured -->
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Events Captured</span>
+          <span id="statTotalEvents" class="text-xl sm:text-2xl font-black font-mono text-cyan-400">0</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+      </div>
+
+      <!-- Card 3: Seat Held Mid-Booking Events (Type 1) -->
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Seats Held (5m)</span>
+          <span id="statSeatsHeld" class="text-xl sm:text-2xl font-black font-mono text-amber-400">0</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-800/60 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+      </div>
+
+      <!-- Card 4: Seat Released Events (Type 2) -->
+      <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center justify-between">
+        <div class="space-y-0.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Seats Released</span>
+          <span id="statSeatsReleased" class="text-xl sm:text-2xl font-black font-mono text-emerald-400">0</span>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-unlock"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Rooms Tray & Quick Subscribe Strip -->
+    <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <h3 class="font-extrabold text-xs sm:text-sm text-white">Subscribed Trip Rooms Registry</h3>
+          <span id="activeRoomsCountBadge" class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 font-mono">0 active</span>
+        </div>
+        
+        <!-- Manual Room Subscribe Modal Trigger -->
+        <form id="joinRoomForm" class="flex items-center space-x-2 text-xs w-full sm:w-auto">
+          <input type="text" id="manualRoomInput" placeholder="LIVE#train#701#Dhaka#Chattogram#19-Oct-2026" 
+            class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-950 text-slate-200 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none font-mono w-full sm:w-80">
+          <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0 cursor-pointer transition">
+            <i class="fa-solid fa-plus mr-1"></i> Subscribe
+          </button>
+        </form>
+      </div>
+
+      <!-- Active Rooms List Chips -->
+      <div id="activeRoomsList" class="flex flex-wrap items-center gap-2">
+        <span class="text-xs text-slate-500 italic">No trip rooms actively connected. Open the seat layout modal or subscribe to a room above to monitor data streams.</span>
+      </div>
+    </div>
+
+    <!-- Filters Strip -->
+    <div class="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs">
+      <!-- Filter By Event Type -->
+      <div class="flex items-center space-x-2 flex-wrap">
+        <span class="font-bold text-slate-400">Filter Event:</span>
+        <button type="button" class="filter-type-btn px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px]" data-type="">All</button>
+        <button type="button" class="filter-type-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px]" data-type="SEAT_HELD">🔒 Held (Type 1)</button>
+        <button type="button" class="filter-type-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-[11px]" data-type="SEAT_RELEASED">⚡ Released (Type 2)</button>
+        <button type="button" class="filter-type-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[11px]" data-type="ANNOUNCE_SUBSCRIPTION">Announced</button>
+        <button type="button" class="filter-type-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-[11px]" data-type="HEARTBEAT">Heartbeat</button>
+      </div>
+
+      <!-- Auto Scroll Checkbox -->
+      <div class="flex items-center space-x-3">
+        <label class="inline-flex items-center space-x-1.5 cursor-pointer text-slate-300 font-bold text-xs select-none">
+          <input type="checkbox" id="autoScrollCheckbox" checked class="rounded bg-slate-800 border-slate-700 text-emerald-600 focus:ring-0">
+          <span>Auto-Scroll Down</span>
+        </label>
+        <span id="logCounterDisplay" class="font-mono text-slate-400 text-xs">Showing: 0</span>
+      </div>
+    </div>
+
+    <!-- Live Terminal Log Stream Window -->
+    <div class="rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[560px]">
+      
+      <!-- Terminal Window Bar -->
+      <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+        <div class="flex items-center space-x-2">
+          <div class="flex space-x-1.5">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+          </div>
+          <span class="text-slate-400 text-[11px] font-bold pl-2">Shohoz Socket.IO Event Stream (EIO=4 Engine.IO Frame Log)</span>
+        </div>
+        <div class="flex items-center space-x-3 text-slate-400 text-[11px]">
+          <span id="connectionSpeedLabel"><i class="fa-solid fa-signal text-emerald-400 mr-1"></i>200ms Poll</span>
+          <span id="lastUpdatedLabel">Updated: Just now</span>
+        </div>
+      </div>
+
+      <!-- Terminal Body / Events Container -->
+      <div id="terminalLogBody" class="flex-1 overflow-y-auto p-3 sm:p-4 font-mono text-xs space-y-2 custom-scrollbar">
+        <!-- Log items injected via JS -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // ----------------------------------------------------
+    // Admin WebSocket Log Monitor Client Script
+    // ----------------------------------------------------
+    const terminalLogBody = document.getElementById('terminalLogBody');
+    const statActiveRooms = document.getElementById('statActiveRooms');
+    const statTotalEvents = document.getElementById('statTotalEvents');
+    const statSeatsHeld = document.getElementById('statSeatsHeld');
+    const statSeatsReleased = document.getElementById('statSeatsReleased');
+    const activeRoomsList = document.getElementById('activeRoomsList');
+    const activeRoomsCountBadge = document.getElementById('activeRoomsCountBadge');
+    const logCounterDisplay = document.getElementById('logCounterDisplay');
+    const lastUpdatedLabel = document.getElementById('lastUpdatedLabel');
+    const autoScrollCheckbox = document.getElementById('autoScrollCheckbox');
+    const togglePauseBtn = document.getElementById('togglePauseBtn');
+    const pauseBtnIcon = document.getElementById('pauseBtnIcon');
+    const pauseBtnText = document.getElementById('pauseBtnText');
+    const liveStatusText = document.getElementById('liveStatusText');
+    const liveStreamBadge = document.getElementById('liveStreamBadge');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+    const joinRoomForm = document.getElementById('joinRoomForm');
+    const manualRoomInput = document.getElementById('manualRoomInput');
+
+    let isPaused = false;
+    let pollTimer = null;
+    let lastSeenSequence = 0;
+    let currentFilterType = '';
+    let allLogs = [];
+    let seatsHeldCount = 0;
+    let seatsReleasedCount = 0;
+
+    function getAuthToken() {
+      return localStorage.getItem('rail_auth_token') || sessionStorage.getItem('rail_auth_token') || '';
+    }
+
+    // Direct browser-side socket observer for instantaneous local client display
+    let directClientWs = null;
+    function initDirectClientStream() {
+      try {
+        const wsUrl = 'wss://train-websocket.shohoz.com/socket.io/?EIO=4&transport=websocket';
+        directClientWs = new WebSocket(wsUrl);
+        directClientWs.onopen = () => {
+          console.log('[Monitor] Direct browser WebSocket client connected to Shohoz.');
+        };
+        directClientWs.onmessage = (ev) => {
+          const raw = String(ev.data || '');
+          if (raw.charAt(0) === '0') {
+            try { directClientWs.send('40'); } catch (e) {}
+          } else if (raw.charAt(0) === '2') {
+            try { directClientWs.send('3'); } catch (e) {}
+          }
+        };
+      } catch (err) {}
+    }
+    initDirectClientStream();
+
+    // Toggle Pause / Resume
+    togglePauseBtn.addEventListener('click', () => {
+      isPaused = !isPaused;
+      if (isPaused) {
+        pauseBtnIcon.className = 'fa-solid fa-play text-xs';
+        pauseBtnText.textContent = 'Resume';
+        liveStatusText.textContent = 'Feed Paused';
+        liveStreamBadge.className = 'inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-800';
+      } else {
+        pauseBtnIcon.className = 'fa-solid fa-pause text-xs';
+        pauseBtnText.textContent = 'Pause';
+        liveStatusText.textContent = 'Live Feed Active';
+        liveStreamBadge.className = 'inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800';
+        fetchLogs();
+      }
+    });
+
+    // Clear Logs
+    clearLogsBtn.addEventListener('click', async () => {
+      const token = getAuthToken();
+      try {
+        await fetch('/api/admin/socket-logs/clear', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {}
+      allLogs = [];
+      terminalLogBody.innerHTML = '';
+      lastSeenSequence = 0;
+      updateStats();
+    });
+
+    // Manual Subscribe Room Form
+    joinRoomForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const custom_room = (manualRoomInput.value || '').trim();
+      if (!custom_room) return;
+      const token = getAuthToken();
+      try {
+        const res = await fetch('/api/admin/socket-logs/join-room', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ custom_room })
+        });
+        const data = await res.json();
+        if (data.success) {
+          manualRoomInput.value = '';
+          fetchLogs();
+        } else {
+          alert('Failed to subscribe: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+    // Filter Buttons
+    document.querySelectorAll('.filter-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-type-btn').forEach(b => {
+          b.className = 'filter-type-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-[11px]';
+        });
+        btn.className = 'filter-type-btn px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px]';
+        currentFilterType = btn.dataset.type || '';
+        renderLogs();
+      });
+    });
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    }
+
+    function createLogCard(log) {
+      const isHeld = log.type === 'SEAT_HELD';
+      const isReleased = log.type === 'SEAT_RELEASED';
+      const isError = log.severity === 'error';
+      const isHeartbeat = log.type === 'HEARTBEAT_PING';
+
+      let borderClass = 'border-slate-800 bg-slate-900/60';
+      let tagBg = 'bg-slate-800 text-slate-300';
+
+      if (isHeld) {
+        borderClass = 'border-amber-500/40 bg-amber-950/20';
+        tagBg = 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else if (isReleased) {
+        borderClass = 'border-emerald-500/40 bg-emerald-950/20';
+        tagBg = 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      } else if (isError) {
+        borderClass = 'border-rose-500/40 bg-rose-950/20';
+        tagBg = 'bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      } else if (log.type === 'ANNOUNCE_SUBSCRIPTION') {
+        borderClass = 'border-cyan-500/40 bg-cyan-950/20';
+        tagBg = 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+      }
+
+      const ticketsList = Array.isArray(log.tickets) ? log.tickets : [];
+      let ticketsHtml = '';
+      if (ticketsList.length > 0) {
+        ticketsHtml = `
+          <div class="mt-1.5 flex flex-wrap gap-1.5 pt-1 border-t border-slate-800/80">
+            ${ticketsList.map(t => {
+              const seatLabel = `${t.coach_name || 'Coach'}-${t.seat_number || t.ticket_id || 'Seat'}`;
+              const badgeClass = isHeld ? 'bg-amber-500/20 text-amber-200 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40';
+              return `<span class="px-2 py-0.5 rounded text-[10px] font-bold border font-mono ${badgeClass}">${seatLabel}</span>`;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="p-2.5 rounded-xl border ${borderClass} transition hover:bg-slate-900 group">
+          <div class="flex items-center justify-between gap-2 flex-wrap text-[11px]">
+            <div class="flex items-center space-x-2">
+              <span class="text-slate-500 font-mono text-[10px]">${formatTime(log.timestamp)}</span>
+              <span class="px-2 py-0.2 rounded text-[10px] font-extrabold ${tagBg}">#${log.id} ${log.type}</span>
+              ${log.room ? `<span class="text-slate-400 text-[10px] truncate max-w-[260px] sm:max-w-md font-mono" title="${log.room}">[${log.room}]</span>` : ''}
+            </div>
+            <span class="text-[10px] text-slate-500 font-mono">${log.iso.slice(11, 23)}</span>
+          </div>
+          <div class="mt-1 text-slate-200 text-xs leading-relaxed">
+            ${log.summary || 'WebSocket event processed.'}
+          </div>
+          ${ticketsHtml}
+          ${log.raw && !isHeartbeat ? `
+            <details class="mt-1.5 text-[10px] text-slate-500">
+              <summary class="cursor-pointer hover:text-slate-300 select-none">Raw WebSocket Frame</summary>
+              <pre class="mt-1 p-2 rounded bg-slate-950 text-slate-400 overflow-x-auto text-[10px] leading-tight">${log.raw}</pre>
+            </details>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderLogs() {
+      let filtered = allLogs;
+      if (currentFilterType) {
+        if (currentFilterType === 'HEARTBEAT') {
+          filtered = filtered.filter(l => l.type === 'HEARTBEAT_PING');
+        } else {
+          filtered = filtered.filter(l => l.type === currentFilterType);
+        }
+      }
+
+      if (filtered.length === 0) {
+        terminalLogBody.innerHTML = `
+          <div class="py-24 text-center text-slate-500 space-y-2">
+            <i class="fa-solid fa-satellite text-3xl opacity-50"></i>
+            <p class="text-xs">No WebSocket event logs matching current filter.</p>
+          </div>
+        `;
+      } else {
+        terminalLogBody.innerHTML = filtered.map(createLogCard).join('');
+      }
+
+      logCounterDisplay.textContent = `Showing: ${filtered.length} / ${allLogs.length}`;
+
+      if (autoScrollCheckbox.checked) {
+        terminalLogBody.scrollTop = terminalLogBody.scrollHeight;
+      }
+    }
+
+    function updateStats() {
+      statTotalEvents.textContent = allLogs.length;
+      statSeatsHeld.textContent = seatsHeldCount;
+      statSeatsReleased.textContent = seatsReleasedCount;
+    }
+
+    async function fetchLogs() {
+      if (isPaused) return;
+
+      const token = getAuthToken();
+      try {
+        const res = await fetch(`/api/admin/socket-logs?since=${lastSeenSequence}&limit=200`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (res.status === 403 || res.status === 401) {
+          window.location.href = '/?admin_required=1';
+          return;
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            statActiveRooms.textContent = data.activeRoomsCount || 0;
+            activeRoomsCountBadge.textContent = `${data.activeRoomsCount || 0} active`;
+
+            // Render active rooms chips
+            const rooms = Array.isArray(data.activeRooms) ? data.activeRooms : [];
+            if (rooms.length === 0) {
+              activeRoomsList.innerHTML = `<span class="text-xs text-slate-500 italic">No trip rooms actively connected. Open the seat layout modal or subscribe to a room above to monitor data streams.</span>`;
+            } else {
+              activeRoomsList.innerHTML = rooms.map(r => {
+                return `
+                  <div class="px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full ${r.ready ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}"></span>
+                    <span class="text-slate-200 font-bold">${r.roomName}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold">${r.heldCount} held</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">${r.releasedCount} freed</span>
+                  </div>
+                `;
+              }).join('');
+            }
+
+            const incoming = Array.isArray(data.logs) ? data.logs : [];
+            if (incoming.length > 0) {
+              incoming.forEach(log => {
+                if (log.id > lastSeenSequence) {
+                  lastSeenSequence = log.id;
+                  allLogs.push(log);
+                  if (log.type === 'SEAT_HELD') seatsHeldCount += (log.ticketsCount || 1);
+                  if (log.type === 'SEAT_RELEASED') seatsReleasedCount += (log.ticketsCount || 1);
+                }
+              });
+
+              if (allLogs.length > 500) {
+                allLogs = allLogs.slice(-500);
+              }
+
+              renderLogs();
+              updateStats();
+            }
+
+            lastUpdatedLabel.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+          }
+        }
+      } catch (err) {
+        console.warn('[Monitor] Fetch error:', err.message);
+      }
+    }
+
+    // Polling interval for real-time WebSocket log streaming
+    fetchLogs();
+    pollTimer = setInterval(fetchLogs, 1000);
+  </script>
+</body>
+</html>

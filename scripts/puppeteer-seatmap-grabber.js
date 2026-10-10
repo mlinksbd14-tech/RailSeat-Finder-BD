@@ -73,6 +73,15 @@ async function runPuppeteer() {
     console.log(`🧭 Navigating to: ${searchUrl}`);
     await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 45000 });
 
+    // Dismiss Railway Disclaimer ("I AGREE") if present
+    await page.evaluate(() => {
+      try {
+        sessionStorage.setItem('disclaimer_agreed_for_home', '1');
+        const agree = document.querySelector('.agree-btn, button.agree-btn, .disclaimer-bottom-sheet-action-btn button');
+        if (agree) agree.click();
+      } catch (e) {}
+    }).catch(() => {});
+
     // Wait for train cards to render
     await page.waitForSelector('.single-trip-wrapper, .train-name, .no-trains-found', { timeout: 20000 }).catch(() => {});
 
@@ -94,11 +103,20 @@ async function runPuppeteer() {
     }
 
     // Try clicking first available "Book Now" or "Show Layout" if present
-    const bookBtn = await page.$('.book-now-btn, button:has-text("BOOK NOW"), button:has-text("Show Layout")');
-    if (bookBtn) {
+    const bookClicked = await page.evaluate(() => {
+      const candidates = Array.from(document.querySelectorAll('button, a.btn, .btn, .book-now-btn'));
+      for (const el of candidates) {
+        const txt = (el.textContent || '').trim().toUpperCase();
+        if (txt.includes('BOOK NOW') || txt.includes('SHOW LAYOUT') || el.classList.contains('book-now-btn')) {
+          el.click();
+          return true;
+        }
+      }
+      return false;
+    });
+    if (bookClicked) {
       console.log('🖱️ Clicking layout/booking button to open seat layout...');
-      await bookBtn.click().catch(() => {});
-      await page.waitForTimeout(3000);
+      await new Promise(r => setTimeout(r, 3000));
     }
 
     // Capture screenshot of results

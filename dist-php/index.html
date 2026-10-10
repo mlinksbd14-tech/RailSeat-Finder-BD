@@ -12,6 +12,8 @@
   <!-- Firebase App & Auth SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <!-- Cloudflare Turnstile Live Challenge SDK -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- Google Fonts: Inter & Hind Siliguri -->
@@ -132,6 +134,12 @@
           <span id="authBtnText" class="hidden sm:inline" data-i18n="connect_live_api">Connect Live API</span>
         </button>
 
+        <!-- 1-Second Quick-Sync Live Token Button -->
+        <button id="headerQuickSyncBtn" type="button" class="flex items-center justify-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 cursor-pointer shrink-0" title="1-Second Quick-Sync: Instantly grabs fresh Turnstile token to enable 100% live Railway seat maps">
+          <i class="fa-solid fa-bolt text-amber-500 animate-pulse"></i>
+          <span class="hidden sm:inline">⚡ 1-Sec Quick Sync</span>
+        </button>
+
         <!-- Install PWA Mobile/Desktop App Button -->
         <button id="pwaInstallBtn" class="hidden items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition text-xs font-semibold shadow-xs cursor-pointer shrink-0" title="Install RailSeat BD App">
           <i class="fa-solid fa-download text-xs"></i>
@@ -193,6 +201,13 @@
                   </div>
                   <span id="manageUsersPendingBadge" class="hidden px-1.5 py-0.2 bg-amber-500 text-white font-bold text-[9px] rounded">0 pending</span>
                 </button>
+                <a id="dropdownSocketMonitorLink" href="/admin/socket-monitor" target="_blank" rel="noopener noreferrer" class="hidden w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-700 font-semibold flex items-center justify-between transition cursor-pointer">
+                  <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-satellite-dish text-emerald-500 text-xs"></i>
+                    <span>WebSocket Monitor</span>
+                  </div>
+                  <span class="px-1.5 py-0.2 bg-emerald-500 text-white font-bold text-[9px] rounded">Live</span>
+                </a>
                 <a href="/support" target="_blank" rel="noopener noreferrer" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-700 font-semibold flex items-center space-x-2 transition cursor-pointer">
                   <i class="fa-solid fa-headset text-slate-500 text-xs"></i>
                   <span>Help & Live Support</span>
@@ -999,129 +1014,173 @@
         </div>
       </div>
 
-      <!-- Main Auto-Book Configuration Card -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+      <!-- Main Auto-Book Configuration Card (Clean 3-Step Human Design) -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80">
 
-        <!-- Form Grid Row 1: Stations & Date & Train -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          
-          <!-- From Station -->
-          <div class="relative space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="from_station">From</label>
-            <div class="relative">
-              <input type="text" id="autoBookFromInput" placeholder="Departure station" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
-              <button type="button" id="autoBookFromClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-              <div id="autoBookFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+        <!-- STEP 1: Route & Travel Date -->
+        <section class="p-4 sm:p-5 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] flex items-center justify-center">1</span>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Route & Travel Date</span>
             </div>
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 1 of 3</span>
           </div>
 
-          <!-- To Station -->
-          <div class="relative space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="to_station">To</label>
-              <button type="button" id="autoBookSwapBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
-                <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                <span data-i18n="swap_stations">Swap</span>
-              </button>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- From Station -->
+            <div class="relative space-y-1">
+              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="from_station">From Station</label>
+              <div class="relative">
+                <input type="text" id="autoBookFromInput" placeholder="Departure station (e.g. Dhaka)" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+                <button type="button" id="autoBookFromClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div id="autoBookFromDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+              </div>
             </div>
-            <div class="relative">
-              <input type="text" id="autoBookToInput" placeholder="Arrival station" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
-              <button type="button" id="autoBookToClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-              <div id="autoBookToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
-            </div>
-          </div>
 
-          <!-- Journey Date -->
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Date</label>
-              <span id="autoBookDateBadge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">⚡ Find Now</span>
+            <!-- To Station -->
+            <div class="relative space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="to_station">To Station</label>
+                <button type="button" id="autoBookSwapBtn" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                  <span data-i18n="swap_stations">Swap</span>
+                </button>
+              </div>
+              <div class="relative">
+                <input type="text" id="autoBookToInput" placeholder="Arrival station (e.g. Chittagong)" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden" autocomplete="off" />
+                <button type="button" id="autoBookToClearBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div id="autoBookToDropdown" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 divide-y divide-slate-100 dark:divide-slate-800"></div>
+              </div>
             </div>
-            <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
-            <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
-          </div>
 
-          <!-- Train Selector (Multi-Select) -->
-          <div class="space-y-1 relative" id="autoBookTrainDropdownContainer">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_train">Train</label>
-              <span id="autoBookTrainCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Train</span>
+            <!-- Journey Date -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Date</label>
+                <span id="autoBookDateBadge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">⚡ Find Now</span>
+              </div>
+              <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
+              <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
             </div>
-            <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
-              <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookTrainChevron"></i>
-            </button>
-            <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
-              <div id="autoBookTrainOptionsList" class="space-y-0.5">
-                <!-- Injected dynamically via JS -->
+
+            <!-- Preferred Train (Multi-Select) -->
+            <div class="space-y-1 relative" id="autoBookTrainDropdownContainer">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Preferred Train</label>
+                <span id="autoBookTrainCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Train</span>
+              </div>
+              <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+                <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
+                <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                  <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
+                  <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookTrainChevron"></i>
+                </div>
+              </button>
+              <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+                <div id="autoBookTrainOptionsList" class="space-y-0.5">
+                  <!-- Injected dynamically via JS -->
+                </div>
               </div>
             </div>
           </div>
+        </section>
 
-        </div>
-
-        <!-- Form Grid Row 2: Class & Quantity & Seat Position -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          
-          <!-- Seat Class (Multi-Select - Shows All Classes) -->
-          <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="filter_class">Class</label>
-              <span id="autoBookClassCountBadge" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Any Class</span>
+        <!-- STEP 2: Class & Seating Preferences -->
+        <section class="p-4 sm:p-5 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-extrabold text-[11px] flex items-center justify-center">2</span>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Class & Seat Preferences</span>
             </div>
-            <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
-              <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
-              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1.5 transition-transform duration-200" id="autoBookClassChevron"></i>
-            </button>
-            <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
-              <div id="autoBookClassOptionsList" class="space-y-0.5">
-                <!-- Injected dynamically via JS showing all BR classes -->
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 2 of 3</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- Class & Seat Preferences (Multi-Select) -->
+            <div class="space-y-1 relative" id="autoBookClassDropdownContainer">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Class & Seat Preferences</label>
+                <span id="autoBookClassCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Class</span>
+              </div>
+              <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
+                <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
+                <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                  <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
+                  <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookClassChevron"></i>
+                </div>
+              </button>
+              <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
+                <div id="autoBookClassOptionsList" class="space-y-0.5">
+                  <!-- Injected dynamically via JS showing all BR classes -->
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Seat Quantity (1 to 4 Seats) -->
-          <div class="space-y-1">
-            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seats</label>
-            <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
-              <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
-              <button type="button" data-seats="3" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">3</button>
-              <button type="button" data-seats="4" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">4</button>
+            <!-- Seat Quantity (1 to 4 Seats) -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seats</label>
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">1–4 passengers</span>
+              </div>
+              <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
+                <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
+                <button type="button" data-seats="3" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">3</button>
+                <button type="button" data-seats="4" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">4</button>
+              </div>
+            </div>
+
+            <!-- Seating Placement option: Any, Front, Middle, Back -->
+            <div class="space-y-1">
+              <div class="flex items-center justify-between">
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seating Placement</label>
+                <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">সিটের অবস্থান</span>
+              </div>
+              <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
+                <option value="any">Any (যেকোনো আসন)</option>
+                <option value="front">Front (সামনের দিক)</option>
+                <option value="middle">Middle (মাঝের অংশ)</option>
+                <option value="back">Back (পেছনের দিক)</option>
+              </select>
             </div>
           </div>
 
-          <!-- Seat Position Preference (Window, Aisle, Front, Middle, Back) -->
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Seat Position</label>
-              <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">সিটের অবস্থান</span>
+          <!-- Dynamic Group Seating Banner: Keep my group together (seats side by side) - shown only when 2-4 seats are selected -->
+          <div id="autoBookKeepTogetherContainer" class="hidden p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 transition-all duration-200">
+            <label class="flex items-center justify-between gap-3 cursor-pointer select-none">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 cursor-pointer" />
+                <div>
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Keep my group together (seats side by side)</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Picks adjacent seats in the same coach row first</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 shrink-0">Group 2–4</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- STEP 3: Booking Action & Options -->
+        <section class="p-4 sm:p-5 space-y-3.5 bg-slate-50/50 dark:bg-slate-850/40">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-extrabold text-[11px] flex items-center justify-center">3</span>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Booking Action & Execution</span>
             </div>
-            <select id="autoBookPositionPref" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer">
-              <option value="any">Any Position (যেকোনো আসন)</option>
-              <option value="window">Window (জানালা 🪟)</option>
-              <option value="aisle">Aisle (আইল 🚶)</option>
-              <option value="front">Front Side (সামনের দিক 🚅)</option>
-              <option value="middle">Middle (মাঝের অংশ 🎯)</option>
-              <option value="back">Back Side (পেছনের দিক 🚪)</option>
-            </select>
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 3 of 3</span>
           </div>
 
-        </div>
-
-        <!-- Row 3: Action Mode (Hold vs Buy) & Options -->
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-2.5">
-          
           <!-- Compact Hold / Buy Toggle -->
-          <div class="grid grid-cols-2 gap-2" id="autoBookModeSelector">
+          <div class="grid grid-cols-2 gap-2.5" id="autoBookModeSelector">
             <!-- Hold Mode -->
             <label class="relative cursor-pointer group" id="autoBookHoldModeLabel">
               <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" checked class="sr-only peer" />
-              <div class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 dark:peer-checked:bg-blue-950/40 transition select-none">
+              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 dark:peer-checked:bg-blue-950/40 transition select-none">
                 <i class="fa-solid fa-hand text-blue-600 dark:text-blue-400 text-sm"></i>
                 <div>
                   <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Hold Only</span>
@@ -1132,7 +1191,7 @@
             <!-- Buy Mode -->
             <label class="relative cursor-pointer group" id="autoBookBuyModeLabel">
               <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" class="sr-only peer" />
-              <div class="flex items-center gap-2 p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/70 dark:peer-checked:bg-emerald-950/40 transition select-none">
+              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/70 dark:peer-checked:bg-emerald-950/40 transition select-none">
                 <i class="fa-solid fa-bolt text-emerald-600 dark:text-emerald-400 text-sm"></i>
                 <div>
                   <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Buy Now</span>
@@ -1142,19 +1201,17 @@
             </label>
           </div>
 
-          <!-- Secondary Switches: Keep Together, Keep Trying & Sound Alarm -->
-          <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <span class="font-bold text-slate-700 dark:text-slate-300">Seats Together</span>
-            </label>
-
+          <!-- Secondary Switches: Keep Trying & Sound Alarm -->
+          <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
-              <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
+              <div>
+                <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
+                <span class="text-[10px] text-slate-400 block sm:inline sm:ml-1">Retries if sold out</span>
+              </div>
             </label>
 
-            <div class="flex items-center justify-between sm:justify-start gap-2">
+            <div class="flex items-center justify-between sm:justify-end gap-2">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
                 <span class="font-bold text-slate-700 dark:text-slate-300">Alarm</span>
@@ -1165,23 +1222,31 @@
                 <option value="siren">🚨 Siren</option>
                 <option value="bell">🔔 Bell</option>
               </select>
-              <button type="button" id="autoBookTestToneBtn" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-amber-500 hover:text-white transition cursor-pointer" title="Test Alarm Sound">Test</button>
+              <button type="button" id="autoBookTestToneBtn" class="text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 hover:bg-amber-500 hover:text-white transition cursor-pointer" title="Test Alarm Sound">Test</button>
             </div>
+          </div>
+        </section>
+
+        <!-- Card Footer: Action Buttons -->
+        <div class="p-4 sm:p-5 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <i class="fa-solid fa-mobile-screen text-amber-500"></i>
+            <span>📱 Mobile 3-Way Grabber</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">Setup</span>
+          </button>
+          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <button type="button" id="headlessGrabNowBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Directly holds seat in your Railway cart and sends instant Telegram alert to your phone (0% phone CPU/battery)">
+              <i class="fa-solid fa-cloud-arrow-down text-emerald-200" id="headlessGrabNowIcon"></i>
+              <span id="headlessGrabNowText">📱 1-Tap Headless Cart Hold</span>
+            </button>
+            <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+              <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
+              <span id="autoBookActionText">⚡ Check & Open Railway</span>
+            </button>
           </div>
         </div>
 
-        <!-- Action Button & Mobile Setup Trigger -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
-          <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <i class="fa-solid fa-mobile-screen text-amber-500"></i>
-            <span>📱 Mobile Auto-Grab Setup</span>
-            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">3 Ways</span>
-          </button>
-          <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-sm shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer">
-            <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
-            <span id="autoBookActionText">⚡ Check & Auto-Book Now</span>
-          </button>
-        </div>
+      </div>
 
         <!-- Live Activity Console -->
         <div id="autoBookConsoleBox" class="hidden rounded-2xl bg-slate-950 text-slate-100 font-mono text-xs border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
@@ -2005,12 +2070,27 @@
               </div>
             </div>
 
+            <!-- Cloudflare Turnstile Live Browser Challenge Widget -->
+            <div id="cfTurnstileLoginBox" class="py-2.5 px-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center space-y-1.5">
+              <div class="flex items-center justify-between w-full text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                <span class="flex items-center gap-1">
+                  <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+                  <span>Cloudflare Turnstile Verification</span>
+                </span>
+                <span id="cftStatusIndicator" class="font-bold text-amber-500 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  <span>Solving...</span>
+                </span>
+              </div>
+              <div id="cfTurnstileWidgetSlot" class="min-h-[65px] flex items-center justify-center w-full"></div>
+            </div>
+
             <div id="cfWorkerLoginStatus" class="hidden text-[11px] p-2 rounded-lg font-medium"></div>
 
             <button type="submit" id="cfWorkerLoginBtn" 
               class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold shadow-md transition flex items-center justify-center space-x-2 cursor-pointer text-xs">
-              <i class="fa-solid fa-cloud"></i>
-              <span>Sign In via Cloudflare Worker</span>
+              <i class="fa-solid fa-bolt"></i>
+              <span>Sign In with Active Turnstile Token</span>
             </button>
           </form>
         </div>
@@ -2346,128 +2426,97 @@
   <div id="seatLayoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden modal-dialog-responsive">
       
-      <!-- Modal Header -->
-      <div class="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-600 text-white flex items-center justify-center text-sm shadow-sm shrink-0">
-            <i class="fa-solid fa-couch"></i>
-          </div>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2 flex-wrap">
-              <h3 id="seatLayoutTrainName" class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">Coach & Seat Details</h3>
-              <span id="seatLayoutTrainModel" class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-mono font-bold">#---</span>
-              <span id="seatLayoutClassBadge" class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300">SNIGDHA</span>
-              <span id="seatLayoutLiveBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                <span>Live Railway Server</span>
-              </span>
-              <span id="seatLayoutTemplateBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Official Railway Layout</span>
-              </span>
-              <span id="seatLayoutSearchingBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 items-center gap-1">
-                <svg class="w-2.5 h-2.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-                <span>Fetching live layout&hellip;</span>
-              </span>
-            </div>
-            <p id="seatLayoutSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-              Live carriage layout direct from Bangladesh Railway Shohoz API
-            </p>
-          </div>
-        </div>
-        <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition shrink-0 ml-2 cursor-pointer">
-          <i class="fa-solid fa-xmark text-sm"></i>
-        </button>
-      </div>
-
-      <!-- Coach Selector Strip (Horizontal Scrolling Tabs) -->
-      <div class="p-2.5 sm:p-3 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80">
-        <div class="flex items-center justify-between gap-2 mb-1.5">
-          <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-train-subway text-emerald-500 text-xs"></i>
-            <span>Select Coach / বগি নির্বাচন করুন:</span>
+      <!-- Modal Header (Simple & Clean: Only Train Name & Start Time & Close) -->
+      <div class="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 gap-3">
+        <div class="min-w-0 flex items-center gap-2 sm:gap-2.5 flex-wrap">
+          <h3 id="seatLayoutTrainName" class="font-black text-base sm:text-lg text-slate-900 dark:text-white tracking-tight truncate">Train Name</h3>
+          <span id="seatLayoutStartTime" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+            <i class="fa-regular fa-clock text-[11px] text-slate-400"></i>
+            <span id="seatLayoutStartTimeText">--:--</span>
           </span>
-          <span id="seatLayoutCoachesSummary" class="text-[10px] text-slate-500 dark:text-slate-400 font-medium"></span>
+          <!-- Hidden socket badge kept for JS compatibility -->
+          <span id="seatLayoutSocketBadge" class="hidden" aria-hidden="true">
+            <span id="seatLayoutSocketBadgeText"></span>
+          </span>
         </div>
-        <div id="seatLayoutCoachTabs" class="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-thin">
-          <!-- Rendered by JS -->
+        
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Hidden tags kept for DOM/JS backward-compatibility -->
+          <div class="hidden" aria-hidden="true">
+            <span id="seatLayoutTrainModel"></span>
+            <span id="seatLayoutClassBadge"></span>
+            <p id="seatLayoutSubtitle"></p>
+            <span id="seatLayoutLiveBadge"></span>
+            <span id="seatLayoutTemplateBadge"></span>
+            <button id="seatLayoutQuickSyncBtn" type="button"></button>
+            <span id="seatLayoutSearchingBadge"></span>
+          </div>
+          <button id="seatLayoutCloseBtn" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition cursor-pointer" title="Close (Esc)">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Active Coach Overview Strip -->
-      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-100 dark:border-emerald-900/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex items-center space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
-          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">--</b></span>
-          <span>•</span>
+      <!-- Coach Selector Strip -->
+      <div class="px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 overflow-hidden">
+        <div class="flex items-center gap-2 flex-1 overflow-hidden">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Coach:</span>
+          <div id="seatLayoutCoachTabs" class="flex items-center space-x-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+        <button id="seatLayoutAvailableOnlyToggle" type="button" class="hidden">
+          <span id="seatLayoutAvailableOnlyToggleText"></span>
+        </button>
+        <span id="seatLayoutCoachesSummary" class="hidden"></span>
+      </div>
+
+      <!-- Active Coach Overview Strip (Coach • Class • Total • Booked • Available • Fare) -->
+      <div id="seatLayoutCoachInfoBanner" class="px-4 py-2.5 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs sm:text-sm">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 text-slate-700 dark:text-slate-300 flex-wrap">
+          <span>Coach: <b id="seatLayoutActiveCoachName" class="text-slate-900 dark:text-white font-black text-sm sm:text-base">--</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
           <span>Class: <b id="seatLayoutActiveCoachClass" class="text-slate-900 dark:text-white font-bold">--</b></span>
-          <span>•</span>
-          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-bold">0</b></span>
-          <span>•</span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
+          <span>Total: <b id="seatLayoutActiveTotalCount" class="text-slate-900 dark:text-white font-bold">--</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
           <span>Booked: <b id="seatLayoutActiveBookedCount" class="text-slate-500 dark:text-slate-400 font-bold">0</b></span>
+          <span class="text-slate-300 dark:text-slate-600">•</span>
+          <span>Available: <b id="seatLayoutActiveAvailCount" class="text-emerald-600 dark:text-emerald-400 font-black text-sm sm:text-base">0</b></span>
         </div>
         <div class="text-right">
           <span class="text-slate-500 dark:text-slate-400">Fare: </span>
-          <span id="seatLayoutActiveFare" class="font-extrabold font-mono text-sm text-emerald-700 dark:text-emerald-300">--</span>
+          <span id="seatLayoutActiveFare" class="font-black font-mono text-sm sm:text-base text-emerald-600 dark:text-emerald-400">--</span>
         </div>
       </div>
 
       <!-- Carriage Body Canvas -->
       <div id="seatLayoutContent" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
-        <!-- Rendered by JS: Realistic train carriage with front/rear doors and seating matrix -->
+        <!-- Rendered by JS -->
       </div>
 
-      <!-- Legend & Footer Action Bar -->
-      <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <!-- Legend -->
-        <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-300">
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
-            <span>Free (Available)</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded bg-amber-500 border border-amber-600 inline-block"></span>
-            <span>Selected</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
-            <span>Taken (Booked)</span>
-          </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="w-4 h-4 rounded border border-slate-400 dark:border-slate-600 border-b-[3px] border-b-slate-700 dark:border-b-slate-300 inline-block"></span>
-            <span>Window</span>
-          </div>
-        </div>
-
+      <!-- Clean Footer Action Bar: Only Hold Only and Buy Now -->
+      <div class="px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-3 text-xs">
         <!-- Action Links: Hold Only & Buy Now -->
-        <div class="flex flex-col items-end gap-1.5 w-full sm:w-auto">
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <!-- Hold Only Button -->
-            <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
-              <i class="fa-solid fa-hand text-xs"></i>
-              <span id="seatLayoutHoldText">Hold Only</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
-            </a>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <!-- Hold Only Button -->
+          <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+            class="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-hand text-xs"></i>
+            <span id="seatLayoutHoldText">Hold Only</span>
+          </a>
 
-            <!-- Buy Now Button (Proceeds to OTP) -->
-            <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-              class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
-              <i class="fa-solid fa-bolt text-xs"></i>
-              <span id="seatLayoutBuyText">Buy Now</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
-            </a>
+          <!-- Buy Now Button -->
+          <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
+            class="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-bolt text-xs"></i>
+            <span id="seatLayoutBuyText">Buy Now</span>
+          </a>
 
-            <!-- Legacy fallback element hidden -->
-            <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
-          </div>
-          <p id="seatLayoutAutoBookHint" class="hidden text-[10px] text-slate-500 dark:text-slate-400 text-right leading-tight">
-            <i class="fa-solid fa-robot text-[9px] mr-1"></i>
-            <span id="seatLayoutAutoBookHintText">Locks exact coach and seat numbers directly into the Bangladesh Railway cart.</span>
-            <a href="/railseat-sync.user.js" target="_blank" rel="noopener" class="underline font-semibold text-emerald-600 dark:text-emerald-400 ml-1" id="seatLayoutAutoBookHelperLink" data-i18n="autobook_helper">Install auto-book helper</a>
-            <button type="button" id="seatLayoutMobileHelpBtn" class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline ml-1.5 cursor-pointer">
-              <i class="fa-solid fa-mobile-screen"></i> 📱 Mobile setup?
-            </button>
-          </p>
+          <!-- Hidden compatibility elements -->
+          <a id="seatLayoutBookNowBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" class="hidden"></a>
+          <span id="seatLayoutBookNowText" class="hidden"></span>
+          <p id="seatLayoutAutoBookHint" class="hidden"><span id="seatLayoutAutoBookHintText"></span></p>
         </div>
       </div>
 
@@ -2591,26 +2640,59 @@
           </div>
         </div>
 
-        <!-- TAB 3: Direct API & Server-Side Integration -->
+        <!-- TAB 3: 100% Headless Mobile Grabber (3 Ways: Dashboard 1-Tap, CLI, GitHub Actions) -->
         <div id="mobileTabContent-api" class="mobile-tab-pane hidden space-y-3">
-          <div class="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-1.5">
-            <div class="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-300">
-              <i class="fa-solid fa-server text-blue-500"></i>
-              <span>Server-Side Background API Seat Hold</span>
+          <div class="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/50 space-y-1.5">
+            <div class="flex items-center gap-2 font-bold text-teal-900 dark:text-teal-300">
+              <i class="fa-solid fa-bolt text-teal-500"></i>
+              <span>Method 3: 100% Headless Mobile Grabber (Zero App / Zero Userscript)</span>
             </div>
-            <p class="text-[11px] text-blue-800 dark:text-blue-200/90 leading-relaxed">
-              মোবাইলে স্ক্রিপ্ট না থাকলেও আপনার সেভ করা রেলওয়ে সেশনের মাধ্যমে আমাদের ব্যাকএন্ড থেকে সরাসরি রেলওয়ে এপিআই কল দিয়ে সিট লক ও হোল্ড করার ব্যবস্থা রয়েছে।
+            <p class="text-[11px] text-teal-800 dark:text-teal-200/90 leading-relaxed">
+              মোবাইলে কোনো এক্সটেনশন বা ব্রাউজার খোলা রাখার প্রয়োজন নেই। সার্ভার বা ক্লাউড অটোমেশন নিজে থেকেই সিট বুকিং করে আপনার রেলওয়ে কার্টে ৫ মিনিটের জন্য লক করে রাখে এবং তাৎক্ষণিক টেলিগ্রাম অ্যালার্ট পাঠায়।
             </p>
           </div>
 
-          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-2 text-[11.5px] text-slate-600 dark:text-slate-300">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-slate-800 dark:text-slate-200">Live Railway Session Status:</span>
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 space-y-3 text-[11.5px]">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-2">
+              <span class="font-bold text-slate-800 dark:text-slate-200">Railway Session Token:</span>
               <span id="mobileApiSessionBadge" class="px-2 py-0.5 rounded-full font-bold text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Checking...</span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              আপনার সেশনটি সংযুক্ত থাকলে যেকোনো মোবাইল থেকে <strong>⚡ Check & Auto-Book Now</strong> বাটন চাপলেই সার্ভার তাৎক্ষণিক সিট রিডাইরেকশন এবং সিট রিজার্ভেশন টোকেন পুশ করে দেয়।
-            </p>
+
+            <!-- Way A: Dashboard 1-Tap -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-teal-500/20 text-teal-600 dark:text-teal-400 font-extrabold flex items-center justify-center text-[10px]">1</span>
+                <span>Way A: মোবাইলের ড্যাশবোর্ড থেকে ১-ট্যাপ হেডলেস গ্র্যাব</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                ড্যাশবোর্ডে স্টেশন ও তারিখ সিলেক্ট করে <strong class="text-teal-600 dark:text-teal-400">📱 1-Tap Headless Cart Hold</strong> বাটনে চাপ দিন। ব্যাকএন্ড এপিআই ও পাপেটিয়ার ইঞ্জিন সাথে সাথে কার্টে সিট লক করে টেলিগ্রামে পেমেন্ট লিংক পাঠিয়ে দেবে।
+              </p>
+            </div>
+
+            <!-- Way B: CLI Runner -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 font-extrabold flex items-center justify-center text-[10px]">2</span>
+                <span>Way B: PC / VPS টার্মিনাল রানার (CLI Script)</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                আপনার কম্পিউটার বা সার্ভারে কমান্ড চালিয়ে ব্যাকগ্রাউন্ডে ওয়াচার চালু রাখুন:
+              </p>
+              <div class="pl-6 pt-1">
+                <code class="block p-2 rounded-lg bg-slate-900 text-teal-300 font-mono text-[10px] select-all overflow-x-auto">node scripts/headless-grab-cli.js --from "Dhaka" --to "Chittagong" --date "2026-10-15" --rush</code>
+              </div>
+            </div>
+
+            <!-- Way C: Serverless GitHub Actions -->
+            <div class="space-y-1">
+              <span class="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 font-extrabold flex items-center justify-center text-[10px]">3</span>
+                <span>Way C: 100% Free Serverless 08:00 AM Ticket Rush (GitHub Actions)</span>
+              </span>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 pl-6">
+                GitHub মোবাইল অ্যাপ দিয়ে অথবা প্রতিদিন সকাল ০৭:৫৮ মিনিটে স্বয়ংক্রিয়ভাবে ক্লাউড রানার চালু হয়ে সকাল ৮:০০ টার টিকিট ড্রপ গ্র্যাব করে আপনার টেলিগ্রামে চেকআউট পাঠিয়ে দেয়।
+              </p>
+            </div>
           </div>
         </div>
 
@@ -3828,6 +3910,6 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC5hYf947iK55nmXRyEz-a4QRwVMapi3gE"></script>
   <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@0.16.0/dist/Leaflet.GoogleMutant.js"></script>
   <script src="js/i18n.js"></script>
-  <script src="js/app.js?v=8.2.8"></script>
+  <script src="js/app.js?v=8.3.0"></script>
 </body>
 </html>

@@ -287,50 +287,77 @@ async function main() {
                 target.lastNotifiedSeats = totalAvail;
                 target.lastNotifiedAt = new Date().toISOString();
 
-                console.log(`  🎯 MATCH! Triggering alert for ${train.train_name} (${totalAvail} seats in ${st.type})`);
+                console.log(`  🎯 MATCH! Processing alert for ${train.train_name} (${totalAvail} seats in ${st.type})`);
 
-                // Optionally grab live mobile coach layout if trip_id exists
-                let liveCoachesInfo = '';
-                if (st.trip_id) {
+                // Auto Background Grab Trigger (Method 1 & Method 2) if target or env enabled it
+                let grabResult = null;
+                const isAutoGrab = target.autoGrab === true || target.auto_grab === true || process.env.AUTO_GRAB === 'true';
+                if (isAutoGrab) {
                   try {
-                    const coaches = await fetchLiveSeatLayoutMobile(st.trip_id, st.trip_route_id, session);
-                    if (coaches && coaches.length > 0) {
-                      const availCoaches = coaches.filter(c => Number(c.available_seats || 0) > 0);
-                      if (availCoaches.length > 0) {
-                        const coachSummary = availCoaches.map(c => `${c.coach_name} (${c.available_seats})`).join(', ');
-                        liveCoachesInfo = `\n🧮 <b>Available Coaches:</b> <code>${coachSummary}</code>`;
-                      }
-                    }
-                  } catch (e) {}
+                    const { grabSeatsInBackground } = require('./background-seat-grabber');
+                    console.log(`  ⚡ AUTO-GRAB ACTIVE! Triggering Dual-Method Background Grabber...`);
+                    grabResult = await grabSeatsInBackground({
+                      trainName: train.train_name,
+                      trainModel: train.train_model,
+                      fromCity: fromCity,
+                      toCity: toCity,
+                      date: dateOfJourney,
+                      seatClass: st.type,
+                      tripId: st.trip_id,
+                      tripRouteId: st.trip_route_id,
+                      seatsCount: Number(target.minSeats) || 1,
+                      telegramChatId: target.telegramChatId || TELEGRAM_DEFAULT_CHAT_ID
+                    }, { method: 'auto', sendTelegramAlert: true });
+                  } catch (gErr) {
+                    console.warn('  ⚠️ Background grab error:', gErr.message);
+                  }
                 }
 
-                const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(formatShohozDoj(dateOfJourney))}&class=${encodeURIComponent(st.type)}`;
-                const chatId = target.telegramChatId || TELEGRAM_DEFAULT_CHAT_ID;
+                // If auto-grab already succeeded and sent the Telegram alert, skip duplicate standard alert
+                if (!grabResult || !grabResult.success) {
+                  // Optionally grab live mobile coach layout if trip_id exists
+                  let liveCoachesInfo = '';
+                  if (st.trip_id) {
+                    try {
+                      const coaches = await fetchLiveSeatLayoutMobile(st.trip_id, st.trip_route_id, session);
+                      if (coaches && coaches.length > 0) {
+                        const availCoaches = coaches.filter(c => Number(c.available_seats || 0) > 0);
+                        if (availCoaches.length > 0) {
+                          const coachSummary = availCoaches.map(c => `${c.coach_name} (${c.available_seats})`).join(', ');
+                          liveCoachesInfo = `\n🧮 <b>Available Coaches:</b> <code>${coachSummary}</code>`;
+                        }
+                      }
+                    } catch (e) {}
+                  }
 
-                const msgText = wasSoldOut ?
-                  `🚨 <b>[SEATS RELEASED / DROPPED!]</b>\n\n` +
-                  `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
-                  `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
-                  `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
-                  `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
-                  `🔥 <b>Available Seats:</b> <b>${totalAvail}</b> (Online: ${availOnline}, Counter: ${availCounter})` +
-                  liveCoachesInfo +
-                  `\n\n⚡ <i>This train was previously sold out and new seats just became available!</i>\n` +
-                  `🔗 <a href="${bookUrl}">Click here to Book Immediately</a>`
-                  :
-                  `🎯 <b>WATCHLIST RADAR ALERT!</b>\n\n` +
-                  `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
-                  `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
-                  `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
-                  `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
-                  `🟢 <b>Available Seats:</b> <b>${totalAvail}</b> (Online: ${availOnline}, Counter: ${availCounter})` +
-                  liveCoachesInfo +
-                  `\n\n⚡ <i>Seats are available now on Bangladesh Railway!</i>\n` +
-                  `🔗 <a href="${bookUrl}">Click here to Book Immediately</a>`;
+                  const bookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(formatShohozDoj(dateOfJourney))}&class=${encodeURIComponent(st.type)}`;
+                  const chatId = target.telegramChatId || TELEGRAM_DEFAULT_CHAT_ID;
 
-                await sendTelegramMessage(chatId, msgText, [
-                  [{ text: '🎟️ Book Now on Railway', url: bookUrl }]
-                ]);
+                  const msgText = wasSoldOut ?
+                    `🚨 <b>[SEATS RELEASED / DROPPED!]</b>\n\n` +
+                    `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
+                    `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
+                    `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
+                    `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
+                    `🔥 <b>Available Seats:</b> <b>${totalAvail}</b> (Online: ${availOnline}, Counter: ${availCounter})` +
+                    liveCoachesInfo +
+                    `\n\n⚡ <i>This train was previously sold out and new seats just became available!</i>\n` +
+                    `🔗 <a href="${bookUrl}">Click here to Book Immediately</a>`
+                    :
+                    `🎯 <b>WATCHLIST RADAR ALERT!</b>\n\n` +
+                    `🚆 <b>Train:</b> ${train.train_name} (#${train.train_model})\n` +
+                    `📍 <b>Route:</b> ${fromCity} ➔ ${toCity}\n` +
+                    `📅 <b>Date:</b> ${formatShohozDoj(dateOfJourney)}\n` +
+                    `💺 <b>Class:</b> ${st.display_name || st.type}\n` +
+                    `🟢 <b>Available Seats:</b> <b>${totalAvail}</b> (Online: ${availOnline}, Counter: ${availCounter})` +
+                    liveCoachesInfo +
+                    `\n\n⚡ <i>Seats are available now on Bangladesh Railway!</i>\n` +
+                    `🔗 <a href="${bookUrl}">Click here to Book Immediately</a>`;
+
+                  await sendTelegramMessage(chatId, msgText, [
+                    [{ text: '🎟️ Book Now on Railway', url: bookUrl }]
+                  ]);
+                }
               }
             } else {
               target.notifiedSeatsByDate[dateOfJourney] = totalAvail;

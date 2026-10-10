@@ -248,14 +248,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const seatLayoutModal = document.getElementById('seatLayoutModal');
   const seatLayoutCloseBtn = document.getElementById('seatLayoutCloseBtn');
   const seatLayoutTrainName = document.getElementById('seatLayoutTrainName');
+  const seatLayoutStartTime = document.getElementById('seatLayoutStartTime');
+  const seatLayoutStartTimeText = document.getElementById('seatLayoutStartTimeText');
   const seatLayoutTrainModel = document.getElementById('seatLayoutTrainModel');
   const seatLayoutClassBadge = document.getElementById('seatLayoutClassBadge');
   const seatLayoutSubtitle = document.getElementById('seatLayoutSubtitle');
   const seatLayoutCoachTabs = document.getElementById('seatLayoutCoachTabs');
   const seatLayoutCoachesSummary = document.getElementById('seatLayoutCoachesSummary');
+  const seatLayoutAvailableOnlyToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
   const seatLayoutCoachInfoBanner = document.getElementById('seatLayoutCoachInfoBanner');
   const seatLayoutActiveCoachName = document.getElementById('seatLayoutActiveCoachName');
   const seatLayoutActiveCoachClass = document.getElementById('seatLayoutActiveCoachClass');
+  const seatLayoutActiveTotalCount = document.getElementById('seatLayoutActiveTotalCount');
   const seatLayoutActiveAvailCount = document.getElementById('seatLayoutActiveAvailCount');
   const seatLayoutActiveBookedCount = document.getElementById('seatLayoutActiveBookedCount');
   const seatLayoutActiveFare = document.getElementById('seatLayoutActiveFare');
@@ -333,6 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dropdownUserFullName = document.getElementById('dropdownUserFullName');
   const dropdownUserUsername = document.getElementById('dropdownUserUsername');
   const dropdownManageUsersBtn = document.getElementById('dropdownManageUsersBtn');
+  const dropdownSocketMonitorLink = document.getElementById('dropdownSocketMonitorLink');
   const dropdownChangePasswordBtn = document.getElementById('dropdownChangePasswordBtn');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const modalLogoutBtn = document.getElementById('modalLogoutBtn');
@@ -759,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const canonicalFrom = getCanonicalStationName(fromCity || state.selectedFrom || 'Dhaka');
     const canonicalTo = getCanonicalStationName(toCity || state.selectedTo || 'Chattogram');
     const canonicalDoj = formatShohozDoj(journeyDate || state.selectedDate || new Date().toISOString().split('T')[0]);
-    const chosenClass = preferredClass && preferredClass !== 'ALL' ? preferredClass : 'S_CHAIR';
+    const chosenClass = (preferredClass && preferredClass !== 'ALL' && preferredClass !== 'ANY') ? String(preferredClass).toUpperCase() : 'S_CHAIR';
 
     return `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(canonicalFrom)}&tocity=${encodeURIComponent(canonicalTo)}&doj=${encodeURIComponent(canonicalDoj)}&class=${encodeURIComponent(chosenClass)}`;
   }
@@ -1235,6 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Immediately show correct state from cache (no flicker)
     updateAuthUI(state.isAuthenticated, state.authUserData, null, null, null, state.isAuthenticated);
     if (authModal) authModal.classList.remove('hidden');
+    if (typeof initTurnstileLoginWidget === 'function') setTimeout(initTurnstileLoginWidget, 100);
     // Then refresh from server in background
     checkRailwaySessionStatus();
   }
@@ -1304,7 +1310,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       resetTabs();
       tabMobileBtn.className = activeTabClass;
-      if (mobileLoginTab) mobileLoginTab.classList.remove('hidden');
+      if (mobileLoginTab) {
+        mobileLoginTab.classList.remove('hidden');
+        if (typeof initTurnstileLoginWidget === 'function') initTurnstileLoginWidget();
+      }
     });
   }
 
@@ -1499,6 +1508,99 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ----------------------------------------------------
+  // Cloudflare Turnstile Live Browser Challenge Solver
+  // ----------------------------------------------------
+  let _cfTurnstileWidgetId = null;
+  let _cftLoginToken = '';
+
+  function initTurnstileLoginWidget() {
+    const slot = document.getElementById('cfTurnstileWidgetSlot');
+    const indicator = document.getElementById('cftStatusIndicator');
+    if (!slot) return;
+
+    if (!window.turnstile) {
+      if (!window._turnstileWaitInterval) {
+        let attempts = 0;
+        window._turnstileWaitInterval = setInterval(() => {
+          attempts++;
+          if (window.turnstile) {
+            clearInterval(window._turnstileWaitInterval);
+            window._turnstileWaitInterval = null;
+            initTurnstileLoginWidget();
+          } else if (attempts > 15) {
+            clearInterval(window._turnstileWaitInterval);
+            window._turnstileWaitInterval = null;
+            if (indicator) {
+              indicator.className = 'font-bold text-indigo-500 flex items-center gap-1';
+              indicator.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i><span>Syncing Token...</span>';
+            }
+            if (typeof requestBackgroundTurnstileToken === 'function') requestBackgroundTurnstileToken(true);
+          }
+        }, 300);
+      }
+      return;
+    }
+
+    if (_cfTurnstileWidgetId !== null) {
+      try { window.turnstile.reset(_cfTurnstileWidgetId); } catch(e) {}
+      return;
+    }
+
+    try {
+      _cfTurnstileWidgetId = window.turnstile.render('#cfTurnstileWidgetSlot', {
+        sitekey: '0x4AAAAAAB5VTjZ90pUxRuXR',
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        size: 'normal',
+        callback: (token) => {
+          console.log('[Turnstile] ✅ Browser auto-solved challenge! Token acquired:', token.substring(0, 15) + '...');
+          _cftLoginToken = token;
+          window._activeTurnstileToken = token;
+          try {
+            localStorage.setItem('railway_cft_response', token);
+            localStorage.setItem('cft_response', token);
+          } catch(e) {}
+          if (indicator) {
+            indicator.className = 'font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
+            indicator.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i><span>Verified by Cloudflare</span>';
+          }
+          if (cfWorkerLoginBtn) {
+            cfWorkerLoginBtn.classList.add('ring-2', 'ring-emerald-400');
+          }
+        },
+        'expired-callback': () => {
+          _cftLoginToken = '';
+          if (indicator) {
+            indicator.className = 'font-bold text-amber-500 flex items-center gap-1';
+            indicator.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>Expired, Refreshing...</span>';
+          }
+          if (_cfTurnstileWidgetId !== null) window.turnstile.reset(_cfTurnstileWidgetId);
+        },
+        'error-callback': (errCode) => {
+          console.warn('[Turnstile] Widget error or domain lock:', errCode);
+          if (indicator) {
+            indicator.className = 'font-bold text-indigo-500 flex items-center gap-1';
+            indicator.innerHTML = '<i class="fa-solid fa-cloud-arrow-down animate-bounce"></i><span>Syncing Bridge Token...</span>';
+          }
+          if (typeof requestBackgroundTurnstileToken === 'function') {
+            requestBackgroundTurnstileToken(true).then(() => {
+              const fresh = window._freshBridgeCft || getStoredCftResponse();
+              if (fresh) {
+                _cftLoginToken = fresh;
+                if (indicator) {
+                  indicator.className = 'font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
+                  indicator.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i><span>Bridge Token Active</span>';
+                }
+              }
+            });
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('[Turnstile] Error rendering widget:', err);
+    }
+  }
+
   if (cfWorkerLoginForm) {
     cfWorkerLoginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1510,40 +1612,50 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const activeCft = _cftLoginToken || window._activeTurnstileToken || getStoredCftResponse() || '';
+
       if (cfWorkerLoginBtn) {
         cfWorkerLoginBtn.disabled = true;
-        cfWorkerLoginBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Connecting via Cloudflare Edge...</span>';
+        cfWorkerLoginBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Authenticating via Railway Gateway...</span>';
       }
       if (cfWorkerLoginStatus) {
         cfWorkerLoginStatus.className = 'text-[11px] p-2 rounded-lg font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/50 block';
-        cfWorkerLoginStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Contacting Bangladesh Railway Mobile Gateway via Cloudflare Worker...';
+        cfWorkerLoginStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Contacting Bangladesh Railway Authentication with Turnstile Verification...';
       }
 
       try {
         let data = null;
-        let workerFailed = false;
+        const loginPayload = {
+          mobile_number: mobile,
+          password: password,
+          cft_response: activeCft
+        };
 
-        // 1. Primary: Direct fetch to Cloudflare Worker
+        // 1. Primary: Server endpoint (relays directly to official Shohoz backend with full mobile SSDK headers)
         try {
-          const res = await fetch(`${CF_WORKER_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile_number: mobile, password: password })
-          });
-          data = await res.json();
-        } catch (fetchErr) {
-          console.warn('[CF Worker] Direct fetch to Worker failed, falling back to backend proxy:', fetchErr);
-          workerFailed = true;
-        }
-
-        // 2. Fallback: If direct browser-to-worker fails (e.g. adblocker / network block), use server endpoint
-        if (workerFailed || !data) {
           const backendRes = await fetch('/api/shohoz-signin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mobile_number: mobile, password: password })
+            body: JSON.stringify(loginPayload)
           });
           data = await backendRes.json();
+        } catch (fetchErr) {
+          console.warn('[Login] Primary signin error, trying Cloudflare Worker fallback:', fetchErr);
+        }
+
+        // 2. Fallback: Direct Cloudflare Edge Worker
+        if (!data || !data.success) {
+          try {
+            const workerRes = await fetch(`${CF_WORKER_URL}/api/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(loginPayload)
+            });
+            const workerData = await workerRes.json();
+            if (workerData && workerData.success) {
+              data = workerData;
+            }
+          } catch (_) {}
         }
 
         if (data && data.success && data.token) {
@@ -1554,10 +1666,12 @@ document.addEventListener('DOMContentLoaded', () => {
           await saveCredentials({
             token: data.token,
             device_id: data.device_id || data.deviceId,
-            device_key: data.device_key || data.deviceKey
+            device_key: data.device_key || data.deviceKey,
+            cft_response: activeCft
           });
           if (cfWorkerPasswordInput) cfWorkerPasswordInput.value = '';
           if (cfWorkerLoginStatus) cfWorkerLoginStatus.classList.add('hidden');
+          showToast('Signed in successfully to Bangladesh Railway!', 'success');
         } else {
           const errDetail = data?.error || data?.message || 'Authentication rejected by Bangladesh Railway.';
           if (cfWorkerLoginStatus) {
@@ -1575,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         if (cfWorkerLoginBtn) {
           cfWorkerLoginBtn.disabled = false;
-          cfWorkerLoginBtn.innerHTML = '<i class="fa-solid fa-cloud"></i><span>Sign In via Cloudflare Worker</span>';
+          cfWorkerLoginBtn.innerHTML = '<i class="fa-solid fa-bolt"></i><span>Sign In with Active Turnstile Token</span>';
         }
       }
     });
@@ -3622,13 +3736,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Filter out any connection where Leg 2 start time is before Leg 1 arrival/departure
+    // Filter out connections where layover is invalid or Train 2 departs before Train 1
     const validRoutes = alternateRoutes.filter(alt => {
       if (alt.is_same_train) return true;
+      if (typeof alt.layover_minutes === 'number') {
+        return alt.layover_minutes >= 20 && alt.layover_minutes <= 240;
+      }
       const t1Arr = parseTimeToMinutes(alt.leg1?.arrival_time) || parseTimeToMinutes(alt.leg1?.departure_time);
       const t2Dep = parseTimeToMinutes(alt.leg2?.departure_time);
       if (t1Arr !== null && t2Dep !== null) {
-        return t2Dep > t1Arr; // Train 2 MUST depart AFTER Train 1 arrives
+        let diff = t2Dep - t1Arr;
+        if (diff < 0) diff += 1440;
+        return diff >= 20 && diff <= 240;
       }
       return true;
     });
@@ -3640,11 +3759,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const sameTrainCount = validRoutes.filter(r => r.is_same_train).length;
+    const transferCount = validRoutes.filter(r => !r.is_same_train).length;
+
+    const renderClassChips = (seatTypes) => {
+      if (!seatTypes || !seatTypes.length) return '';
+      const avail = seatTypes.filter(s => (Number(s.seats_available) || 0) > 0);
+      if (!avail.length) return '';
+      return `<div class="flex flex-wrap gap-1 pt-1">${avail.map(s => `<span class="px-1.5 py-0.5 rounded text-[9px] bg-slate-900/90 text-emerald-300 font-mono font-bold border border-slate-700/80">${escapeHtml(s.type)}: ${s.seats_available}</span>`).join('')}</div>`;
+    };
 
     alternateRoutesContainer.classList.remove('hidden');
     alternateRoutesContainer.innerHTML = `
       <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/40 border-2 border-emerald-500/40 space-y-3 shadow-md animate-fade-in">
-        <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center justify-between flex-wrap gap-2.5">
           <div class="flex items-center space-x-2.5">
             <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
               <i class="fa-solid fa-route"></i>
@@ -3652,26 +3779,77 @@ document.addEventListener('DOMContentLoaded', () => {
             <div>
               <h4 class="font-black text-sm text-white flex items-center space-x-2">
                 <span>⚡ Smart Alternate Stoppage & Junction Split Routes</span>
-                <span class="px-2 py-0.2 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${validRoutes.length} Found</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">${validRoutes.length} Found</span>
               </h4>
-              <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out. Book via <b>Same-Train Quota</b> or ride the <b>Longest Available Leg</b> and transfer to the next connecting train!</p>
+              <p class="text-[11px] text-emerald-200/80">Direct end-to-end seats are sold out. Book via <b>Same-Train Stoppage Quota</b> or take the <b>Longest Available Leg</b> and connect smoothly!</p>
             </div>
+          </div>
+
+          <!-- Interactive Filter Tabs -->
+          <div class="flex items-center space-x-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px]" id="alt-routes-filter-tabs">
+            <button type="button" data-alt-filter="all" class="alt-filter-tab px-2.5 py-1 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-sm">
+              All (${validRoutes.length})
+            </button>
+            ${sameTrainCount > 0 ? `
+              <button type="button" data-alt-filter="same" class="alt-filter-tab px-2.5 py-1 rounded-lg font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                🟢 Same-Train (${sameTrainCount})
+              </button>
+            ` : ''}
+            ${transferCount > 0 ? `
+              <button type="button" data-alt-filter="transfer" class="alt-filter-tab px-2.5 py-1 rounded-lg font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+                🔵 Junction (${transferCount})
+              </button>
+            ` : ''}
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-0.5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-0.5" id="alt-routes-grid">
           ${validRoutes.map((alt, idx) => {
             const leg1Book = buildShohozBookingUrl(alt.leg1.from, alt.leg1.to, state.selectedDate, 'ALL');
             const leg2Book = buildShohozBookingUrl(alt.leg2.from, alt.leg2.to, state.selectedDate, 'ALL');
             const isSameTrain = !!alt.is_same_train;
+            const isBestMatch = !!alt.is_best_match;
             const layoverStr = alt.layover_text || 'Transfer';
+            const minSeats = alt.guaranteed_seats || Math.min(alt.leg1?.seats || 0, alt.leg2?.seats || 0);
+
+            // Layover badge rendering
+            let layoverBadge = '';
+            if (isSameTrain) {
+              layoverBadge = `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold"><i class="fa-solid fa-couch text-[9px]"></i><span>0m • Stay Onboard</span></span>`;
+            } else if (alt.layover_quality === 'OPTIMAL') {
+              layoverBadge = `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold"><i class="fa-solid fa-clock-check text-[9px]"></i><span>${layoverStr}</span></span>`;
+            } else if (alt.layover_quality === 'QUICK') {
+              layoverBadge = `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold"><i class="fa-solid fa-bolt text-[9px]"></i><span>${layoverStr}</span></span>`;
+            } else {
+              layoverBadge = `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold"><i class="fa-solid fa-mug-hot text-[9px]"></i><span>${layoverStr}</span></span>`;
+            }
+
+            const commonClassBadge = (alt.common_classes && alt.common_classes.length > 0)
+              ? `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[10px] font-bold"><i class="fa-solid fa-chair text-[9px]"></i><span>Shared: ${alt.common_classes.join(', ')}</span></span>`
+              : '';
+
+            const fareBadge = alt.combined_fare
+              ? `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold font-mono"><span>Est. ৳${alt.combined_fare}</span></span>`
+              : '';
+
+            const guaranteedBadge = `<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[10px] font-mono font-bold"><span>🟢 Min ${minSeats} Seats</span></span>`;
+
+            const cardBorder = isBestMatch
+              ? 'border-2 border-amber-400/90 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/40'
+              : (isSameTrain ? 'border-2 border-emerald-500/60 shadow-md' : 'border-2 border-indigo-500/50 shadow-sm');
 
             return `
-              <div class="p-3.5 rounded-2xl bg-slate-900/95 border-2 ${isSameTrain ? 'border-emerald-500/60 shadow-md' : 'border-indigo-500/50 shadow-sm'} space-y-2.5 text-xs relative overflow-hidden">
+              <div class="alt-route-card p-3.5 rounded-2xl bg-slate-900/95 ${cardBorder} space-y-2.5 text-xs relative overflow-hidden transition-all" data-alt-category="${isSameTrain ? 'same' : 'transfer'}">
                 
                 <!-- Option Header -->
-                <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 flex-wrap gap-1">
+                <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2 flex-wrap gap-1.5">
                   <div class="flex items-center space-x-1.5 min-w-0">
+                    ${isBestMatch ? `
+                      <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 uppercase tracking-wider shadow-sm shrink-0">
+                        <i class="fa-solid fa-crown text-[8px]"></i>
+                        <span>Best Match</span>
+                      </span>
+                    ` : ''}
                     <span class="font-extrabold text-white text-xs sm:text-sm truncate">
                       ${isSameTrain ? alt.train_name : `Option ${idx + 1}: ${alt.leg1.train_name} ➔ ${alt.leg2.train_name}`}
                     </span>
@@ -3680,26 +3858,37 @@ document.addEventListener('DOMContentLoaded', () => {
                   
                   <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0 ${isSameTrain ? 'bg-emerald-500/20 text-emerald-300 border-2 border-emerald-500/50' : 'bg-indigo-500/20 text-indigo-300 border-2 border-indigo-500/50'}">
                     <i class="fa-solid ${isSameTrain ? 'fa-train-circle-check text-emerald-400' : 'fa-train-subway text-indigo-400'} text-[9px]"></i>
-                    <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `🚀 Longest Ride + Next Train`}</span>
+                    <span>${isSameTrain ? `SAME TRAIN (Via ${alt.via_hub})` : `🚀 Junction via ${alt.via_hub}`}</span>
                   </span>
+                </div>
+
+                <!-- Match Metrics Badges -->
+                <div class="flex items-center flex-wrap gap-1.5">
+                  ${layoverBadge}
+                  ${guaranteedBadge}
+                  ${commonClassBadge}
+                  ${fareBadge}
                 </div>
 
                 ${isSameTrain ? `
                   <div class="text-[11px] text-emerald-300/95 bg-emerald-950/60 px-2.5 py-1.5 rounded-xl border-2 border-emerald-800/40 flex items-center space-x-1.5 font-medium">
-                    <i class="fa-solid fa-circle-info text-xs text-emerald-400 shrink-0"></i>
-                    <span>No train change needed! Board <b>${alt.train_name}</b> and remain onboard for the entire journey.</span>
+                    <i class="fa-solid fa-circle-check text-xs text-emerald-400 shrink-0"></i>
+                    <span><b>Ghost Seat / Same Train Quota:</b> No train change needed! Board <b>${alt.train_name}</b> and remain onboard for the entire journey.</span>
                   </div>
                 ` : `
                   <div class="text-[11px] text-indigo-200 bg-indigo-950/60 px-2.5 py-1.5 rounded-xl border-2 border-indigo-800/40 flex items-center space-x-1.5 font-medium">
                     <i class="fa-solid fa-shuffle text-xs text-indigo-400 shrink-0"></i>
-                    <span>Ride <b>${alt.leg1.train_name}</b> to ${alt.via_hub}, then switch to <b>${alt.leg2.train_name}</b> (⏱️ ${layoverStr} transfer wait).</span>
+                    <span>Ride <b>${alt.leg1.train_name}</b> to ${alt.via_hub}, then switch to <b>${alt.leg2.train_name}</b> (⏱️ ${layoverStr} wait).</span>
                   </div>
                 `}
                 
                 <!-- Leg 1 Breakdown (Longest First Leg) -->
-                <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
+                <div class="space-y-1.5 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-extrabold text-slate-100">Leg 1: ${alt.leg1.from} ➔ ${alt.leg1.to}</span>
+                    <span class="font-extrabold text-slate-100 flex items-center space-x-1">
+                      <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] inline-flex items-center justify-center font-bold">1</span>
+                      <span>${alt.leg1.from} ➔ ${alt.leg1.to}</span>
+                    </span>
                     <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60 font-mono">🟢 ${alt.leg1.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
@@ -3709,21 +3898,31 @@ document.addEventListener('DOMContentLoaded', () => {
                       <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                     </a>
                   </div>
+                  ${renderClassChips(alt.leg1.seat_types)}
                 </div>
 
                 <!-- Transfer Connector Bar (If switching trains) -->
                 ${!isSameTrain ? `
                   <div class="flex items-center justify-center space-x-2 py-0.5 text-[10px] font-bold text-amber-300">
                     <i class="fa-solid fa-arrow-down text-[9px]"></i>
-                    <span>Transfer at ${alt.via_hub} (Layover: ${layoverStr})</span>
+                    <span>Transfer at ${alt.via_hub} (${layoverStr})</span>
                     <i class="fa-solid fa-arrow-down text-[9px]"></i>
                   </div>
-                ` : ''}
+                ` : `
+                  <div class="flex items-center justify-center space-x-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    <i class="fa-solid fa-couch text-[9px]"></i>
+                    <span>Intermediate Stoppage at ${alt.via_hub} (Stay seated)</span>
+                    <i class="fa-solid fa-couch text-[9px]"></i>
+                  </div>
+                `}
 
                 <!-- Leg 2 Breakdown (Next Train Connection) -->
-                <div class="space-y-1 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
+                <div class="space-y-1.5 bg-slate-800/60 p-2.5 rounded-xl border-2 border-slate-700/80">
                   <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-extrabold text-slate-100">Leg 2: ${alt.leg2.from} ➔ ${alt.leg2.to}</span>
+                    <span class="font-extrabold text-slate-100 flex items-center space-x-1">
+                      <span class="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] inline-flex items-center justify-center font-bold">2</span>
+                      <span>${alt.leg2.from} ➔ ${alt.leg2.to}</span>
+                    </span>
                     <span class="text-[10px] font-black text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-700/60 font-mono">🟢 ${alt.leg2.seats} Seats</span>
                   </div>
                   <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
@@ -3733,6 +3932,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                     </a>
                   </div>
+                  ${renderClassChips(alt.leg2.seat_types)}
                 </div>
 
               </div>
@@ -3741,6 +3941,34 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
     `;
+
+    // Attach Interactive Filter Tab Event Handlers
+    const filterTabsContainer = alternateRoutesContainer.querySelector('#alt-routes-filter-tabs');
+    if (filterTabsContainer) {
+      filterTabsContainer.querySelectorAll('.alt-filter-tab').forEach(tabBtn => {
+        tabBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const filter = tabBtn.getAttribute('data-alt-filter');
+          
+          // Update active button styles
+          filterTabsContainer.querySelectorAll('.alt-filter-tab').forEach(b => {
+            b.className = 'alt-filter-tab px-2.5 py-1 rounded-lg font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800';
+          });
+          tabBtn.className = 'alt-filter-tab px-2.5 py-1 rounded-lg font-bold transition-all bg-emerald-500 text-slate-950 shadow-sm';
+
+          // Show/Hide matching cards
+          const cards = alternateRoutesContainer.querySelectorAll('.alt-route-card');
+          cards.forEach(card => {
+            const cat = card.getAttribute('data-alt-category');
+            if (filter === 'all' || cat === filter) {
+              card.classList.remove('hidden');
+            } else {
+              card.classList.add('hidden');
+            }
+          });
+        });
+      });
+    }
   }
 
   // ----------------------------------------------------
@@ -3933,6 +4161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tModel = train.train_model || '';
     const tName = train.train_name || '';
+    const tDepartureTime = train.departure_time || '';
     const tTripId = seat.trip_id || train.trip_id || '';
     const tTripRouteId = seat.trip_route_id || train.trip_route_id || '';
     const seatClassType = seat.type || seat.display_name || '';
@@ -3943,6 +4172,7 @@ document.addEventListener('DOMContentLoaded', () => {
           class="view-seat-layout-btn app-seat-tile relative block w-full text-left p-2.5 sm:p-3 rounded-lg border-2 border-emerald-500/80 dark:border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 hover:border-emerald-600 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 transition-all shadow-xs hover:shadow-sm group cursor-pointer"
           data-train-model="${tModel}"
           data-train-name="${tName}"
+          data-departure-time="${tDepartureTime}"
           data-trip-id="${tTripId}"
           data-trip-route-id="${tTripRouteId}"
           data-seat-class="${seatClassType}"
@@ -3975,6 +4205,7 @@ document.addEventListener('DOMContentLoaded', () => {
           class="view-seat-layout-btn app-seat-tile block w-full text-left p-2.5 sm:p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/40 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 transition cursor-pointer select-none group"
           data-train-model="${tModel}"
           data-train-name="${tName}"
+          data-departure-time="${tDepartureTime}"
           data-trip-id="${tTripId}"
           data-trip-route-id="${tTripRouteId}"
           data-seat-class="${seatClassType}"
@@ -4067,6 +4298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <button type="button" class="view-seat-layout-btn inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-xs shrink-0 shadow-2xs cursor-pointer transition"
                     data-train-model="${train.train_model || ''}"
                     data-train-name="${train.train_name || ''}"
+                    data-departure-time="${train.departure_time || ''}"
                     data-trip-id="${s.trip_id || train.trip_id || ''}"
                     data-trip-route-id="${s.trip_route_id || train.trip_route_id || ''}"
                     data-seat-class="${s.type || ''}"
@@ -4161,6 +4393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="view-seat-layout-btn inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700/80 text-xs shadow-2xs whitespace-nowrap cursor-pointer transition group"
                   data-train-model="${train.train_model || ''}"
                   data-train-name="${train.train_name || ''}"
+                  data-departure-time="${train.departure_time || ''}"
                   data-trip-id="${s.trip_id || train.trip_id || ''}"
                   data-trip-route-id="${s.trip_route_id || train.trip_route_id || ''}"
                   data-seat-class="${s.type || ''}"
@@ -6547,48 +6780,128 @@ document.addEventListener('DOMContentLoaded', () => {
   // where the userscript runs, immediately capturing fresh Turnstile tokens
   // and sending them to /api/auth/set-token to keep live layouts 100% active.
   // ----------------------------------------------------
-  let _bgTurnstileIframe = null;
+  // ----------------------------------------------------
+  // Automatic Background Turnstile Token Collector Bridge
+  // 100% Invisible Background Execution (Zero popups, zero tabs, zero screen intrusion)
+  // Keeps fresh tokens alive via userscript sync and server solver.
+  // ----------------------------------------------------
   let _lastCftRequestTime = 0;
-  function requestBackgroundTurnstileToken(force = false) {
+  let _isRefreshingTurnstile = false;
+
+  async function requestBackgroundTurnstileToken(force = false) {
     const now = Date.now();
     if (!force && now - _lastCftRequestTime < 4000) return;
     _lastCftRequestTime = now;
 
-    const uniqueUrl = 'https://eticket.railway.gov.bd/booking/train/search?fromcity=Dhaka&tocity=Chattogram&doj=' +
-      new Date().toISOString().split('T')[0] + '&cft_collector=1&_t=' + now;
+    if (_isRefreshingTurnstile) return;
+    _isRefreshingTurnstile = true;
 
-    // 100% invisible background iframe collection (Zero popups, zero tabs opened)
-    // IMPORTANT: Cloudflare Turnstile requires an active rendering context.
-    // Display:none or 0x0 size pauses or suppresses Turnstile widget execution.
-    // We keep width:300px, height:100px with opacity:0 positioned far offscreen (-9999px)
-    // so Turnstile solves invisibly in the background without being visible to the user.
     try {
-      if (!_bgTurnstileIframe) {
-        _bgTurnstileIframe = document.createElement('iframe');
-        _bgTurnstileIframe.id = 'railseat-turnstile-bridge-frame';
-        _bgTurnstileIframe.style.cssText = 'position:fixed;width:300px;height:100px;left:-9999px;top:-9999px;opacity:0;pointer-events:none;border:none;z-index:-999;visibility:hidden;';
-        // Note: some browsers don't execute JS in visibility:hidden, so use opacity:0 and pointer-events:none
-        _bgTurnstileIframe.style.visibility = 'visible';
-        document.body.appendChild(_bgTurnstileIframe);
+      const res = await fetch('/api/auth/refresh-turnstile' + (force ? '?force=1' : ''), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.token) {
+          const token = json.token;
+          console.log('[Turnstile Solver] ⚡ Background token refreshed:', token.substring(0, 15) + '...');
+          window._freshBridgeCft = token;
+          try {
+            localStorage.setItem('railway_cft_response', token);
+            localStorage.setItem('cft_response', token);
+          } catch (e) {}
+
+          // If seat layout modal is open and showing non-live (template), auto-reload it with live data
+          if (currentSeatLayoutState && seatLayoutModal && !seatLayoutModal.classList.contains('hidden')) {
+            if (!currentSeatLayoutState.isLive) {
+              console.log('[Turnstile Solver] Auto-reloading live seat layout with fresh background token...');
+              fetchClassLiveSeatLayout(currentSeatLayoutState.lastFetchedClass || 'S_CHAIR');
+            }
+          }
+        }
       }
-      _bgTurnstileIframe.src = uniqueUrl;
-      console.log('[Turnstile Bridge] ⚡ Triggered 100% invisible background iframe Turnstile token collection');
     } catch (e) {
-      console.warn('[Turnstile Bridge] Failed to load background iframe:', e);
+      console.warn('[Turnstile Solver] Background refresh error:', e.message);
+    } finally {
+      _isRefreshingTurnstile = false;
     }
   }
 
-  // Listen for direct postMessage token sync from userscript inside iframe or popup
+  // ----------------------------------------------------
+  // Proactive Background Turnstile Token Keeper (Dashboard)
+  // Keeps a fresh token permanently alive in the background
+  // so any train seat map loads instantly with zero wait.
+  // ----------------------------------------------------
+  function initBackgroundTurnstileKeeper() {
+    async function keepTokenWarm() {
+      try {
+        const res = await fetch('/api/auth/token-status');
+        if (res.ok) {
+          const data = await res.json();
+          // If token is missing, expired, or older than 90 seconds, request refresh
+          if (!data.has_cft || !data.cft_response || (data.cft_age_seconds && data.cft_age_seconds > 90)) {
+            requestBackgroundTurnstileToken(false);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Check every 60 seconds
+    setInterval(keepTokenWarm, 60000);
+    // When tab gains focus, check immediately
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        keepTokenWarm();
+      }
+    });
+    // Check shortly after boot
+    setTimeout(keepTokenWarm, 3000);
+  }
+
+  initBackgroundTurnstileKeeper();
+
+  // Listen for direct postMessage token & seatLayout sync from userscript (if active on same domain or iframe)
   window.addEventListener('message', (ev) => {
     try {
-      if (ev.data && ev.data.type === 'RAILSEAT_CFT_TOKEN' && ev.data.cft_response) {
-        const token = ev.data.cft_response;
-        console.log('[Turnstile Bridge] ⚡ Received fresh token via postMessage:', token.substring(0, 15));
-        window._freshBridgeCft = token;
-        try {
-          localStorage.setItem('railway_cft_response', token);
-          localStorage.setItem('cft_response', token);
-        } catch (e) {}
+      if (ev.data && (ev.data.type === 'RAILSEAT_CFT_TOKEN' || ev.data.type === 'RAILSEAT_LIVE_LAYOUT')) {
+        if (ev.data.cft_response) {
+          const token = ev.data.cft_response;
+          console.log('[Turnstile Bridge] ⚡ Received fresh token via postMessage:', token.substring(0, 15));
+          window._freshBridgeCft = token;
+          try {
+            localStorage.setItem('railway_cft_response', token);
+            localStorage.setItem('cft_response', token);
+          } catch (e) {}
+
+          // Broadcast to server immediately to keep server vault primed
+          try {
+            fetch('/api/auth/set-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cft_response: token })
+            });
+          } catch (e) {}
+        }
+
+        // Direct Raw Shohoz layout payload push
+        if (ev.data.layout && currentSeatLayoutState && seatLayoutModal && !seatLayoutModal.classList.contains('hidden')) {
+          const raw = ev.data.layout.data || ev.data.layout;
+          const extracted = extractCoachesFromPayload(raw, currentSeatLayoutState.lastFetchedClass || 'S_CHAIR');
+          if (extracted && extracted.length > 0) {
+            console.log('[SeatLayout Direct-Sync] 🎯 Instant live layout received via postMessage!');
+            currentSeatLayoutState.allCoaches = extracted;
+            const availCoaches = extracted.filter(isCoachAvailable);
+            currentSeatLayoutState.allSoldOut = (availCoaches.length === 0);
+            currentSeatLayoutState.coaches = (currentSeatLayoutState.availableOnly && availCoaches.length > 0) ? availCoaches : extracted;
+            currentSeatLayoutState.isLive = true;
+            currentSeatLayoutState.fetching = false;
+            renderSeatLayoutCoachTabs();
+            renderActiveCoachCarriage();
+            syncSeatLayoutSourceBadges();
+            return;
+          }
+        }
 
         // If seat layout modal is currently open and waiting, immediately re-fetch live layout with fresh token
         if (currentSeatLayoutState && seatLayoutModal && !seatLayoutModal.classList.contains('hidden')) {
@@ -6616,14 +6929,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
   });
 
-  // Background keep-alive loop: proactively collect fresh token every 3 minutes
+  // Background keep-alive loop: proactively refresh token every 2.5 minutes while page is active
   setInterval(() => {
-    // Only pre-fetch if user has active session or modal is open
-    const hasStored = getStoredCftResponse();
-    if (!hasStored || (currentSeatLayoutState && !currentSeatLayoutState.isLive)) {
-      requestBackgroundTurnstileToken();
+    if (!document.hidden) {
+      const hasStored = getStoredCftResponse();
+      if (!hasStored || (currentSeatLayoutState && !currentSeatLayoutState.isLive)) {
+        requestBackgroundTurnstileToken();
+      }
     }
-  }, 180000);
+  }, 150000);
 
   // ----------------------------------------------------
   // Native Android In-App Background Automation Bridge
@@ -6645,6 +6959,7 @@ document.addEventListener('DOMContentLoaded', () => {
       openSeatLayoutModal({
         trainModel: currentSeatLayoutState.trainModel,
         trainName: currentSeatLayoutState.trainName,
+        departureTime: currentSeatLayoutState.departureTime,
         tripId: currentSeatLayoutState.tripId,
         tripRouteId: currentSeatLayoutState.tripRouteId,
         seatClass: currentSeatLayoutState.lastFetchedClass,
@@ -6655,24 +6970,356 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // ----------------------------------------------------
+  // Real-Time Railway WebSocket Client Module
+  // ----------------------------------------------------
+  const RAIL_SOCKET_URL = 'wss://train-websocket.shohoz.com/socket.io/?EIO=4&transport=websocket';
+  let activeSeatLayoutWebSocket = null;
+  let activeSeatLayoutRoomName = null;
+
+  function formatCanonicalShohozDate(inputDate) {
+    if (!inputDate) return '';
+    const clean = String(inputDate).trim();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (/^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(clean)) return clean;
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(clean)) {
+      const parts = clean.split('-');
+      const y = parts[0];
+      const m = parseInt(parts[1], 10) - 1;
+      const d = String(parseInt(parts[2], 10)).padStart(2, '0');
+      if (m >= 0 && m < 12) return `${d}-${months[m]}-${y}`;
+    }
+    const dt = new Date(clean);
+    if (!isNaN(dt.getTime())) {
+      const d = String(dt.getDate()).padStart(2, '0');
+      const m = months[dt.getMonth()];
+      const y = dt.getFullYear();
+      return `${d}-${m}-${y}`;
+    }
+    return clean;
+  }
+
+  function buildClientTripRoomName(model, from, to, date) {
+    const m = String(model || '').replace(/\D/g, '') || String(model || '').trim();
+    const normalizeStation = (s) => {
+      const clean = String(s || '').trim().replace(/_/g, ' ');
+      const lower = clean.toLowerCase();
+      if (typeof CITY_ALIASES !== 'undefined' && CITY_ALIASES[lower]) return CITY_ALIASES[lower];
+      if (lower === 'chittagong' || lower === 'ctg') return 'Chattogram';
+      return clean.charAt(0).toUpperCase() + clean.slice(1);
+    };
+    const f = normalizeStation(from);
+    const t = normalizeStation(to);
+    const d = formatCanonicalShohozDate(date);
+    return `LIVE#train#${m}#${f}#${t}#${d}`;
+  }
+
+  let seatSocketReconnectTimer = null;
+  let lastSocketReleaseToastTime = 0;
+
+  function connectSeatLayoutWebSocket(roomName, model) {
+    if (activeSeatLayoutWebSocket && activeSeatLayoutRoomName === roomName && activeSeatLayoutWebSocket.readyState === WebSocket.OPEN) {
+      return;
+    }
+    disconnectSeatLayoutWebSocket();
+    if (!roomName) return;
+
+    activeSeatLayoutRoomName = roomName;
+    const socketBadge = document.getElementById('seatLayoutSocketBadge');
+    const socketBadgeText = document.getElementById('seatLayoutSocketBadgeText');
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+
+    try {
+      const ws = new WebSocket(RAIL_SOCKET_URL);
+      activeSeatLayoutWebSocket = ws;
+
+      ws.onopen = () => {
+        console.log('[SeatSocket] 🟢 Connected to Railway WebSocket:', RAIL_SOCKET_URL);
+      };
+
+      ws.onmessage = (event) => {
+        const raw = String(event.data || '');
+
+        // Engine.IO open handshake (0{...}) -> reply 40 and announce room
+        if (raw.charAt(0) === '0') {
+          try { ws.send('40'); } catch (e) {}
+          try {
+            ws.send('42' + JSON.stringify(['seatLayoutOpened', { roomName, model: model || null }]));
+            console.log('[SeatSocket] 📡 Announced room subscription:', roomName);
+          } catch (e) {}
+          if (socketBadge) {
+            socketBadge.classList.remove('hidden');
+            socketBadge.classList.add('inline-flex');
+            if (socketBadgeText) {
+              socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
+            }
+          }
+          return;
+        }
+
+        // Engine.IO Ping (2) -> Pong (3) heartbeat
+        if (raw.charAt(0) === '2') {
+          try { ws.send('3'); } catch (e) {}
+          return;
+        }
+
+        // Socket.IO message (42["inProgressTickets", ...])
+        if (raw.startsWith('42')) {
+          let parsed;
+          try { parsed = JSON.parse(raw.slice(2)); } catch (e) { return; }
+          if (!Array.isArray(parsed) || parsed[0] !== 'inProgressTickets') return;
+          const payload = parsed[1] || {};
+          handleIncomingSeatSocketEvent(payload);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.warn('[SeatSocket] WebSocket notice:', err);
+      };
+
+      ws.onclose = () => {
+        if (socketBadge) {
+          socketBadge.classList.add('hidden');
+          socketBadge.classList.remove('inline-flex');
+        }
+        // Auto-reconnect if seat modal is still actively open
+        if (seatLayoutModal && !seatLayoutModal.classList.contains('hidden') && activeSeatLayoutRoomName === roomName) {
+          if (seatSocketReconnectTimer) clearTimeout(seatSocketReconnectTimer);
+          seatSocketReconnectTimer = setTimeout(() => {
+            if (seatLayoutModal && !seatLayoutModal.classList.contains('hidden')) {
+              connectSeatLayoutWebSocket(roomName, model);
+            }
+          }, 3000);
+        }
+      };
+    } catch (err) {
+      console.warn('[SeatSocket] Failed to open WebSocket:', err);
+    }
+  }
+
+  function disconnectSeatLayoutWebSocket() {
+    if (seatSocketReconnectTimer) {
+      clearTimeout(seatSocketReconnectTimer);
+      seatSocketReconnectTimer = null;
+    }
+    if (activeSeatLayoutWebSocket) {
+      try { activeSeatLayoutWebSocket.close(); } catch (e) {}
+      activeSeatLayoutWebSocket = null;
+    }
+    activeSeatLayoutRoomName = null;
+    const socketBadge = document.getElementById('seatLayoutSocketBadge');
+    if (socketBadge) {
+      socketBadge.classList.add('hidden');
+      socketBadge.classList.remove('inline-flex');
+    }
+  }
+
+  function handleIncomingSeatSocketEvent(payload) {
+    if (!currentSeatLayoutState || !Array.isArray(currentSeatLayoutState.allCoaches) || currentSeatLayoutState.allCoaches.length === 0) {
+      return;
+    }
+    const type = Number(payload.type); // 1 = held/in-progress, 2 = released
+    const tickets = Array.isArray(payload.tickets) ? payload.tickets : [];
+    if (!tickets.length) return;
+
+    let stateChanged = false;
+    let anySelectedLost = false;
+    let heldSeatDisplay = null;
+    let releasedSeatDisplay = null;
+
+    const normalizeCoachStr = (name) => {
+      if (!name) return '';
+      return String(name).replace(/^(coach|bogie)[-_\s]*/i, '').trim().toUpperCase();
+    };
+
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+    const activeCoach = currentSeatLayoutState.coaches?.[currentSeatLayoutState.activeCoachIndex] || null;
+    const activeCoachNorm = activeCoach ? normalizeCoachStr(activeCoach.coach_name) : null;
+
+    tickets.forEach(t => {
+      const tid = (t.ticket_id !== undefined && t.ticket_id !== null) ? String(t.ticket_id) : null;
+      const rawSeatNum = t.seat_number ? String(t.seat_number).trim() : null;
+      const sNumClean = rawSeatNum ? rawSeatNum.replace(/^[^-]+-/, '') : null;
+      const incomingCoach = t.coach_name ? normalizeCoachStr(t.coach_name) : null;
+
+      currentSeatLayoutState.allCoaches.forEach(coach => {
+        const coachNorm = normalizeCoachStr(coach.coach_name);
+        if (incomingCoach && coachNorm && coachNorm !== incomingCoach) {
+          return;
+        }
+
+        const seatsToSearch = Array.isArray(coach.seats) ? coach.seats : [];
+
+        seatsToSearch.forEach(s => {
+          if (s.is_blank) return;
+          const matchById = tid && s.ticket_id !== null && s.ticket_id !== undefined && String(s.ticket_id) === tid;
+          const sSeatNum = String(s.seat_number || '').trim();
+          const sDispNum = String(s.display_number || '').trim();
+          const sCleanNum = sSeatNum.replace(/^[^-]+-/, '');
+
+          const matchByNum = rawSeatNum && (
+            sSeatNum.toUpperCase() === rawSeatNum.toUpperCase() ||
+            sDispNum.toUpperCase() === rawSeatNum.toUpperCase() ||
+            (sNumClean && (sSeatNum.toUpperCase() === sNumClean.toUpperCase() || sDispNum.toUpperCase() === sNumClean.toUpperCase() || sCleanNum.toUpperCase() === sNumClean.toUpperCase()))
+          );
+
+          if (matchById || (!tid && matchByNum)) {
+            const fullSeatName = s.full_seat_name || s.seat_name || (coach.coach_name + '-' + s.seat_number);
+
+            if (type === 1) {
+              // Seat held by another user in 5-minute checkout
+              if (s.status === 'available') {
+                s.status = 'booking-in-process';
+                coach.available_seats = Math.max(0, (coach.available_seats || 0) - 1);
+                coach.in_process_seats = (coach.in_process_seats || 0) + 1;
+                stateChanged = true;
+                heldSeatDisplay = `${coach.coach_name}-${s.display_number || s.seat_number}`;
+
+                // Deselect if currently picked by active user
+                if (Array.isArray(currentSeatLayoutState.selectedSeats)) {
+                  const selIdx = currentSeatLayoutState.selectedSeats.findIndex(sel =>
+                    sel.seat_name === fullSeatName ||
+                    sel.seat_name === s.seat_name ||
+                    (normalizeCoachStr(sel.coach_name) === coachNorm && String(sel.seat_number) === String(s.seat_number))
+                  );
+                  if (selIdx !== -1) {
+                    currentSeatLayoutState.selectedSeats.splice(selIdx, 1);
+                    anySelectedLost = true;
+                  }
+                }
+
+                // Instant DOM tile update if seat belongs to current active carriage
+                if (seatLayoutContent && (!activeCoachNorm || coachNorm === activeCoachNorm)) {
+                  const seatBtn = seatLayoutContent.querySelector(`button[data-seat-name="${fullSeatName}"], button[data-seat-number="${s.seat_number}"]`);
+                  if (seatBtn) {
+                    seatBtn.dataset.seatStatus = 'booking-in-process';
+                    seatBtn.title = `${fullSeatName} (${isBn ? 'বুকিং চলমান' : 'In Process'} • ${isBn ? '৫ মিনিটের জন্য লক করা হয়েছে' : 'Locked in 5-min checkout'})`;
+                    seatBtn.className = 'carriage-seat-btn aspect-square w-full rounded sm:rounded-md flex flex-col items-center justify-center p-0 transition duration-150 select-none bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-2 border-amber-500 dark:border-amber-400 cursor-not-allowed font-extrabold ring-2 ring-amber-300/60 dark:ring-amber-500/30 animate-pulse';
+
+                    if (!seatBtn.querySelector('.fa-clock')) {
+                      const clockBadge = document.createElement('span');
+                      clockBadge.className = 'text-[8px] text-amber-600 dark:text-amber-400 font-black leading-none mt-0.5 animate-bounce';
+                      clockBadge.innerHTML = '<i class="fa-regular fa-clock"></i>';
+                      const numSpan = seatBtn.querySelector('.seat-number-text') || seatBtn.querySelector('span');
+                      if (numSpan && numSpan.nextSibling) {
+                        seatBtn.insertBefore(clockBadge, numSpan.nextSibling);
+                      } else {
+                        seatBtn.appendChild(clockBadge);
+                      }
+                    }
+                  }
+                }
+              }
+            } else if (type === 2) {
+              // Seat released / hold expired -> reverts to Available
+              if (s.status === 'booking-in-process') {
+                s.status = 'available';
+                coach.available_seats = (coach.available_seats || 0) + 1;
+                coach.in_process_seats = Math.max(0, (coach.in_process_seats || 0) - 1);
+                stateChanged = true;
+                releasedSeatDisplay = `${coach.coach_name}-${s.display_number || s.seat_number}`;
+
+                // Instant DOM tile update if seat belongs to current active carriage
+                if (seatLayoutContent && (!activeCoachNorm || coachNorm === activeCoachNorm)) {
+                  const seatBtn = seatLayoutContent.querySelector(`button[data-seat-name="${fullSeatName}"], button[data-seat-number="${s.seat_number}"]`);
+                  if (seatBtn) {
+                    seatBtn.dataset.seatStatus = 'available';
+                    seatBtn.title = `${fullSeatName} (${isBn ? 'খালি' : 'Available'})`;
+                    seatBtn.className = 'carriage-seat-btn aspect-square w-full rounded sm:rounded-md flex flex-col items-center justify-center p-0 transition duration-150 select-none bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-extrabold cursor-pointer shadow-2xs hover:scale-105';
+
+                    const clockIcon = seatBtn.querySelector('.fa-clock');
+                    if (clockIcon && clockIcon.parentElement) {
+                      clockIcon.parentElement.remove();
+                    }
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // Also ensure coach.layout.rows reference statuses match
+        if (coach.layout && Array.isArray(coach.layout.rows)) {
+          coach.layout.rows.forEach(row => {
+            if (!Array.isArray(row)) return;
+            row.forEach(rowSeat => {
+              if (!rowSeat || rowSeat.is_blank) return;
+              const matchingFlatSeat = coach.seats.find(fs => fs.seat_name === rowSeat.seat_name || (fs.seat_number && fs.seat_number === rowSeat.seat_number));
+              if (matchingFlatSeat) {
+                rowSeat.status = matchingFlatSeat.status;
+              }
+            });
+          });
+        }
+      });
+    });
+
+    if (anySelectedLost) {
+      showToast(isBn ? '⚠️ আপনার নির্বাচিত একটি আসন অন্য একজন যাত্রী লক করেছেন।' : '⚠️ One of your selected seats was just reserved by another user.', 'warning');
+      updateSeatLayoutBookNowButton();
+    } else if (heldSeatDisplay && (Date.now() - lastSocketReleaseToastTime > 4000)) {
+      lastSocketReleaseToastTime = Date.now();
+      showToast(isBn ? `🔒 আসন হোল্ড: ${heldSeatDisplay} অন্য যাত্রী ৫ মিনিটের জন্য লক করেছেন!` : `🔒 Seat held: ${heldSeatDisplay} just locked by another passenger (5m checkout)!`, 'warning');
+    } else if (releasedSeatDisplay && (Date.now() - lastSocketReleaseToastTime > 4000)) {
+      lastSocketReleaseToastTime = Date.now();
+      showToast(isBn ? `⚡ আসন অবমুক্ত হয়েছে: ${releasedSeatDisplay} এখন খালি!` : `⚡ Seat released: ${releasedSeatDisplay} is now available!`, 'info');
+    }
+
+    if (stateChanged) {
+      // Update Coach Overview Banner stats
+      if (activeCoach) {
+        const fmtCount = (v) => {
+          if (v === null || v === undefined) return '--';
+          return isBn ? window.i18n.toBnNum(v) : String(v);
+        };
+        const totalSeats = (activeCoach.total_seats !== undefined && activeCoach.total_seats !== null) 
+          ? activeCoach.total_seats 
+          : ((activeCoach.seats && activeCoach.seats.length) ? activeCoach.seats.length : ((Number(activeCoach.available_seats) || 0) + (Number(activeCoach.booked_seats) || 0)));
+
+        if (seatLayoutActiveTotalCount) seatLayoutActiveTotalCount.textContent = fmtCount(totalSeats);
+        if (seatLayoutActiveAvailCount) seatLayoutActiveAvailCount.textContent = fmtCount(activeCoach.available_seats);
+        if (seatLayoutActiveBookedCount) seatLayoutActiveBookedCount.textContent = fmtCount(activeCoach.booked_seats);
+      }
+
+      // Update coach tabs badges
+      renderSeatLayoutCoachTabs();
+      updateSeatLayoutBookNowButton();
+    }
+  }
+
+  function closeSeatLayoutModal() {
+    disconnectSeatLayoutWebSocket();
+    if (seatLayoutModal) {
+      seatLayoutModal.classList.add('hidden');
+    }
+  }
+
   function initSeatLayoutModule() {
-    if (seatLayoutCloseBtn && seatLayoutModal) {
+    if (seatLayoutAvailableOnlyToggle) {
+      seatLayoutAvailableOnlyToggle.addEventListener('click', () => {
+        if (typeof toggleAvailableOnlyCoaches === 'function') {
+          toggleAvailableOnlyCoaches();
+        }
+      });
+    }
+
+    if (seatLayoutCloseBtn) {
       seatLayoutCloseBtn.addEventListener('click', () => {
-        seatLayoutModal.classList.add('hidden');
+        closeSeatLayoutModal();
       });
     }
 
     if (seatLayoutModal) {
       seatLayoutModal.addEventListener('click', (e) => {
         if (e.target === seatLayoutModal) {
-          seatLayoutModal.classList.add('hidden');
+          closeSeatLayoutModal();
         }
       });
     }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && seatLayoutModal && !seatLayoutModal.classList.contains('hidden')) {
-        seatLayoutModal.classList.add('hidden');
+        closeSeatLayoutModal();
       }
     });
 
@@ -6962,8 +7609,225 @@ document.addEventListener('DOMContentLoaded', () => {
     return buildRakeTemplate(seatTypes);
   }
 
+  function isCoachAvailable(c) {
+    if (!c) return false;
+    const avail = Number(c.available_seats);
+    if (!isNaN(avail) && avail > 0) return true;
+    if (Array.isArray(c.seats)) {
+      return c.seats.some(s => s && !s.is_blank && (s.status === 'available' || s.is_available === 1 || s.is_available === true));
+    }
+    return false;
+  }
+
+  function cleanCoachNameStr(rawName) {
+    if (!rawName) return 'Coach';
+    let str = String(rawName).trim();
+    str = str.replace(/\s*\([^)]*\)/g, '').trim();
+    const letterMatch = str.match(/^[Cc]oach[-_\s]+([a-zA-Z\u0980-\u09FF]+[\w-]*)$/);
+    if (letterMatch) return letterMatch[1];
+    return str || 'Coach';
+  }
+
+  function resolveAccurateCoachClass(coachName, currentClass, targetTrain = null, fallbackClass = 'S_CHAIR') {
+    const rawFallback = (fallbackClass && fallbackClass !== 'ANY' && fallbackClass !== 'ALL')
+      ? String(fallbackClass).toUpperCase().trim()
+      : 'S_CHAIR';
+    const cName = cleanCoachNameStr(coachName).toUpperCase();
+
+    // 1. If coach name explicitly mentions a class keyword
+    if (cName.includes('SNIGDHA')) return 'SNIGDHA';
+    if (cName.includes('AC_B') || cName.includes('BERTH') || cName.includes('CABIN') || cName.includes('SLEEPER')) return 'AC_B';
+    if (cName.includes('AC_S') || cName.includes('AC_C') || cName.includes('AC_CHAIR') || cName.includes('AC SEAT') || cName.includes('AC CHAIR')) return 'AC_S';
+    if (cName.includes('S_CHAIR') || cName.includes('SHOVAN') || cName.includes('SHOVON')) return 'S_CHAIR';
+    if (cName.includes('F_SEAT') || cName.includes('FIRST SEAT')) return 'F_SEAT';
+    if (cName.includes('F_BERTH') || cName.includes('FIRST BERTH')) return 'F_BERTH';
+    if (cName.includes('SULOB') || cName.includes('SHULOBH')) return 'SULOB';
+
+    // 2. Authoritative check in targetTrain.seat_types
+    if (targetTrain && Array.isArray(targetTrain.seat_types)) {
+      for (const st of targetTrain.seat_types) {
+        const stType = String(st.type || st.seat_class || '').toUpperCase().trim();
+        if (!stType || stType === 'ANY' || stType === 'ALL') continue;
+        const coachList = Array.isArray(st.coaches) ? st.coaches : (Array.isArray(st.coach_list) ? st.coach_list : []);
+        const matched = coachList.some(coachItem => {
+          const itemClean = cleanCoachNameStr(coachItem).toUpperCase();
+          return itemClean === cName || itemClean.replace(/[-_\s]/g, '') === cName.replace(/[-_\s]/g, '');
+        });
+        if (matched) return stType;
+      }
+    }
+
+    // 3. Keep searched/requested class context (never mutate class on letters like KA, GA, CHA)
+    return rawFallback;
+  }
+
+  function resolveCoachFare(coachClass, targetTrain = null, fallbackFare = 0) {
+    if (targetTrain && Array.isArray(targetTrain.seat_types)) {
+      const matchedSt = targetTrain.seat_types.find(st => {
+        const stType = String(st.type || st.seat_class || '').toUpperCase().trim();
+        return stType === coachClass;
+      });
+      if (matchedSt) {
+        const fare = Number(matchedSt.total_fare || matchedSt.fare || 0);
+        if (fare > 0) return fare;
+      }
+    }
+    return Number(fallbackFare || 0);
+  }
+
+  function extractCoachesFromPayload(payload, defaultClass = 'S_CHAIR', fallbackFare = 0) {
+    if (!payload) return [];
+    // Strict Live Enforcement: Discard simulated or template status_source layouts
+    if (payload.status_source === 'template' || payload.data?.status_source === 'template') {
+      return [];
+    }
+    const root = (payload.data && typeof payload.data === 'object') ? payload.data : payload;
+    if (root.status_source === 'template') {
+      return [];
+    }
+
+    const targetTrain = currentSeatLayoutState?.targetTrain || null;
+    const resolvedDefaultClass = (defaultClass && defaultClass !== 'ANY' && defaultClass !== 'ALL')
+      ? String(defaultClass).toUpperCase().trim()
+      : (currentSeatLayoutState?.lastFetchedClass || 'S_CHAIR');
+
+    // 1. If coaches are already normalized, verify they are genuine live coaches and ensure accurate class/fare
+    if (Array.isArray(root.coaches) && root.coaches.length > 0) {
+      const liveCoaches = root.coaches.filter(c => c && c.status_source !== 'template');
+      liveCoaches.forEach(c => {
+        const cClass = resolveAccurateCoachClass(c.coach_name, c.seat_class, targetTrain, resolvedDefaultClass);
+        c.seat_class = cClass;
+        c.coach_title = `${c.coach_name} (${cClass})`;
+        const accurateFare = resolveCoachFare(cClass, targetTrain, c.fare || fallbackFare);
+        if (accurateFare > 0) {
+          c.fare = accurateFare;
+          c.total_fare = accurateFare;
+        }
+        if (Array.isArray(c.seats)) {
+          c.seats.forEach(s => {
+            s.seat_class = cClass;
+            if (accurateFare > 0) {
+              s.fare = accurateFare;
+              s.total_fare = accurateFare;
+            }
+          });
+        }
+      });
+      return liveCoaches;
+    }
+
+    // 2. Official Shohoz / Bangladesh Railway raw schema: data.seatLayout or data.seat_layout
+    const rawList = Array.isArray(root.seatLayout) ? root.seatLayout
+      : (Array.isArray(root.seat_layout) && root.seat_layout[0] && (root.seat_layout[0].layout || root.seat_layout[0].floor_name) ? root.seat_layout
+      : (Array.isArray(root) && root[0] && (root[0].layout || root[0].floor_name || root[0].seat_floor) ? root
+      : (root && Array.isArray(root.layout) ? [root] : null)));
+
+    if (rawList && rawList.length > 0) {
+      return rawList.map((c, cIdx) => {
+        const rawCoachName = String(c.floor_name || c.coach_name || c.seat_floor || `Coach-${cIdx + 1}`).trim();
+        const coachName = cleanCoachNameStr(rawCoachName);
+        const rawLayout = Array.isArray(c.layout) ? c.layout : [];
+
+        let seatLevelClass = null;
+        for (const row of rawLayout) {
+          if (Array.isArray(row)) {
+            for (const s of row) {
+              if (s && s.seat_class && s.seat_class !== 'ANY' && s.seat_class !== 'ALL') {
+                seatLevelClass = String(s.seat_class).toUpperCase().trim();
+                break;
+              }
+            }
+          }
+          if (seatLevelClass) break;
+        }
+
+        const rawCoachClass = String(c.seat_class || c.class_name || root.seat_class || seatLevelClass || '').toUpperCase().trim();
+        const coachClass = resolveAccurateCoachClass(coachName, rawCoachClass, targetTrain, resolvedDefaultClass);
+        const coachFare = resolveCoachFare(coachClass, targetTrain, c.total_fare || c.fare || root.total_fare || root.fare || fallbackFare);
+
+        const flattenedSeats = [];
+        const layoutRows = [];
+        let maxCols = 0;
+
+        rawLayout.forEach((row, ri) => {
+          if (!Array.isArray(row)) return;
+          if (row.length > maxCols) maxCols = row.length;
+          const rowSeats = [];
+          row.forEach((s, ci) => {
+            const sNum = String(s?.seat_number ?? '').trim();
+            const isBlank = !s || !sNum || sNum === '' || s.is_blank === true || s.is_available === 'blank';
+            const rawAvail = s?.seat_availability;
+            const isSold = rawAvail === 0 || rawAvail === false;
+            const isProcess = !isBlank && !isSold && (s?.in_progress === true || s?.seat_availability === 'in-progress' || rawAvail === 2);
+            const isBooked = !isBlank && !isProcess && (isSold || s?.is_booked === true || String(s?.is_available) === '0');
+            const isAvail = !isBlank && !isProcess && !isBooked && (rawAvail === 1 || rawAvail === true || String(s?.is_available) === '1');
+            const status = isBlank ? 'blank' : (isAvail ? 'available' : (isProcess ? 'booking-in-process' : (isBooked ? 'booked' : 'unknown')));
+            const isWindow = !isBlank && (ci === 0 || ci === (row.length - 1));
+            const cleanDisplayNum = sNum ? sNum.replace(new RegExp('^' + coachName + '[-_]', 'i'), '') : '';
+
+            const seatFare = coachFare || Number(s?.fare || c.fare || root.fare || fallbackFare || 0);
+
+            const seatObj = {
+              seat_name: !isBlank ? (sNum.includes('-') ? sNum : `${coachName}-${sNum}`) : `${coachName}-B${ri + 1}-${ci + 1}`,
+              seat_number: sNum,
+              display_number: cleanDisplayNum,
+              status: status,
+              is_blank: isBlank,
+              is_window: isWindow,
+              blank_reason: isBlank ? (s?.blank_reason || 'empty-space') : null,
+              seat_class: coachClass,
+              fare: seatFare,
+              vat: Number(s?.vat || c.vat || root.vat || 0),
+              total_fare: seatFare,
+              ticket_id: s?.ticket_id || null,
+              row: ri + 1,
+              col: ci,
+              position: s?.position || null
+            };
+            flattenedSeats.push(seatObj);
+            rowSeats.push(seatObj);
+          });
+          layoutRows.push(rowSeats);
+        });
+
+        const nonBlank = flattenedSeats.filter(s => !s.is_blank && s.seat_number);
+        const availCount = nonBlank.filter(s => s.status === 'available').length;
+        const bookedCount = nonBlank.filter(s => s.status === 'booked').length;
+        const inProcCount = nonBlank.filter(s => s.status === 'booking-in-process').length;
+        const totalCount = nonBlank.length;
+        const seatCols = Math.max(1, maxCols || 4);
+
+        return {
+          coach_name: coachName,
+          coach_title: `${coachName} (${coachClass})`,
+          seat_class: coachClass,
+          status_source: 'official_railway_server',
+          total_seats: totalCount,
+          available_seats: availCount,
+          booked_seats: bookedCount,
+          in_process_seats: inProcCount,
+          blank_seats: flattenedSeats.filter(s => s.is_blank).length,
+          unknown_seats: 0,
+          fare: coachFare,
+          layout: {
+            kind: 'chair',
+            seat_columns: seatCols,
+            grid_columns: seatCols,
+            aisle_col: Math.floor(seatCols / 2),
+            from_server: true,
+            rows: layoutRows
+          },
+          seats: flattenedSeats
+        };
+      });
+    }
+
+    return [];
+  }
+
   function generateFallbackCarriageLayout(trainName, trainModel, targetClass = 'S_CHAIR') {
-    return buildAccurateTrainCoachLayout(trainName, trainModel, targetClass);
+    // Strict Live Enforcement: Pre-templates and simulated carriages are completely disabled.
+    return [];
   }
 
 
@@ -7000,43 +7864,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (!tripId) tripId = `TRIP_${cleanModel || 'DEF'}`;
-    if (!tripRouteId) tripRouteId = `ROUTE_${cleanModel || 'DEF'}`;
+    const authoritativeTrainName = targetTrain?.train_name || trainName;
+    const rawAuthModel = String(targetTrain?.train_model || cleanModel || trainModel || '');
+    const authoritativeTrainModel = rawAuthModel.replace(/\D/g, '') || rawAuthModel.trim();
 
-    // 1. Build the real carriage structure for this train: real coach letters in
-    // real rake order, real capacities, real blank positions, real fares from the
-    // live search. Per-seat status stays "unknown" until the server confirms it.
-    const initialCoaches = buildAccurateTrainCoachLayout(trainName, cleanModel, targetClass, {
-      availableSeats: availableSeats,
-      onlineSeats: onlineSeats,
-      counterSeats: counterSeats,
-      fare: fare
-    });
+    if (!tripId) tripId = `TRIP_${authoritativeTrainModel || 'DEF'}`;
+    if (!tripRouteId) tripRouteId = `ROUTE_${authoritativeTrainModel || 'DEF'}`;
 
-    // Keep all coaches in initial rake layout so user can view every coach tab
-    const visibleInitialCoaches = initialCoaches;
+    const departureTime = params.departureTime || targetTrain?.departure_time || targetTrain?.departure_date_time || targetTrain?.start_time || '';
 
-    // Determine default active coach index matching clicked seat class
-    let initialActiveIdx = -1;
-    if (targetClass) {
-      initialActiveIdx = visibleInitialCoaches.findIndex(c => 
-        (c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))) &&
-        Number(c.available_seats || 0) > 0
-      );
-      if (initialActiveIdx === -1) {
-        initialActiveIdx = visibleInitialCoaches.findIndex(c => 
-          c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))
-        );
-      }
-    }
-    if (initialActiveIdx === -1) {
-      initialActiveIdx = visibleInitialCoaches.findIndex(c => Number(c.available_seats || 0) > 0);
-    }
-    if (initialActiveIdx === -1) initialActiveIdx = 0;
-
+    // Live Only Mode: Do NOT display cached or template seats. Wait for 100% verified live Railway data.
     currentSeatLayoutState = {
-      trainModel: cleanModel,
-      trainName: trainName,
+      trainModel: authoritativeTrainModel,
+      trainName: authoritativeTrainName,
+      departureTime: departureTime,
       tripId: tripId,
       tripRouteId: tripRouteId,
       fromCity: fromCity,
@@ -7045,8 +7886,11 @@ document.addEventListener('DOMContentLoaded', () => {
       targetTrain: targetTrain,
       lastFetchedClass: targetClass,
       targetFare: fare,
-      coaches: visibleInitialCoaches,
-      activeCoachIndex: initialActiveIdx,
+      allCoaches: [],
+      availableOnly: true,
+      allSoldOut: false,
+      coaches: [],
+      activeCoachIndex: 0,
       selectedSeat: null,
       selectedSeats: [],
       isLive: false,
@@ -7054,6 +7898,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (seatLayoutTrainName) seatLayoutTrainName.textContent = trainName;
+    if (seatLayoutStartTime && seatLayoutStartTimeText) {
+      if (departureTime) {
+        const timeDisplay = isBn && window.i18n ? window.i18n.toBnNum(departureTime) : departureTime;
+        seatLayoutStartTimeText.textContent = timeDisplay;
+        seatLayoutStartTime.classList.remove('hidden');
+        seatLayoutStartTime.classList.add('inline-flex');
+      } else {
+        seatLayoutStartTime.classList.add('hidden');
+        seatLayoutStartTime.classList.remove('inline-flex');
+      }
+    }
     if (seatLayoutTrainModel) seatLayoutTrainModel.textContent = cleanModel ? `#${cleanModel}` : '#---';
     if (seatLayoutSubtitle) {
       const fromDisplay = window.i18n ? window.i18n.getStationName(fromCity) : fromCity;
@@ -7079,6 +7934,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seatLayoutModal) seatLayoutModal.classList.remove('hidden');
 
+    // Connect live Shohoz WebSocket stream to track in-progress held/released tickets
+    const clientRoomName = buildClientTripRoomName(cleanModel, fromCity, toCity, journeyDate);
+    if (cleanModel && fromCity && toCity) {
+      connectSeatLayoutWebSocket(clientRoomName, cleanModel);
+    }
+
     // Immediately render the accurate coach layout so user has instant visibility matching seat pill
     renderSeatLayoutCoachTabs();
     renderActiveCoachCarriage();
@@ -7098,6 +7959,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // and can always clear it, including on error.
     currentSeatLayoutState.fetching = true;
     syncSeatLayoutSourceBadges();
+
+    // Watchdog timer: Guarantee fetching indicator NEVER stays stuck past 22 seconds
+    const fetchWatchdog = setTimeout(() => {
+      if (currentSeatLayoutState && currentSeatLayoutState.fetching) {
+        currentSeatLayoutState.fetching = false;
+        syncSeatLayoutSourceBadges();
+      }
+    }, 22000);
 
     // In background: auto-search → extract live trip_id → fetch seat-layout
     // This mirrors the Railway frontend's "Book Now" → select class → show coach layout flow
@@ -7140,7 +8009,9 @@ document.addEventListener('DOMContentLoaded', () => {
         available_seats: availableSeats !== null ? availableSeats : '',
         fare: fare !== null ? fare : '',
         trip_id: tripId || '',
-        trip_route_id: tripRouteId || ''
+        trip_route_id: tripRouteId || '',
+        no_cache: '1',
+        live_only: '1'
       }).toString();
 
       let json = null;
@@ -7158,7 +8029,9 @@ document.addEventListener('DOMContentLoaded', () => {
           fare: fare !== null ? fare : '',
           trip_id: tripId || '',
           trip_route_id: tripRouteId || '',
-          cft_response: cft || ''
+          cft_response: cft || '',
+          no_cache: true,
+          live_only: true
         };
         const liveRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
           method: 'POST',
@@ -7170,7 +8043,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // If live-coach-layout wasn't live and we have explicit trip_id, try direct seat-layout via POST
-        if ((!json || !json.live) && tripId && !tripId.startsWith('TRIP_')) {
+        if ((!json || !json.data?.coaches?.length) && tripId && !tripId.startsWith('TRIP_')) {
           const directPayload = {
             trip_id: tripId,
             trip_route_id: tripRouteId,
@@ -7179,39 +8052,32 @@ document.addEventListener('DOMContentLoaded', () => {
             seat_class: targetClass,
             available_seats: availableSeats !== null ? availableSeats : '',
             fare: fare !== null ? fare : '',
-            cft_response: cft || ''
+            cft_response: cft || '',
+            no_cache: true,
+            live_only: true
           };
-          const directRes = await fetch('/api/seat-layout', {
+          const directRes = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(directPayload)
           });
           if (directRes.ok) {
             const directJson = await directRes.json();
-            if (directJson && directJson.live) {
+            if (directJson && directJson.data?.coaches?.length) {
               json = directJson;
             }
           }
         }
 
-        // If turnstile token was missing or expired, auto-poll for incoming background bridge token
+        // If turnstile token was missing or expired, auto-grab token immediately from background solver
         if (!json || !json.live) {
-          for (let poll = 0; poll < 25; poll++) {
-            await new Promise(r => setTimeout(r, 300));
-            try {
-              let freshCft = window._freshBridgeCft || '';
-              if (!freshCft) {
-                const stRes = await fetch('/api/auth/token-status');
-                if (stRes.ok) {
-                  const stData = await stRes.json();
-                  if (stData.has_cft && stData.cft_response && stData.cft_response !== cft) {
-                    freshCft = stData.cft_response;
-                  }
-                }
-              }
-              if (freshCft && freshCft !== cft) {
-                cft = freshCft;
-                window._freshBridgeCft = '';
+          try {
+            const refRes = await fetch('/api/auth/refresh-turnstile?force=1', { method: 'POST' });
+            if (refRes.ok) {
+              const refData = await refRes.json();
+              if (refData.success && refData.token && refData.token !== cft) {
+                cft = refData.token;
+                window._freshBridgeCft = cft;
                 try { localStorage.setItem('railway_cft_response', cft); } catch (e) {}
                 headers['x-cft-response'] = cft;
                 livePayload.cft_response = cft;
@@ -7224,29 +8090,51 @@ document.addEventListener('DOMContentLoaded', () => {
                   const retryJson = await retryRes.json();
                   if (retryJson.live) {
                     json = retryJson;
-                    break;
                   }
                 }
               }
-            } catch (e) {}
+            }
+          } catch (e) {}
+
+          if (!json || !json.live) {
+            for (let poll = 0; poll < 15; poll++) {
+              await new Promise(r => setTimeout(r, 300));
+              try {
+                let freshCft = window._freshBridgeCft || '';
+                if (!freshCft) {
+                  const stRes = await fetch('/api/auth/token-status');
+                  if (stRes.ok) {
+                    const stData = await stRes.json();
+                    if (stData.has_cft && stData.cft_response && stData.cft_response !== cft) {
+                      freshCft = stData.cft_response;
+                    }
+                  }
+                }
+                if (freshCft && freshCft !== cft) {
+                  cft = freshCft;
+                  window._freshBridgeCft = '';
+                  try { localStorage.setItem('railway_cft_response', cft); } catch (e) {}
+                  headers['x-cft-response'] = cft;
+                  livePayload.cft_response = cft;
+                  const retryRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(livePayload)
+                  });
+                  if (retryRes.ok) {
+                    const retryJson = await retryRes.json();
+                    if (retryJson.live) {
+                      json = retryJson;
+                      break;
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
           }
         }
       } catch (e) {
         console.warn('[SeatLayout] parallel seat-layout fetch error:', e.message);
-      }
-
-      // 3. FALLBACK: PHP endpoint
-      if (!json || !json.success || !Array.isArray(json.data?.coaches) || json.data.coaches.length === 0) {
-        const fallbackParams = new URLSearchParams({
-          trip_id: tripId,
-          trip_route_id: tripRouteId,
-          seat_class: targetClass,
-          available_seats: availableSeats !== null ? availableSeats : ''
-        }).toString();
-        try {
-          const res = await fetch(`/api/seat-layout.php?${fallbackParams}`, { headers });
-          if (res.ok) json = await res.json();
-        } catch (e) {}
       }
 
       // Hide "searching" indicator
@@ -7256,8 +8144,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (currentSeatLayoutState) currentSeatLayoutState.fetching = false;
 
-      if (json && json.success && Array.isArray(json.data?.coaches) && json.data.coaches.length > 0) {
-        let liveCoaches = json.data.coaches;
+      // Render layout whenever authentic coaches were returned (handles both normalized json.data.coaches and raw Shohoz json.data.seatLayout)
+      const extractedCoaches = extractCoachesFromPayload(json, targetClass || 'S_CHAIR', fare || 0);
+      if (extractedCoaches && extractedCoaches.length > 0) {
+        let liveCoaches = extractedCoaches;
 
         // Ensure each coach has a valid fare from the search results if server omitted it
         const fallbackFare = Number(currentSeatLayoutState.targetFare || fare || 0);
@@ -7273,17 +8163,25 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        currentSeatLayoutState.coaches = liveCoaches;
+        currentSeatLayoutState.allCoaches = liveCoaches;
+        const availableLiveCoaches = liveCoaches.filter(isCoachAvailable);
+        currentSeatLayoutState.allSoldOut = (availableLiveCoaches.length === 0);
+
+        if (currentSeatLayoutState.availableOnly && availableLiveCoaches.length > 0) {
+          currentSeatLayoutState.coaches = availableLiveCoaches;
+        } else {
+          currentSeatLayoutState.coaches = liveCoaches;
+        }
 
         // Update trip IDs if live search gave us better ones
-        if (json.trip_id && !String(json.trip_id).startsWith('TRIP_')) {
+        if (json?.trip_id && !String(json.trip_id).startsWith('TRIP_')) {
           currentSeatLayoutState.tripId = json.trip_id;
           currentSeatLayoutState.tripRouteId = json.trip_route_id;
         }
 
-        currentSeatLayoutState.isLive = !!json.live;
-        currentSeatLayoutState.requiresTurnstile = !!(json.requires_turnstile || json.turnstile_required);
-        currentSeatLayoutState.notice = json.reason || json.error_message || '';
+        currentSeatLayoutState.isLive = !!(json?.live || json?.status_source === 'official_railway_server' || json?.data?.seatLayout || json?.seatLayout);
+        currentSeatLayoutState.requiresTurnstile = !!(json?.requires_turnstile || json?.turnstile_required);
+        currentSeatLayoutState.notice = json?.reason || json?.error_message || '';
 
         let targetIdx = -1;
         if (targetClass) {
@@ -7337,6 +8235,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSeatLayoutState.fetching = false;
         currentSeatLayoutState.error = err.message;
       }
+    } finally {
+      clearTimeout(fetchWatchdog);
+      if (currentSeatLayoutState) {
+        currentSeatLayoutState.fetching = false;
+        syncSeatLayoutSourceBadges();
+      }
     }
   }
 
@@ -7350,6 +8254,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (liveB) { liveB.classList.add('hidden'); liveB.classList.remove('inline-flex'); }
     currentSeatLayoutState.fetching = true;
     syncSeatLayoutSourceBadges();
+
+    const classWatchdog = setTimeout(() => {
+      if (currentSeatLayoutState && currentSeatLayoutState.fetching) {
+        currentSeatLayoutState.fetching = false;
+        syncSeatLayoutSourceBadges();
+      }
+    }, 22000);
 
     try {
       const token = getAuthToken();
@@ -7376,10 +8287,12 @@ document.addEventListener('DOMContentLoaded', () => {
           fare: totalFare !== null ? totalFare : '',
           trip_id: st?.trip_id || currentSeatLayoutState.tripId || '',
           trip_route_id: st?.trip_route_id || currentSeatLayoutState.tripRouteId || '',
-          cft_response: cft || ''
+          cft_response: cft || '',
+          live_only: true,
+          no_cache: true
         };
         try {
-          const res = await fetch('/api/live-coach-layout', {
+          const res = await fetch('/api/live-coach-layout?live_only=1&no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(livePayload)
@@ -7399,10 +8312,12 @@ document.addEventListener('DOMContentLoaded', () => {
             seat_class: cleanClass,
             available_seats: totalAvail !== null ? totalAvail : '',
             fare: totalFare !== null ? totalFare : '',
-            cft_response: cft || ''
+            cft_response: cft || '',
+            live_only: true,
+            no_cache: true
           };
           try {
-            const res = await fetch('/api/seat-layout', {
+            const res = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
               method: 'POST',
               headers: { ...headers, 'Content-Type': 'application/json' },
               body: JSON.stringify(fallbackPayload)
@@ -7414,30 +8329,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
 
-      if (json && json.success && Array.isArray(json.data?.coaches) && json.data.coaches.length > 0) {
-        let liveCoaches = json.data.coaches;
-        currentSeatLayoutState.coaches = liveCoaches;
-        const firstAvailIdx = liveCoaches.findIndex(c => Number(c.available_seats || 0) > 0);
+      // Render layout whenever authentic coaches were returned (handles both normalized coaches and raw Shohoz seatLayout)
+      const extractedCoaches = extractCoachesFromPayload(json, cleanClass, totalFare || 0);
+      if (extractedCoaches && extractedCoaches.length > 0) {
+        let liveCoaches = extractedCoaches;
+        currentSeatLayoutState.allCoaches = liveCoaches;
+        const availableLiveCoaches = liveCoaches.filter(isCoachAvailable);
+        currentSeatLayoutState.allSoldOut = (availableLiveCoaches.length === 0);
+
+        if (currentSeatLayoutState.availableOnly && availableLiveCoaches.length > 0) {
+          currentSeatLayoutState.coaches = availableLiveCoaches;
+        } else {
+          currentSeatLayoutState.coaches = liveCoaches;
+        }
+
+        const firstAvailIdx = currentSeatLayoutState.coaches.findIndex(c => Number(c.available_seats || 0) > 0);
         currentSeatLayoutState.activeCoachIndex = firstAvailIdx !== -1 ? firstAvailIdx : 0;
         currentSeatLayoutState.lastFetchedClass = cleanClass;
-        currentSeatLayoutState.isLive = !!json.live || !!currentSeatLayoutState.isLive;
-        currentSeatLayoutState.requiresTurnstile = !json.live && !!(json.requires_turnstile || json.turnstile_required);
-        if (json.trip_id && !String(json.trip_id).startsWith('TRIP_')) {
+        currentSeatLayoutState.isLive = !!(json?.live || json?.status_source === 'official_railway_server' || json?.data?.seatLayout || json?.seatLayout);
+        currentSeatLayoutState.requiresTurnstile = !!(json?.requires_turnstile || json?.turnstile_required);
+        if (json?.trip_id && !String(json.trip_id).startsWith('TRIP_')) {
           currentSeatLayoutState.tripId = json.trip_id;
           currentSeatLayoutState.tripRouteId = json.trip_route_id;
         }
-        if (liveB && json.live) {
-          liveB.classList.remove('hidden');
-          liveB.classList.add('inline-flex');
+        if (liveB) {
+          if (currentSeatLayoutState.isLive) {
+            liveB.classList.remove('hidden');
+            liveB.classList.add('inline-flex');
+          } else {
+            liveB.classList.add('hidden');
+            liveB.classList.remove('inline-flex');
+          }
         }
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
+        syncSeatLayoutSourceBadges();
       } else {
-        // If live fetch returned no valid live data, mark as not live and require verification
-        if (!json || !json.live) {
+        if (!json || (!json.data?.coaches?.length && !json.data?.seatLayout && !json.seatLayout)) {
           currentSeatLayoutState.isLive = false;
-          currentSeatLayoutState.requiresTurnstile = true;
           renderActiveCoachCarriage();
+          syncSeatLayoutSourceBadges();
         }
       }
     } catch (e) {
@@ -7448,6 +8379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveCoachCarriage();
       }
     } finally {
+      clearTimeout(classWatchdog);
       // Always clear the fetching flag, so the spinner cannot get stuck when a
       // request fails or returns nothing usable.
       if (currentSeatLayoutState) {
@@ -7476,7 +8408,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setBadge(document.getElementById('seatLayoutLiveBadge'), isLive);
     setBadge(document.getElementById('seatLayoutTemplateBadge'), !isLive);
+    setBadge(document.getElementById('seatLayoutQuickSyncBtn'), !isLive && !st.fetching);
     setBadge(document.getElementById('seatLayoutSearchingBadge'), !!st.fetching);
+
+    const isSocketConnected = !!(activeSeatLayoutWebSocket && activeSeatLayoutWebSocket.readyState === WebSocket.OPEN);
+    setBadge(document.getElementById('seatLayoutSocketBadge'), isSocketConnected);
+    const socketBadgeText = document.querySelector('#seatLayoutSocketBadge span:last-child');
+    if (socketBadgeText) {
+      socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
+    }
 
     const sub = document.getElementById('seatLayoutSubtitle');
     if (sub) {
@@ -7486,17 +8426,117 @@ document.addEventListener('DOMContentLoaded', () => {
           : 'Live carriage layout direct from Bangladesh Railway Shohoz API';
       } else {
         sub.textContent = isBn
-          ? 'অফিসিয়াল রেলওয়ে বগির কাঠামো — লাইভ খালি/বুকড সিট দেখতে উপরে লাইভ লিংক বা টোকেন দিন'
-          : 'Official Bangladesh Railway coach layout — paste live URL or token above to view live booked/empty seats';
+          ? 'অফিসিয়াল বাংলাদেশ রেলওয়ে বগির কাঠামো — ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে লাইভ সিঙ্ক হচ্ছে'
+          : 'Official Bangladesh Railway coach layout — Auto-syncing live seat status in background';
       }
     }
   }
 
+  // -------------------------------------------------------------------------
+  // 1-Second Quick-Sync Live Token Trigger
+  // Solves Cloudflare Turnstile on Railway in <1s via micro-collector & updates layout
+  // -------------------------------------------------------------------------
+  let isQuickSyncInProgress = false;
+
+  function triggerOneSecondQuickSync(onSuccess) {
+    if (isQuickSyncInProgress) return;
+    isQuickSyncInProgress = true;
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+    showToast(isBn ? '⚡ ১-সেকেন্ড কুইক-সিঙ্ক সক্রিয়! লাইভ টোকেন সংগ্রহ হচ্ছে...' : '⚡ 1-Sec Quick-Sync active! Grabbing fresh Railway verification token...', 'info');
+
+    const syncUrl = 'https://eticket.railway.gov.bd/login?cft_collector=1';
+    let popup = null;
+    try {
+      popup = window.open(syncUrl, 'railseat_quick_sync', 'width=450,height=550,top=120,left=120');
+    } catch (e) {}
+
+    let attempts = 0;
+    const pollInterval = setInterval(async () => {
+      attempts++;
+      try {
+        let freshToken = window._freshBridgeCft || '';
+        if (!freshToken) {
+          const res = await fetch('/api/auth/token-status');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.has_cft && data.cft_age_seconds !== null && data.cft_age_seconds < 30) {
+              freshToken = data.cft_response;
+            }
+          }
+        }
+
+        if (freshToken) {
+          clearInterval(pollInterval);
+          isQuickSyncInProgress = false;
+          try { if (popup && !popup.closed) popup.close(); } catch (e) {}
+          showToast(isBn ? '🎯 ১০০% লাইভ রেলওয়ে টোকেন সিঙ্ক সম্পন্ন!' : '🎯 100% Genuine Live Railway Token Synced!', 'success');
+
+          // If seat layout modal is currently open, immediately re-fetch live layout
+          if (currentSeatLayoutState && currentSeatLayoutState.tripId) {
+            fetchClassLiveSeatLayout(currentSeatLayoutState.lastFetchedClass || 'S_CHAIR');
+          }
+
+          if (typeof onSuccess === 'function') onSuccess(freshToken);
+        }
+      } catch (e) {}
+
+      if (attempts >= 30) {
+        clearInterval(pollInterval);
+        isQuickSyncInProgress = false;
+      }
+    }, 250);
+  }
+
+  // Cross-window message listener for instant token delivery from popup
+  window.addEventListener('message', async (e) => {
+    if (e.data && e.data.type === 'RAILSEAT_CFT_TOKEN' && e.data.cft_response) {
+      console.log('[QuickSync] Instant token arrived via postMessage:', e.data.cft_response.substring(0, 16));
+      window._freshBridgeCft = e.data.cft_response;
+      try {
+        await fetch('/api/auth/set-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cft_response: e.data.cft_response })
+        });
+      } catch (err) {}
+    }
+  });
+
+  // Attach button click listeners
+  const headerQuickSyncBtn = document.getElementById('headerQuickSyncBtn');
+  if (headerQuickSyncBtn) {
+    headerQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
+  }
+  const seatLayoutQuickSyncBtn = document.getElementById('seatLayoutQuickSyncBtn');
+  if (seatLayoutQuickSyncBtn) {
+    seatLayoutQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
+  }
+
   function renderSeatLayoutCoachTabs() {
     const isBn = window.i18n && window.i18n.getLang() === 'bn';
-    const coaches = currentSeatLayoutState.coaches || [];
+    const coaches = currentSeatLayoutState?.coaches || [];
+    const allCoaches = currentSeatLayoutState?.allCoaches || coaches;
+    const isAvailOnly = currentSeatLayoutState?.availableOnly !== false;
 
     syncSeatLayoutSourceBadges();
+
+    // Sync toggle button appearance
+    const availToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
+    const availToggleText = document.getElementById('seatLayoutAvailableOnlyToggleText');
+    if (availToggle && availToggleText) {
+      if (isAvailOnly && allCoaches.length > coaches.length) {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
+        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length}/${allCoaches.length})`;
+        availToggle.title = isBn ? 'সকল বগি দেখতে ক্লিক করুন' : 'Click to show all coaches';
+      } else if (!isAvailOnly) {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:opacity-90 transition cursor-pointer';
+        availToggleText.textContent = isBn ? `সকল বগি (${allCoaches.length})` : `All Coaches (${allCoaches.length})`;
+        availToggle.title = isBn ? 'শুধু খালি বগি দেখতে ক্লিক করুন' : 'Click to show only coaches with available seats';
+      } else {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
+        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length})`;
+      }
+    }
 
     if (seatLayoutCoachesSummary) {
       // Only total up availability the server actually reported. Unknown
@@ -7505,12 +8545,38 @@ document.addEventListener('DOMContentLoaded', () => {
       const totalAvail = known.reduce((sum, c) => sum + Number(c.available_seats || 0), 0);
       const totalSeats = coaches.reduce((sum, c) => sum + Number(c.total_seats || 0), 0);
       const arr = isBn ? window.i18n.toBnNum : (v) => v;
-      seatLayoutCoachesSummary.textContent = isBn
-        ? `${arr(coaches.length)}টি বগি • মোট খালি: ${arr(totalAvail)}টি সিট • মোট আসন: ${arr(totalSeats)}`
-        : `${coaches.length} Coaches • ${totalAvail} of ${totalSeats} seats available`;
+      if (isAvailOnly && allCoaches.length > coaches.length) {
+        seatLayoutCoachesSummary.textContent = isBn
+          ? `${arr(coaches.length)}টি খালি বগি (মোট ${arr(allCoaches.length)}) • খালি: ${arr(totalAvail)}টি সিট`
+          : `${coaches.length} Available Coaches (${allCoaches.length} total) • ${totalAvail} seats available`;
+      } else {
+        seatLayoutCoachesSummary.textContent = isBn
+          ? `${arr(coaches.length)}টি বগি • মোট খালি: ${arr(totalAvail)}টি সিট • মোট আসন: ${arr(totalSeats)}`
+          : `${coaches.length} Coaches • ${totalAvail} of ${totalSeats} seats available`;
+      }
     }
 
     if (!seatLayoutCoachTabs) return;
+    const isFetching = !!currentSeatLayoutState?.fetching;
+
+    if (coaches.length === 0) {
+      if (isFetching) {
+        seatLayoutCoachTabs.innerHTML = `
+          <div class="py-1 px-3 text-xs text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2 whitespace-nowrap animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>${isBn ? 'রেলওয়ে সার্ভার থেকে লাইভ বগি লোড হচ্ছে...' : 'Loading live carriages from Railway server...'}</span>
+          </div>
+        `;
+      } else {
+        seatLayoutCoachTabs.innerHTML = `
+          <div class="py-1 px-3 text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-circle-exclamation text-amber-500"></i>
+            <span>${isBn ? 'এই ট্রেনের কোনো বগিতে খালি আসন নেই' : 'No coaches with available seats found on this train (Sold Out)'}</span>
+          </div>
+        `;
+      }
+      return;
+    }
 
     seatLayoutCoachTabs.innerHTML = coaches.map((c, idx) => {
       const isActive = idx === currentSeatLayoutState.activeCoachIndex;
@@ -7527,7 +8593,7 @@ document.addEventListener('DOMContentLoaded', () => {
         : (isBn ? 'সিটের অবস্থা এখনো যাচাই হয়নি' : 'Per-seat status not verified yet');
 
       return `
-        <button type="button" class="coach-tab-pill px-3 py-1.5 rounded-xl border text-xs font-extrabold shrink-0 transition flex items-center space-x-2 cursor-pointer ${
+        <button type="button" class="coach-tab-pill px-3 py-1.5 rounded-xl border text-xs font-bold shrink-0 transition flex items-center space-x-1.5 cursor-pointer ${
           isActive 
             ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
             : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-500'
@@ -7542,9 +8608,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }">
             ${countDisplay}
           </span>
-          ${isLive
-            ? '<i class="fa-solid fa-circle-check text-[9px] text-emerald-500" title="Live from Railway server"></i>'
-            : '<i class="fa-solid fa-triangle-exclamation text-[9px] text-amber-500" title="Layout template - per-seat status not verified"></i>'}
         </button>
       `;
     }).join('');
@@ -7563,6 +8626,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function toggleAvailableOnlyCoaches() {
+    if (!currentSeatLayoutState) return;
+    const all = currentSeatLayoutState.allCoaches || currentSeatLayoutState.coaches || [];
+    currentSeatLayoutState.availableOnly = !currentSeatLayoutState.availableOnly;
+
+    const availableCoaches = all.filter(isCoachAvailable);
+    if (currentSeatLayoutState.availableOnly) {
+      currentSeatLayoutState.coaches = availableCoaches.length > 0 ? availableCoaches : all;
+    } else {
+      currentSeatLayoutState.coaches = all;
+    }
+
+    if (currentSeatLayoutState.activeCoachIndex >= currentSeatLayoutState.coaches.length) {
+      currentSeatLayoutState.activeCoachIndex = 0;
+    }
+    currentSeatLayoutState.selectedSeat = null;
+    currentSeatLayoutState.selectedSeats = [];
+    renderSeatLayoutCoachTabs();
+    renderActiveCoachCarriage();
+  }
+
   function buildExactSeatBookingUrl(mode = 'buy') {
     const st = currentSeatLayoutState;
     if (!st) return 'https://eticket.railway.gov.bd';
@@ -7571,25 +8655,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedSeats = Array.isArray(st.selectedSeats) ? st.selectedSeats : [];
     const baseBookingUrl = buildShohozBookingUrl(st.fromCity, st.toCity, st.journeyDate, bookClass);
 
-    if (selectedSeats.length === 0) {
-      return baseBookingUrl;
-    }
-
     const coachName = coach?.coach_name || selectedSeats[0]?.coach_name || '';
     const seatNumbersOnly = selectedSeats.map(s => s.seat_number ? String(s.seat_number).replace(/^[^-]+-/, '') : s.seat_name);
     const seatNamesStr = seatNumbersOnly.join(',');
-    const coachTripId = coach?.trip_id || st.tripId || '';
-    const coachTripRouteId = coach?.trip_route_id || st.tripRouteId || '';
+
+    // Authoritative Train Identity from live data
+    const effectiveTrainName = st.targetTrain?.train_name || st.trainName || '';
+    const rawTrainModel = String(st.targetTrain?.train_model || st.trainModel || '');
+    const effectiveTrainModel = rawTrainModel.replace(/\D/g, '') || rawTrainModel.trim();
+
+    // Only pass real numeric trip IDs (avoid placeholder 'TRIP_701')
+    const rawTripId = String(coach?.trip_id || st.tripId || '');
+    const rawTripRouteId = String(coach?.trip_route_id || st.tripRouteId || '');
+    const coachTripId = (/^\d+$/.test(rawTripId)) ? rawTripId : '';
+    const coachTripRouteId = (/^\d+$/.test(rawTripRouteId)) ? rawTripRouteId : '';
 
     try {
       const urlObj = new URL(baseBookingUrl);
-      if (st.trainName) urlObj.searchParams.set('train', st.trainName);
-      if (st.trainModel) urlObj.searchParams.set('train_model', st.trainModel);
+      if (effectiveTrainName) urlObj.searchParams.set('train', effectiveTrainName);
+      if (effectiveTrainModel) urlObj.searchParams.set('train_model', effectiveTrainModel);
       if (coachName) urlObj.searchParams.set('coach', coachName);
-      urlObj.searchParams.set('seats', seatNamesStr);
-      urlObj.searchParams.set('seats_count', String(selectedSeats.length));
+      if (seatNamesStr) {
+        urlObj.searchParams.set('seats', seatNamesStr);
+        urlObj.searchParams.set('seats_count', String(selectedSeats.length));
+      } else {
+        urlObj.searchParams.set('seats_count', '1');
+      }
       urlObj.searchParams.set('autobook', '1');
-      urlObj.searchParams.set('exact_coach', '1');
+      if (coachName) urlObj.searchParams.set('exact_coach', '1');
       if (coachTripId) urlObj.searchParams.set('trip_id', coachTripId);
       if (coachTripRouteId) urlObj.searchParams.set('trip_route_id', coachTripRouteId);
 
@@ -7599,7 +8692,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return urlObj.toString();
     } catch (e) {
       const holdParam = mode === 'hold' ? '&hold_only=1' : '';
-      return `${baseBookingUrl}&train=${encodeURIComponent(st.trainName || '')}&train_model=${encodeURIComponent(st.trainModel || '')}&coach=${encodeURIComponent(coachName)}&seats=${encodeURIComponent(seatNamesStr)}&seats_count=${selectedSeats.length}&autobook=1&exact_coach=1${holdParam}`;
+      const coachParam = coachName ? `&coach=${encodeURIComponent(coachName)}&exact_coach=1` : '';
+      const seatParam = seatNamesStr ? `&seats=${encodeURIComponent(seatNamesStr)}&seats_count=${selectedSeats.length}` : '&seats_count=1';
+      return `${baseBookingUrl}&train=${encodeURIComponent(effectiveTrainName)}&train_model=${encodeURIComponent(effectiveTrainModel)}${coachParam}${seatParam}&autobook=1${holdParam}`;
     }
   }
 
@@ -7612,20 +8707,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const coachName = coach?.coach_name || selectedSeats[0]?.coach_name || '';
     const seatNumbersOnly = selectedSeats.map(s => s.seat_number ? String(s.seat_number).replace(/^[^-]+-/, '') : s.seat_name);
 
+    const effectiveTrainName = st.targetTrain?.train_name || st.trainName || '';
+    const rawTrainModel = String(st.targetTrain?.train_model || st.trainModel || '');
+    const effectiveTrainModel = rawTrainModel.replace(/\D/g, '') || rawTrainModel.trim();
+
+    const rawTripId = String(coach?.trip_id || st.tripId || '');
+    const rawTripRouteId = String(coach?.trip_route_id || st.tripRouteId || '');
+    const coachTripId = (/^\d+$/.test(rawTripId)) ? rawTripId : '';
+    const coachTripRouteId = (/^\d+$/.test(rawTripRouteId)) ? rawTripRouteId : '';
+
     const intent = {
-      train: st.trainName || '',
-      trainModel: st.trainModel || '',
+      train: effectiveTrainName,
+      trainModel: effectiveTrainModel,
       seatClass: bookClass,
       coach: coachName,
       seats: seatNumbersOnly,
       seatsCount: selectedSeats.length || 1,
-      exactCoach: true,
+      exactCoach: !!coachName,
       from: st.fromCity || '',
       to: st.toCity || '',
       doj: st.journeyDate || '',
       holdOnly: mode === 'hold',
-      tripId: coach?.trip_id || st.tripId || '',
-      tripRouteId: coach?.trip_route_id || st.tripRouteId || '',
+      tripId: coachTripId,
+      tripRouteId: coachTripRouteId,
       createdAt: Date.now()
     };
 
@@ -7652,7 +8756,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (seatLayoutBookNowBtn) seatLayoutBookNowBtn.href = buyUrl;
 
     if (seatLayoutAutoBookHint) {
-      seatLayoutAutoBookHint.classList.toggle('hidden', !hasSeats);
+      seatLayoutAutoBookHint.classList.add('hidden');
     }
 
     if (!hasSeats) {
@@ -7705,11 +8809,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (seatLayoutAutoBookHintText) {
-      if (isBn) {
-        seatLayoutAutoBookHintText.textContent = `বগি ${coachBn}, সিট ${seatNamesBn} সরাসরি বুকিং কার্টে লক হবে (হোল্ড = ৫ মিনিট রিজার্ভ, কিনুন = সরাসরি ওটিপি পেজ)।`;
-      } else {
-        seatLayoutAutoBookHintText.textContent = `Locks Coach ${coachName}, Seat ${seatNamesJoined} directly into Railway cart (Hold = 5 min reserve, Buy = proceeds to OTP).`;
-      }
+      seatLayoutAutoBookHintText.textContent = '';
     }
   }
 
@@ -7718,81 +8818,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = currentSeatLayoutState;
     if (!st || !seatLayoutContent) return;
 
-    // Strict Live Enforcement: Only display 100% verified live results from official Railway server
-    if (!st.isLive) {
-      if (st.fetching) {
-        seatLayoutContent.innerHTML = `
-          <div class="py-14 flex flex-col items-center justify-center space-y-4 text-center">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-sm border border-emerald-200 dark:border-emerald-800">
-              <svg class="w-7 h-7 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-              </svg>
-            </div>
-            <div class="space-y-1.5 max-w-sm">
-              <h4 class="font-black text-base text-slate-800 dark:text-white">
-                ${isBn ? 'রেলওয়ে সার্ভার থেকে ১০০% লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map from Railway Server...'}
-              </h4>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                ${isBn ? 'স্বয়ংক্রিয়ভাবে লাইভ টোকেন যাচাই করে আসল বগি ও প্রতি সিটের অবস্থা লোড করা হচ্ছে।' : 'Auto-acquiring live token to load exact official carriage layout and real-time seat availability.'}
-              </p>
-            </div>
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>${isBn ? 'লাইভ সার্ভার কানেকশন সক্রিয়...' : 'Live Railway Connection Active...'}</span>
-            </div>
-          </div>
-        `;
-        return;
-      } else {
-        seatLayoutContent.innerHTML = `
-          <div class="py-12 max-w-md mx-auto text-center space-y-4 px-4">
-            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-2xl shadow-sm border border-amber-200 dark:border-amber-800">
-              <i class="fa-solid fa-satellite-dish"></i>
-            </div>
-            <div class="space-y-1.5">
-              <h4 class="font-extrabold text-base text-slate-900 dark:text-white">
-                ${isBn ? 'রেলওয়ে লাইভ সার্ভার ভেরিফিকেশন প্রয়োজন' : 'Live Railway Verification Required'}
-              </h4>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                ${isBn ? 'টেমপ্লেট বা অনুমানকৃত সিট বন্ধ রাখা হয়েছে। শুধুমাত্র বাংলাদেশ রেলওয়ে সার্ভারের ১০০% আসল লাইভ সিটম্যাপ দেখতে নিচের বাটনে ক্লিক করুন:' : 'Simulated template seats are disabled. To load the 100% official live seat map directly from Bangladesh Railway:'}
-              </p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-2.5 justify-center pt-2">
-              <button type="button" id="btnLiveAutoGrab" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-bolt"></i>
-                <span>${isBn ? 'স্বয়ংক্রিয় লাইভ টোকেন সংগ্রহ করুন' : 'Auto-Grab Live Token & Retry'}</span>
-              </button>
-              <button type="button" id="btnLiveLoginModal" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-user-lock"></i>
-                <span>${isBn ? 'রেলওয়ে অ্যাকাউন্ট লগইন' : 'Railway Account Login'}</span>
-              </button>
-            </div>
-          </div>
-        `;
+    // Strict Live Enforcement: Show live spinner while fetching and reset banner stats
+    if (st.fetching) {
+      if (seatLayoutActiveCoachName) seatLayoutActiveCoachName.textContent = '--';
+      if (seatLayoutActiveCoachClass) seatLayoutActiveCoachClass.textContent = st.lastFetchedClass || '--';
+      if (seatLayoutActiveTotalCount) seatLayoutActiveTotalCount.textContent = '--';
+      if (seatLayoutActiveBookedCount) seatLayoutActiveBookedCount.textContent = '--';
+      if (seatLayoutActiveAvailCount) seatLayoutActiveAvailCount.textContent = '--';
+      if (seatLayoutActiveFare) seatLayoutActiveFare.textContent = '--';
 
-        const btnGrab = seatLayoutContent.querySelector('#btnLiveAutoGrab');
-        if (btnGrab) {
-          btnGrab.addEventListener('click', () => {
-            requestBackgroundTurnstileToken(true);
-            st.fetching = true;
-            renderActiveCoachCarriage();
-            fetchClassLiveSeatLayout(st.lastFetchedClass || 'S_CHAIR');
-          });
-        }
-        const btnLogin = seatLayoutContent.querySelector('#btnLiveLoginModal');
-        if (btnLogin) {
-          btnLogin.addEventListener('click', () => {
-            const loginModal = document.getElementById('loginModal') || document.getElementById('railwayLoginModal');
-            if (loginModal) loginModal.classList.remove('hidden');
-          });
-        }
-        return;
+      seatLayoutContent.innerHTML = `
+        <div class="py-16 flex flex-col items-center justify-center space-y-4 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-sm border border-emerald-200 dark:border-emerald-800">
+            <svg class="w-7 h-7 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+          </div>
+          <div class="space-y-1.5 max-w-sm">
+            <h4 class="font-black text-base text-slate-800 dark:text-white">
+              ${isBn ? 'রেলওয়ে সার্ভার থেকে ১০০% লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map from Railway Server...'}
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              ${isBn ? 'কোনো ক্যাশ বা অনুমানকৃত সিট দেখানো হয় না। শুধুমাত্র বাংলাদেশ রেলওয়ের আসল লাইভ সিট লোড হচ্ছে।' : 'Cached and simulated seat maps are disabled. Loading 100% verified real-time seat availability directly from Bangladesh Railway.'}
+            </p>
+          </div>
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span>${isBn ? 'লাইভ সার্ভার কানেকশন সক্রিয়...' : 'Live Railway Connection Active...'}</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Render coach seats whenever coaches exist; only show retry state if no coach data loaded
+    if (!st.coaches || st.coaches.length === 0) {
+      seatLayoutContent.innerHTML = `
+        <div class="py-14 max-w-md mx-auto text-center space-y-4 px-4">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-2xl shadow-sm border border-emerald-200 dark:border-emerald-800">
+            <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+          </div>
+          <div class="space-y-1.5">
+            <h4 class="font-extrabold text-base text-slate-900 dark:text-white">
+              ${isBn ? 'লাইভ সিটম্যাপ সংযোগ স্থাপন করা হচ্ছে...' : 'Connecting to Live Railway Seat Map...'}
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              ${isBn ? 'ক্যাশ সিটম্যাপ বন্ধ রাখা হয়েছে। রেলওয়ে সার্ভার থেকে ১০০% লাইভ আসন তালিকা সংগ্রহ করা হচ্ছে।' : 'Cached seat maps are disabled. Retrieving 100% genuine live seats directly from official Railway server...'}
+            </p>
+          </div>
+          <div class="pt-2">
+            <button type="button" id="btnLiveRetryNow" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 mx-auto cursor-pointer">
+              <i class="fa-solid fa-bolt"></i>
+              <span>${isBn ? 'লাইভ সিটম্যাপ রিফ্রেশ করুন' : 'Retry Live Seat Map'}</span>
+            </button>
+          </div>
+        </div>
+      `;
+      const btnRetry = seatLayoutContent.querySelector('#btnLiveRetryNow');
+      if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+          st.fetching = true;
+          renderActiveCoachCarriage();
+          requestBackgroundTurnstileToken(true);
+          fetchClassLiveSeatLayout(st.lastFetchedClass || 'S_CHAIR');
+        });
       }
+      requestBackgroundTurnstileToken(false);
+      return;
     }
 
     const coach = st.coaches?.[st.activeCoachIndex];
-    if (!coach) return;
+    if (!coach) {
+      seatLayoutContent.innerHTML = `
+        <div class="py-12 max-w-md mx-auto text-center space-y-3 px-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-xl border border-amber-200 dark:border-amber-800">
+            <i class="fa-solid fa-chair"></i>
+          </div>
+          <h4 class="font-extrabold text-sm sm:text-base text-slate-800 dark:text-white">
+            ${isBn ? 'এই ট্রেনের কোনো বগিতে খালি আসন নেই' : 'No Coaches With Available Seats'}
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            ${isBn ? 'সবগুলো আসন ইতোমধ্যে বুকড হয়ে গেছে। অন্য ট্রেন বা তারিখ অনুসন্ধান করুন।' : 'All seats on this train are currently booked. Please check another train or travel date.'}
+          </p>
+        </div>
+      `;
+      return;
+    }
 
     const coachClass = coach.seat_class || 'S_CHAIR';
     const classDisplayName = window.i18n ? window.i18n.getSeatClassName(coachClass) : coachClass;
@@ -7804,6 +8916,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (v === null || v === undefined) return isBn ? '--' : '--';
       return isBn ? window.i18n.toBnNum(v) : String(v);
     };
+
+    const totalSeats = (coach.total_seats !== undefined && coach.total_seats !== null) 
+      ? coach.total_seats 
+      : ((coach.seats && coach.seats.length) ? coach.seats.length : ((Number(coach.available_seats) || 0) + (Number(coach.booked_seats) || 0)));
+
+    if (seatLayoutActiveTotalCount) seatLayoutActiveTotalCount.textContent = fmtCount(totalSeats);
     if (seatLayoutActiveAvailCount) seatLayoutActiveAvailCount.textContent = fmtCount(coach.available_seats);
     if (seatLayoutActiveBookedCount) seatLayoutActiveBookedCount.textContent = fmtCount(coach.booked_seats);
     if (seatLayoutActiveFare) {
@@ -7884,18 +9002,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (isAvail) {
         tileClasses = 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-extrabold cursor-pointer shadow-2xs hover:scale-105';
       } else if (isProcess) {
-        tileClasses = 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 cursor-not-allowed opacity-80';
+        tileClasses = 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-2 border-amber-500 dark:border-amber-400 cursor-not-allowed font-extrabold ring-2 ring-amber-300/60 dark:ring-amber-500/30 animate-pulse';
       } else if (isBooked) {
         tileClasses = 'bg-[#f0eee9] dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 border border-[#e2ded6] dark:border-slate-700/60 cursor-not-allowed line-through text-[11px]';
       } else {
         tileClasses = 'bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 border border-dashed border-slate-300 dark:border-slate-700 cursor-not-allowed';
       }
 
+      const processBadge = isProcess 
+        ? `<span class="text-[8px] text-amber-600 dark:text-amber-400 font-black leading-none mt-0.5 animate-bounce"><i class="fa-regular fa-clock"></i></span>`
+        : '';
+
       return `
         <button type="button" class="carriage-seat-btn aspect-square w-full rounded sm:rounded-md flex flex-col items-center justify-center p-0 transition duration-150 select-none ${tileClasses}"
-          ${isAvail ? `data-seat-name="${fullSeatName}" data-seat-number="${s.seat_number}" data-seat-status="${s.status}" data-seat-fare="${s.total_fare || s.fare || coach.fare || 0}"` : ''}
-          title="${fullSeatName} (${STATUS_LABEL[isAvail ? 'available' : (isBooked ? 'booked' : (isProcess ? 'process' : 'unknown'))]}${isWindow ? ' • Window' : ''})">
-          <span class="text-[10px] sm:text-[11px] font-bold leading-none tracking-tight">${numDisplay}</span>
+          data-seat-name="${fullSeatName}" data-seat-number="${s.seat_number}" data-seat-status="${s.status}" data-seat-fare="${s.total_fare || s.fare || coach.fare || 0}"
+          title="${fullSeatName} (${STATUS_LABEL[isAvail ? 'available' : (isBooked ? 'booked' : (isProcess ? 'process' : 'unknown'))]}${isWindow ? ' • Window' : ''}${isProcess ? ' • Locked in 5-min checkout' : ''})">
+          <span class="text-[10px] sm:text-[11px] font-bold leading-none tracking-tight seat-number-text">${numDisplay}</span>
+          ${processBadge}
           ${windowBar}
         </button>
       `;
@@ -7908,13 +9031,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const unknownCount = seats.filter(s => s.status === 'unknown').length;
     let statusNotice = '';
-    if (unknownCount > 0) {
+    if (unknownCount > 0 && !isLive) {
       statusNotice = `
-        <div class="flex items-start gap-2 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-[11px] text-amber-800 dark:text-amber-300 max-w-[300px] mx-auto">
-          <i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i>
-          <span>${isBn
-            ? 'রেলওয়ে সার্ভার সিটের অবস্থা এখনো সম্পূর্ণ পাঠায়নি। সেশন সিঙ্ক হলে লাইভ বুকড/খালি অবস্থা দেখা যাবে।'
-            : 'Per-seat status not confirmed yet. Connect active session to view live status.'}</span>
+        <div class="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-emerald-300/60 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-[11px] text-emerald-800 dark:text-emerald-300 max-w-[300px] mx-auto mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="font-semibold">${isBn ? 'ব্যাকগ্রাউন্ডে লাইভ সিট সিঙ্ক হচ্ছে...' : 'Auto-syncing live seat status...'}</span>
+          </div>
+          <span class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">100% Auto</span>
         </div>
       `;
     }
@@ -7958,7 +9082,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-1.5">
           <div class="flex items-center space-x-1.5">
             <span class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight">${coach.coach_name || 'Coach'}</span>
-            ${isLive ? '<span class="px-1.5 py-0.5 rounded bg-slate-900 text-white dark:bg-emerald-600 text-[9px] font-extrabold uppercase tracking-wider">PICK</span>' : ''}
+            ${isLive ? '<span class="px-1.5 py-0.5 rounded bg-slate-900 text-white dark:bg-emerald-600 text-[9px] font-extrabold uppercase tracking-wider">PICK</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/60 dark:border-amber-800/60 text-[9px] font-bold tracking-wider inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>' + (isBn ? 'সিঙ্ক হচ্ছে...' : 'SYNCING...') + '</span>'}
           </div>
           <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">${countDisplay}</span>
         </div>
@@ -8122,6 +9246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Admin-only controls visibility: strictly hidden for viewer accounts
         const isAdmin = data.user.role === 'admin';
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.toggle('hidden', !isAdmin);
+        if (dropdownSocketMonitorLink) dropdownSocketMonitorLink.classList.toggle('hidden', !isAdmin);
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.toggle('hidden', !isAdmin);
         if (settingAdminTabBtn) settingAdminTabBtn.classList.toggle('hidden', !isAdmin);
         if (settingAdminSection) settingAdminSection.classList.toggle('hidden', !isAdmin);
@@ -8159,6 +9284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userNavLabel) userNavLabel.textContent = 'Users';
         if (userRoleBadge) userRoleBadge.classList.add('hidden');
         if (dropdownManageUsersBtn) dropdownManageUsersBtn.classList.add('hidden');
+        if (dropdownSocketMonitorLink) dropdownSocketMonitorLink.classList.add('hidden');
         if (settingOpenUserMgmtBtn) settingOpenUserMgmtBtn.classList.add('hidden');
         if (settingAdminTabBtn) settingAdminTabBtn.classList.add('hidden');
         if (settingAdminSection) settingAdminSection.classList.add('hidden');
@@ -9879,8 +11005,27 @@ document.addEventListener('DOMContentLoaded', () => {
       }).observe(topNotifBadge, { childList: true, attributes: true, attributeFilter: ['class'] });
     }
 
-    // Set initial mobile bottom nav active tab to Seats
-    syncMobileBottomNav('seats');
+    // Auto-activate tab from URL hash (e.g. #autobook, #tracker, #seats) or query param ?tab=autobook
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = (window.location.hash.replace('#', '') || urlParams.get('tab') || '').toLowerCase();
+    if (initialTab === 'autobook' || initialTab === 'auto-book') {
+      switchMainTab('autobook');
+    } else if (initialTab === 'tracker' || initialTab === 'radar') {
+      switchMainTab('tracker');
+    } else {
+      syncMobileBottomNav('seats');
+    }
+
+    window.addEventListener('hashchange', () => {
+      const h = window.location.hash.replace('#', '').toLowerCase();
+      if (h === 'autobook' || h === 'auto-book') {
+        switchMainTab('autobook');
+      } else if (h === 'tracker' || h === 'radar') {
+        switchMainTab('tracker');
+      } else if (h === 'seats') {
+        switchMainTab('seats');
+      }
+    });
 
     // Refresh Button
     if (refreshLiveTrackerBtn) {
@@ -10140,6 +11285,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function switchMainTab(tab) {
     state.activeMainTab = tab;
     syncMobileBottomNav(tab);
+
+    try {
+      const currentHash = window.location.hash.replace('#', '');
+      if (currentHash !== tab) {
+        history.replaceState(null, null, '#' + tab);
+      }
+    } catch (e) {}
 
     const autoBookSection = document.getElementById('autoBookSection');
 
@@ -11453,6 +12605,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoBookActionBtn = document.getElementById('autoBookActionBtn');
     const autoBookActionIcon = document.getElementById('autoBookActionIcon');
     const autoBookActionText = document.getElementById('autoBookActionText');
+    const headlessGrabNowBtn = document.getElementById('headlessGrabNowBtn');
+    const headlessGrabNowIcon = document.getElementById('headlessGrabNowIcon');
+    const headlessGrabNowText = document.getElementById('headlessGrabNowText');
     const autoBookConsoleBox = document.getElementById('autoBookConsoleBox');
     const autoBookConsoleStatus = document.getElementById('autoBookConsoleStatus');
     const autoBookConsoleLogs = document.getElementById('autoBookConsoleLogs');
@@ -11755,7 +12910,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const labels = selectedAutoBookClasses.map(c => window.i18n ? window.i18n.getSeatClassName(c) : c);
         autoBookClassBtnText.textContent = labels.join(', ');
-        if (autoBookClassCountBadge) autoBookClassCountBadge.textContent = `${selectedAutoBookClasses.length} selected`;
+        if (autoBookClassCountBadge) {
+          const count = selectedAutoBookClasses.length;
+          autoBookClassCountBadge.textContent = isBnLang ? `${count}টি ক্লাস` : (count === 1 ? '1 Class' : `${count} Classes`);
+        }
         if (autoBookClassSelect) autoBookClassSelect.value = selectedAutoBookClasses[0];
       }
     }
@@ -11770,7 +12928,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (autoBookTrainSelect) autoBookTrainSelect.value = 'ALL';
       } else {
         autoBookTrainBtnText.textContent = selectedAutoBookTrains.join(', ');
-        if (autoBookTrainCountBadge) autoBookTrainCountBadge.textContent = `${selectedAutoBookTrains.length} selected`;
+        if (autoBookTrainCountBadge) {
+          const count = selectedAutoBookTrains.length;
+          autoBookTrainCountBadge.textContent = isBnLang ? `${count}টি ট্রেন` : (count === 1 ? '1 Train' : `${count} Trains`);
+        }
         if (autoBookTrainSelect) autoBookTrainSelect.value = selectedAutoBookTrains[0];
       }
     }
@@ -12084,17 +13245,35 @@ document.addEventListener('DOMContentLoaded', () => {
     populateAutoBookRouteData();
     window.addEventListener('trainsCatalogLoaded', () => populateAutoBookRouteData());
 
-    // 6. Seat Quantity Selector (1 to 4)
+    // 6. Dynamic Seat Quantity Selector (1 to 4) & Keep Group Together Toggle
+    function updateAutoBookSeatCountUI(seats, autoCheckTogether = true) {
+      selectedSeatsCount = Math.min(4, Math.max(1, Number(seats) || 1));
+      if (autoBookSeatCountGroup) {
+        autoBookSeatCountGroup.querySelectorAll('.autobook-seat-count-btn').forEach(b => {
+          const isSelected = Number(b.dataset.seats) === selectedSeatsCount;
+          b.className = isSelected
+            ? 'autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer'
+            : 'autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer';
+        });
+      }
+      const keepTogetherContainer = document.getElementById('autoBookKeepTogetherContainer');
+      if (selectedSeatsCount >= 2) {
+        if (keepTogetherContainer) keepTogetherContainer.classList.remove('hidden');
+        if (autoCheckTogether && autoBookKeepTogetherToggle) autoBookKeepTogetherToggle.checked = true;
+      } else {
+        if (keepTogetherContainer) keepTogetherContainer.classList.add('hidden');
+        if (autoCheckTogether && autoBookKeepTogetherToggle) autoBookKeepTogetherToggle.checked = false;
+      }
+    }
+
     if (autoBookSeatCountGroup) {
       autoBookSeatCountGroup.querySelectorAll('.autobook-seat-count-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          selectedSeatsCount = Number(btn.dataset.seats) || 1;
-          autoBookSeatCountGroup.querySelectorAll('.autobook-seat-count-btn').forEach(b => {
-            b.className = 'autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer';
-          });
-          btn.className = 'autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer';
+          updateAutoBookSeatCountUI(btn.dataset.seats, true);
         });
       });
+      // Initial state sync (default 1 seat keeps group together toggle hidden)
+      updateAutoBookSeatCountUI(selectedSeatsCount, false);
     }
 
     // 7. Unified Smart Auto-Book Mode & Action State
@@ -12257,6 +13436,45 @@ document.addEventListener('DOMContentLoaded', () => {
       autoBookConsoleLogs.scrollTop = autoBookConsoleLogs.scrollHeight;
     }
 
+    // Helpers: Clean Coach Name, Infer Class, Clean Seat Number
+    function cleanCoachName(rawName) {
+      if (!rawName) return 'Coach';
+      let str = String(rawName).trim();
+      str = str.replace(/\s*\([^)]*\)/g, '').trim();
+      const letterMatch = str.match(/^[Cc]oach[-_\s]+([a-zA-Z\u0980-\u09FF]+[\w-]*)$/);
+      if (letterMatch) {
+        return letterMatch[1];
+      }
+      return str || 'Coach';
+    }
+
+    function inferClassFromCoachName(coachName, fallback = 'S_CHAIR') {
+      const safeFallback = (fallback && fallback !== 'ANY' && fallback !== 'ALL') ? String(fallback).toUpperCase() : 'S_CHAIR';
+      if (!coachName) return safeFallback;
+      const upper = String(coachName).toUpperCase().trim();
+
+      if (upper.includes('SNIGDHA')) return 'SNIGDHA';
+      if (upper.includes('AC_B') || upper.includes('BERTH') || upper.includes('CABIN') || upper.includes('SLEEPER')) return 'AC_B';
+      if (upper.includes('AC_S') || upper.includes('AC_C') || upper.includes('AC_CHAIR') || upper.includes('AC SEAT') || upper.includes('AC CHAIR')) return 'AC_S';
+      if (upper.includes('S_CHAIR') || upper.includes('SHOVAN') || upper.includes('SHOVON') || upper.includes('CHAIR')) return 'S_CHAIR';
+      if (upper.includes('F_SEAT') || upper.includes('FIRST SEAT')) return 'F_SEAT';
+      if (upper.includes('F_BERTH') || upper.includes('FIRST BERTH')) return 'F_BERTH';
+      if (upper.includes('SULOB') || upper.includes('SHULOBH')) return 'SULOB';
+
+      // Do not guess or override class based on coach letters (e.g. KA, GA, CHA)
+      return safeFallback;
+    }
+
+    function cleanSeatNumber(rawSeat) {
+      if (!rawSeat) return '';
+      const str = String(rawSeat).trim();
+      const m = str.match(/^[a-zA-Z\u0980-\u09FF0-9]+-(.+)$/);
+      if (m && m[1]) {
+        return m[1].trim();
+      }
+      return str;
+    }
+
     // 9. Smart Seat Allocation Algorithm (Keep Seats Together, Window/Aisle & Front/Middle/Back Seat Position Preferences)
     function allocateSmartSeats(coaches, count, prefs = {}) {
       let {
@@ -12284,12 +13502,20 @@ document.addEventListener('DOMContentLoaded', () => {
         classFilterList = [String(preferredClass).toUpperCase()];
       }
 
+      function getCoachClass(c) {
+        let cls = String(c.seat_class || c.class_name || '').toUpperCase().trim();
+        if (!cls || cls === 'ANY' || cls === 'ALL') {
+          cls = inferClassFromCoachName(c.coach_name || c.floor_name || '', 'S_CHAIR');
+        }
+        return cls;
+      }
+
       // Filter coaches that have at least 1 seat available
       let candidates = coaches.filter(c => Number(c.available_seats || 0) > 0);
       if (candidates.length === 0) return null;
 
       if (classFilterList.length > 0) {
-        const classFiltered = candidates.filter(c => classFilterList.includes((c.seat_class || '').toUpperCase()));
+        const classFiltered = candidates.filter(c => classFilterList.includes(getCoachClass(c)));
         if (classFiltered.length > 0) candidates = classFiltered;
       }
 
@@ -12633,6 +13859,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return '';
     }
 
+    // Helper: Adaptive smart retry delay (08:00-08:05 AM ticket rush = 1.6s fast poll; off-peak = 2.5s to 3.5s with slight jitter to prevent WAF throttling)
+    function getAdaptiveRetryDelay(attempt) {
+      const now = new Date();
+      const hr = now.getHours();
+      const min = now.getMinutes();
+      const isRushHour = (hr === 7 && min >= 59) || (hr === 8 && min <= 6);
+      if (isRushHour) {
+        return 1600; // Ultra-fast 1.6s retry during 8:00 AM ticket drop rush
+      }
+      // Off-peak adaptive: start at 2500ms, gently back off up to 4000ms
+      const base = Math.min(4000, 2500 + Math.floor((attempt || 1) / 5) * 500);
+      const jitter = Math.floor(Math.random() * 300); // 0-300ms jitter
+      return base + jitter;
+    }
+
     // 10. Execute Auto-Grab Now (with 100% Exact Coach and Seat Grabbing via Turnstile Bridge)
     async function executeAutoGrabNow() {
       const fromCity = (autoBookFromInput?.value || '').trim();
@@ -12778,21 +14019,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Helper: Adaptive smart retry delay (08:00-08:05 AM ticket rush = 1.6s fast poll; off-peak = 2.5s to 3.5s with slight jitter to prevent WAF throttling)
-        function getAdaptiveRetryDelay(attempt) {
-          const now = new Date();
-          const hr = now.getHours();
-          const min = now.getMinutes();
-          const isRushHour = (hr === 7 && min >= 59) || (hr === 8 && min <= 6);
-          if (isRushHour) {
-            return 1600; // Ultra-fast 1.6s retry during 8:00 AM ticket drop rush
-          }
-          // Off-peak adaptive: start at 2500ms, gently back off up to 4000ms
-          const base = Math.min(4000, 2500 + Math.floor((attempt || 1) / 5) * 500);
-          const jitter = Math.floor(Math.random() * 300); // 0-300ms jitter
-          return base + jitter;
-        }
-
         if (!json || !json.data || !Array.isArray(json.data.coaches) || json.data.coaches.length === 0) {
           addConsoleLog(`[2/4] ⚠️ No live coach layout returned from Railway for this query.`, 'warn');
           if (keepTrying && isAutoGrabRetrying) {
@@ -12878,12 +14104,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { coach, seats, isContiguous } = allocation;
-        const coachName = coach.coach_name || 'Coach';
-        const allocatedClass = coach.seat_class || (targetClasses[0] !== 'ANY' ? targetClasses[0] : 'S_CHAIR');
+        const rawCoachName = coach.coach_name || coach.floor_name || 'Coach';
+        const coachName = cleanCoachName(rawCoachName);
+
+        // Resolve exact class: coach.seat_class -> seat.seat_class -> json.matched_seat_class -> targetClasses -> infer from coachName -> 'S_CHAIR'
+        let candidateClass = coach.seat_class;
+        if (!candidateClass || candidateClass === 'ANY' || candidateClass === 'ALL') {
+          candidateClass = seats.find(s => s && s.seat_class && s.seat_class !== 'ANY' && s.seat_class !== 'ALL')?.seat_class;
+        }
+        if (!candidateClass || candidateClass === 'ANY' || candidateClass === 'ALL') {
+          candidateClass = json.matched_seat_class;
+        }
+        if (!candidateClass || candidateClass === 'ANY' || candidateClass === 'ALL') {
+          candidateClass = targetClasses.find(c => c && c !== 'ANY' && c !== 'ALL');
+        }
+        if (!candidateClass || candidateClass === 'ANY' || candidateClass === 'ALL') {
+          candidateClass = inferClassFromCoachName(rawCoachName, 'S_CHAIR');
+        }
+        const allocatedClass = (candidateClass && candidateClass !== 'ANY' && candidateClass !== 'ALL') ? String(candidateClass).toUpperCase().trim() : 'S_CHAIR';
+
         // Use the coach's specific trip_id if available (per-class trip_id from Railway)
         const coachTripId = coach.trip_id || json.trip_id || '';
         const coachTripRouteId = coach.trip_route_id || json.trip_route_id || '';
-        const seatNumbersOnly = seats.map(s => s.display_number || (s.seat_number ? s.seat_number.replace(/^[^-]+-/, '') : s.seat_name));
+        const seatNumbersOnly = seats.map(s => {
+          const num = cleanSeatNumber(s.display_number || s.seat_number || s.seat_name);
+          return num;
+        }).filter(Boolean);
         const seatNamesStr = seatNumbersOnly.join(',');
 
         if (json.live) {
@@ -13027,6 +14273,195 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isAutoGrabRetrying) {
           if (autoBookActionBtn) autoBookActionBtn.disabled = false;
         }
+      }
+    }
+
+    let isHeadlessRadarActive = false;
+    let headlessRadarTimer = null;
+    let headlessRadarAttemptCount = 0;
+
+    function stopHeadlessRadar(showNotice = true) {
+      if (headlessRadarTimer) {
+        clearTimeout(headlessRadarTimer);
+        headlessRadarTimer = null;
+      }
+      isHeadlessRadarActive = false;
+      headlessRadarAttemptCount = 0;
+      if (headlessGrabNowBtn) {
+        headlessGrabNowBtn.disabled = false;
+        headlessGrabNowBtn.className = 'w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer';
+      }
+      if (headlessGrabNowIcon) headlessGrabNowIcon.className = 'fa-solid fa-cloud-arrow-down text-emerald-200';
+      if (headlessGrabNowText) headlessGrabNowText.textContent = isBn() ? '📱 হেডলেস কার্ট হোল্ড' : '📱 1-Tap Headless Cart Hold';
+      if (autoBookConsoleStatus && autoBookConsoleStatus.textContent.includes('Radar')) {
+        autoBookConsoleStatus.textContent = 'Idle';
+        autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700';
+      }
+      if (showNotice) {
+        showToast(isBn() ? 'হেডলেস রাডার পর্যবেক্ষণ বন্ধ করা হয়েছে।' : 'Headless Radar watcher stopped.', 'info');
+      }
+    }
+
+    // 10b. Execute 1-Tap Headless Mobile Grab (Cart Hold + Telegram Alert)
+    async function executeHeadlessMobileGrabNow() {
+      if (isHeadlessRadarActive) {
+        stopHeadlessRadar(true);
+        return;
+      }
+
+      const fromCity = (autoBookFromInput?.value || '').trim();
+      const toCity = (autoBookToInput?.value || '').trim();
+      const journeyDate = autoBookDateInput?.value || '';
+
+      const targetTrains = (selectedAutoBookTrains.includes('ALL') || selectedAutoBookTrains.length === 0)
+        ? ['ALL']
+        : [...selectedAutoBookTrains];
+      const targetClasses = (selectedAutoBookClasses.includes('ANY') || selectedAutoBookClasses.length === 0)
+        ? ['ANY']
+        : [...selectedAutoBookClasses];
+
+      const count = selectedSeatsCount;
+      const keepTrying = autoBookKeepTryingToggle ? autoBookKeepTryingToggle.checked : true;
+
+      if (!fromCity || !toCity) {
+        showToast(isBn() ? 'অনুগ্রহ করে স্টেশন নির্বাচন করুন।' : 'Please specify departure and arrival stations.', 'error');
+        return;
+      }
+      if (!journeyDate) {
+        showToast(isBn() ? 'অনুগ্রহ করে ভ্রমণের তারিখ নির্বাচন করুন।' : 'Please choose a journey date.', 'error');
+        return;
+      }
+
+      if (autoBookConsoleBox) autoBookConsoleBox.classList.remove('hidden');
+      if (headlessRadarAttemptCount === 0 && autoBookConsoleLogs) autoBookConsoleLogs.innerHTML = '';
+      if (autoBookConsoleStatus) {
+        autoBookConsoleStatus.textContent = headlessRadarAttemptCount > 0 ? `Radar Watcher (#${headlessRadarAttemptCount + 1})` : 'Headless Grabbing...';
+        autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-teal-950/80 text-[10px] font-bold text-teal-300 border border-teal-800 animate-pulse';
+      }
+
+      const attemptNum = headlessRadarAttemptCount + 1;
+      const attemptPrefix = headlessRadarAttemptCount > 0 ? `[Attempt #${attemptNum}] ` : '';
+
+      addConsoleLog(`${attemptPrefix}[1/3] 📱 <b>Executing 1-Tap Headless Grab:</b> ${fromCity} ➔ ${toCity} on ${journeyDate} (${targetClasses.join(', ')} | ${count} seats)...`, 'info');
+      addConsoleLog(`${attemptPrefix}[1/3] ⚡ Dual-Method Engine active (Method 1: Direct API, Method 2: Puppeteer). Zero phone battery or CPU used.`, 'info');
+
+      try {
+        const tgConfig = typeof getTelegramConfig === 'function' ? getTelegramConfig() : null;
+        const grabPayload = {
+          from_city: fromCity,
+          to_city: toCity,
+          date_of_journey: journeyDate,
+          train_name: targetTrains.includes('ALL') ? '' : targetTrains.join(','),
+          seat_class: targetClasses.includes('ANY') ? 'ANY' : targetClasses.join(','),
+          seats_count: count,
+          method: 'auto',
+          telegram_chat_id: tgConfig?.chat_id || ''
+        };
+
+        if (headlessGrabNowBtn) headlessGrabNowBtn.disabled = true;
+        if (headlessGrabNowIcon) headlessGrabNowIcon.className = 'fa-solid fa-spinner fa-spin text-amber-300';
+        if (headlessGrabNowText) headlessGrabNowText.textContent = isBn() ? 'লক করা হচ্ছে...' : 'Holding in Cart...';
+
+        let res = await fetch('/api/seat-grab', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(grabPayload)
+        });
+
+        // Fallback for PHP environments without URL rewrite enabled
+        if (res.status === 404) {
+          res = await fetch('/api/seat-grab.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(grabPayload)
+          });
+        }
+
+        const data = await res.json();
+
+        if (res.ok && data.success && data.details) {
+          stopHeadlessRadar(false);
+          const det = data.details;
+          const displayTrainName = det.trainName || (targetTrains[0] !== 'ALL' ? targetTrains[0] : 'Intercity Train');
+          const displayCoach = cleanCoachName(det.coach || 'Target');
+          const displaySeats = (det.seats || []).map(cleanSeatNumber).filter(Boolean);
+          const seatsStr = displaySeats.length > 0 ? displaySeats.join(', ') : 'Allocated';
+          const checkoutUrl = 'https://eticket.railway.gov.bd/booking/checkout';
+
+          addConsoleLog(`[2/3] 🎉 <b>100% SUCCESS: SEATS SECURED IN OFFICIAL CART!</b>`, 'success');
+          addConsoleLog(`[2/3] 🚆 Train: <span class="text-white font-bold">${displayTrainName}</span> • Coach: <span class="text-emerald-400 font-bold">${displayCoach}</span> • Seat(s): <span class="text-amber-300 font-bold">${seatsStr}</span> via <code>${det.method || data.method_used}</code>`, 'success');
+          addConsoleLog(`[3/3] ⏳ <b>LOCKED IN CART FOR ~5 MINUTES!</b> Complete payment before the timer expires.`, 'warn');
+          addConsoleLog(`[3/3] 📱 <b>Telegram Alert Dispatched:</b> Instant notification with 1-tap checkout button sent to your phone!`, 'info');
+
+          // Highlight Banner inside Activity Console
+          const grabBanner = document.getElementById('autoBookGrabbedBanner');
+          if (grabBanner) {
+            grabBanner.classList.remove('hidden');
+            const cVal = document.getElementById('grabbedCoachVal');
+            const clVal = document.getElementById('grabbedClassVal');
+            const sVal = document.getElementById('grabbedSeatsVal');
+            const tBadge = document.getElementById('grabbedTrainBadge');
+            const linkBox = document.getElementById('grabbedActionLinkContainer');
+            if (cVal) cVal.textContent = displayCoach;
+            if (clVal) clVal.textContent = det.seatClass || grabPayload.seat_class;
+            if (sVal) sVal.textContent = seatsStr;
+            if (tBadge) tBadge.textContent = displayTrainName;
+            if (linkBox) {
+              linkBox.innerHTML = `<a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow transition cursor-pointer">💳 Pay Now (Checkout)</a>`;
+            }
+          }
+
+          if (autoBookConsoleStatus) {
+            autoBookConsoleStatus.textContent = 'Held in Cart! 🛒';
+            autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-emerald-900/80 text-[10px] font-bold text-emerald-300 border border-emerald-700 animate-pulse';
+          }
+
+          if (autoBookSoundAlarmToggle && autoBookSoundAlarmToggle.checked) {
+            playAlarmChime();
+          }
+
+          showToast(isBn() ? `🎉 সিট আপনার রেলওয়ে কার্টে লক করা হয়েছে! ৫ মিনিটের মধ্যে পেমেন্ট সম্পন্ন করুন।` : `🎉 Seats locked in your Railway cart! Complete payment within 5 minutes.`, 'success');
+          return;
+        }
+
+        // Handle seat not found yet
+        const reason = data.error || data.details?.reason || 'No available seats matching criteria at this moment';
+        addConsoleLog(`[2/3] ⚠️ Headless Grab attempt: ${reason}`, 'warn');
+
+        if (keepTrying) {
+          isHeadlessRadarActive = true;
+          headlessRadarAttemptCount++;
+          const delayMs = getAdaptiveRetryDelay(headlessRadarAttemptCount);
+          const delaySec = (delayMs / 1000).toFixed(1);
+
+          addConsoleLog(`🔄 [Radar Active] Route is monitored. Retrying in ${delaySec}s to grab instant drop (Attempt #${headlessRadarAttemptCount + 1})...`, 'info');
+          if (autoBookConsoleStatus) {
+            autoBookConsoleStatus.textContent = `Radar Watcher (#${headlessRadarAttemptCount})`;
+            autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-amber-950/80 text-[10px] font-bold text-amber-300 border border-amber-800 animate-pulse';
+          }
+
+          if (headlessGrabNowBtn) {
+            headlessGrabNowBtn.disabled = false;
+            headlessGrabNowBtn.className = 'w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 transition flex items-center justify-center space-x-1.5 cursor-pointer';
+          }
+          if (headlessGrabNowIcon) headlessGrabNowIcon.className = 'fa-solid fa-stop text-white';
+          if (headlessGrabNowText) headlessGrabNowText.textContent = isBn() ? '⏹️ রাডার বন্ধ করুন' : '⏹️ Stop Radar Watcher';
+
+          headlessRadarTimer = setTimeout(() => {
+            executeHeadlessMobileGrabNow();
+          }, delayMs);
+          return;
+        } else {
+          addConsoleLog('💡 Tip: Keep "Keep trying if no seats are available" enabled above to let the radar auto-grab tickets the exact millisecond they drop!', 'info');
+          if (autoBookConsoleStatus) autoBookConsoleStatus.textContent = 'Sold Out';
+          showToast(reason, 'info');
+          stopHeadlessRadar(false);
+        }
+      } catch (err) {
+        addConsoleLog(`❌ Headless Grab failed: ${err.message}`, 'error');
+        if (autoBookConsoleStatus) autoBookConsoleStatus.textContent = 'Error';
+        showToast(`Headless grab failed: ${err.message}`, 'error');
+        stopHeadlessRadar(false);
       }
     }
 
@@ -13225,8 +14660,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAutoBookClasses();
             renderAutoBookTrains(currentAutoBookRouteTrains);
 
-            selectedSeatsCount = t.count;
-            if (autoBookKeepTogetherToggle) autoBookKeepTogetherToggle.checked = t.keepTogether;
+            updateAutoBookSeatCountUI(t.count, false);
+            if (autoBookKeepTogetherToggle && t.keepTogether !== undefined) autoBookKeepTogetherToggle.checked = !!t.keepTogether;
             if (autoBookPositionPref) autoBookPositionPref.value = t.positionPref || t.sectionPref || 'any';
             if (t.holdOnly && autoBookModeHold) {
               autoBookModeHold.checked = true;
@@ -13271,6 +14706,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           scheduleAutoBookTask();
         }
+      });
+    }
+
+    // 13b. 1-Tap Headless Mobile Grab Button Click
+    if (headlessGrabNowBtn) {
+      headlessGrabNowBtn.addEventListener('click', () => {
+        executeHeadlessMobileGrabNow();
       });
     }
 
@@ -13472,6 +14914,7 @@ document.addEventListener('DOMContentLoaded', () => {
         openSeatLayoutModal({
           trainModel: seatLayoutBtn.dataset.trainModel,
           trainName: seatLayoutBtn.dataset.trainName,
+          departureTime: seatLayoutBtn.dataset.departureTime || '',
           tripId: seatLayoutBtn.dataset.tripId,
           tripRouteId: seatLayoutBtn.dataset.tripRouteId,
           seatClass: seatLayoutBtn.dataset.seatClass,

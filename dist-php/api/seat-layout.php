@@ -5,7 +5,8 @@ $tripId = trim($_GET['trip_id'] ?? '');
 $tripRouteId = trim($_GET['trip_route_id'] ?? '');
 $trainName = trim($_GET['train_name'] ?? 'Intercity Train');
 $trainModel = trim($_GET['train_model'] ?? '');
-$seatClass = trim($_GET['seat_class'] ?? 'S_CHAIR');
+$rawSeatClass = trim($_GET['seat_class'] ?? 'S_CHAIR');
+$seatClass = (!empty($rawSeatClass) && strtoupper($rawSeatClass) !== 'ANY' && strtoupper($rawSeatClass) !== 'ALL') ? strtoupper($rawSeatClass) : 'S_CHAIR';
 
 $availSeatsParam = (isset($_GET['available_seats']) && $_GET['available_seats'] !== '') ? max(0, (int)$_GET['available_seats']) : null;
 $fareParam = (isset($_GET['fare']) && $_GET['fare'] !== '') ? (float)$_GET['fare'] : null;
@@ -914,6 +915,17 @@ if ($httpCode === 200 && $json) {
             'data' => buildTemplateFallback($cleanTripId, $seatClass, $availSeatsParam, $fareParam, [])
         ], JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    $availOnly = isset($_GET['available_only']) && ($_GET['available_only'] === '1' || $_GET['available_only'] === 'true');
+    if ($availOnly && !empty($normalized['coaches'])) {
+        $filteredCoaches = array_values(array_filter($normalized['coaches'], function($c) {
+            return (int)($c['available_seats'] ?? 0) > 0;
+        }));
+        if (!empty($filteredCoaches)) {
+            $normalized['coaches'] = $filteredCoaches;
+            $normalized['total_coaches'] = count($filteredCoaches);
+        }
     }
 
     echo json_encode([

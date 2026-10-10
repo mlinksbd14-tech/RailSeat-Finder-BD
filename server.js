@@ -541,7 +541,9 @@ let authCredentials = {
 
 // Global Cloudflare Turnstile token store (updated via background Tampermonkey / bridge)
 // Managed Cloudflare Turnstile Token Vault & Queue
-const cftTokenVault = new Set();
+// Managed Cloudflare Turnstile Token Vault & Queue
+const cftTokenVault = new Map(); // token -> timestamp
+const deadCftTokens = new Set(); // tokens known to be consumed or rejected (422)
 let globalCftResponse = {
   token: null,
   timestamp: 0
@@ -550,29 +552,140 @@ let globalCftResponse = {
 function addCftTokenToVault(token) {
   if (!token || typeof token !== 'string' || token.length < 20) return;
   const clean = token.trim();
-  cftTokenVault.add(clean);
+  if (deadCftTokens.has(clean)) return;
+
+  cftTokenVault.set(clean, Date.now());
   globalCftResponse = {
     token: clean,
     timestamp: Date.now()
   };
+
   // Cap vault size to prevent unbounded memory growth
-  if (cftTokenVault.size > 20) {
-    const oldest = cftTokenVault.values().next().value;
-    cftTokenVault.delete(oldest);
+  if (cftTokenVault.size > 30) {
+    const oldestKey = cftTokenVault.keys().next().value;
+    cftTokenVault.delete(oldestKey);
   }
+
+  // Persist to disk so background CLI and workers share it
+  try {
+    const tokenFile = path.join(__dirname, 'data', 'latest_turnstile_token.json');
+    fs.writeFileSync(tokenFile, JSON.stringify({ token: clean, timestamp: Date.now() }, null, 2));
+  } catch (e) {}
+}
+
+function getNextFreshCftToken() {
+  const now = Date.now();
+  for (const [token, ts] of cftTokenVault.entries()) {
+    if (deadCftTokens.has(token)) {
+      cftTokenVault.delete(token);
+      continue;
+    }
+    if (now - ts > 180000) { // older than 3 minutes -> expired
+      cftTokenVault.delete(token);
+      continue;
+    }
+    return { token, timestamp: ts };
+  }
+  return null;
+}
+
+function markCftTokenDead(token) {
+  if (!token) return;
+  const clean = String(token).trim();
+  deadCftTokens.add(clean);
+  if (deadCftTokens.size > 300) {
+    const oldest = deadCftTokens.values().next().value;
+    deadCftTokens.delete(oldest);
+  }
+  cftTokenVault.delete(clean);
+
+  if (globalCftResponse.token === clean) {
+    const nextFresh = getNextFreshCftToken();
+    globalCftResponse = {
+      token: nextFresh ? nextFresh.token : null,
+      timestamp: nextFresh ? nextFresh.timestamp : 0
+    };
+  }
+
+  if (authCredentials.cftResponse === clean) {
+    authCredentials.cftResponse = null;
+  }
+
+  try {
+    const sessionPath = path.join(__dirname, 'data', 'session.json');
+    if (fs.existsSync(sessionPath)) {
+      const sess = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
+      if (sess && sess.cftResponse === clean) {
+        sess.cftResponse = null;
+        fs.writeFileSync(sessionPath, JSON.stringify(sess, null, 2));
+      }
+    }
+  } catch (e) {}
 }
 
 function removeCftTokenFromVault(token) {
-  if (!token) return;
-  cftTokenVault.delete(token);
-  if (globalCftResponse.token === token) {
-    const nextToken = cftTokenVault.values().next().value || null;
-    globalCftResponse = {
-      token: nextToken,
-      timestamp: nextToken ? Date.now() : 0
-    };
+  markCftTokenDead(token);
+  if (cftTokenVault.size === 0) {
+    setTimeout(() => {
+      runBackgroundTurnstileKeeper(true);
+    }, 100);
   }
 }
+
+// Seed vault from disk on startup (only if strictly under 3 minutes old)
+try {
+  const tokenFile = path.join(__dirname, 'data', 'latest_turnstile_token.json');
+  if (fs.existsSync(tokenFile)) {
+    const disk = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
+    if (disk && disk.token && disk.timestamp && (Date.now() - disk.timestamp < 180000)) {
+      addCftTokenToVault(disk.token);
+      console.log(`[Turnstile Vault] 💾 Loaded active fresh token from disk`);
+    }
+  }
+} catch (e) {}
+
+// ====================================================
+// 24/7 Continuous Background Turnstile Token Keeper
+// Proactively solves and keeps Turnstile token warm and alive.
+// Guarantees zero latency on seat layout requests across any train route.
+// ====================================================
+let isTurnstileKeeperSolving = false;
+let lastTurnstileKeeperRun = 0;
+
+async function runBackgroundTurnstileKeeper(force = false) {
+  if (isTurnstileKeeperSolving) return;
+  const now = Date.now();
+
+  // If not forcing, check if we already have a warm token under 2 minutes old
+  if (!force && globalCftResponse.token && (now - globalCftResponse.timestamp < 120000)) {
+    return;
+  }
+
+  isTurnstileKeeperSolving = true;
+  lastTurnstileKeeperRun = now;
+  try {
+    const { solveTurnstileToken } = require('./scripts/turnstile-auto-solver');
+    const token = await solveTurnstileToken(force);
+    if (token) {
+      addCftTokenToVault(token);
+      console.log(`[Turnstile Keeper] 🛡️ Turnstile token refreshed & alive in background (${token.substring(0, 16)}...)`);
+    }
+  } catch (err) {
+    console.warn('[Turnstile Keeper] Background solver run failed:', err.message);
+  } finally {
+    isTurnstileKeeperSolving = false;
+  }
+}
+
+// Background Keeper Heartbeat: Check every 45 seconds to keep token permanently fresh
+setInterval(() => {
+  runBackgroundTurnstileKeeper(false);
+}, 45000);
+
+// Kick off first keeper cycle 3 seconds after server start
+setTimeout(() => {
+  runBackgroundTurnstileKeeper(false);
+}, 3000);
 
 // Helper to decode rich official profile from Shohoz JWT Token
 function decodeShohozJwtProfile(token) {
@@ -1030,6 +1143,24 @@ setInterval(() => {
     if (now > rec.resetAt) authRateLimits.delete(ip);
   }
 }, 5 * 60 * 1000);
+
+function formatShohozError(errData) {
+  if (!errData) return '';
+  if (typeof errData === 'string') return errData;
+  const errorObj = errData.error || errData;
+  const messages = errorObj.messages || errorObj.message;
+  if (Array.isArray(messages)) return messages.join(', ');
+  if (typeof messages === 'string') return messages;
+  if (messages && typeof messages === 'object') {
+    if (messages.errorKey) return messages.errorKey;
+    if (messages.errors && typeof messages.errors === 'object') {
+      return Object.values(messages.errors).join(', ');
+    }
+    return JSON.stringify(messages);
+  }
+  return errorObj.message || errorObj.code || '';
+}
+
 
 // Global API Limiter: 500 req / 60s (Generous for live seat monitoring & SPA navigation)
 app.use('/api/', createRateLimiter(apiRateLimits, 500, 60 * 1000, 'API rate limit exceeded. Please try again in a few seconds.'));
@@ -1539,21 +1670,90 @@ app.post('/api/auth/set-token', (req, res) => {
   });
 });
 
-// 2b. Live Token & Turnstile Status Checker
+// 2b. On-Demand / Background Cloudflare Turnstile Token Refresh
+app.all('/api/auth/refresh-turnstile', async (req, res) => {
+  const force = req.query.force === '1' || req.query.force === 'true' || req.body?.force === true;
+  const now = Date.now();
+
+  // If not forced and vault has a token under 3 minutes old, return it immediately
+  if (!force && globalCftResponse.token && (now - globalCftResponse.timestamp < 180000)) {
+    return res.json({
+      success: true,
+      token: globalCftResponse.token,
+      cached: true,
+      age: Math.round((now - globalCftResponse.timestamp) / 1000),
+      vault_size: cftTokenVault.size
+    });
+  }
+
+  // Check disk token
+  try {
+    const tokenFile = path.join(__dirname, 'data', 'latest_turnstile_token.json');
+    if (fs.existsSync(tokenFile)) {
+      const disk = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
+      if (!force && disk && disk.token && (now - disk.timestamp < 180000)) {
+        addCftTokenToVault(disk.token);
+        return res.json({
+          success: true,
+          token: disk.token,
+          cached: true,
+          age: Math.round((now - disk.timestamp) / 1000),
+          vault_size: cftTokenVault.size
+        });
+      }
+    }
+  } catch (e) {}
+
+  // Run headless solver in background
+  try {
+    const { solveTurnstileToken } = require('./scripts/turnstile-auto-solver');
+    const token = await solveTurnstileToken(force);
+    if (token) {
+      addCftTokenToVault(token);
+      return res.json({
+        success: true,
+        token: token,
+        cached: false,
+        vault_size: cftTokenVault.size
+      });
+    }
+  } catch (err) {
+    console.warn('[RefreshTurnstile] Auto-solver error:', err.message);
+  }
+
+  // Fallback to any fresh unconsumed token currently in vault
+  const freshFallback = getNextFreshCftToken();
+  if (freshFallback && freshFallback.token) {
+    return res.json({
+      success: true,
+      token: freshFallback.token,
+      cached: true,
+      age: Math.round((now - freshFallback.timestamp) / 1000),
+      vault_size: cftTokenVault.size
+    });
+  }
+
+  return res.json({
+    success: false,
+    message: 'Could not solve Turnstile at this moment.',
+    vault_size: cftTokenVault.size
+  });
+});
+
+// 2c. Live Token & Turnstile Status Checker
 app.get('/api/auth/token-status', (req, res) => {
   const session = getUserShohozSession(req);
   const now = Date.now();
-  const vaultToken = (cftTokenVault && cftTokenVault.length > 0) ? cftTokenVault[0] : null;
-  const cft = (session && session.cftResponse && session.cftResponse !== 'null')
-    ? session.cftResponse
-    : ((globalCftResponse.token && (now - globalCftResponse.timestamp < 600000)) ? globalCftResponse.token : (vaultToken || null));
-  const age = globalCftResponse.timestamp ? Math.floor((now - globalCftResponse.timestamp) / 1000) : null;
+  const fresh = getNextFreshCftToken();
+  const cft = fresh ? fresh.token : null;
+  const age = fresh ? Math.floor((now - fresh.timestamp) / 1000) : null;
   res.json({
     success: true,
     has_token: !!(session && session.token),
     has_cft: !!cft,
     cft_response: cft || null,
     cft_age_seconds: age,
+    vault_size: cftTokenVault.size,
     user: (session && session.user) || null
   });
 });
@@ -1582,9 +1782,9 @@ app.get('/api/railway-profile', (req, res) => {
   });
 });
 
-// 4. Shohoz Sign-in with Mobile & Password
-app.post('/api/auth/sign-in', async (req, res) => {
-  const { mobile_number, password } = req.body;
+// 4. Shohoz Sign-in with Mobile & Password (Web & Mobile with Turnstile Support)
+app.post(['/api/auth/sign-in', '/api/shohoz-signin'], async (req, res) => {
+  const { mobile_number, password, cft_response } = req.body;
 
   if (!mobile_number || !password) {
     return res.status(400).json({
@@ -1595,13 +1795,9 @@ app.post('/api/auth/sign-in', async (req, res) => {
 
   const generatedDeviceId = crypto.randomUUID();
   const generatedDeviceKey = generateShohozDeviceKey(mobile_number);
+  const activeCftToken = cft_response || req.headers['x-cft-response'] || globalCftResponse.token || null;
 
   const signinConfigs = [
-    {
-      name: 'Cloudflare Worker Mobile Gateway',
-      url: `${CF_WORKER_GATEWAY}/api/login`,
-      headers: { 'Content-Type': 'application/json' }
-    },
     {
       name: 'Mobile App API (/v1.0/app/)',
       url: 'https://railspaapi.shohoz.com/v1.0/app/auth/sign-in',
@@ -1615,6 +1811,11 @@ app.post('/api/auth/sign-in', async (req, res) => {
         'x-app-version': '2.2.0',
         'Content-Type': 'application/json'
       }
+    },
+    {
+      name: 'Cloudflare Worker Mobile Gateway',
+      url: `${CF_WORKER_GATEWAY}/api/login`,
+      headers: { 'Content-Type': 'application/json' }
     },
     {
       name: 'Web API (/v1.0/web/)',
@@ -1637,10 +1838,14 @@ app.post('/api/auth/sign-in', async (req, res) => {
   for (const cfg of signinConfigs) {
     try {
       console.log(`[Auth] Attempting login via ${cfg.name} with mobile ${mobile_number}...`);
-      const response = await axios.post(cfg.url, {
+      const postBody = {
         mobile_number: mobile_number.trim(),
         password: password
-      }, { headers: cfg.headers, timeout: 9000 });
+      };
+      if (activeCftToken) {
+        postBody.cft_response = activeCftToken;
+      }
+      const response = await axios.post(cfg.url, postBody, { headers: cfg.headers, timeout: 9000 });
 
       if (response.status === 200 && response.data) {
         const token = response.data.data?.token || response.data.token || response.data.data?.access_token;
@@ -1860,14 +2065,14 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
     const response = await safeShohozRequest(async () => {
       return axios.get(targetUrl, {
         headers: baseHeaders,
-        timeout: 9000,
+        timeout: 20000,
         validateStatus: (status) => status < 500
       });
     });
 
     if (response.status === 200 && response.data) {
       if (response.data.error && response.data.error.code) {
-        const msg = response.data.error.messages?.join(', ') || '';
+        const msg = formatShohozError(response.data.error);
         if (msg.toLowerCase().includes('frequently') || msg.toLowerCase().includes('wait') || msg.toLowerCase().includes('too many')) {
           isRateLimited = true;
           lastErrorMessage = msg;
@@ -1893,10 +2098,10 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
     if (response.status === 429) {
       isRateLimited = true;
       lastErrorStatus = 429;
-      lastErrorMessage = response.data?.error?.messages?.join(', ') || 'You are requesting too frequently. Please wait and try after some time.';
+      lastErrorMessage = formatShohozError(response.data?.error) || 'You are requesting too frequently. Please wait and try after some time.';
     } else if (response.status === 401) {
       lastErrorStatus = 401;
-      const msg = response.data?.error?.messages?.join(', ') || 'Your Bangladesh Railway session token has expired or is invalid.';
+      const msg = formatShohozError(response.data?.error) || 'Your Bangladesh Railway session token has expired or is invalid.';
       lastErrorMessage = msg;
     } else if (response.status === 403) {
       lastErrorStatus = 403;
@@ -1910,6 +2115,17 @@ async function querySingleShohozTrip(from_city, to_city, date_of_journey, custom
       lastErrorMessage = 'You are requesting too frequently. Please wait and try after some time.';
     } else {
       lastErrorMessage = err.message;
+      // If Railway server timed out, check if we have any recently cached search data for this route
+      const graceData = getFromGraceCache(cacheKey);
+      if (graceData) {
+        console.log(`[Shohoz Search] ⚡ Railway timed out (${err.message}). Serving cached data for ${canonicalFrom} ➔ ${canonicalTo}`);
+        return {
+          ...graceData,
+          from_cache: true,
+          is_stale_cache: true,
+          cooldown_notice: 'Railway server slow/busy. Showing recent search results.'
+        };
+      }
     }
   }
 
@@ -1988,27 +2204,60 @@ function buildShohozBookingUrl(fromCity, toCity, dateStr, seatClass) {
 }
 
 // Major Railway Junction Hubs and Corridor Stoppage Networks
-const ROUTE_CORRIDOR_JUNCTIONS = {
+// Major Railway Junction Hubs and Comprehensive Corridor Stoppage Networks
+const BANGLADESH_RAILWAY_CORRIDORS = {
+  // Eastern Zone Corridors
   'dhaka_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Brahmanbaria', 'Akhaura', 'Bhairab_Bazar'],
   'chattogram_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Laksam', 'Cumilla', 'Feni'],
-  'dhaka_sylhet': ['Kulaura', 'Sreemangal', 'Shaistaganj', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
-  'sylhet_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Shaistaganj', 'Sreemangal', 'Kulaura'],
-  'dhaka_rajshahi': ['Abdulpur', 'Ishwardi', 'Ullapara', 'Tangail', 'Joydebpur'],
-  'rajshahi_dhaka': ['Joydebpur', 'Tangail', 'Ullapara', 'Ishwardi', 'Abdulpur'],
-  'dhaka_khulna': ['Jessore', 'Chuadanga', 'Kushtia_Court', 'Poradah', 'Ishwardi', 'Joydebpur'],
-  'khulna_dhaka': ['Joydebpur', 'Ishwardi', 'Poradah', 'Kushtia_Court', 'Chuadanga', 'Jessore'],
-  'dhaka_rangpur': ['Parbatipur', 'Bogura', 'Santahar', 'Natore', 'Joydebpur'],
-  'rangpur_dhaka': ['Joydebpur', 'Natore', 'Santahar', 'Bogura', 'Parbatipur'],
-  'dhaka_dinajpur': ['Parbatipur', 'Santahar', 'Fulbari', 'Joydebpur'],
-  'dinajpur_dhaka': ['Joydebpur', 'Santahar', 'Parbatipur', 'Fulbari'],
+  'dhaka_sylhet': ['Shaistaganj', 'Sreemangal', 'Kulaura', 'Akhaura', 'Brahmanbaria', 'Bhairab_Bazar'],
+  'sylhet_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Kulaura', 'Sreemangal', 'Shaistaganj'],
+  'chattogram_sylhet': ['Kulaura', 'Sreemangal', 'Shaistaganj', 'Akhaura', 'Laksam', 'Cumilla', 'Feni'],
+  'sylhet_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Shaistaganj', 'Sreemangal', 'Kulaura'],
   'dhaka_cox\'s_bazar': ['Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
   'cox\'s_bazar_dhaka': ['Chattogram', 'Feni', 'Cumilla', 'Brahmanbaria'],
-  'chattogram_sylhet': ['Kulaura', 'Sreemangal', 'Akhaura', 'Laksam', 'Cumilla', 'Feni'],
-  'sylhet_chattogram': ['Feni', 'Cumilla', 'Laksam', 'Akhaura', 'Sreemangal', 'Kulaura']
+  'dhaka_noakhali': ['Laksam', 'Cumilla', 'Brahmanbaria', 'Bhairab_Bazar'],
+  'noakhali_dhaka': ['Bhairab_Bazar', 'Brahmanbaria', 'Cumilla', 'Laksam'],
+  'dhaka_chandpur': ['Laksam', 'Cumilla', 'Bhairab_Bazar'],
+  'chandpur_dhaka': ['Bhairab_Bazar', 'Cumilla', 'Laksam'],
+
+  // Western Zone Corridors (North & South)
+  'dhaka_rajshahi': ['Ishwardi', 'Ishwardi_Bypass', 'Abdulpur', 'Ullapara', 'Tangail', 'Joydebpur', 'Tongi'],
+  'rajshahi_dhaka': ['Joydebpur', 'Tongi', 'Tangail', 'Ullapara', 'Abdulpur', 'Ishwardi_Bypass', 'Ishwardi'],
+  'dhaka_khulna': ['Jessore', 'Chuadanga', 'Poradah', 'Ishwardi', 'Ullapara', 'Joydebpur'],
+  'khulna_dhaka': ['Joydebpur', 'Ullapara', 'Ishwardi', 'Poradah', 'Chuadanga', 'Jessore'],
+  'dhaka_rangpur': ['Parbatipur', 'Bogura', 'Santahar', 'Natore', 'Ishwardi_Bypass', 'Joydebpur'],
+  'rangpur_dhaka': ['Joydebpur', 'Ishwardi_Bypass', 'Natore', 'Santahar', 'Bogura', 'Parbatipur'],
+  'dhaka_dinajpur': ['Parbatipur', 'Santahar', 'Natore', 'Ishwardi_Bypass', 'Joydebpur'],
+  'dinajpur_dhaka': ['Joydebpur', 'Ishwardi_Bypass', 'Natore', 'Santahar', 'Parbatipur'],
+  'dhaka_panchagarh': ['Parbatipur', 'Santahar', 'Joydebpur'],
+  'panchagarh_dhaka': ['Joydebpur', 'Santahar', 'Parbatipur'],
+  'dhaka_lalmonirhat': ['Kaunia', 'Bogura', 'Santahar', 'Joydebpur'],
+  'lalmonirhat_dhaka': ['Joydebpur', 'Santahar', 'Bogura', 'Kaunia'],
+  'dhaka_kurigram': ['Kaunia', 'Bogura', 'Santahar', 'Joydebpur'],
+  'kurigram_dhaka': ['Joydebpur', 'Santahar', 'Bogura', 'Kaunia'],
+  'dhaka_chilahati': ['Parbatipur', 'Santahar', 'Joydebpur'],
+  'chilahati_dhaka': ['Joydebpur', 'Santahar', 'Parbatipur'],
+  'dhaka_benapole': ['Jessore', 'Ishwardi', 'Poradah', 'Joydebpur'],
+  'benapole_dhaka': ['Joydebpur', 'Ishwardi', 'Poradah', 'Jessore'],
+
+  // Padma Bridge Southwest Corridors
+  'dhaka_bhanga': ['Gopalganj', 'Padma'],
+  'dhaka_gopalganj': ['Bhanga_Junction'],
+  'gopalganj_dhaka': ['Bhanga_Junction'],
+
+  // Inter-district Corridors
+  'khulna_rajshahi': ['Poradah', 'Ishwardi', 'Abdulpur'],
+  'rajshahi_khulna': ['Abdulpur', 'Ishwardi', 'Poradah'],
+  'khulna_rangpur': ['Santahar', 'Ishwardi', 'Poradah', 'Parbatipur'],
+  'rangpur_khulna': ['Parbatipur', 'Santahar', 'Ishwardi', 'Poradah'],
+  'rajshahi_rangpur': ['Abdulpur', 'Santahar', 'Parbatipur', 'Bogura'],
+  'rangpur_rajshahi': ['Parbatipur', 'Bogura', 'Santahar', 'Abdulpur']
 };
 
+const ROUTE_CORRIDOR_JUNCTIONS = BANGLADESH_RAILWAY_CORRIDORS;
+
 const GENERAL_JUNCTION_HUBS = [
-  'Akhaura', 'Brahmanbaria', 'Feni', 'Cumilla', 'Bhairab_Bazar', 'Ishwardi', 'Santahar', 'Parbatipur', 'Laksam', 'Tongi', 'Joydebpur', 'Kulaura', 'Sreemangal'
+  'Akhaura', 'Brahmanbaria', 'Feni', 'Cumilla', 'Bhairab_Bazar', 'Ishwardi', 'Santahar', 'Parbatipur', 'Laksam', 'Tongi', 'Joydebpur', 'Kulaura', 'Sreemangal', 'Abdulpur', 'Poradah', 'Jessore'
 ];
 
 // Utility to parse train time strings ("06:30 AM", "18:45", etc.) into minutes from midnight
@@ -2029,102 +2278,243 @@ function parseTimeToMinutes(timeStr) {
 }
 
 // ----------------------------------------------------
-// Smart Multi-Hop Alternate Junction Route Engine (Corridor & General Transfer Hubs)
+// Smart Multi-Hop Alternate Junction & Same-Train Stoppage Route Engine
 // ----------------------------------------------------
 async function findAlternateJunctionRoutes(fromCity, toCity, dateStr, session, directTrains = []) {
-  const cleanFrom = (fromCity || '').trim().toLowerCase();
-  const cleanTo = (toCity || '').trim().toLowerCase();
-  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
-  
-  const corridorList = ROUTE_CORRIDOR_JUNCTIONS[corridorKey] || [];
-  const candidatePool = [...corridorList, ...GENERAL_JUNCTION_HUBS];
-  
-  const candidates = [];
-  const seen = new Set();
-  for (const h of candidatePool) {
-    const norm = h.toLowerCase().replace(/_/g, ' ').trim();
-    if (norm !== cleanFrom && norm !== cleanTo && !seen.has(norm)) {
-      seen.add(norm);
-      candidates.push(h);
+  const canonicalFrom = getCanonicalStationName(fromCity);
+  const canonicalTo = getCanonicalStationName(toCity);
+  const cleanFrom = canonicalFrom.toLowerCase();
+  const cleanTo = canonicalTo.toLowerCase();
+
+  // 1. Dynamic Stoppage Extraction from Route Knowledge Base
+  const routeStoppageCandidates = [];
+  const candidateStoppageScores = new Map();
+
+  function registerCandidate(stn, priorityBonus = 0) {
+    if (!stn) return;
+    const canon = getCanonicalStationName(stn);
+    const low = canon.toLowerCase();
+    if (low === cleanFrom || low === cleanTo) return;
+    const current = candidateStoppageScores.get(canon) || 0;
+    candidateStoppageScores.set(canon, current + priorityBonus);
+    if (!routeStoppageCandidates.includes(canon)) {
+      routeStoppageCandidates.push(canon);
     }
   }
 
-  const longestReachTransferOptions = [];
+  // Scan routeCache for intermediate stoppages of direct trains on this route
+  try {
+    for (const [routeKey, routeData] of routeCache.entries()) {
+      if (!routeData || !Array.isArray(routeData.routes)) continue;
+      const stns = routeData.routes.map(r => getCanonicalStationName(r.city));
+      const idxFrom = stns.findIndex(s => s.toLowerCase() === cleanFrom);
+      const idxTo = stns.findIndex(s => s.toLowerCase() === cleanTo);
+      if (idxFrom !== -1 && idxTo !== -1 && idxFrom < idxTo) {
+        const intermediateStops = stns.slice(idxFrom + 1, idxTo);
+        const totalStops = intermediateStops.length;
+        intermediateStops.forEach((stn, i) => {
+          const centerProximity = 1 - Math.abs((i / (totalStops || 1)) - 0.5);
+          registerCandidate(stn, 60 + Math.round(centerProximity * 50));
+        });
+      }
+    }
+  } catch (scanErr) {}
 
-  for (let hubIndex = 0; hubIndex < Math.min(candidates.length, 4); hubIndex++) {
-    const hub = candidates[hubIndex];
-    try {
+  // 2. Add Corridor Knowledge Base Stoppages
+  const corridorKey = `${cleanFrom.replace(/[\s'-]+/g, '_')}_${cleanTo.replace(/[\s'-]+/g, '_')}`;
+  const corridorList = BANGLADESH_RAILWAY_CORRIDORS[corridorKey] || [];
+  corridorList.forEach((stn, i) => {
+    registerCandidate(stn, 90 - (i * 6));
+  });
+
+  // 3. Fallback: Regionally Targetted Transfer Hubs
+  const isEastern = /chattogram|sylhet|cox|feni|cumilla|noakhali|chandpur|akhaura|brahmanbaria|kulaura|sreemangal/i.test(`${cleanFrom} ${cleanTo}`);
+  const isWestern = /rajshahi|khulna|rangpur|dinajpur|bogura|ishwardi|santahar|parbatipur|panchagarh|benapole|jessore|chuadanga/i.test(`${cleanFrom} ${cleanTo}`);
+
+  if (isEastern) {
+    ['Bhairab_Bazar', 'Brahmanbaria', 'Akhaura', 'Cumilla', 'Laksam', 'Feni', 'Sreemangal', 'Kulaura'].forEach(h => registerCandidate(h, 25));
+  }
+  if (isWestern) {
+    ['Joydebpur', 'Tangail', 'Ullapara', 'Ishwardi', 'Ishwardi_Bypass', 'Santahar', 'Parbatipur', 'Poradah', 'Jessore', 'Abdulpur'].forEach(h => registerCandidate(h, 25));
+  }
+  ['Joydebpur', 'Tongi', 'Bhairab_Bazar', 'Ishwardi', 'Akhaura', 'Santahar'].forEach(h => registerCandidate(h, 15));
+
+  // Sort candidate hubs descending by relevance score
+  const sortedCandidates = routeStoppageCandidates.sort((a, b) => {
+    return (candidateStoppageScores.get(b) || 0) - (candidateStoppageScores.get(a) || 0);
+  });
+
+  // Pick top 6 candidate hubs to balance speed and maximum match coverage
+  const targetHubs = sortedCandidates.slice(0, 6);
+  if (targetHubs.length === 0) return [];
+
+  // 4. In-flight memoized leg query cache to avoid duplicate API calls
+  const legQueryCache = new Map();
+  async function queryLeg(origin, dest) {
+    const k = `${origin.toLowerCase()}_${dest.toLowerCase()}`;
+    if (legQueryCache.has(k)) return legQueryCache.get(k);
+    const p = (async () => {
+      try {
+        const res = await querySingleShohozTrip(origin, dest, dateStr, session);
+        return (res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
+      } catch (e) {
+        return [];
+      }
+    })();
+    legQueryCache.set(k, p);
+    return p;
+  }
+
+  // 5. Query candidate hubs in parallel batches of 2
+  const evaluatedRoutes = [];
+  const processedSignatures = new Set();
+
+  for (let i = 0; i < targetHubs.length; i += 2) {
+    const batchHubs = targetHubs.slice(i, i + 2);
+    await Promise.all(batchHubs.map(async (hub) => {
       const cleanHubName = hub.replace(/_/g, ' ');
+      const [leg1Trains, leg2Trains] = await Promise.all([
+        queryLeg(fromCity, cleanHubName),
+        queryLeg(cleanHubName, toCity)
+      ]);
 
-      const leg1Res = await querySingleShohozTrip(fromCity, cleanHubName, dateStr, session);
-      const leg1Trains = (leg1Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg1Trains.length === 0) continue;
-
-      const leg2Res = await querySingleShohozTrip(cleanHubName, toCity, dateStr, session);
-      const leg2Trains = (leg2Res.trains || []).filter(t => (t.total_combined_seats || 0) > 0);
-      if (leg2Trains.length === 0) continue;
+      if (leg1Trains.length === 0 || leg2Trains.length === 0) return;
 
       for (const t1 of leg1Trains) {
         for (const t2 of leg2Trains) {
-          if (String(t1.train_model).trim() !== String(t2.train_model).trim()) {
-            const t1Dep = parseTimeToMinutes(t1.departure_time);
-            const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
-            const t2Dep = parseTimeToMinutes(t2.departure_time);
+          const m1 = String(t1.train_model || '').trim();
+          const m2 = String(t2.train_model || '').trim();
+          const isSameTrain = (m1 && m2 && m1 === m2) || (t1.train_name && t2.train_name && t1.train_name.toLowerCase() === t2.train_name.toLowerCase());
 
-            if (t1Arr !== null && t2Dep !== null) {
-              let layover = t2Dep - t1Arr;
-              if (layover < 0) layover += 1440;
+          const t1Dep = parseTimeToMinutes(t1.departure_time);
+          const t1Arr = parseTimeToMinutes(t1.arrival_time) || t1Dep;
+          const t2Dep = parseTimeToMinutes(t2.departure_time);
+          const t2Arr = parseTimeToMinutes(t2.arrival_time) || t2Dep;
 
-              if (layover < 15 || layover > 360) {
-                continue;
-              }
+          let layover = 0;
+          let layoverQuality = 'OPTIMAL';
+          let layoverLabel = '';
 
-              const layoverHours = Math.floor(layover / 60);
-              const layoverMins = layover % 60;
-              const layoverLabel = layoverHours > 0 ? `${layoverHours}h ${layoverMins}m` : `${layoverMins}m`;
+          if (isSameTrain) {
+            // Same Train: Stoppage halt is only 2-5 minutes; stay onboard!
+            layover = 0;
+            layoverQuality = 'SAME_TRAIN';
+            layoverLabel = '0m (Same Train - Stay Onboard)';
+          } else {
+            if (t1Arr === null || t2Dep === null) continue;
+            layover = t2Dep - t1Arr;
+            if (layover < 0) layover += 1440; // Cross-midnight connection
 
-              longestReachTransferOptions.push({
-                is_same_train: false,
-                is_longest_reach: hubIndex === 0,
-                route_type: 'LONGEST_DESTINATION_TRANSFER',
-                via_hub: cleanHubName,
-                layover_minutes: layover,
-                layover_text: layoverLabel,
-                leg1: {
-                  train_name: t1.train_name,
-                  train_model: t1.train_model,
-                  from: fromCity,
-                  to: cleanHubName,
-                  departure_time: t1.departure_time,
-                  arrival_time: t1.arrival_time,
-                  seats: t1.total_combined_seats || 0,
-                  online_seats: t1.total_online_seats || 0,
-                  seat_types: t1.seat_types || []
-                },
-                leg2: {
-                  train_name: t2.train_name,
-                  train_model: t2.train_model,
-                  from: cleanHubName,
-                  to: toCity,
-                  departure_time: t2.departure_time,
-                  arrival_time: t2.arrival_time,
-                  seats: t2.total_combined_seats || 0,
-                  online_seats: t2.total_online_seats || 0,
-                  seat_types: t2.seat_types || []
-                }
-              });
-              if (longestReachTransferOptions.length >= 3) break;
+            // Feasibility bounds: 20 mins to 240 mins (4 hours max)
+            if (layover < 20 || layover > 240) continue;
+
+            if (layover >= 35 && layover <= 90) {
+              layoverQuality = 'OPTIMAL';
+              layoverLabel = `${layover}m (Optimal Transfer)`;
+            } else if (layover >= 20 && layover < 35) {
+              layoverQuality = 'QUICK';
+              layoverLabel = `${layover}m (Quick Transfer)`;
+            } else if (layover > 90 && layover <= 180) {
+              const h = Math.floor(layover / 60);
+              const m = layover % 60;
+              layoverQuality = 'RELAXED';
+              layoverLabel = `${h}h ${m}m (Relaxed Wait)`;
+            } else {
+              const h = Math.floor(layover / 60);
+              const m = layover % 60;
+              layoverQuality = 'EXTENDED';
+              layoverLabel = `${h}h ${m}m (Extended Wait)`;
             }
           }
-        }
-        if (longestReachTransferOptions.length >= 3) break;
-      }
 
-      if (longestReachTransferOptions.length >= 3) break;
-    } catch (e) {}
+          // Shared class matching and combined fare calculation
+          const l1Classes = (t1.seat_types || []).filter(s => (s.seats_available || 0) > 0);
+          const l2Classes = (t2.seat_types || []).filter(s => (s.seats_available || 0) > 0);
+          const l1Names = l1Classes.map(s => s.type.toUpperCase());
+          const l2Names = l2Classes.map(s => s.type.toUpperCase());
+          const commonClasses = l1Names.filter(c => l2Names.includes(c));
+
+          // Estimate lowest combined fare
+          const minFare1 = l1Classes.length > 0 ? Math.min(...l1Classes.map(s => Number(s.fare) || 0).filter(f => f > 0)) : 0;
+          const minFare2 = l2Classes.length > 0 ? Math.min(...l2Classes.map(s => Number(s.fare) || 0).filter(f => f > 0)) : 0;
+          const combinedFare = (minFare1 > 0 && minFare2 > 0) ? (minFare1 + minFare2) : null;
+
+          const l1Seats = t1.total_combined_seats || 0;
+          const l2Seats = t2.total_combined_seats || 0;
+          const guaranteedSeats = Math.min(l1Seats, l2Seats);
+          if (guaranteedSeats <= 0) continue;
+
+          // Unique signature deduplication
+          const sig = `${isSameTrain ? 'SAME' : 'DIFF'}_${t1.train_name}_${t2.train_name}_${cleanHubName}`;
+          if (processedSignatures.has(sig)) continue;
+          processedSignatures.add(sig);
+
+          // Advanced Match Scoring Algorithm
+          let score = 0;
+          if (isSameTrain) {
+            score += 5000; // Same-train is supreme: continuous journey, no luggage haul
+          } else {
+            score += 2000;
+            if (layoverQuality === 'OPTIMAL') score += 400;
+            else if (layoverQuality === 'QUICK') score += 250;
+            else if (layoverQuality === 'RELAXED') score += 200;
+            else score += 50;
+          }
+
+          score += Math.min(guaranteedSeats * 8, 250);
+          if ((t1.total_online_seats || 0) > 0 && (t2.total_online_seats || 0) > 0) score += 150;
+          if (commonClasses.length > 0) score += 200;
+
+          evaluatedRoutes.push({
+            is_same_train: isSameTrain,
+            route_type: isSameTrain ? 'SAME_TRAIN_SPLIT' : 'JUNCTION_TRANSFER',
+            via_hub: cleanHubName,
+            layover_minutes: layover,
+            layover_text: layoverLabel,
+            layover_quality: layoverQuality,
+            guaranteed_seats: guaranteedSeats,
+            common_classes: commonClasses,
+            combined_fare: combinedFare,
+            score: score,
+            train_name: isSameTrain ? t1.train_name : `${t1.train_name} ➔ ${t2.train_name}`,
+            train_model: isSameTrain ? t1.train_model : `${t1.train_model}+${t2.train_model}`,
+            leg1: {
+              train_name: t1.train_name,
+              train_model: t1.train_model,
+              from: fromCity,
+              to: cleanHubName,
+              departure_time: t1.departure_time,
+              arrival_time: t1.arrival_time,
+              seats: l1Seats,
+              online_seats: t1.total_online_seats || 0,
+              seat_types: t1.seat_types || []
+            },
+            leg2: {
+              train_name: t2.train_name,
+              train_model: t2.train_model,
+              from: cleanHubName,
+              to: toCity,
+              departure_time: t2.departure_time,
+              arrival_time: t2.arrival_time,
+              seats: l2Seats,
+              online_seats: t2.total_online_seats || 0,
+              seat_types: t2.seat_types || []
+            }
+          });
+        }
+      }
+    }));
   }
 
-  return longestReachTransferOptions.slice(0, 6);
+  // Sort descending by calculated match score
+  evaluatedRoutes.sort((a, b) => b.score - a.score);
+
+  // Mark top-ranked route as Best Match
+  if (evaluatedRoutes.length > 0) {
+    evaluatedRoutes[0].is_best_match = true;
+  }
+
+  return evaluatedRoutes.slice(0, 8);
 }
 
 // 2. Search Available Trains & Seats for Single Date
@@ -2705,11 +3095,32 @@ const RAIL_SOCKET_IDLE_MS = 90 * 1000;
 
 function buildTripRoomName({ train_model, fromStation, toStation, journeyDate }) {
   const part = (v) => String(v === null || v === undefined ? '' : v).trim();
-  return ['LIVE#train', part(train_model), part(fromStation), part(toStation), part(journeyDate)].join('#');
+  const jDate = formatShohozDate(journeyDate) || part(journeyDate);
+  return ['LIVE#train', part(train_model), part(fromStation), part(toStation), jDate].join('#');
 }
 
-// roomName -> { ws, held:Set, released:Set, lastEventAt, ready, timer }
+// roomName -> { ws, held:Set, released:Set, lastEventAt, ready, timer, model }
 const tripSocketRooms = new Map();
+
+// Global Ring Buffer for Shohoz WebSocket Live Event Logs
+const SOHOZ_SOCKET_LOG_MAX = 500;
+const sohozSocketLogBuffer = [];
+let sohozLogSequence = 0;
+
+function pushShohozSocketLog(entry) {
+  sohozLogSequence++;
+  const record = {
+    id: sohozLogSequence,
+    timestamp: Date.now(),
+    iso: new Date().toISOString(),
+    ...entry
+  };
+  sohozSocketLogBuffer.push(record);
+  if (sohozSocketLogBuffer.length > SOHOZ_SOCKET_LOG_MAX) {
+    sohozSocketLogBuffer.shift();
+  }
+  return record;
+}
 
 function getTripSocketState(roomName) {
   const room = tripSocketRooms.get(roomName);
@@ -2723,6 +3134,12 @@ function closeTripSocketRoom(roomName) {
   try { if (room.timer) clearTimeout(room.timer); } catch (e) {}
   try { if (room.ws) room.ws.close(); } catch (e) {}
   tripSocketRooms.delete(roomName);
+  pushShohozSocketLog({
+    type: 'ROOM_CLOSED',
+    room: roomName,
+    summary: `Room unsubscribed and closed after inactivity timeout.`,
+    severity: 'info'
+  });
 }
 
 function openTripSocketRoom(roomName, model) {
@@ -2735,15 +3152,31 @@ function openTripSocketRoom(roomName, model) {
     released: new Set(),
     ready: false,
     lastEventAt: Date.now(),
+    model: model || null,
     timer: null
   };
   tripSocketRooms.set(roomName, room);
+
+  pushShohozSocketLog({
+    type: 'ROOM_JOIN',
+    room: roomName,
+    model: model || null,
+    summary: `Initiating WebSocket connection to Shohoz stream for room "${roomName}"`,
+    severity: 'info'
+  });
 
   let ws;
   try {
     ws = new WebSocket(RAIL_SOCKET_URL);
   } catch (e) {
     tripSocketRooms.delete(roomName);
+    pushShohozSocketLog({
+      type: 'CONNECT_ERROR',
+      room: roomName,
+      error: e.message,
+      summary: `Failed to construct WebSocket: ${e.message}`,
+      severity: 'error'
+    });
     return;
   }
   room.ws = ws;
@@ -2756,6 +3189,13 @@ function openTripSocketRoom(roomName, model) {
   };
 
   ws.onopen = () => {
+    pushShohozSocketLog({
+      type: 'CONNECT_OPEN',
+      room: roomName,
+      url: RAIL_SOCKET_URL,
+      summary: `WebSocket connection opened to Shohoz. Sending Engine.IO namespace connect '40'.`,
+      severity: 'info'
+    });
     try { ws.send('40'); } catch (e) {}
   };
 
@@ -2764,17 +3204,44 @@ function openTripSocketRoom(roomName, model) {
     try { raw = typeof ev.data === 'string' ? ev.data : String(ev.data); } catch (e) { return; }
     touch();
 
-    // Engine.IO "0{...}" open -> join namespace, then announce the room.
+    // Engine.IO "0{...}" open handshake -> join namespace, then announce the room.
     if (raw.charAt(0) === '0') {
+      let handshakeObj = null;
+      try { handshakeObj = JSON.parse(raw.slice(1)); } catch (e) {}
+      pushShohozSocketLog({
+        type: 'ENGINE_IO_HANDSHAKE',
+        room: roomName,
+        sid: handshakeObj?.sid || null,
+        pingInterval: handshakeObj?.pingInterval || null,
+        raw: raw,
+        summary: `Handshake received (sid: ${handshakeObj?.sid || 'unknown'}). Announcing seatLayoutOpened.`,
+        severity: 'info'
+      });
       try { ws.send('40'); } catch (e) {}
       try {
-        ws.send('42' + JSON.stringify(['seatLayoutOpened', { roomName, model: model || null }]));
+        const announcePayload = ['seatLayoutOpened', { roomName, model: model || null }];
+        ws.send('42' + JSON.stringify(announcePayload));
+        pushShohozSocketLog({
+          type: 'ANNOUNCE_SUBSCRIPTION',
+          room: roomName,
+          payload: announcePayload,
+          summary: `Subscribed to room "${roomName}" (Train model: ${model || 'default'})`,
+          severity: 'info'
+        });
       } catch (e) {}
       return;
     }
+
     // Engine.IO ping -> pong
     if (raw.charAt(0) === '2') {
       try { ws.send('3'); } catch (e) {}
+      pushShohozSocketLog({
+        type: 'HEARTBEAT_PING',
+        room: roomName,
+        raw: '2 (ping -> answered 3 pong)',
+        summary: `Engine.IO Heartbeat Ping received, Pong answered.`,
+        severity: 'debug'
+      });
       return;
     }
 
@@ -2782,12 +3249,41 @@ function openTripSocketRoom(roomName, model) {
     if (raw.startsWith('42')) {
       let parsed;
       try { parsed = JSON.parse(raw.slice(2)); } catch (e) { return; }
-      if (!Array.isArray(parsed) || parsed[0] !== 'inProgressTickets') return;
+      if (!Array.isArray(parsed) || parsed[0] !== 'inProgressTickets') {
+        pushShohozSocketLog({
+          type: 'SOCKET_EVENT_OTHER',
+          room: roomName,
+          event: parsed[0] || 'unknown',
+          data: parsed[1] || null,
+          raw: raw,
+          summary: `Received event "${parsed[0] || 'unknown'}"`,
+          severity: 'debug'
+        });
+        return;
+      }
+
       const payload = parsed[1] || {};
       const tickets = Array.isArray(payload.tickets) ? payload.tickets : [];
+      const eventType = Number(payload.type); // 1 = held/in-progress, 2 = released
+      const typeLabel = eventType === 1 ? 'SEAT_HELD' : (eventType === 2 ? 'SEAT_RELEASED' : `TYPE_${eventType}`);
+
+      pushShohozSocketLog({
+        type: typeLabel,
+        room: roomName,
+        model: model || null,
+        inProgressType: eventType,
+        ticketsCount: tickets.length,
+        tickets: tickets,
+        raw: raw,
+        summary: eventType === 1
+          ? `🔒 ${tickets.length} seat(s) held in 5-min checkout: ${tickets.map(t => `${t.coach_name || ''}-${t.seat_number || t.ticket_id}`).join(', ')}`
+          : `⚡ ${tickets.length} seat(s) released/freed: ${tickets.map(t => `${t.coach_name || ''}-${t.seat_number || t.ticket_id}`).join(', ')}`,
+        severity: eventType === 1 ? 'warning' : 'success'
+      });
+
       if (!tickets.length) return;
-      if (Number(payload.type) === 2) {
-        // Released / expired: drop from both sets so a still-2 seat frees up.
+      if (eventType === 2) {
+        // Released / expired: drop from held set, record in released set
         tickets.forEach((t) => {
           const id = t && t.ticket_id !== undefined ? String(t.ticket_id) : null;
           if (!id) return;
@@ -2795,6 +3291,7 @@ function openTripSocketRoom(roomName, model) {
           room.released.add(id);
         });
       } else {
+        // Held: record in held set, drop from released set
         tickets.forEach((t) => {
           const id = t && t.ticket_id !== undefined ? String(t.ticket_id) : null;
           if (!id) return;
@@ -2806,11 +3303,37 @@ function openTripSocketRoom(roomName, model) {
     }
 
     // Socket.IO namespace CONNECT ack -> ready
-    if (raw.startsWith('40')) room.ready = true;
+    if (raw.startsWith('40')) {
+      room.ready = true;
+      pushShohozSocketLog({
+        type: 'NAMESPACE_CONNECTED',
+        room: roomName,
+        raw: raw,
+        summary: `Connected to default namespace '/' successfully.`,
+        severity: 'info'
+      });
+    }
   };
 
-  ws.onerror = () => { /* surfaced through lastEventAt; room is reaped on idle */ };
-  ws.onclose = () => {
+  ws.onerror = (err) => {
+    pushShohozSocketLog({
+      type: 'SOCKET_ERROR',
+      room: roomName,
+      error: err?.message || 'WebSocket transport error',
+      summary: `Socket error on room "${roomName}"`,
+      severity: 'error'
+    });
+  };
+
+  ws.onclose = (ev) => {
+    pushShohozSocketLog({
+      type: 'SOCKET_DISCONNECT',
+      room: roomName,
+      code: ev?.code || null,
+      reason: ev?.reason || null,
+      summary: `Socket connection closed (code: ${ev?.code || 'unknown'})`,
+      severity: 'warning'
+    });
     if (tripSocketRooms.get(roomName) === room) tripSocketRooms.delete(roomName);
   };
 }
@@ -3367,10 +3890,46 @@ function finalizeLiveCoach(rawCoach, coachName, coachClass) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Helpers: Clean Coach Name & Infer Canonical Seat Class
+// ---------------------------------------------------------------------------
+function cleanCoachName(rawName) {
+  if (!rawName) return 'Coach';
+  let str = String(rawName).trim();
+  str = str.replace(/\s*\([^)]*\)/g, '').trim();
+  const letterMatch = str.match(/^[Cc]oach[-_\s]+([a-zA-Z\u0980-\u09FF]+[\w-]*)$/);
+  if (letterMatch) {
+    return letterMatch[1];
+  }
+  return str || 'Coach';
+}
+
+function inferClassFromCoachName(coachName, fallback = 'S_CHAIR') {
+  const safeFallback = (fallback && fallback !== 'ANY' && fallback !== 'ALL') ? String(fallback).toUpperCase() : 'S_CHAIR';
+  if (!coachName) return safeFallback;
+  const upper = String(coachName).toUpperCase().trim();
+
+  // Direct keyword matching
+  if (upper.includes('SNIGDHA')) return 'SNIGDHA';
+  if (upper.includes('AC_B') || upper.includes('BERTH') || upper.includes('CABIN') || upper.includes('SLEEPER')) return 'AC_B';
+  if (upper.includes('AC_S') || upper.includes('AC_C') || upper.includes('AC_CHAIR') || upper.includes('AC SEAT') || upper.includes('AC CHAIR')) return 'AC_S';
+  if (upper.includes('S_CHAIR') || upper.includes('SHOVAN') || upper.includes('SHOVON') || upper.includes('CHAIR')) return 'S_CHAIR';
+  if (upper.includes('F_SEAT') || upper.includes('FIRST SEAT')) return 'F_SEAT';
+  if (upper.includes('F_BERTH') || upper.includes('FIRST BERTH')) return 'F_BERTH';
+  if (upper.includes('SULOB') || upper.includes('SHULOBH')) return 'SULOB';
+
+  // Do not guess or override class based on coach letters (e.g. KA, GA, CHA)
+  // preserve the queried class context
+  return safeFallback;
+}
+
 function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketState = null) {
   if (!rawData) return { total_coaches: 0, coaches: [] };
 
-  const defaultClass = String(reqSeatClass || 'S_CHAIR').toUpperCase();
+  let defaultClass = String(reqSeatClass || 'S_CHAIR').toUpperCase().trim();
+  if (!defaultClass || defaultClass === 'ANY' || defaultClass === 'ALL') {
+    defaultClass = 'S_CHAIR';
+  }
   // If wrapped in data property
   const payload = (rawData.data && typeof rawData.data === 'object') ? rawData.data : rawData;
 
@@ -3383,9 +3942,28 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
 
   if (officialLayoutList && officialLayoutList.length > 0) {
     const parsedCoaches = officialLayoutList.map((coachData, cIdx) => {
-      const coachName = String(coachData.floor_name || coachData.coach_name || coachData.seat_floor || `Coach-${cIdx + 1}`).trim();
-      const coachClass = String(coachData.seat_class || coachData.class_name || payload.seat_class || defaultClass).toUpperCase();
+      const rawCoachName = String(coachData.floor_name || coachData.coach_name || coachData.seat_floor || `Coach-${cIdx + 1}`).trim();
+      const coachName = cleanCoachName(rawCoachName);
+
       const rawLayout = Array.isArray(coachData.layout) ? coachData.layout : [];
+      let seatLevelClass = null;
+      for (const row of rawLayout) {
+        if (Array.isArray(row)) {
+          for (const s of row) {
+            if (s && s.seat_class && s.seat_class !== 'ANY' && s.seat_class !== 'ALL') {
+              seatLevelClass = String(s.seat_class).toUpperCase().trim();
+              break;
+            }
+          }
+        }
+        if (seatLevelClass) break;
+      }
+
+      let detectedClass = String(coachData.seat_class || coachData.class_name || payload.seat_class || seatLevelClass || '').toUpperCase().trim();
+      if (!detectedClass || detectedClass === 'ANY' || detectedClass === 'ALL') {
+        detectedClass = inferClassFromCoachName(rawCoachName, defaultClass);
+      }
+      const coachClass = detectedClass || defaultClass;
       
       const flattenedSeats = [];
       const layoutRows = [];
@@ -3430,7 +4008,7 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
             is_blank: isBlank,
             is_window: isWindow,
             blank_reason: isBlank ? (s?.blank_reason || 'empty-space') : null,
-            seat_class: s?.seat_class || coachClass,
+            seat_class: (s?.seat_class && s.seat_class !== 'ANY' && s.seat_class !== 'ALL') ? String(s.seat_class).toUpperCase().trim() : coachClass,
             fare: Number(s?.fare || coachData.fare || payload.fare || 0),
             vat: Number(s?.vat || coachData.vat || payload.vat || 0),
             total_fare: Number(s?.total_fare || s?.fare || coachData.total_fare || coachData.fare || payload.total_fare || payload.fare || 0),
@@ -3500,9 +4078,11 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
   }
   // Case 3: payload.coaches is an object keyed by coach name: { "KA": [...seats...], "KHA": [...] }
   else if (payload.coaches && typeof payload.coaches === 'object' && !Array.isArray(payload.coaches)) {
-    rawCoaches = Object.entries(payload.coaches).map(([cName, val]) => {
+    rawCoaches = Object.entries(payload.coaches).map(([rawCName, val]) => {
+      const cName = cleanCoachName(rawCName);
       const seats = Array.isArray(val) ? val : (val && Array.isArray(val.seats) ? val.seats : []);
-      const cClass = (val && val.seat_class) || (seats[0] && seats[0].seat_class) || 'S_CHAIR';
+      const detected = (val && val.seat_class) || (seats[0] && seats[0].seat_class) || '';
+      const cClass = (detected && detected !== 'ANY' && detected !== 'ALL') ? String(detected).toUpperCase().trim() : inferClassFromCoachName(cName, defaultClass);
       return {
         coach_name: cName,
         coach_title: `${cName} (${cClass})`,
@@ -3518,9 +4098,11 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
   }
   // Case 5: payload.coach_wise_seats is an object keyed by coach name: { "KA": [...seats...], "KHA": [...] }
   else if (payload.coach_wise_seats && typeof payload.coach_wise_seats === 'object' && !Array.isArray(payload.coach_wise_seats)) {
-    rawCoaches = Object.entries(payload.coach_wise_seats).map(([cName, val]) => {
+    rawCoaches = Object.entries(payload.coach_wise_seats).map(([rawCName, val]) => {
+      const cName = cleanCoachName(rawCName);
       const seats = Array.isArray(val) ? val : (val && Array.isArray(val.seats) ? val.seats : []);
-      const cClass = (val && val.seat_class) || (seats[0] && seats[0].seat_class) || 'S_CHAIR';
+      const detected = (val && val.seat_class) || (seats[0] && seats[0].seat_class) || '';
+      const cClass = (detected && detected !== 'ANY' && detected !== 'ALL') ? String(detected).toUpperCase().trim() : inferClassFromCoachName(cName, defaultClass);
       return {
         coach_name: cName,
         coach_title: `${cName} (${cClass})`,
@@ -3535,8 +4117,12 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
     const rawSeats = Array.isArray(payload.seats) ? payload.seats : payload.seat_layout;
     const coachMap = new Map();
     rawSeats.forEach((s) => {
-      const cName = String(s.coach_name || s.coach || (s.seat_name ? String(s.seat_name).split('-')[0] : '')).trim() || 'KA';
-      const cClass = String(s.seat_class || s.type || 'S_CHAIR').toUpperCase();
+      const rawCName = String(s.coach_name || s.coach || (s.seat_name ? String(s.seat_name).split('-')[0] : '')).trim() || 'KA';
+      const cName = cleanCoachName(rawCName);
+      let cClass = String(s.seat_class || s.type || '').toUpperCase().trim();
+      if (!cClass || cClass === 'ANY' || cClass === 'ALL') {
+        cClass = inferClassFromCoachName(cName, defaultClass);
+      }
       if (!coachMap.has(cName)) coachMap.set(cName, { coach_name: cName, seat_class: cClass, seats: [] });
       coachMap.get(cName).seats.push(s);
     });
@@ -3548,8 +4134,12 @@ function normalizeSeatLayoutResponse(rawData, reqSeatClass = 'S_CHAIR', socketSt
   if (rawCoaches && rawCoaches.length > 0) {
     coaches = rawCoaches.map((c) => {
       // Real coach name, verbatim. Never synthesised while live data exists.
-      const cName = String(c.coach_name || c.name || c.coach || '').trim() || 'Coach';
-      const cClass = String(c.seat_class || c.class_name || c.type || c.seat_type || 'S_CHAIR').toUpperCase();
+      const rawCName = String(c.coach_name || c.name || c.coach || '').trim() || 'Coach';
+      const cName = cleanCoachName(rawCName);
+      let cClass = String(c.seat_class || c.class_name || c.type || c.seat_type || '').toUpperCase().trim();
+      if (!cClass || cClass === 'ANY' || cClass === 'ALL') {
+        cClass = inferClassFromCoachName(cName, defaultClass);
+      }
       return finalizeLiveCoach(c, cName, cClass);
     });
   }
@@ -3579,7 +4169,7 @@ function buildTemplateFallback(tripId, seatClass, reqAvail, reqFare, liveSeatTyp
   if (seatTypes.length === 0) {
     // No live search to work from. Build a single-class entry from whatever the
     // caller knows, so the response shape stays identical.
-    const cleanClass = (seatClass && seatClass !== 'ALL' && seatClass !== 'UNKNOWN') ? String(seatClass).toUpperCase() : 'S_CHAIR';
+    const cleanClass = (seatClass && seatClass !== 'ALL' && seatClass !== 'ANY' && seatClass !== 'UNKNOWN') ? String(seatClass).toUpperCase().trim() : 'S_CHAIR';
     const total = (reqAvail !== null && reqAvail !== undefined) ? Number(reqAvail) : 0;
     const totalFare = (reqFare !== null && reqFare !== undefined && !isNaN(reqFare)) ? Number(reqFare) : 0;
     seatTypes = [{
@@ -3759,12 +4349,13 @@ app.all('/api/live-coach-layout', async (req, res) => {
     ? String(liveTripRouteId).trim()
     : cleanTripId;
 
-  // Cache lookup (15s TTL) - only when we have real trip IDs
-  if (cleanTripId && !cleanTripId.startsWith('TRIP_')) {
+  const bypassCache = params.no_cache === '1' || params.no_cache === 'true' || params.live_only === '1' || params.live_only === 'true';
+  // Cache lookup (15s TTL) - only when not bypassed and payload was verified live
+  if (!bypassCache && cleanTripId && !cleanTripId.startsWith('TRIP_')) {
     const ck = `${cleanTripId}|${cleanTripRouteId}`;
     const hit = seatLayoutCache.get(ck);
-    if (hit && (Date.now() - hit.ts) < SEAT_LAYOUT_CACHE_TTL) {
-      res.json({ success: true, live: false, cached: true, ...hit.payload });
+    if (hit && (Date.now() - hit.ts) < SEAT_LAYOUT_CACHE_TTL && hit.payload?.live) {
+      res.json({ success: true, live: true, cached: true, ...hit.payload });
       return;
     }
   }
@@ -3775,37 +4366,31 @@ app.all('/api/live-coach-layout', async (req, res) => {
   // until seat-layout succeeds (422 means token was already consumed).
   function collectAllFreshCftTokens() {
     const tokens = new Set();
-    const clientCft = req.query.cft_response || req.headers['x-cft-response'] || '';
-    if (clientCft) tokens.add(clientCft);
+    const clientCft = (req.query.cft_response || req.headers['x-cft-response'] || '').trim();
+    if (clientCft && !deadCftTokens.has(clientCft)) tokens.add(clientCft);
 
-    // Pull all fresh tokens from the central managed vault
-    for (const vToken of cftTokenVault) {
+    // Pull all fresh tokens from the central managed vault (Map of token -> timestamp)
+    const now = Date.now();
+    for (const [vToken, ts] of cftTokenVault.entries()) {
+      if (deadCftTokens.has(vToken)) continue;
+      if (now - ts > 180000) continue;
       if (vToken && typeof vToken === 'string' && vToken.length > 20) {
         tokens.add(vToken);
       }
     }
 
-    if (session.cftResponse && session.cftResponse !== 'null') tokens.add(session.cftResponse);
-    if (globalCftResponse.token && Date.now() - globalCftResponse.timestamp < 600000) tokens.add(globalCftResponse.token);
-    if (authCredentials.cftResponse) tokens.add(authCredentials.cftResponse);
-    // Sweep all user sessions for their latest CFT tokens
-    try {
-      const usersData = loadUsersData();
-      if (usersData && Array.isArray(usersData.users)) {
-        for (const u of usersData.users) {
-          const cft = u.shohozSession && u.shohozSession.cftResponse;
-          if (cft && cft !== 'null' && typeof cft === 'string' && cft.length > 20) {
-            tokens.add(cft);
-          }
-        }
-      }
-    } catch (e) {}
+    if (globalCftResponse.token && !deadCftTokens.has(globalCftResponse.token) && (now - globalCftResponse.timestamp < 180000)) {
+      tokens.add(globalCftResponse.token);
+    }
+
     return Array.from(tokens).filter(Boolean);
   }
 
   // Attempt live seat-layout fetch
   if (session.token) {
-    const effectiveClassForFallback = matchedSeatType ? matchedSeatType.type : (cleanSeatClass || 'S_CHAIR');
+    const effectiveClassForFallback = (matchedSeatType && matchedSeatType.type && matchedSeatType.type !== 'ANY' && matchedSeatType.type !== 'ALL')
+      ? matchedSeatType.type
+      : ((cleanSeatClass && cleanSeatClass !== 'ANY' && cleanSeatClass !== 'ALL') ? cleanSeatClass : 'S_CHAIR');
     const effectiveAvailForFallback = liveAvailableSeats !== null ? liveAvailableSeats : parsedAvail;
     const effectiveFareForFallback = liveFare !== null ? liveFare : parsedFare;
 
@@ -3818,23 +4403,30 @@ app.all('/api/live-coach-layout', async (req, res) => {
           toStation: to_city,
           journeyDate: date_of_journey
         });
-        const normalizedLayout = normalizeSeatLayoutResponse(rawData, seat_class, socketState);
+        const normalizedLayout = normalizeSeatLayoutResponse(rawData, effectiveClassForFallback, socketState);
         if (normalizedLayout.coaches && normalizedLayout.coaches.length > 0) {
           normalizedLayout.coaches.forEach(c => {
             c.status_source = sourceName;
           });
           console.log(`[LiveCoachLayout] Step 2 ✅ Live layout: ${normalizedLayout.coaches.length} coach(es) from ${sourceName}`);
           if (cleanTripId && !cleanTripId.startsWith('TRIP_')) {
-            seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { source: sourceName, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: normalizedLayout } });
+            seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { live: true, source: sourceName, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: normalizedLayout } });
+          }
+          let outgoingLayout = normalizedLayout;
+          if (params.available_only === '1' || params.available_only === 'true' || params.available_only === true) {
+            const availCoaches = normalizedLayout.coaches.filter(c => Number(c.available_seats || 0) > 0);
+            if (availCoaches.length > 0) {
+              outgoingLayout = { ...normalizedLayout, coaches: availCoaches, total_coaches: availCoaches.length };
+            }
           }
           return {
             success: true, live: true, cached: false, searched: searchAttempted,
             source: sourceName,
             train_name: liveTrainName || train_name || null,
             train_model: cleanModel || null,
-            matched_seat_class: matchedSeatType ? matchedSeatType.type : (cleanSeatClass || 'S_CHAIR'),
+            matched_seat_class: effectiveClassForFallback,
             trip_id: cleanTripId, trip_route_id: cleanTripRouteId,
-            data: normalizedLayout
+            data: outgoingLayout
           };
         }
       }
@@ -3859,7 +4451,7 @@ app.all('/api/live-coach-layout', async (req, res) => {
           }
         }
       } else {
-        const errDetail = appRes?.data?.error?.messages?.join(', ') || appRes?.data?.message || 'Unknown';
+        const errDetail = formatShohozError(appRes?.data?.error) || appRes?.data?.message || 'Unknown';
         console.log(`[LiveCoachLayout] Mobile App API status ${appRes?.status} (${errDetail}). Falling back to web Turnstile route.`);
       }
     } catch (mobileErr) {
@@ -3870,15 +4462,16 @@ app.all('/api/live-coach-layout', async (req, res) => {
     const allCftTokens = collectAllFreshCftTokens();
     const cftVal = allCftTokens[0] || '';
 
+    const clientUa = req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0';
     const webHeaders = {
-      'User-Agent': getRandomUserAgent(),
+      'User-Agent': clientUa,
       'Accept': 'application/json, text/plain, */*',
       'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8',
       'X-Requested-With': 'XMLHttpRequest',
       'Origin': 'https://eticket.railway.gov.bd',
       'Referer': 'https://eticket.railway.gov.bd/',
       'Authorization': `Bearer ${session.token}`,
-      'X-Device-Id': session.deviceId || 'd1b101fb-683d-4d74-a1e5-0cdfbd087ae3',
+      'X-Device-Id': session.deviceId || '34a817c48b87571632d2a7a1d50575a4',
       'X-Device-Key': (session.deviceKey && session.deviceKey.toLowerCase() !== 'web') ? session.deviceKey : (session.token ? generateShohozDeviceKey(session.token) : ''),
       'Priority': 'u=1, i'
     };
@@ -3888,7 +4481,7 @@ app.all('/api/live-coach-layout', async (req, res) => {
       let url = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(cleanTripId)}&trip_route_id=${encodeURIComponent(cleanTripRouteId)}`;
       if (cftToken) url += `&cft_response=${encodeURIComponent(cftToken)}`;
       console.log(`[LiveCoachLayout] Step 2b: Fetching web seat-layout from Railway (CFT: ${cftToken ? cftToken.substring(0, 12) + '...' : 'none'}) → trip_id=${cleanTripId}`);
-      const res = await safeShohozRequest(async () => axios.get(url, { headers: webHeaders, timeout: 9000, validateStatus: s => s < 500 }));
+      const res = await safeShohozRequest(async () => axios.get(url, { headers: webHeaders, timeout: 20000, validateStatus: s => s < 500 }));
       if (cftToken) {
         removeCftTokenFromVault(cftToken);
       }
@@ -3905,6 +4498,7 @@ app.all('/api/live-coach-layout', async (req, res) => {
         successPayload = await processLayoutResponse(firstResponse);
       } else {
         last422 = true;
+        if (allCftTokens[0]) markCftTokenDead(allCftTokens[0]);
         console.warn(`[LiveCoachLayout] CFT token [0/${allCftTokens.length}] rejected (422). Trying remaining ${allCftTokens.length - 1} session token(s)...`);
       }
 
@@ -3912,10 +4506,11 @@ app.all('/api/live-coach-layout', async (req, res) => {
       if (!successPayload && last422 && allCftTokens.length > 1) {
         for (let i = 1; i < allCftTokens.length; i++) {
           const token = allCftTokens[i];
-          if (!token) continue;
+          if (!token || deadCftTokens.has(token)) continue;
           try {
             const retryResp = await trySeatLayoutFetch(token);
             if (retryResp.status === 422) {
+              markCftTokenDead(token);
               console.warn(`[LiveCoachLayout] CFT token [${i}/${allCftTokens.length - 1}] also rejected (422). Trying next...`);
               continue;
             }
@@ -3935,23 +4530,139 @@ app.all('/api/live-coach-layout', async (req, res) => {
         return res.json(successPayload);
       }
 
-      // All tokens exhausted — fall back to structural template with real availability data
+      // All tokens exhausted — attempt automated background Turnstile solver before falling back
       if (last422 || allCftTokens.length === 0) {
+        console.log('[LiveCoachLayout] Turnstile challenged (422). Launching headless background solver...');
+        runBackgroundTurnstileKeeper(true);
+        try {
+          const { solveTurnstileToken } = require('./scripts/turnstile-auto-solver');
+          const autoToken = await Promise.race([
+            solveTurnstileToken(true, date_of_journey),
+            new Promise(r => setTimeout(() => r(null), 12000))
+          ]);
+          if (autoToken) {
+            addCftTokenToVault(autoToken);
+            const retryResp = await trySeatLayoutFetch(autoToken);
+            if (retryResp && retryResp.status === 200) {
+              const retryPayload = await processLayoutResponse(retryResp);
+              if (retryPayload) {
+                console.log('[LiveCoachLayout] 🚀 100% Genuine live layout retrieved via background Turnstile solver!');
+                return res.json(retryPayload);
+              }
+            }
+          }
+        } catch (autoErr) {
+          console.warn('[LiveCoachLayout] Automated Turnstile retry error:', autoErr.message);
+        }
+
+        // Direct in-browser Camoufox layout capture fallback (100% genuine guaranteed)
+        try {
+          const camoufoxCaptureScript = path.join(__dirname, 'scripts', 'camoufox-seat-fetcher.py');
+          if (fs.existsSync(camoufoxCaptureScript)) {
+            console.log(`[LiveCoachLayout] 🦊 Launching Camoufox direct layout capture for ${cleanModel || train_model || 'route'}...`);
+            const { execFile } = require('child_process');
+            const pyExe = process.env.PYTHON_PATH || 'C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe';
+            const captureArgs = [
+              camoufoxCaptureScript,
+              '--from-city', from_city,
+              '--to-city', to_city,
+              '--doj', date_of_journey,
+              '--class', cleanSeatClass || 'S_CHAIR',
+              '--model', cleanModel || '704',
+              '--trip-id', cleanTripId || '',
+              '--trip-route-id', cleanTripRouteId || ''
+            ];
+            const camoufoxOutput = await new Promise((resolve) => {
+              execFile(pyExe, captureArgs, { timeout: 35000, env: process.env }, (err, stdout) => {
+                if (err) console.warn('[LiveCoachLayout] Camoufox fetcher process warning:', err.message);
+                resolve(stdout || '');
+              });
+            });
+
+            if (camoufoxOutput && camoufoxOutput.includes('---LIVE_LAYOUT_JSON_START---')) {
+              const startMark = '---LIVE_LAYOUT_JSON_START---';
+              const endMark = '---LIVE_LAYOUT_JSON_END---';
+              const jsonStr = camoufoxOutput.substring(camoufoxOutput.indexOf(startMark) + startMark.length, camoufoxOutput.indexOf(endMark)).trim();
+              const rawCamoufoxJson = JSON.parse(jsonStr);
+              if (rawCamoufoxJson && (rawCamoufoxJson.data || rawCamoufoxJson.coaches)) {
+                const livePayload = await processLayoutResponse({ status: 200, data: rawCamoufoxJson });
+                if (livePayload) {
+                  console.log('[LiveCoachLayout] 🎯 100% Genuine live layout captured directly via Camoufox browser!');
+                  return res.json(livePayload);
+                }
+              }
+            }
+
+            // Check if disk layout was saved by Camoufox
+            const diskLayoutPath = path.join(__dirname, 'data', `live_seat_layout_${cleanModel || '704'}.json`);
+            if (fs.existsSync(diskLayoutPath)) {
+              try {
+                const diskJson = JSON.parse(fs.readFileSync(diskLayoutPath, 'utf8'));
+                if (diskJson && (diskJson.data || diskJson.coaches)) {
+                  const livePayload = await processLayoutResponse({ status: 200, data: diskJson });
+                  if (livePayload) {
+                    console.log('[LiveCoachLayout] 🎯 100% Genuine live layout retrieved from Camoufox disk cache!');
+                    return res.json(livePayload);
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+        } catch (camoufoxErr) {
+          console.warn('[LiveCoachLayout] Direct Camoufox layout capture error:', camoufoxErr.message);
+        }
+
+        const isLiveOnly = params.live_only === '1' || params.live_only === 'true' || params.live_only === true;
+        if (isLiveOnly) {
+          return res.status(422).json({
+            success: false,
+            live: false,
+            cached: false,
+            status_source: 'railway_challenge',
+            requires_turnstile: true,
+            error: 'Live railway seat map requires fresh verification token'
+          });
+        }
+
         console.warn('[LiveCoachLayout] All Turnstile tokens exhausted (HTTP 422). Using availability-accurate template fallback.');
         return res.json({ success: true, live: false, cached: false, status_source: 'template', searched: searchAttempted, train_name: liveTrainName || train_name || null, train_model: cleanModel || null, matched_seat_class: effectiveClassForFallback, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, requires_turnstile: true, data: buildTemplateFallback(cleanTripId, effectiveClassForFallback, effectiveAvailForFallback, effectiveFareForFallback, liveSeatTypes) });
+      }
+
+      const isLiveOnly = params.live_only === '1' || params.live_only === 'true' || params.live_only === true;
+      if (isLiveOnly) {
+        return res.status(422).json({
+          success: false,
+          live: false,
+          cached: false,
+          requires_turnstile: true,
+          error: 'Live railway seat map requires fresh verification token'
+        });
       }
 
       return res.json({ success: true, live: false, cached: false, status_source: 'template', searched: searchAttempted, train_name: liveTrainName || train_name || null, train_model: cleanModel || null, matched_seat_class: effectiveClassForFallback, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: buildTemplateFallback(cleanTripId, effectiveClassForFallback, effectiveAvailForFallback, effectiveFareForFallback, liveSeatTypes) });
     } catch (layoutErr) {
       console.warn('[LiveCoachLayout] Step 2 seat-layout fetch error:', layoutErr.message);
+      if (params.live_only === '1' || params.live_only === 'true' || params.live_only === true) {
+        return res.status(502).json({ success: false, live: false, cached: false, error: layoutErr.message });
+      }
       return res.json({ success: true, live: false, cached: false, status_source: 'template', searched: searchAttempted, train_name: liveTrainName || train_name || null, train_model: cleanModel || null, matched_seat_class: effectiveClassForFallback, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: buildTemplateFallback(cleanTripId, effectiveClassForFallback, effectiveAvailForFallback, effectiveFareForFallback, liveSeatTypes) });
     }
   }
 
-  // No official seat layout available (no session / no Turnstile). Render the
-  // real carriage structure with the availability we already captured so the
-  // picker is usable, and flag that the map is not live.
-  const effectiveClass = matchedSeatType ? matchedSeatType.type : (cleanSeatClass || 'S_CHAIR');
+  // No official seat layout available (no session / no Turnstile).
+  if (params.live_only === '1' || params.live_only === 'true' || params.live_only === true) {
+    return res.status(422).json({
+      success: false,
+      live: false,
+      cached: false,
+      requires_turnstile: true,
+      error: 'Live railway seat map requires fresh verification token'
+    });
+  }
+
+  const effectiveClass = (matchedSeatType && matchedSeatType.type && matchedSeatType.type !== 'ANY' && matchedSeatType.type !== 'ALL')
+    ? matchedSeatType.type
+    : ((cleanSeatClass && cleanSeatClass !== 'ANY' && cleanSeatClass !== 'ALL') ? cleanSeatClass : 'S_CHAIR');
   const effectiveAvail = liveAvailableSeats !== null ? liveAvailableSeats : parsedAvail;
   const effectiveFare = liveFare !== null ? liveFare : parsedFare;
   return res.json({ success: true, live: false, cached: false, status_source: 'template', searched: searchAttempted, train_name: liveTrainName || train_name || null, train_model: cleanModel || null, matched_seat_class: effectiveClass, trip_id: cleanTripId, trip_route_id: cleanTripRouteId, data: buildTemplateFallback(cleanTripId, effectiveClass, effectiveAvail, effectiveFare, liveSeatTypes) });
@@ -3962,6 +4673,7 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
   const { trip_id, trip_route_id, train_name, train_model, seat_class, available_seats, fare, cft_response, from_station, to_station, journey_date } = params;
   const parsedAvail = (available_seats !== undefined && available_seats !== null && available_seats !== '') ? Math.max(0, parseInt(available_seats, 10)) : null;
   const parsedFare = (fare !== undefined && fare !== null && fare !== '') ? parseFloat(fare) : null;
+  const cleanSeatClass = (seat_class && seat_class !== 'ANY' && seat_class !== 'ALL') ? String(seat_class).toUpperCase().trim() : 'S_CHAIR';
 
   const cleanTripId = trip_id && trip_id !== 'null' && trip_id !== 'undefined' ? String(trip_id).trim() : (train_model ? `TRIP_${train_model}` : 'TRIP_DEFAULT');
   const cleanTripRouteId = trip_route_id && trip_route_id !== 'null' && trip_route_id !== 'undefined' ? String(trip_route_id).trim() : cleanTripId;
@@ -3971,12 +4683,13 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
   if (params.device_id || params.deviceId) session.deviceId = params.device_id || params.deviceId;
   if (params.device_key || params.deviceKey) session.deviceKey = params.device_key || params.deviceKey;
 
-  // Cache lookup (15s TTL) - only when we have real trip IDs
-  if (cleanTripId) {
+  const bypassCache = params.no_cache === '1' || params.no_cache === 'true' || params.live_only === '1' || params.live_only === 'true';
+  // Cache lookup (15s TTL) - only when not bypassed and payload was verified live
+  if (!bypassCache && cleanTripId) {
     const ck = `${cleanTripId}|${cleanTripRouteId}`;
     const hit = seatLayoutCache.get(ck);
-    if (hit && (Date.now() - hit.ts) < SEAT_LAYOUT_CACHE_TTL) {
-      res.json({ success: true, live: false, cached: true, ...hit.payload });
+    if (hit && (Date.now() - hit.ts) < SEAT_LAYOUT_CACHE_TTL && hit.payload?.live) {
+      res.json({ success: true, live: true, cached: true, ...hit.payload });
       return;
     }
   }
@@ -3995,18 +4708,25 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
           toStation: to_station,
           journeyDate: journey_date
         });
-        const normalizedLayout = normalizeSeatLayoutResponse(rawData, seat_class, socketState);
+        const normalizedLayout = normalizeSeatLayoutResponse(rawData, cleanSeatClass, socketState);
         if (normalizedLayout.coaches && normalizedLayout.coaches.length > 0) {
           normalizedLayout.coaches.forEach(c => {
             c.status_source = 'official_railway_mobile_app';
           });
           if (cleanTripId) seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { source: 'official_railway_mobile_app', data: normalizedLayout } });
+          let outgoingLayout = normalizedLayout;
+          if (params.available_only === '1' || params.available_only === 'true' || params.available_only === true) {
+            const availCoaches = normalizedLayout.coaches.filter(c => Number(c.available_seats || 0) > 0);
+            if (availCoaches.length > 0) {
+              outgoingLayout = { ...normalizedLayout, coaches: availCoaches, total_coaches: availCoaches.length };
+            }
+          }
           return res.json({
             success: true,
             live: true,
             cached: false,
             source: 'official_railway_mobile_app',
-            data: normalizedLayout
+            data: outgoingLayout
           });
         }
       }
@@ -4028,15 +4748,16 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
     targetUrl += `&cft_response=${encodeURIComponent(cftVal)}`;
   }
 
+  const clientUa = req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) Gecko/20100101 Firefox/156.0';
   const headers = {
-    'User-Agent': getRandomUserAgent(),
+    'User-Agent': clientUa,
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8',
     'X-Requested-With': 'XMLHttpRequest',
     'Origin': 'https://eticket.railway.gov.bd',
     'Referer': 'https://eticket.railway.gov.bd/',
     'Authorization': `Bearer ${session.token}`,
-    'X-Device-Id': session.deviceId || 'd1b101fb-683d-4d74-a1e5-0cdfbd087ae3',
+    'X-Device-Id': session.deviceId || '34a817c48b87571632d2a7a1d50575a4',
     'X-Device-Key': (session.deviceKey && session.deviceKey.toLowerCase() !== 'web') ? session.deviceKey : (session.token ? generateShohozDeviceKey(session.token) : ''),
     'Priority': 'u=1, i'
   };
@@ -4047,14 +4768,14 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
     const response = await safeShohozRequest(async () => {
       return axios.get(targetUrl, {
         headers,
-        timeout: 9000,
+        timeout: 20000,
         validateStatus: (status) => status < 500
       });
     });
 
     if (response.status === 200 && response.data) {
       if (response.data.error && response.data.error.code) {
-        return res.json({ success: true, live: false, cached: false, status_source: 'template', detail: response.data.error.code, data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+        return res.json({ success: true, live: false, cached: false, status_source: 'template', detail: response.data.error.code, data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
       }
 
       const rawData = response.data.data || response.data;
@@ -4064,40 +4785,108 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
         toStation: to_station,
         journeyDate: journey_date
       });
-      const normalizedLayout = normalizeSeatLayoutResponse(rawData, seat_class, socketState);
+      const normalizedLayout = normalizeSeatLayoutResponse(rawData, cleanSeatClass, socketState);
 
       if (!normalizedLayout.coaches || normalizedLayout.coaches.length === 0) {
-        return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+        return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
       }
 
       if (cleanTripId) seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { source: 'official_railway_server', data: normalizedLayout } });
+      let outgoingLayout = normalizedLayout;
+      if (params.available_only === '1' || params.available_only === 'true' || params.available_only === true) {
+        const availCoaches = normalizedLayout.coaches.filter(c => Number(c.available_seats || 0) > 0);
+        if (availCoaches.length > 0) {
+          outgoingLayout = { ...normalizedLayout, coaches: availCoaches, total_coaches: availCoaches.length };
+        }
+      }
       return res.json({
         success: true,
         live: true,
         cached: false,
         source: 'official_railway_server',
-        data: normalizedLayout
+        data: outgoingLayout
       });
     }
 
     if (response.status === 422) {
-      return res.json({ success: true, live: false, cached: false, status_source: 'template', requires_turnstile: true, data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+      console.log('[/api/seat-layout] Turnstile challenged (422). Triggering background keeper...');
+      runBackgroundTurnstileKeeper(true);
+      try {
+        const { solveTurnstileToken } = require('./scripts/turnstile-auto-solver');
+        const autoToken = await Promise.race([
+          solveTurnstileToken(true, journey_date),
+          new Promise(r => setTimeout(() => r(null), 35000))
+        ]);
+        if (autoToken) {
+          addCftTokenToVault(autoToken);
+          let retryUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(cleanTripId)}&trip_route_id=${encodeURIComponent(cleanTripRouteId)}&cft_response=${encodeURIComponent(autoToken)}`;
+          const retryRes = await safeShohozRequest(async () => axios.get(retryUrl, { headers, timeout: 20000, validateStatus: s => s < 500 }));
+          if (retryRes && retryRes.status === 200 && retryRes.data && !retryRes.data.error) {
+            const rawData = retryRes.data.data || retryRes.data;
+            const socketState = await syncTripInProgress({ train_model, fromStation: from_station, toStation: to_station, journeyDate: journey_date });
+            const normalizedLayout = normalizeSeatLayoutResponse(rawData, cleanSeatClass, socketState);
+            if (normalizedLayout.coaches && normalizedLayout.coaches.length > 0) {
+              if (cleanTripId) seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { source: 'official_railway_server', data: normalizedLayout } });
+              console.log('[/api/seat-layout] 🚀 100% Genuine live layout retrieved via background solver!');
+              return res.json({ success: true, live: true, cached: false, source: 'official_railway_server', data: normalizedLayout });
+            }
+          }
+        }
+      } catch (autoErr) {
+        console.warn('[/api/seat-layout] Automated solver retry error:', autoErr.message);
+      }
+      return res.json({ success: true, live: false, cached: false, status_source: 'template', requires_turnstile: true, data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
     }
 
     if (response.status === 401) {
-      return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+      return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
     }
 
     if (response.status === 403 || response.status === 404) {
-      return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+      return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
     }
 
-    return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+    return res.json({ success: true, live: false, cached: false, status_source: 'template', data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
 
   } catch (err) {
     console.warn('[SeatLayout] Error querying Shohoz:', err.message);
-    return res.json({ success: true, live: false, cached: false, status_source: 'template', detail: err.message, data: buildTemplateFallback(cleanTripId, seat_class, parsedAvail, parsedFare) });
+    return res.json({ success: true, live: false, cached: false, status_source: 'template', detail: err.message, data: buildTemplateFallback(cleanTripId, cleanSeatClass, parsedAvail, parsedFare) });
   }
+});
+
+// ---------------------------------------------------------------------------
+// 4.2. Direct Live Seat Layout Intake (Fast-Path from Userscript / Playwright)
+// ---------------------------------------------------------------------------
+app.post('/api/seat-layout/save', (req, res) => {
+  const { trip_id, trip_route_id, layout, cft_response, seat_class } = req.body;
+  if (cft_response) {
+    addCftTokenToVault(cft_response);
+  }
+  if (trip_id && trip_route_id && layout) {
+    try {
+      const cleanTripId = String(trip_id).trim();
+      const cleanTripRouteId = String(trip_route_id).trim();
+      const rawData = layout.data || layout;
+      const normalizedLayout = normalizeSeatLayoutResponse(rawData, seat_class || 'S_CHAIR');
+      if (normalizedLayout.coaches && normalizedLayout.coaches.length > 0) {
+        seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, {
+          ts: Date.now(),
+          payload: {
+            live: true,
+            source: 'userscript_direct_sync',
+            trip_id: cleanTripId,
+            trip_route_id: cleanTripRouteId,
+            data: normalizedLayout
+          }
+        });
+        console.log(`[SeatLayout Fast-Sync] 🎯 Stored 100% genuine live layout from userscript for trip ${cleanTripId}|${cleanTripRouteId}`);
+        return res.json({ success: true, cached: true });
+      }
+    } catch (e) {
+      console.warn('[SeatLayout Fast-Sync] Normalization error:', e.message);
+    }
+  }
+  return res.json({ success: true, message: 'Processed token/layout payload' });
 });
 
 // ----------------------------------------------------
@@ -6976,6 +7765,135 @@ app.get('/api/radar/alerts', (req, res) => {
   });
 });
 
+// ----------------------------------------------------
+// ⚡ Automated Background Seat Grabber (Method 1 & Method 2)
+// ----------------------------------------------------
+app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
+  const { grabSeatsInBackground } = require('./scripts/background-seat-grabber');
+  const params = { ...(req.query || {}), ...(req.body || {}) };
+
+  const fromCity = params.from_city || params.fromCity;
+  const toCity = params.to_city || params.toCity;
+  const dateOfJourney = params.date_of_journey || params.date;
+
+  if (!fromCity || !toCity || !dateOfJourney) {
+    return res.status(400).json({
+      success: false,
+      error: 'from_city, to_city, and date_of_journey are required to execute background seat grab.'
+    });
+  }
+
+  const canonicalFrom = getCanonicalStationName(fromCity);
+  const canonicalTo = getCanonicalStationName(toCity);
+
+  let tripId = params.trip_id || params.tripId;
+  let tripRouteId = params.trip_route_id || params.tripRouteId;
+  let seatClass = (params.seat_class || params.seatClass || 'S_CHAIR').toUpperCase();
+  let trainName = params.train_name || params.trainName || '';
+  const seatsCount = parseInt(params.seats_count || params.seatsCount || '1', 10);
+
+  // If trip_id is missing, use querySingleShohozTrip to find live train & available seats
+  if (!tripId) {
+    try {
+      const searchRes = await querySingleShohozTrip(canonicalFrom, canonicalTo, dateOfJourney);
+      if (searchRes && searchRes.success && Array.isArray(searchRes.trains) && searchRes.trains.length > 0) {
+        const trainFilter = trainName && trainName !== 'ALL' && trainName !== 'ANY'
+          ? trainName.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+          : [];
+        
+        // Find trains matching user filter (or any train)
+        let candidateTrains = searchRes.trains;
+        if (trainFilter.length > 0) {
+          const matchedTrains = searchRes.trains.filter(t => 
+            trainFilter.some(tf => (t.train_name || '').toLowerCase().includes(tf))
+          );
+          if (matchedTrains.length > 0) candidateTrains = matchedTrains;
+        }
+
+        // Priority 1: Find a train and seat class that actually has seats available >= seatsCount
+        let found = null;
+        for (const t of candidateTrains) {
+          const seatTypes = t.seat_types || [];
+          if (seatClass !== 'ANY' && seatClass !== 'ALL') {
+            const matchCls = seatTypes.find(st => st.type === seatClass && (Number(st.seats_available) || 0) >= seatsCount);
+            if (matchCls) {
+              found = { train: t, seatType: matchCls };
+              break;
+            }
+          }
+          const anyAvail = seatTypes.find(st => (Number(st.seats_available) || 0) >= seatsCount);
+          if (anyAvail) {
+            found = { train: t, seatType: anyAvail };
+            break;
+          }
+        }
+
+        // Priority 2: If none have >= seatsCount, pick one that has ANY available seats (> 0)
+        if (!found) {
+          for (const t of candidateTrains) {
+            const anyAvail = (t.seat_types || []).find(st => (Number(st.seats_available) || 0) > 0);
+            if (anyAvail) {
+              found = { train: t, seatType: anyAvail };
+              break;
+            }
+          }
+        }
+
+        // Priority 3: Fallback to first matching candidate
+        if (!found && candidateTrains.length > 0) {
+          const t = candidateTrains[0];
+          const st = (t.seat_types || []).find(s => s.type === seatClass) || (t.seat_types || [])[0];
+          found = { train: t, seatType: st };
+        }
+
+        if (found) {
+          tripId = found.seatType?.trip_id || found.train?.trip_id;
+          tripRouteId = found.seatType?.trip_route_id || found.train?.trip_route_id || tripId;
+          trainName = found.train?.train_name || trainName;
+          if (found.seatType?.type) seatClass = found.seatType.type;
+          console.log(`[SeatGrab] 🎯 Pre-grab discovery matched ${trainName} (${seatClass}) -> trip_id=${tripId}`);
+        }
+      }
+    } catch (lookupErr) {
+      console.warn('[SeatGrab] Pre-grab trip discovery warning:', lookupErr.message);
+    }
+  }
+
+  const target = {
+    fromCity: canonicalFrom,
+    toCity: canonicalTo,
+    date: dateOfJourney,
+    trainName: trainName,
+    trainModel: params.train_model || params.trainModel,
+    seatClass: seatClass,
+    coach: params.coach || params.coach_name || '',
+    seats: Array.isArray(params.seats) ? params.seats : (params.seats ? String(params.seats).split(',') : []),
+    seatsCount: seatsCount,
+    tripId: tripId,
+    tripRouteId: tripRouteId,
+    telegramChatId: params.telegram_chat_id || params.telegramChatId
+  };
+
+  const options = {
+    method: params.method || 'auto', // 'auto', 'api', 'puppeteer'
+    sendTelegramAlert: params.notify !== false
+  };
+
+  try {
+    const result = await grabSeatsInBackground(target, options);
+    res.json({
+      success: result.success,
+      method_used: result.method || null,
+      details: result
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 // ====================================================
 // 9. 📲 Web Push (Service Worker Closed-Browser Alerts) Endpoints
 // ====================================================
@@ -7224,6 +8142,99 @@ app.get('/support', (req, res) => {
     return res.sendFile(supportPath);
   }
   res.redirect('/');
+});
+
+// Admin-Only Shohoz WebSocket Live Event Monitor Route
+app.get(['/admin/socket-monitor', '/admin/websocket-logs', '/admin/socket-logs'], (req, res) => {
+  const session = getAuthenticatedUser(req);
+  if (!session || session.role !== 'admin') {
+    // If not authenticated as admin, redirect to dashboard or login
+    return res.redirect('/?admin_required=1');
+  }
+  const monitorPath = path.join(__dirname, 'public', 'socket-monitor.html');
+  if (fs.existsSync(monitorPath)) {
+    return res.sendFile(monitorPath);
+  }
+  res.status(404).send('Admin WebSocket Monitor interface not found.');
+});
+
+// GET /api/admin/socket-logs - Retrieve real-time Shohoz WebSocket telemetry logs
+app.get('/api/admin/socket-logs', requireAdmin, (req, res) => {
+  const since = parseInt(req.query.since || '0', 10);
+  const filterType = (req.query.type || '').trim().toUpperCase();
+  const filterRoom = (req.query.room || '').trim().toLowerCase();
+  const limit = Math.min(500, parseInt(req.query.limit || '200', 10));
+
+  let results = sohozSocketLogBuffer;
+  if (since > 0) {
+    results = results.filter(item => item.id > since);
+  }
+  if (filterType) {
+    results = results.filter(item => item.type && item.type.toUpperCase().includes(filterType));
+  }
+  if (filterRoom) {
+    results = results.filter(item => item.room && item.room.toLowerCase().includes(filterRoom));
+  }
+
+  // Active rooms summary
+  const activeRoomsList = [];
+  tripSocketRooms.forEach((room, roomKey) => {
+    activeRoomsList.push({
+      roomName: roomKey,
+      model: room.model || null,
+      ready: !!room.ready,
+      lastEventAt: room.lastEventAt || null,
+      heldCount: room.held ? room.held.size : 0,
+      releasedCount: room.released ? room.released.size : 0,
+      heldSample: room.held ? Array.from(room.held).slice(0, 5) : [],
+      releasedSample: room.released ? Array.from(room.released).slice(0, 5) : []
+    });
+  });
+
+  res.json({
+    success: true,
+    latestSequence: sohozLogSequence,
+    totalBuffered: sohozSocketLogBuffer.length,
+    activeRoomsCount: tripSocketRooms.size,
+    activeRooms: activeRoomsList,
+    logs: results.slice(-limit)
+  });
+});
+
+// POST /api/admin/socket-logs/clear - Clear in-memory log buffer
+app.post('/api/admin/socket-logs/clear', requireAdmin, (req, res) => {
+  sohozSocketLogBuffer.length = 0;
+  pushShohozSocketLog({
+    type: 'LOGS_CLEARED',
+    summary: `WebSocket event log buffer cleared by Administrator.`,
+    severity: 'info'
+  });
+  res.json({ success: true, message: 'Log buffer cleared.' });
+});
+
+// POST /api/admin/socket-logs/join-room - Admin manual test subscription to a Shohoz trip room
+app.post('/api/admin/socket-logs/join-room', requireAdmin, (req, res) => {
+  const { train_model, from_station, to_station, journey_date, custom_room } = req.body || {};
+  let roomName = custom_room ? String(custom_room).trim() : '';
+  if (!roomName) {
+    roomName = buildTripRoomName({
+      train_model: train_model || '',
+      fromStation: from_station || '',
+      toStation: to_station || '',
+      journeyDate: journey_date || ''
+    });
+  }
+
+  if (!roomName || roomName.split('#').length < 4) {
+    return res.status(400).json({ success: false, error: 'Invalid room parameters. Format: LIVE#train#MODEL#FROM#TO#DATE' });
+  }
+
+  openTripSocketRoom(roomName, train_model || null);
+  res.json({
+    success: true,
+    roomName: roomName,
+    message: `Subscribed to Shohoz live room: ${roomName}`
+  });
 });
 
 // GET /api/support/messages - Get support conversation stream

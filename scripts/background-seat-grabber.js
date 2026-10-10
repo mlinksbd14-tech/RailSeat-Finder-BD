@@ -36,28 +36,44 @@ function loadSession() {
     };
   }
 
+  let loaded = null;
   // 2. data/session.json
   const sessionPath = path.join(__dirname, '..', 'data', 'session.json');
   if (fs.existsSync(sessionPath)) {
     try {
       const raw = JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
-      if (raw && raw.token) return raw;
+      if (raw && raw.token) loaded = raw;
     } catch (e) {}
   }
 
   // 3. data/users.json
-  const usersPath = path.join(__dirname, '..', 'data', 'users.json');
-  if (fs.existsSync(usersPath)) {
-    try {
-      const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-      if (usersData && Array.isArray(usersData.users)) {
-        const found = usersData.users.find(u => u.shohozSession && u.shohozSession.token);
-        if (found) return found.shohozSession;
-      }
-    } catch (e) {}
+  if (!loaded) {
+    const usersPath = path.join(__dirname, '..', 'data', 'users.json');
+    if (fs.existsSync(usersPath)) {
+      try {
+        const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        if (usersData && Array.isArray(usersData.users)) {
+          const found = usersData.users.find(u => u.shohozSession && u.shohozSession.token);
+          if (found) loaded = found.shohozSession;
+        }
+      } catch (e) {}
+    }
   }
 
-  return { token: null };
+  const finalSession = loaded || { token: null };
+
+  // 4. Attach active fresh Turnstile token from disk if available
+  try {
+    const tokenPath = path.join(__dirname, '..', 'data', 'latest_turnstile_token.json');
+    if (fs.existsSync(tokenPath)) {
+      const tData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
+      if (tData && tData.token && (Date.now() - tData.timestamp < 180000)) {
+        finalSession.cftResponse = tData.token;
+      }
+    }
+  } catch (e) {}
+
+  return finalSession;
 }
 
 function generateShohozDeviceKey(seed = '') {
@@ -220,15 +236,37 @@ async function grabSeatsViaApi(target, session) {
   if (selectedSeats.length === 0) {
     console.log(`[Grabber:Method1] 🔎 Discovering open seats for trip ${tripId}...`);
     try {
-      const layoutUrl = `https://railspaapi.shohoz.com/v1.0/app/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
-      const mHeaders = buildMobileHeaders(session);
-      let lRes = await axios.get(layoutUrl, { headers: mHeaders, timeout: 6000, validateStatus: s => s < 500 });
-      
-      let coaches = (lRes.status === 200 && lRes.data) ? (lRes.data.data?.coaches || lRes.data.coaches || []) : [];
+      let coaches = [];
 
-      // Fallback to web layout endpoint if mobile returned empty or 4xx
+      // ── ATTEMPT 0: Ultra-Fast Pre-warmed Camoufox Daemon (<500ms) ──
+      try {
+        const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+        const dRes = await axios.get(`${daemonUrl}/get-layout`, {
+          params: { trip_id: tripId, trip_route_id: tripRouteId },
+          timeout: 2500,
+          validateStatus: s => s < 500
+        });
+        if (dRes.status === 200 && dRes.data) {
+          const raw = dRes.data.data || dRes.data;
+          coaches = raw.coaches || raw.seatLayout || [];
+          if (coaches.length > 0) {
+            console.log(`[Grabber:Method1] ⚡ Pre-warmed Camoufox Daemon provided live coach layout in <500ms!`);
+          }
+        }
+      } catch (dErr) {}
+
+      // Fallback: Mobile App API
       if (coaches.length === 0) {
-        const webLayoutUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
+        const layoutUrl = `https://railspaapi.shohoz.com/v1.0/app/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
+        const mHeaders = buildMobileHeaders(session);
+        let lRes = await axios.get(layoutUrl, { headers: mHeaders, timeout: 6000, validateStatus: s => s < 500 });
+        coaches = (lRes.status === 200 && lRes.data) ? (lRes.data.data?.coaches || lRes.data.coaches || []) : [];
+      }
+
+      // Fallback: Web layout endpoint
+      if (coaches.length === 0) {
+        let webLayoutUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
+        if (session.cftResponse) webLayoutUrl += `&cft_response=${encodeURIComponent(session.cftResponse)}`;
         const wHeaders = buildWebHeaders(session);
         const wRes = await axios.get(webLayoutUrl, { headers: wHeaders, timeout: 6000, validateStatus: s => s < 500 });
         if (wRes.status === 200 && wRes.data) {

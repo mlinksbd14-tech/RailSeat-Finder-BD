@@ -27,11 +27,39 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 SESSION_FILE = os.path.join(DATA_DIR, "session.json")
 TOKEN_FILE = os.path.join(DATA_DIR, "latest_turnstile_token.json")
 
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+
 def load_session():
+    # 1. Direct session.json
     if os.path.exists(SESSION_FILE):
         try:
             with open(SESSION_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                sess = json.load(f)
+                if sess and sess.get("token"):
+                    return sess
+        except Exception:
+            pass
+
+    # 2. Environment variables (useful for cloud deployments like Render/Heroku)
+    env_token = os.environ.get("SHOHOZ_AUTH_TOKEN")
+    if env_token:
+        return {
+            "token": env_token,
+            "deviceId": os.environ.get("SHOHOZ_DEVICE_ID", "34a817c48b87571632d2a7a1d50575a4"),
+            "deviceKey": os.environ.get("SHOHOZ_DEVICE_KEY", ""),
+            "user": {"name": "Cloud Deployment Session"}
+        }
+
+    # 3. Fallback to active session in data/users.json
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                users = data.get("users", [])
+                for u in users:
+                    ss = u.get("shohozSession")
+                    if ss and ss.get("token"):
+                        return ss
         except Exception:
             pass
     return None

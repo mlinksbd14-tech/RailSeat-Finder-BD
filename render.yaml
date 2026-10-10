@@ -1,11 +1,10 @@
 services:
   - type: web
     name: railseat-finder-bd
-    env: node
+    env: docker
     plan: free
     region: singapore
-    buildCommand: npm install
-    startCommand: node server.js
+    dockerfilePath: ./Dockerfile
     autoDeploy: true
     envVars:
       - key: NODE_ENV

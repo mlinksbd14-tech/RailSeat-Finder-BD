@@ -25,13 +25,39 @@ const TELEGRAM_DEFAULT_CHAT_ID = (process.env.TELEGRAM_CHAT_ID || '').trim();
 // Helpers & Session Loading
 // ---------------------------------------------------------------------------
 
-function loadSession() {
+function loadSession(overrideSession = null) {
+  if (overrideSession && overrideSession.token) {
+    const s = {
+      token: overrideSession.token.replace(/^Bearer\s+/i, '').trim(),
+      deviceId: overrideSession.deviceId || '34a817c48b87571632d2a7a1d50575a4',
+      deviceKey: overrideSession.deviceKey || null,
+      cftResponse: overrideSession.cftResponse || null,
+      user: overrideSession.user || null
+    };
+    if (!s.deviceKey || s.deviceKey.length < 32) {
+      s.deviceKey = generateShohozDeviceKey(s.token);
+    }
+    // Also attach fresh turnstile token from disk if not provided
+    if (!s.cftResponse) {
+      try {
+        const tokenPath = path.join(__dirname, '..', 'data', 'latest_turnstile_token.json');
+        if (fs.existsSync(tokenPath)) {
+          const tData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
+          if (tData && tData.token && (Date.now() - tData.timestamp < 300000)) {
+            s.cftResponse = tData.token;
+          }
+        }
+      } catch (e) {}
+    }
+    return s;
+  }
+
   // 1. Env secret
   if (process.env.RAILWAY_SESSION_TOKEN) {
     return {
       token: process.env.RAILWAY_SESSION_TOKEN.trim(),
-      deviceId: process.env.RAILWAY_DEVICE_ID || '844272bb-aabf-4f99-8ced-6fd56b4457b2',
-      deviceKey: process.env.RAILWAY_DEVICE_KEY || null,
+      deviceId: process.env.RAILWAY_DEVICE_ID || '34a817c48b87571632d2a7a1d50575a4',
+      deviceKey: process.env.RAILWAY_DEVICE_KEY || generateShohozDeviceKey(process.env.RAILWAY_SESSION_TOKEN),
       cftResponse: process.env.RAILWAY_CFT_RESPONSE || null
     };
   }
@@ -60,14 +86,20 @@ function loadSession() {
     }
   }
 
-  const finalSession = loaded || { token: null };
+  const finalSession = loaded ? { ...loaded } : { token: null };
+  if (finalSession.token) {
+    finalSession.deviceId = finalSession.deviceId || '34a817c48b87571632d2a7a1d50575a4';
+    if (!finalSession.deviceKey || finalSession.deviceKey.length < 32) {
+      finalSession.deviceKey = generateShohozDeviceKey(finalSession.token);
+    }
+  }
 
   // 4. Attach active fresh Turnstile token from disk if available
   try {
     const tokenPath = path.join(__dirname, '..', 'data', 'latest_turnstile_token.json');
     if (fs.existsSync(tokenPath)) {
       const tData = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
-      if (tData && tData.token && (Date.now() - tData.timestamp < 180000)) {
+      if (tData && tData.token && (Date.now() - tData.timestamp < 300000)) {
         finalSession.cftResponse = tData.token;
       }
     }
@@ -190,33 +222,58 @@ async function grabSeatsViaApi(target, session) {
     return { success: false, reason: 'No authenticated Railway session token available' };
   }
 
+  // Ensure fresh Turnstile token
+  if (!session.cftResponse) {
+    try {
+      const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+      const tRes = await axios.get(`${daemonUrl}/token`, { timeout: 2000, validateStatus: () => true });
+      if (tRes.status === 200 && tRes.data?.token) {
+        session.cftResponse = tRes.data.token;
+      }
+    } catch (e) {}
+  }
+
   let tripId = target.tripId || target.trip_id;
   let tripRouteId = target.tripRouteId || target.trip_route_id || tripId;
+  const fromCity = target.fromCity || target.from || 'Dhaka';
+  const toCity = target.toCity || target.to || 'Chittagong';
+  const doj = formatShohozDoj(target.date || target.journeyDate);
+  let cls = (target.seatClass || target.className || 'S_CHAIR').toUpperCase();
 
   // Auto-discover trip_id if not explicitly provided
   if (!tripId) {
-    const fromCity = target.fromCity || target.from || 'Dhaka';
-    const toCity = target.toCity || target.to || 'Chittagong';
-    const doj = formatShohozDoj(target.date || target.journeyDate);
-    const cls = target.seatClass || target.className || 'S_CHAIR';
-
     try {
       console.log(`[Grabber:Method1] 🔎 Discovering live trip_id for ${fromCity} ➔ ${toCity} on ${doj}...`);
-      const searchUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/search-trips-v2?from_city=${encodeURIComponent(fromCity)}&to_city=${encodeURIComponent(toCity)}&date_of_journey=${encodeURIComponent(doj)}&seat_class=${encodeURIComponent(cls)}`;
+      const searchUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/search-trips-v2?from_city=${encodeURIComponent(fromCity)}&to_city=${encodeURIComponent(toCity)}&date_of_journey=${encodeURIComponent(doj)}&seat_class=${encodeURIComponent(cls !== 'ANY' && cls !== 'ALL' ? cls : 'S_CHAIR')}`;
       const sHeaders = buildWebHeaders(session);
       const sRes = await axios.get(searchUrl, { headers: sHeaders, timeout: 6000, validateStatus: s => s < 500 });
       if (sRes.status === 200 && sRes.data && Array.isArray(sRes.data.data?.trains)) {
         const trains = sRes.data.data.trains;
-        const matched = target.trainName
-          ? trains.find(t => t.train_name && t.train_name.toLowerCase().includes(target.trainName.toLowerCase()))
-          : (trains.find(t => (t.seat_types || []).some(st => (Number(st.seats_available) || 0) > 0)) || trains[0]);
+        const trainFilter = target.trainName && target.trainName !== 'ALL' && target.trainName !== 'ANY'
+          ? target.trainName.toLowerCase()
+          : '';
+
+        let matched = null;
+        if (trainFilter) {
+          matched = trains.find(t => (t.train_name || '').toLowerCase().includes(trainFilter));
+        }
+
+        // Priority: Train with available seats (either online count or seats_available)
+        if (!matched) {
+          matched = trains.find(t => (t.seat_types || []).some(st => (Number(st.seat_counts?.online ?? st.seats_available) || 0) > 0)) || trains[0];
+        }
 
         if (matched) {
-          const stMatch = (matched.seat_types || []).find(st => st.type === cls || (Number(st.seats_available) || 0) > 0) || (matched.seat_types || [])[0];
+          const stMatch = (matched.seat_types || []).find(st => (cls !== 'ANY' && cls !== 'ALL' ? st.type === cls : true) && (Number(st.seat_counts?.online ?? st.seats_available) || 0) > 0)
+            || (matched.seat_types || []).find(st => cls !== 'ANY' && cls !== 'ALL' ? st.type === cls : true)
+            || (matched.seat_types || [])[0];
+
           tripId = stMatch?.trip_id || matched.trip_id;
           tripRouteId = stMatch?.trip_route_id || matched.trip_route_id || tripId;
-          if (stMatch?.type) target.seatClass = stMatch.type;
+          if (stMatch?.type) cls = stMatch.type;
+          target.seatClass = cls;
           target.trainName = matched.train_name;
+          target.trainModel = matched.train_model || matched.trip_number || target.trainModel;
           console.log(`[Grabber:Method1] 🎯 Discovered trip_id=${tripId} for ${matched.train_name} (${target.seatClass})`);
         }
       }
@@ -229,146 +286,189 @@ async function grabSeatsViaApi(target, session) {
     return { success: false, reason: 'Missing trip_id for API reservation' };
   }
 
-  // 1. Fetch live layout to discover available seats if not provided
-  let selectedSeats = Array.isArray(target.seats) && target.seats.length > 0 ? target.seats : [];
-  let selectedCoach = target.coach || target.coach_name || '';
+  // 1. Fetch live seat layout to locate specific available seat ticket_ids
+  let rawCoaches = [];
+  let actionToken = session.cftResponse || null;
 
-  if (selectedSeats.length === 0) {
-    console.log(`[Grabber:Method1] 🔎 Discovering open seats for trip ${tripId}...`);
+  console.log(`[Grabber:Method1] 🔎 Discovering open seats for trip ${tripId} (route: ${tripRouteId})...`);
+  try {
+    // ── ATTEMPT 1: Ultra-Fast Pre-warmed Camoufox Daemon (<500ms) ──
     try {
-      let coaches = [];
-
-      // ── ATTEMPT 0: Ultra-Fast Pre-warmed Camoufox Daemon (<500ms) ──
-      try {
-        const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
-        const dRes = await axios.get(`${daemonUrl}/get-layout`, {
-          params: { trip_id: tripId, trip_route_id: tripRouteId },
-          timeout: 2500,
-          validateStatus: s => s < 500
-        });
-        if (dRes.status === 200 && dRes.data) {
-          const raw = dRes.data.data || dRes.data;
-          coaches = raw.coaches || raw.seatLayout || [];
-          if (coaches.length > 0) {
-            console.log(`[Grabber:Method1] ⚡ Pre-warmed Camoufox Daemon provided live coach layout in <500ms!`);
-          }
+      const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+      const dRes = await axios.get(`${daemonUrl}/get-layout`, {
+        params: { trip_id: tripId, trip_route_id: tripRouteId },
+        timeout: 3000,
+        validateStatus: s => s < 500
+      });
+      if (dRes.status === 200 && dRes.data) {
+        const raw = dRes.data.data || dRes.data;
+        rawCoaches = raw.seatLayout || raw.coaches || [];
+        if (dRes.data.actionToken) actionToken = dRes.data.actionToken;
+        if (rawCoaches.length > 0) {
+          console.log(`[Grabber:Method1] ⚡ Pre-warmed Camoufox Daemon provided live coach layout in <500ms! (ActionToken: ${Boolean(actionToken)})`);
         }
-      } catch (dErr) {}
-
-      // Fallback: Mobile App API
-      if (coaches.length === 0) {
-        const layoutUrl = `https://railspaapi.shohoz.com/v1.0/app/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
-        const mHeaders = buildMobileHeaders(session);
-        let lRes = await axios.get(layoutUrl, { headers: mHeaders, timeout: 6000, validateStatus: s => s < 500 });
-        coaches = (lRes.status === 200 && lRes.data) ? (lRes.data.data?.coaches || lRes.data.coaches || []) : [];
       }
+    } catch (dErr) {}
 
-      // Fallback: Web layout endpoint
-      if (coaches.length === 0) {
+    // ── ATTEMPT 2: Fallback / ensure X-Action-Token from Shohoz Web Route ──
+    if (!actionToken || actionToken.length < 32 || rawCoaches.length === 0) {
+      try {
         let webLayoutUrl = `https://railspaapi.shohoz.com/v1.0/web/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
         if (session.cftResponse) webLayoutUrl += `&cft_response=${encodeURIComponent(session.cftResponse)}`;
         const wHeaders = buildWebHeaders(session);
         const wRes = await axios.get(webLayoutUrl, { headers: wHeaders, timeout: 6000, validateStatus: s => s < 500 });
-        if (wRes.status === 200 && wRes.data) {
-          coaches = wRes.data.data?.coaches || wRes.data.coaches || [];
+        if (wRes.headers && wRes.headers['x-action-token']) {
+          actionToken = wRes.headers['x-action-token'];
         }
-      }
-
-      // Priority 1: Check user's preferred coach
-      if (selectedCoach) {
-        const prefCoach = coaches.find(c => c.coach_name && c.coach_name.toUpperCase() === selectedCoach.toUpperCase());
-        if (prefCoach) {
-          const freeSeats = (prefCoach.seats || []).filter(s => s && !s.is_blank && (s.status === 'available' || s.seat_availability === 1 || s.is_available === 1 || s.is_available === true));
-          if (freeSeats.length > 0) {
-            const countNeeded = Math.min(target.seatsCount || 1, freeSeats.length);
-            selectedSeats = freeSeats.slice(0, countNeeded).map(s => s.seat_number || s.seat_name);
-          }
+        if (rawCoaches.length === 0 && wRes.status === 200 && wRes.data) {
+          const raw = wRes.data.data || wRes.data;
+          rawCoaches = raw.seatLayout || raw.coaches || [];
         }
-      }
-
-      // Priority 2: If preferred coach full or not specified, pick ANY coach with free seats
-      if (selectedSeats.length === 0) {
-        for (const c of coaches) {
-          const freeSeats = (c.seats || []).filter(s => s && !s.is_blank && (s.status === 'available' || s.seat_availability === 1 || s.is_available === 1 || s.is_available === true));
-          if (freeSeats.length > 0) {
-            selectedCoach = c.coach_name;
-            const countNeeded = Math.min(target.seatsCount || 1, freeSeats.length);
-            selectedSeats = freeSeats.slice(0, countNeeded).map(s => s.seat_number || s.seat_name);
-            break;
-          }
-        }
-      }
-    } catch (lErr) {
-      console.warn('[Grabber:Method1] Could not fetch seat layout prior to grab:', lErr.message);
-    }
-  }
-
-  if (selectedSeats.length === 0) {
-    return { success: false, reason: 'No available blank seats found in target coach' };
-  }
-
-  console.log(`[Grabber:Method1] 🎯 Selected Seats: [${selectedSeats.join(', ')}] in Coach ${selectedCoach}`);
-
-  // 2. Send Mobile API Reservation Hold
-  const mobilePayload = {
-    trip_id: tripId,
-    trip_route_id: tripRouteId,
-    coach_name: selectedCoach,
-    seats: selectedSeats,
-    seat_name: selectedSeats,
-    ticket_count: selectedSeats.length,
-    hold_only: true
-  };
-
-  try {
-    const mobileHeaders = buildMobileHeaders(session);
-    const holdRes = await axios.post(
-      'https://railspaapi.shohoz.com/v1.0/app/bookings/book-now',
-      mobilePayload,
-      { headers: mobileHeaders, timeout: 8000, validateStatus: s => s < 500 }
-    );
-
-    if (holdRes.status === 200 && holdRes.data && !holdRes.data.error) {
-      console.log('[Grabber:Method1] 🚀 HTTP 200 Success: Seats held in cart via Mobile Gateway!');
-      return {
-        success: true,
-        method: 'API Mobile Gateway (Method 1)',
-        coach: selectedCoach,
-        seats: selectedSeats,
-        data: holdRes.data,
-        expiresInSeconds: 300
-      };
+      } catch (tokErr) {}
     }
 
-    // If mobile failed, try Web Gateway if cft_response is present
-    if (session.cftResponse) {
-      console.log('[Grabber:Method1] Mobile gateway declined; attempting Web Gateway with Turnstile...');
-      const webHeaders = buildWebHeaders(session);
-      const webPayload = { ...mobilePayload, cft_response: session.cftResponse };
-      const webRes = await axios.post(
-        'https://railspaapi.shohoz.com/v1.0/web/bookings/book-now',
-        webPayload,
-        { headers: webHeaders, timeout: 8000, validateStatus: s => s < 500 }
+    // ── ATTEMPT 3: Mobile App layout endpoint fallback ──
+    if (rawCoaches.length === 0) {
+      const layoutUrl = `https://railspaapi.shohoz.com/v1.0/app/bookings/seat-layout?trip_id=${encodeURIComponent(tripId)}&trip_route_id=${encodeURIComponent(tripRouteId)}`;
+      const mHeaders = buildMobileHeaders(session);
+      const lRes = await axios.get(layoutUrl, { headers: mHeaders, timeout: 6000, validateStatus: s => s < 500 });
+      if (lRes.status === 200 && lRes.data) {
+        const raw = lRes.data.data || lRes.data;
+        rawCoaches = raw.seatLayout || raw.coaches || [];
+      }
+    }
+  } catch (lErr) {
+    console.warn('[Grabber:Method1] Could not fetch seat layout prior to grab:', lErr.message);
+  }
+
+  // Normalize coaches and extract flat seat items with valid ticket_ids
+  const normalizedCoaches = (rawCoaches || []).map(c => {
+    const coachName = String(c.floor_name || c.coach_name || '').trim();
+    let seatList = [];
+    if (Array.isArray(c.layout)) {
+      seatList = c.layout.flat();
+    } else if (Array.isArray(c.seats)) {
+      seatList = c.seats;
+    }
+    const validSeats = seatList.filter(s => s && (s.seat_number || s.seat_name) && !s.isHidden && !s.is_blank);
+    return {
+      coachName,
+      fare: c.seat_fare || null,
+      seats: validSeats
+    };
+  });
+
+  let selectedCoach = target.coach || target.coach_name || '';
+  let availableCandidates = [];
+
+  // Priority 1: Pick from user's preferred coach if specified
+  if (selectedCoach) {
+    const prefCoach = normalizedCoaches.find(c => c.coachName.toUpperCase() === selectedCoach.toUpperCase());
+    if (prefCoach) {
+      availableCandidates = prefCoach.seats.filter(s => 
+        (s.seat_availability === 1 || s.seat_availability === true || String(s.is_available) === '1' || s.status === 'available')
       );
-      if (webRes.status === 200 && webRes.data && !webRes.data.error) {
-        console.log('[Grabber:Method1] 🚀 HTTP 200 Success: Seats held in cart via Web Gateway!');
-        return {
-          success: true,
-          method: 'API Web Gateway (Method 1)',
-          coach: selectedCoach,
-          seats: selectedSeats,
-          data: webRes.data,
-          expiresInSeconds: 300
-        };
+    }
+  }
+
+  // Priority 2: Pick from ANY coach with available seats
+  if (availableCandidates.length === 0) {
+    for (const c of normalizedCoaches) {
+      const free = c.seats.filter(s => 
+        (s.seat_availability === 1 || s.seat_availability === true || String(s.is_available) === '1' || s.status === 'available')
+      );
+      if (free.length > 0) {
+        selectedCoach = c.coachName;
+        availableCandidates = free;
+        break;
       }
     }
-
-    const errDetail = holdRes.data?.error?.message || holdRes.data?.message || `HTTP ${holdRes.status}`;
-    return { success: false, reason: `Railway API rejected hold: ${errDetail}` };
-
-  } catch (apiErr) {
-    return { success: false, reason: `API grab request failed: ${apiErr.message}` };
   }
+
+  if (availableCandidates.length === 0) {
+    return {
+      success: false,
+      soldOut: true,
+      reason: 'No open available seats found in any coach for this train at this moment'
+    };
+  }
+
+  // Determine how many seats to grab
+  const countNeeded = Math.min(target.seatsCount || 1, availableCandidates.length, 4);
+  const seatsToHold = availableCandidates.slice(0, countNeeded);
+  console.log(`[Grabber:Method1] 🎯 Grabbing ${seatsToHold.length} Seat(s): [${seatsToHold.map(s => s.seat_number).join(', ')}] in Coach ${selectedCoach}...`);
+
+  // Ensure action token
+  if (!actionToken) actionToken = session.cftResponse || '';
+
+  // 2. Reserve each seat individually via Official Bangladesh Railway PATCH /bookings/reserve-seat
+  const reservedSeats = [];
+  const reserveErrors = [];
+
+  for (const s of seatsToHold) {
+    const reservePayload = {
+      ticket_id: s.ticket_id,
+      route_id: tripRouteId,
+      action_token: actionToken,
+      extras: {
+        seat_number: s.seat_number,
+        trip_number: String(target.trainModel || target.trainNumber || target.trainName || 'TRAIN'),
+        origin_name: fromCity,
+        destination_name: toCity
+      }
+    };
+
+    const reserveHeaders = {
+      'Authorization': `Bearer ${session.token}`,
+      'x-device-id': session.deviceId || '34a817c48b87571632d2a7a1d50575a4',
+      'x-device-key': session.deviceKey || generateShohozDeviceKey(session.token),
+      'X-Action-Token': actionToken,
+      'Content-Type': 'application/json',
+      'Origin': 'https://eticket.railway.gov.bd',
+      'Referer': 'https://eticket.railway.gov.bd/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+    };
+
+    try {
+      const rRes = await axios.patch(
+        'https://railspaapi.shohoz.com/v1.0/web/bookings/reserve-seat',
+        reservePayload,
+        { headers: reserveHeaders, timeout: 8000, validateStatus: () => true }
+      );
+
+      if (rRes.status === 200 && (rRes.data?.data?.ack === 1 || rRes.data?.data?.message?.includes('Reserved') || !rRes.data?.error)) {
+        console.log(`[Grabber:Method1] 🚀 Successfully RESERVED & HELD Seat ${s.seat_number} (ticket_id: ${s.ticket_id}) in official Railway cart!`);
+        reservedSeats.push(s);
+      } else {
+        const errDetail = rRes.data?.error?.messages?.error_msg || rRes.data?.error?.message || rRes.data?.message || `HTTP ${rRes.status}`;
+        console.warn(`[Grabber:Method1] Could not hold seat ${s.seat_number}:`, errDetail);
+        reserveErrors.push(`${s.seat_number}: ${errDetail}`);
+      }
+    } catch (resErr) {
+      console.warn(`[Grabber:Method1] Seat reserve error for ${s.seat_number}:`, resErr.message);
+      reserveErrors.push(`${s.seat_number}: ${resErr.message}`);
+    }
+  }
+
+  if (reservedSeats.length > 0) {
+    const heldSeatNumbers = reservedSeats.map(s => s.seat_number);
+    console.log(`[Grabber:Method1] 🎉 SUCCESS: ${reservedSeats.length} seat(s) held in official cart for 5 minutes!`);
+    return {
+      success: true,
+      method: 'Headless API Gateway (Method 1)',
+      coach: selectedCoach,
+      seats: heldSeatNumbers,
+      ticketIds: reservedSeats.map(s => s.ticket_id),
+      trainName: target.trainName,
+      tripId: tripId,
+      tripRouteId: tripRouteId,
+      expiresInSeconds: 300,
+      directCheckoutUrl: 'https://eticket.railway.gov.bd/booking/checkout'
+    };
+  }
+
+  const combinedError = reserveErrors.join('; ') || 'Railway API declined cart reservation hold';
+  return { success: false, reason: `Railway API rejected hold: ${combinedError}` };
 }
 
 // ---------------------------------------------------------------------------
@@ -423,6 +523,8 @@ async function grabSeatsViaPlaywright(target, session) {
       if (sessionData && sessionData.token) {
         localStorage.setItem('token', sessionData.token);
         localStorage.setItem('railway_token', sessionData.token);
+        localStorage.setItem('uudid', sessionData.deviceId || '34a817c48b87571632d2a7a1d50575a4');
+        localStorage.setItem('ssdk', sessionData.deviceKey || '');
         if (sessionData.user) localStorage.setItem('user', JSON.stringify(sessionData.user));
         if (sessionData.deviceId) localStorage.setItem('device_id', sessionData.deviceId);
         if (sessionData.deviceKey) localStorage.setItem('device_key', sessionData.deviceKey);
@@ -511,7 +613,7 @@ async function grabSeatsInBackground(target, options = {}) {
   console.log(`🚆 Train: ${target.trainName || 'Any'} | Route: ${target.fromCity} ➔ ${target.toCity}`);
   console.log('====================================================');
 
-  const session = loadSession();
+  const session = loadSession(options.session || target.session);
   const preferredMethod = options.method || 'auto'; // 'auto', 'api', 'playwright', 'puppeteer'
   let result = null;
 

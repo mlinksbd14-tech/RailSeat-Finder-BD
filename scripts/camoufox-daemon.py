@@ -350,7 +350,8 @@ def main():
                                         }
                                     });
                                     const data = await res.json();
-                                    return { status: res.status, ok: res.ok, data: data };
+                                    const atk = res.headers.get('x-action-token') || res.headers.get('X-Action-Token') || '';
+                                    return { status: res.status, ok: res.ok, data: data, actionToken: atk };
                                 } catch(e) {
                                     return { status: 0, error: e.message };
                                 }
@@ -358,9 +359,15 @@ def main():
                         """, {"tripId": trip_id, "tripRouteId": trip_route_id, "cft": cft})
 
                         dur = int((time.time() - t_start) * 1000)
-                        if api_res and api_res.get("ok") and (api_res.get("data", {}).get("data") or api_res.get("data", {}).get("coaches")):
-                            print(f"[CamoufoxDaemon] 🎯 Live layout delivered in {dur}ms!")
-                            task["result"] = api_res.get("data")
+                        if api_res and api_res.get("ok"):
+                            raw_pl = api_res.get("data", {})
+                            clean_data = raw_pl.get("data") if raw_pl.get("data") else raw_pl
+                            atk_val = api_res.get("actionToken") or ""
+                            print(f"[CamoufoxDaemon] 🎯 Live layout delivered in {dur}ms! (ActionToken: {bool(atk_val)})")
+                            task["result"] = {
+                                "data": clean_data,
+                                "actionToken": atk_val
+                            }
                         else:
                             err_msg = api_res.get("data", {}).get("message") if api_res else "No data"
                             status_code = api_res.get("status") if api_res else 0

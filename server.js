@@ -7823,6 +7823,14 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
     });
   }
 
+  const userSession = getUserShohozSession(req);
+  if (params.token || req.headers['authorization']) {
+    const rawTok = (params.token || req.headers['authorization']).replace(/^Bearer\s+/i, '').trim();
+    if (rawTok) {
+      userSession.token = rawTok;
+    }
+  }
+
   const canonicalFrom = getCanonicalStationName(fromCity);
   const canonicalTo = getCanonicalStationName(toCity);
 
@@ -7835,7 +7843,7 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
   // If trip_id is missing, use querySingleShohozTrip to find live train & available seats
   if (!tripId) {
     try {
-      const searchRes = await querySingleShohozTrip(canonicalFrom, canonicalTo, dateOfJourney);
+      const searchRes = await querySingleShohozTrip(canonicalFrom, canonicalTo, dateOfJourney, userSession);
       if (searchRes && searchRes.success && Array.isArray(searchRes.trains) && searchRes.trains.length > 0) {
         const trainFilter = trainName && trainName !== 'ALL' && trainName !== 'ANY'
           ? trainName.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
@@ -7855,13 +7863,13 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
         for (const t of candidateTrains) {
           const seatTypes = t.seat_types || [];
           if (seatClass !== 'ANY' && seatClass !== 'ALL') {
-            const matchCls = seatTypes.find(st => st.type === seatClass && (Number(st.seats_available) || 0) >= seatsCount);
+            const matchCls = seatTypes.find(st => st.type === seatClass && (Number(st.seat_counts?.online ?? st.seats_available) || 0) >= seatsCount);
             if (matchCls) {
               found = { train: t, seatType: matchCls };
               break;
             }
           }
-          const anyAvail = seatTypes.find(st => (Number(st.seats_available) || 0) >= seatsCount);
+          const anyAvail = seatTypes.find(st => (Number(st.seat_counts?.online ?? st.seats_available) || 0) >= seatsCount);
           if (anyAvail) {
             found = { train: t, seatType: anyAvail };
             break;
@@ -7871,7 +7879,7 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
         // Priority 2: If none have >= seatsCount, pick one that has ANY available seats (> 0)
         if (!found) {
           for (const t of candidateTrains) {
-            const anyAvail = (t.seat_types || []).find(st => (Number(st.seats_available) || 0) > 0);
+            const anyAvail = (t.seat_types || []).find(st => (Number(st.seat_counts?.online ?? st.seats_available) || 0) > 0);
             if (anyAvail) {
               found = { train: t, seatType: anyAvail };
               break;
@@ -7911,12 +7919,14 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
     seatsCount: seatsCount,
     tripId: tripId,
     tripRouteId: tripRouteId,
-    telegramChatId: params.telegram_chat_id || params.telegramChatId
+    telegramChatId: params.telegram_chat_id || params.telegramChatId,
+    session: userSession
   };
 
   const options = {
     method: params.method || 'auto', // 'auto', 'api', 'puppeteer'
-    sendTelegramAlert: params.notify !== false
+    sendTelegramAlert: params.notify !== false,
+    session: userSession
   };
 
   try {

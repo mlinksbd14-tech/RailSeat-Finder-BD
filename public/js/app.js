@@ -14347,6 +14347,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const tgConfig = typeof getTelegramConfig === 'function' ? getTelegramConfig() : null;
+        const authToken = typeof getAuthToken === 'function' ? getAuthToken() : '';
+        const railwayToken = localStorage.getItem('rail_auth_token') || localStorage.getItem('token') || '';
         const grabPayload = {
           from_city: fromCity,
           to_city: toCity,
@@ -14357,6 +14359,10 @@ document.addEventListener('DOMContentLoaded', () => {
           method: 'auto',
           telegram_chat_id: tgConfig?.chat_id || ''
         };
+        if (railwayToken) grabPayload.token = railwayToken;
+
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (authToken) reqHeaders['Authorization'] = `Bearer ${authToken}`;
 
         if (headlessGrabNowBtn) headlessGrabNowBtn.disabled = true;
         if (headlessGrabNowIcon) headlessGrabNowIcon.className = 'fa-solid fa-spinner fa-spin text-amber-300';
@@ -14364,7 +14370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let res = await fetch('/api/seat-grab', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: reqHeaders,
           body: JSON.stringify(grabPayload)
         });
 
@@ -14372,7 +14378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.status === 404) {
           res = await fetch('/api/seat-grab.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: reqHeaders,
             body: JSON.stringify(grabPayload)
           });
         }

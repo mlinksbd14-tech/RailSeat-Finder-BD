@@ -180,8 +180,11 @@ if ($layoutCode === 200 && !empty($layoutRaw)) {
                 if (empty($sNum) || !empty($s['is_blank'])) continue;
                 $avail = $s['seat_availability'] ?? null;
                 $isFree = ($avail === 1 || $avail === true || (string)($s['is_available'] ?? '') === '1');
-                if ($isFree) {
-                    $availSeats[] = $sNum;
+                if ($isFree && !empty($s['ticket_id'])) {
+                    $availSeats[] = [
+                        'seat_number' => $sNum,
+                        'ticket_id' => $s['ticket_id']
+                    ];
                 }
             }
 
@@ -197,44 +200,71 @@ if ($layoutCode === 200 && !empty($layoutRaw)) {
 if (empty($selectedSeats)) {
     echo json_encode([
         'success' => false,
+        'soldOut' => true,
         'error' => "No open available seats found in coach {$selectedCoach} for this train at this moment.",
         'details' => ['reason' => 'No available seats found']
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// 3. Send Mobile API Reservation Hold
-$holdPayload = [
-    'trip_id' => $tripId,
-    'trip_route_id' => $tripRouteId,
-    'coach_name' => $selectedCoach,
-    'seats' => $selectedSeats,
-    'seat_name' => $selectedSeats,
-    'ticket_count' => count($selectedSeats),
-    'hold_only' => true
+// 3. Send Official Bangladesh Railway PATCH /bookings/reserve-seat Hold
+$actionToken = $session['cftResponse'] ?? '';
+$webHeaders = [
+    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+    'Accept: application/json, text/plain, */*',
+    'Origin: https://eticket.railway.gov.bd',
+    'Referer: https://eticket.railway.gov.bd/',
+    'Content-Type: application/json',
+    'Authorization: Bearer ' . trim($session['token']),
+    'x-device-id: ' . $devId,
+    'x-device-key: ' . $devKey,
+    'X-Action-Token: ' . $actionToken
 ];
 
-$holdUrl = 'https://railspaapi.shohoz.com/v1.0/app/bookings/book-now';
+$reserveUrl = 'https://railspaapi.shohoz.com/v1.0/web/bookings/reserve-seat';
+$heldSeatNumbers = [];
+$holdErrors = [];
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $holdUrl);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($holdPayload));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, $mobileHeaders);
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+foreach ($selectedSeats as $stItem) {
+    $rPayload = [
+        'ticket_id' => $stItem['ticket_id'],
+        'route_id' => $tripRouteId,
+        'action_token' => $actionToken,
+        'extras' => [
+            'seat_number' => $stItem['seat_number'],
+            'trip_number' => $trainName ?: 'TRAIN',
+            'origin_name' => $canonicalFrom,
+            'destination_name' => $canonicalTo
+        ]
+    ];
 
-$holdRaw = curl_exec($ch);
-$holdCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $reserveUrl);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($rPayload));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $webHeaders);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
-$holdJson = !empty($holdRaw) ? json_decode($holdRaw, true) : null;
-$holdSuccess = ($holdCode === 200 && is_array($holdJson) && empty($holdJson['error']));
+    $holdRaw = curl_exec($ch);
+    $holdCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-if (!$holdSuccess) {
-    $errMsg = $holdJson['error']['message'] ?? ($holdJson['message'] ?? "Railway server responded with HTTP {$holdCode}");
+    $holdJson = !empty($holdRaw) ? json_decode($holdRaw, true) : null;
+    $isOk = ($holdCode === 200 && (isset($holdJson['data']['ack']) && $holdJson['data']['ack'] == 1 || stripos($holdJson['data']['message'] ?? '', 'Reserved') !== false || empty($holdJson['error'])));
+
+    if ($isOk) {
+        $heldSeatNumbers[] = $stItem['seat_number'];
+    } else {
+        $errDetail = $holdJson['error']['messages']['error_msg'] ?? ($holdJson['error']['message'] ?? ($holdJson['message'] ?? "HTTP {$holdCode}"));
+        $holdErrors[] = "{$stItem['seat_number']}: {$errDetail}";
+    }
+}
+
+if (empty($heldSeatNumbers)) {
+    $errMsg = implode('; ', $holdErrors) ?: "Railway server rejected hold request";
     echo json_encode([
         'success' => false,
         'error' => "Hold reservation failed: {$errMsg}",
@@ -242,6 +272,8 @@ if (!$holdSuccess) {
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+$selectedSeats = $heldSeatNumbers;
 
 // 4. Send Telegram Alert if configured
 $botToken = getenv('TELEGRAM_BOT_TOKEN') ?: '';

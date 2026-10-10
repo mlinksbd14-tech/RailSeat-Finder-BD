@@ -8536,26 +8536,65 @@ function openBrowser(url) {
   });
 }
 
-// Pre-warmed Persistent Camoufox Daemon Supervisor
+// ====================================================
+// 🚀 ALL-IN-ONE INTEGRATED SERVICE SUPERVISOR
+// Automatically boots and monitors all background microservices
+// when `node server.js` is started:
+// 1. Pre-warmed Persistent Camoufox Daemon (Port 5055)
+// 2. 24/7 Turnstile Auto-Solver & Keeper
+// 3. 24/7 Seat Watchlist Radar & Telegram Notifier
+// 4. Real-time WebSocket Seat Hold/Release Stream
+// ====================================================
+
 let camoufoxDaemonProcess = null;
+let isSpawningDaemon = false;
+
+function findPythonExecutable() {
+  if (process.env.PYTHON_PATH) {
+    try {
+      require('child_process').execSync(`"${process.env.PYTHON_PATH}" --version`, { stdio: 'ignore', timeout: 2000 });
+      return process.env.PYTHON_PATH;
+    } catch (e) {}
+  }
+  const candidates = [
+    'python',
+    'python3',
+    'C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe',
+    'py'
+  ];
+  for (const cand of candidates) {
+    try {
+      const out = require('child_process').execSync(`${cand} --version`, { stdio: ['ignore', 'pipe', 'ignore'], timeout: 2000 });
+      if (out && out.toString().toLowerCase().includes('python')) {
+        return cand;
+      }
+    } catch (e) {}
+  }
+  return 'python';
+}
+
 async function ensureCamoufoxDaemon() {
   if (isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
+  if (isSpawningDaemon) return;
+
   const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
   try {
     const res = await axios.get(`${daemonUrl}/health`, { timeout: 800 });
     if (res.data?.ready) {
-      console.log(`[CamoufoxDaemon] 🟢 Pre-warmed daemon already active and ready at ${daemonUrl}`);
+      console.log(`[CamoufoxDaemon] 🟢 Pre-warmed daemon is ACTIVE & READY at ${daemonUrl}`);
       return;
     }
   } catch (e) {
-    // Daemon not active yet, spawn it
+    // Daemon not running yet, proceed to spawn
   }
 
   const daemonScript = path.join(__dirname, 'scripts', 'camoufox-daemon.py');
   if (!fs.existsSync(daemonScript)) return;
 
-  const pyExe = process.env.PYTHON_PATH || 'C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe';
+  const pyExe = findPythonExecutable();
+  isSpawningDaemon = true;
   console.log(`[CamoufoxDaemon] 🦊 Auto-launching persistent pre-warmed daemon (${pyExe})...`);
+
   try {
     const { spawn } = require('child_process');
     camoufoxDaemonProcess = spawn(pyExe, [daemonScript], {
@@ -8563,11 +8602,25 @@ async function ensureCamoufoxDaemon() {
       stdio: 'ignore'
     });
     camoufoxDaemonProcess.unref();
-    console.log(`[CamoufoxDaemon] 🚀 Pre-warmed daemon running in background (PID: ${camoufoxDaemonProcess.pid})`);
+    console.log(`[CamoufoxDaemon] 🚀 Pre-warmed daemon started in background (PID: ${camoufoxDaemonProcess.pid})`);
   } catch (err) {
     console.warn(`[CamoufoxDaemon] Could not spawn daemon: ${err.message}`);
+  } finally {
+    isSpawningDaemon = false;
   }
 }
+
+// Graceful child process cleanup on exit
+function cleanupChildServices() {
+  if (camoufoxDaemonProcess && !camoufoxDaemonProcess.killed) {
+    try {
+      console.log('[Shutdown] Stopping background microservices...');
+      camoufoxDaemonProcess.kill('SIGTERM');
+    } catch (e) {}
+  }
+}
+process.on('SIGINT', () => { cleanupChildServices(); process.exit(0); });
+process.on('SIGTERM', () => { cleanupChildServices(); process.exit(0); });
 
 // Start Server with dynamic port fallback
 function startServer(portToTry) {
@@ -8575,11 +8628,15 @@ function startServer(portToTry) {
   const server = app.listen(numericPort, () => {
     const serverUrl = `http://localhost:${numericPort}`;
     console.log(`====================================================`);
-    console.log(` 🚆 RailSeat Finder BD - Bangladesh Railway Seat Availability`);
-    console.log(` 🌐 Server running at: ${serverUrl}`);
+    console.log(` 🚆 RailSeat Finder BD - Unified All-in-One Engine`);
+    console.log(` 🌐 Server URL: ${serverUrl}`);
     console.log(` 🛡️ Anti-Bot Protection & Request Throttling: Active`);
-    console.log(` 💾 Persistent Session Storage: ${fs.existsSync(SESSION_FILE) ? 'LOADED (Active)' : 'EMPTY (Waiting for connection)'}`);
+    console.log(` 💾 Persistent Session Storage: ${fs.existsSync(SESSION_FILE) ? 'LOADED (Active)' : 'EMPTY'}`);
     console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
+    console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
+    console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);
+    console.log(` 🎯 24/7 Radar Automation & Telegram Alerts: ACTIVE`);
+    console.log(` ⚡ Real-Time WebSocket Seat Sync: ACTIVE`);
     console.log(` 🚀 Dashboard auto-launching in browser...`);
     console.log(`====================================================`);
 

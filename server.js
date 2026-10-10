@@ -7824,11 +7824,9 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
   }
 
   const userSession = getUserShohozSession(req);
-  if (params.token || req.headers['authorization']) {
-    const rawTok = (params.token || req.headers['authorization']).replace(/^Bearer\s+/i, '').trim();
-    if (rawTok) {
-      userSession.token = rawTok;
-    }
+  // Only override with client-supplied token if it is an actual Shohoz JWT (starts with eyJ)
+  if (params.token && typeof params.token === 'string' && params.token.trim().startsWith('eyJ')) {
+    userSession.token = params.token.trim();
   }
 
   const canonicalFrom = getCanonicalStationName(fromCity);

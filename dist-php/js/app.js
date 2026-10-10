@@ -14309,9 +14309,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const fromCity = (autoBookFromInput?.value || '').trim();
-      const toCity = (autoBookToInput?.value || '').trim();
-      const journeyDate = autoBookDateInput?.value || '';
+      const fromInputEl = document.getElementById('fromInput');
+      const toInputEl = document.getElementById('toInput');
+      const dateInputEl = document.getElementById('dateInput');
+
+      let fromCity = (autoBookFromInput?.value || '').trim();
+      let toCity = (autoBookToInput?.value || '').trim();
+      let journeyDate = autoBookDateInput?.value || '';
+
+      if (!fromCity && fromInputEl?.value) {
+        fromCity = fromInputEl.value.trim();
+        if (autoBookFromInput) autoBookFromInput.value = fromCity;
+      }
+      if (!toCity && toInputEl?.value) {
+        toCity = toInputEl.value.trim();
+        if (autoBookToInput) autoBookToInput.value = toCity;
+      }
+      if (!journeyDate && dateInputEl?.value) {
+        journeyDate = dateInputEl.value.trim();
+        if (autoBookDateInput) autoBookDateInput.value = journeyDate;
+      }
 
       const targetTrains = (selectedAutoBookTrains.includes('ALL') || selectedAutoBookTrains.length === 0)
         ? ['ALL']
@@ -14324,7 +14341,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const keepTrying = autoBookKeepTryingToggle ? autoBookKeepTryingToggle.checked : true;
 
       if (!fromCity || !toCity) {
-        showToast(isBn() ? 'অনুগ্রহ করে স্টেশন নির্বাচন করুন।' : 'Please specify departure and arrival stations.', 'error');
+        showToast(isBn() ? 'অনুগ্রহ করে প্রস্থান ও গন্তব্য স্টেশন নির্বাচন করুন।' : 'Please specify departure and arrival stations.', 'error');
         return;
       }
       if (!journeyDate) {
@@ -14343,12 +14360,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const attemptPrefix = headlessRadarAttemptCount > 0 ? `[Attempt #${attemptNum}] ` : '';
 
       addConsoleLog(`${attemptPrefix}[1/3] 📱 <b>Executing 1-Tap Headless Grab:</b> ${fromCity} ➔ ${toCity} on ${journeyDate} (${targetClasses.join(', ')} | ${count} seats)...`, 'info');
-      addConsoleLog(`${attemptPrefix}[1/3] ⚡ Dual-Method Engine active (Method 1: Direct API, Method 2: Puppeteer). Zero phone battery or CPU used.`, 'info');
+      addConsoleLog(`${attemptPrefix}[1/3] ⚡ Dual-Method Engine active (Method 1: Direct API, Method 2: Headless Browser). Zero phone battery or CPU used.`, 'info');
 
       try {
         const tgConfig = typeof getTelegramConfig === 'function' ? getTelegramConfig() : null;
         const authToken = typeof getAuthToken === 'function' ? getAuthToken() : '';
-        const railwayToken = localStorage.getItem('rail_auth_token') || localStorage.getItem('token') || '';
         const grabPayload = {
           from_city: fromCity,
           to_city: toCity,
@@ -14359,7 +14375,12 @@ document.addEventListener('DOMContentLoaded', () => {
           method: 'auto',
           telegram_chat_id: tgConfig?.chat_id || ''
         };
-        if (railwayToken) grabPayload.token = railwayToken;
+
+        // Attach raw Shohoz JWT only if stored explicitly as a JWT (starts with eyJ)
+        const candTok = (localStorage.getItem('token') || '').trim();
+        if (candTok.startsWith('eyJ')) {
+          grabPayload.token = candTok;
+        }
 
         const reqHeaders = { 'Content-Type': 'application/json' };
         if (authToken) reqHeaders['Authorization'] = `Bearer ${authToken}`;
@@ -14430,8 +14451,22 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Handle seat not found yet
+        // Handle error / seat not found yet
         const reason = data.error || data.details?.reason || 'No available seats matching criteria at this moment';
+        const isAuthErr = reason.toLowerCase().includes('session') || reason.toLowerCase().includes('token') || reason.toLowerCase().includes('login') || reason.toLowerCase().includes('unauthorized');
+
+        if (isAuthErr) {
+          addConsoleLog(`[2/3] ❌ <b>Railway Authentication Required:</b> ${reason}`, 'error');
+          addConsoleLog(`💡 Please click <b>"Connect Live API"</b> at the top bar to pair your official Bangladesh Railway account.`, 'warn');
+          if (autoBookConsoleStatus) {
+            autoBookConsoleStatus.textContent = 'Auth Required';
+            autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-rose-950/80 text-[10px] font-bold text-rose-300 border border-rose-800';
+          }
+          showToast(reason, 'error');
+          stopHeadlessRadar(false);
+          return;
+        }
+
         addConsoleLog(`[2/3] ⚠️ Headless Grab attempt: ${reason}`, 'warn');
 
         if (keepTrying) {

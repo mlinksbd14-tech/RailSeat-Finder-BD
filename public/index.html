@@ -2427,9 +2427,9 @@
             <i class="fa-regular fa-clock text-[11px] text-slate-400"></i>
             <span id="seatLayoutStartTimeText">--:--</span>
           </span>
-          <span id="seatLayoutSocketBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 shrink-0 shadow-2xs" title="Connected directly to Bangladesh Railway real-time WebSocket stream">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="seatLayoutSocketBadgeText">Live Stream</span>
+          <!-- Hidden socket badge kept for JS compatibility -->
+          <span id="seatLayoutSocketBadge" class="hidden" aria-hidden="true">
+            <span id="seatLayoutSocketBadgeText"></span>
           </span>
         </div>
         
@@ -2488,42 +2488,42 @@
         <!-- Rendered by JS -->
       </div>
 
-      <!-- Legend & Footer Action Bar -->
-      <div class="p-3 sm:p-3.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <!-- Legend -->
-        <div class="flex items-center space-x-3.5 flex-wrap text-[11px] text-slate-600 dark:text-slate-400">
+      <!-- Legend & Footer Action Bar (Clean & Streamlined) -->
+      <div class="px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <!-- Legend (Clean: Available, Selected, Held, Booked) -->
+        <div class="flex items-center space-x-3.5 flex-wrap text-xs text-slate-600 dark:text-slate-400">
           <div class="flex items-center space-x-1.5">
             <span class="w-3.5 h-3.5 rounded border-2 border-emerald-600 bg-white dark:bg-slate-800 inline-block"></span>
-            <span>Available</span>
+            <span class="font-medium">Available</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <span class="w-3.5 h-3.5 rounded bg-amber-500 border border-amber-600 inline-block"></span>
-            <span>Selected</span>
+            <span class="font-medium">Selected</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="w-3.5 h-3.5 rounded bg-amber-50 dark:bg-amber-950/70 border-2 border-amber-400 inline-flex items-center justify-center text-[7px] text-amber-600 font-black leading-none">
+            <span class="w-3.5 h-3.5 rounded bg-amber-100 dark:bg-amber-950/80 border-2 border-amber-500 inline-flex items-center justify-center text-[7px] text-amber-700 dark:text-amber-300 font-black leading-none">
               <i class="fa-regular fa-clock"></i>
             </span>
-            <span>Held (5m)</span>
+            <span class="font-medium">Held (5m)</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <span class="w-3.5 h-3.5 rounded bg-[#f0eee9] dark:bg-slate-800 border border-[#e2ded6] dark:border-slate-700 inline-block"></span>
-            <span>Booked</span>
+            <span class="font-medium">Booked</span>
           </div>
         </div>
 
-        <!-- Action Links: Hold Only & Buy Now -->
-        <div class="flex items-center gap-2 w-full sm:w-auto">
+        <!-- Action Links: Hold Only & Buy Now (Clean layout) -->
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
           <!-- Hold Only Button -->
           <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-            class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
             <i class="fa-solid fa-hand text-xs"></i>
             <span id="seatLayoutHoldText">Hold Only</span>
           </a>
 
           <!-- Buy Now Button -->
           <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-            class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
+            class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
             <i class="fa-solid fa-bolt text-xs"></i>
             <span id="seatLayoutBuyText">Buy Now</span>
           </a>

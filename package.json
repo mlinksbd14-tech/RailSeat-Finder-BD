@@ -11,7 +11,7 @@
     "puppeteer:grab": "node scripts/playwright-seatmap-grabber.js",
     "seat:grab": "node scripts/headless-grab-cli.js",
     "camoufox:token": "python scripts/camoufox-token-worker.py --once",
-    "camoufox:daemon": "python scripts/camoufox-token-worker.py --daemon"
+    "camoufox:daemon": "python scripts/camoufox-daemon.py"
   },
   "keywords": [
     "bangladesh-railway",

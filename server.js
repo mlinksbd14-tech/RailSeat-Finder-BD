@@ -4433,6 +4433,25 @@ app.all('/api/live-coach-layout', async (req, res) => {
       return null;
     }
 
+    // ── ATTEMPT 0: Pre-warmed Persistent Camoufox Daemon (Sub-second response) ──
+    try {
+      const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+      const daemonRes = await axios.get(`${daemonUrl}/get-layout`, {
+        params: { trip_id: cleanTripId, trip_route_id: cleanTripRouteId },
+        timeout: 4500,
+        validateStatus: s => s < 500
+      });
+      if (daemonRes && daemonRes.status === 200 && daemonRes.data) {
+        const daemonPayload = await processLayoutResponse({ status: 200, data: daemonRes.data }, 'camoufox_daemon');
+        if (daemonPayload) {
+          console.log(`[LiveCoachLayout] ⚡⚡ 100% Genuine live layout retrieved via Pre-warmed Camoufox Daemon!`);
+          return res.json(daemonPayload);
+        }
+      }
+    } catch (daemonErr) {
+      // Daemon offline or timed out, seamlessly proceed to next attempts
+    }
+
     // ── ATTEMPT 1: Bangladesh Railway Mobile App Route (/v1.0/app/) ──────────
     // Official native Android apps bypass web Turnstile verification.
     try {
@@ -4763,6 +4782,27 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
   };
 
   if (session.cookie) headers['Cookie'] = session.cookie;
+
+  // ── ATTEMPT 0: Try Pre-warmed Camoufox Daemon (<1s response) ─────────────
+  try {
+    const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+    const daemonRes = await axios.get(`${daemonUrl}/get-layout`, {
+      params: { trip_id: cleanTripId, trip_route_id: cleanTripRouteId },
+      timeout: 3500,
+      validateStatus: s => s < 500
+    });
+    if (daemonRes && daemonRes.status === 200 && daemonRes.data) {
+      const rawData = daemonRes.data.data || daemonRes.data;
+      if (rawData.seatLayout || rawData.coaches) {
+        const socketState = await syncTripInProgress({ train_model, fromStation: from_station, toStation: to_station, journeyDate: journey_date });
+        const normalizedLayout = normalizeSeatLayoutResponse(rawData, cleanSeatClass, socketState);
+        if (normalizedLayout.coaches && normalizedLayout.coaches.length > 0) {
+          if (cleanTripId) seatLayoutCache.set(`${cleanTripId}|${cleanTripRouteId}`, { ts: Date.now(), payload: { source: 'official_railway_server', data: normalizedLayout } });
+          return res.json({ success: true, live: true, cached: false, status_source: 'camoufox_daemon', data: normalizedLayout });
+        }
+      }
+    }
+  } catch (dErr) {}
 
   try {
     const response = await safeShohozRequest(async () => {
@@ -8496,6 +8536,39 @@ function openBrowser(url) {
   });
 }
 
+// Pre-warmed Persistent Camoufox Daemon Supervisor
+let camoufoxDaemonProcess = null;
+async function ensureCamoufoxDaemon() {
+  if (isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
+  const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
+  try {
+    const res = await axios.get(`${daemonUrl}/health`, { timeout: 800 });
+    if (res.data?.ready) {
+      console.log(`[CamoufoxDaemon] 🟢 Pre-warmed daemon already active and ready at ${daemonUrl}`);
+      return;
+    }
+  } catch (e) {
+    // Daemon not active yet, spawn it
+  }
+
+  const daemonScript = path.join(__dirname, 'scripts', 'camoufox-daemon.py');
+  if (!fs.existsSync(daemonScript)) return;
+
+  const pyExe = process.env.PYTHON_PATH || 'C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe';
+  console.log(`[CamoufoxDaemon] 🦊 Auto-launching persistent pre-warmed daemon (${pyExe})...`);
+  try {
+    const { spawn } = require('child_process');
+    camoufoxDaemonProcess = spawn(pyExe, [daemonScript], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    camoufoxDaemonProcess.unref();
+    console.log(`[CamoufoxDaemon] 🚀 Pre-warmed daemon running in background (PID: ${camoufoxDaemonProcess.pid})`);
+  } catch (err) {
+    console.warn(`[CamoufoxDaemon] Could not spawn daemon: ${err.message}`);
+  }
+}
+
 // Start Server with dynamic port fallback
 function startServer(portToTry) {
   const numericPort = parseInt(portToTry, 10) || 3000;
@@ -8509,6 +8582,9 @@ function startServer(portToTry) {
     console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
     console.log(` 🚀 Dashboard auto-launching in browser...`);
     console.log(`====================================================`);
+
+    // Ensure Pre-warmed Camoufox daemon is active
+    ensureCamoufoxDaemon();
 
     // Auto open dashboard in default browser
     setTimeout(() => {

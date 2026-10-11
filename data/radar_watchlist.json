@@ -2,32 +2,9 @@
   "settings": {
     "enabled": true,
     "intervalSeconds": 25,
-    "lastRunAt": "2026-10-11T09:44:05.283Z"
+    "lastRunAt": "2026-10-11T09:45:20.311Z"
   },
-  "targets": [
-    {
-      "id": "watch_1791438345258_u38e",
-      "userId": "usr_1787812528386_taky",
-      "username": "shawon421",
-      "fromCity": "JAMALPUR_TOWN",
-      "toCity": "DHAKA",
-      "date": "2026-10-10",
-      "dates": [
-        "2026-10-10"
-      ],
-      "trainName": "BHRAMMAPUTRA EXPRESS (744)",
-      "trainModel": "744",
-      "className": "ANY",
-      "minSeats": 1,
-      "telegramChatId": "781705575",
-      "telegramUsername": "@srshawon",
-      "active": true,
-      "lastNotifiedSeats": 0,
-      "notifiedSeatsByDate": {},
-      "lastCheckedAt": "2026-10-11T09:44:06.244Z",
-      "createdAt": 1791438345258
-    }
-  ],
+  "targets": [],
   "recentAlerts": [
     {
       "id": "radar_alert_1788147996323_62ic",

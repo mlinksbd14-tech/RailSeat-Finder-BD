@@ -250,12 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const seatLayoutTrainName = document.getElementById('seatLayoutTrainName');
   const seatLayoutStartTime = document.getElementById('seatLayoutStartTime');
   const seatLayoutStartTimeText = document.getElementById('seatLayoutStartTimeText');
-  const seatLayoutTrainModel = document.getElementById('seatLayoutTrainModel');
-  const seatLayoutClassBadge = document.getElementById('seatLayoutClassBadge');
-  const seatLayoutSubtitle = document.getElementById('seatLayoutSubtitle');
   const seatLayoutCoachTabs = document.getElementById('seatLayoutCoachTabs');
-  const seatLayoutCoachesSummary = document.getElementById('seatLayoutCoachesSummary');
-  const seatLayoutAvailableOnlyToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
   const seatLayoutCoachInfoBanner = document.getElementById('seatLayoutCoachInfoBanner');
   const seatLayoutActiveCoachName = document.getElementById('seatLayoutActiveCoachName');
   const seatLayoutActiveCoachClass = document.getElementById('seatLayoutActiveCoachClass');
@@ -264,14 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const seatLayoutActiveBookedCount = document.getElementById('seatLayoutActiveBookedCount');
   const seatLayoutActiveFare = document.getElementById('seatLayoutActiveFare');
   const seatLayoutContent = document.getElementById('seatLayoutContent');
-  const seatLayoutBookNowBtn = document.getElementById('seatLayoutBookNowBtn');
-  const seatLayoutBookNowText = document.getElementById('seatLayoutBookNowText');
   const seatLayoutHoldBtn = document.getElementById('seatLayoutHoldBtn');
   const seatLayoutHoldText = document.getElementById('seatLayoutHoldText');
   const seatLayoutBuyBtn = document.getElementById('seatLayoutBuyBtn');
   const seatLayoutBuyText = document.getElementById('seatLayoutBuyText');
-  const seatLayoutAutoBookHint = document.getElementById('seatLayoutAutoBookHint');
-  const seatLayoutAutoBookHintText = document.getElementById('seatLayoutAutoBookHintText');
 
   // Top Menu Notification Center Elements
   const notifCenterContainer = document.getElementById('notifCenterContainer');
@@ -2434,11 +2425,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('Radar audio alert error:', e);
     }
-  }
-
-  // Alias for backward compatibility
-  function playNotificationChime() {
-    playNormalSeatReleaseSound();
   }
 
   function playUrgentAlertChime() {
@@ -7025,9 +7011,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!roomName) return;
 
     activeSeatLayoutRoomName = roomName;
-    const socketBadge = document.getElementById('seatLayoutSocketBadge');
-    const socketBadgeText = document.getElementById('seatLayoutSocketBadgeText');
-    const isBn = window.i18n && window.i18n.getLang() === 'bn';
 
     try {
       const ws = new WebSocket(RAIL_SOCKET_URL);
@@ -7047,13 +7030,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send('42' + JSON.stringify(['seatLayoutOpened', { roomName, model: model || null }]));
             console.log('[SeatSocket] 📡 Announced room subscription:', roomName);
           } catch (e) {}
-          if (socketBadge) {
-            socketBadge.classList.remove('hidden');
-            socketBadge.classList.add('inline-flex');
-            if (socketBadgeText) {
-              socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
-            }
-          }
           return;
         }
 
@@ -7078,10 +7054,6 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       ws.onclose = () => {
-        if (socketBadge) {
-          socketBadge.classList.add('hidden');
-          socketBadge.classList.remove('inline-flex');
-        }
         // Auto-reconnect if seat modal is still actively open
         if (seatLayoutModal && !seatLayoutModal.classList.contains('hidden') && activeSeatLayoutRoomName === roomName) {
           if (seatSocketReconnectTimer) clearTimeout(seatSocketReconnectTimer);
@@ -7107,11 +7079,6 @@ document.addEventListener('DOMContentLoaded', () => {
       activeSeatLayoutWebSocket = null;
     }
     activeSeatLayoutRoomName = null;
-    const socketBadge = document.getElementById('seatLayoutSocketBadge');
-    if (socketBadge) {
-      socketBadge.classList.add('hidden');
-      socketBadge.classList.remove('inline-flex');
-    }
   }
 
   function handleIncomingSeatSocketEvent(payload) {
@@ -7295,14 +7262,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initSeatLayoutModule() {
-    if (seatLayoutAvailableOnlyToggle) {
-      seatLayoutAvailableOnlyToggle.addEventListener('click', () => {
-        if (typeof toggleAvailableOnlyCoaches === 'function') {
-          toggleAvailableOnlyCoaches();
-        }
-      });
-    }
-
     if (seatLayoutCloseBtn) {
       seatLayoutCloseBtn.addEventListener('click', () => {
         closeSeatLayoutModal();
@@ -7331,12 +7290,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seatLayoutBuyBtn) {
       seatLayoutBuyBtn.addEventListener('click', (e) => {
-        saveExactSeatIntent('buy');
-      });
-    }
-
-    if (seatLayoutBookNowBtn) {
-      seatLayoutBookNowBtn.addEventListener('click', (e) => {
         saveExactSeatIntent('buy');
       });
     }
@@ -7909,27 +7862,6 @@ document.addEventListener('DOMContentLoaded', () => {
         seatLayoutStartTime.classList.remove('inline-flex');
       }
     }
-    if (seatLayoutTrainModel) seatLayoutTrainModel.textContent = cleanModel ? `#${cleanModel}` : '#---';
-    if (seatLayoutSubtitle) {
-      const fromDisplay = window.i18n ? window.i18n.getStationName(fromCity) : fromCity;
-      const toDisplay = window.i18n ? window.i18n.getStationName(toCity) : toCity;
-      const dateDisplay = isBn ? window.i18n.toBnNum(journeyDate) : journeyDate;
-      seatLayoutSubtitle.textContent = `${fromDisplay} ➔ ${toDisplay} • ${dateDisplay}`;
-    }
-
-    // Hide badges initially (they'll be controlled in the background fetch)
-    const _liveBadgeInit = document.getElementById('seatLayoutLiveBadge');
-    if (_liveBadgeInit) { _liveBadgeInit.classList.add('hidden'); _liveBadgeInit.classList.remove('inline-flex'); }
-
-    if (seatLayoutClassBadge) {
-      if (targetClass) {
-        seatLayoutClassBadge.textContent = window.i18n ? window.i18n.getSeatClassName(targetClass) : targetClass;
-        seatLayoutClassBadge.classList.remove('hidden');
-      } else {
-        seatLayoutClassBadge.classList.add('hidden');
-      }
-    }
-
     updateSeatLayoutBookNowButton();
 
     if (seatLayoutModal) seatLayoutModal.classList.remove('hidden');
@@ -7944,17 +7876,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSeatLayoutCoachTabs();
     renderActiveCoachCarriage();
 
-    // Show "fetching live layout" indicator in modal
-    const liveSearchingBadge = document.getElementById('seatLayoutSearchingBadge');
-    const seatLiveBadge = document.getElementById('seatLayoutLiveBadge');
-    if (liveSearchingBadge) {
-      liveSearchingBadge.classList.remove('hidden');
-      liveSearchingBadge.classList.add('inline-flex');
-    }
-    if (seatLiveBadge) {
-      seatLiveBadge.classList.add('hidden');
-      seatLiveBadge.classList.remove('inline-flex');
-    }
     // Track the in-flight request in state so the badge sync owns the spinner
     // and can always clear it, including on error.
     currentSeatLayoutState.fetching = true;
@@ -8247,11 +8168,6 @@ document.addEventListener('DOMContentLoaded', () => {
   async function fetchClassLiveSeatLayout(coachClass) {
     if (!currentSeatLayoutState) return;
     const cleanClass = (coachClass || '').toUpperCase();
-    const liveSearchBadge = document.getElementById('seatLayoutSearchingBadge');
-    const liveB = document.getElementById('seatLayoutLiveBadge');
-
-    if (liveSearchBadge) { liveSearchBadge.classList.remove('hidden'); liveSearchBadge.classList.add('inline-flex'); }
-    if (liveB) { liveB.classList.add('hidden'); liveB.classList.remove('inline-flex'); }
     currentSeatLayoutState.fetching = true;
     syncSeatLayoutSourceBadges();
 
@@ -8394,42 +8310,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // official per-seat endpoint; a rake that mixes live and template coaches is
   // still not fully live, and saying otherwise would misrepresent the data.
   function syncSeatLayoutSourceBadges() {
-    const isBn = window.i18n && window.i18n.getLang() === 'bn';
-    const st = currentSeatLayoutState || {};
-    const coaches = st.coaches || [];
-    const allLive = coaches.length > 0 && coaches.every(c => c.status_source === 'official_railway_server' || c.status_source === 'official_railway_mobile_app');
-    const isLive = !!st.isLive && allLive;
-
-    const setBadge = (el, on) => {
-      if (!el) return;
-      el.classList.toggle('hidden', !on);
-      el.classList.toggle('inline-flex', on);
-    };
-
-    setBadge(document.getElementById('seatLayoutLiveBadge'), isLive);
-    setBadge(document.getElementById('seatLayoutTemplateBadge'), !isLive);
-    setBadge(document.getElementById('seatLayoutQuickSyncBtn'), !isLive && !st.fetching);
-    setBadge(document.getElementById('seatLayoutSearchingBadge'), !!st.fetching);
-
-    const isSocketConnected = !!(activeSeatLayoutWebSocket && activeSeatLayoutWebSocket.readyState === WebSocket.OPEN);
-    setBadge(document.getElementById('seatLayoutSocketBadge'), isSocketConnected);
-    const socketBadgeText = document.querySelector('#seatLayoutSocketBadge span:last-child');
-    if (socketBadgeText) {
-      socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
-    }
-
-    const sub = document.getElementById('seatLayoutSubtitle');
-    if (sub) {
-      if (isLive) {
-        sub.textContent = isBn
-          ? 'লাইভ ক্যারেজ লেআউট — বাংলাদেশ রেলওয়ে শোহোজ API থেকে সরাসরি'
-          : 'Live carriage layout direct from Bangladesh Railway Shohoz API';
-      } else {
-        sub.textContent = isBn
-          ? 'অফিসিয়াল বাংলাদেশ রেলওয়ে বগির কাঠামো — ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে লাইভ সিঙ্ক হচ্ছে'
-          : 'Official Bangladesh Railway coach layout — Auto-syncing live seat status in background';
-      }
-    }
+    // Layout state sync hook
   }
 
   // -------------------------------------------------------------------------
@@ -8507,54 +8388,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (headerQuickSyncBtn) {
     headerQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
   }
-  const seatLayoutQuickSyncBtn = document.getElementById('seatLayoutQuickSyncBtn');
-  if (seatLayoutQuickSyncBtn) {
-    seatLayoutQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
-  }
 
   function renderSeatLayoutCoachTabs() {
     const isBn = window.i18n && window.i18n.getLang() === 'bn';
     const coaches = currentSeatLayoutState?.coaches || [];
     const allCoaches = currentSeatLayoutState?.allCoaches || coaches;
-    const isAvailOnly = currentSeatLayoutState?.availableOnly !== false;
 
     syncSeatLayoutSourceBadges();
-
-    // Sync toggle button appearance
-    const availToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
-    const availToggleText = document.getElementById('seatLayoutAvailableOnlyToggleText');
-    if (availToggle && availToggleText) {
-      if (isAvailOnly && allCoaches.length > coaches.length) {
-        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
-        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length}/${allCoaches.length})`;
-        availToggle.title = isBn ? 'সকল বগি দেখতে ক্লিক করুন' : 'Click to show all coaches';
-      } else if (!isAvailOnly) {
-        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:opacity-90 transition cursor-pointer';
-        availToggleText.textContent = isBn ? `সকল বগি (${allCoaches.length})` : `All Coaches (${allCoaches.length})`;
-        availToggle.title = isBn ? 'শুধু খালি বগি দেখতে ক্লিক করুন' : 'Click to show only coaches with available seats';
-      } else {
-        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
-        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length})`;
-      }
-    }
-
-    if (seatLayoutCoachesSummary) {
-      // Only total up availability the server actually reported. Unknown
-      // coaches are counted separately instead of being read as zero.
-      const known = coaches.filter(c => c.available_seats !== null && c.available_seats !== undefined);
-      const totalAvail = known.reduce((sum, c) => sum + Number(c.available_seats || 0), 0);
-      const totalSeats = coaches.reduce((sum, c) => sum + Number(c.total_seats || 0), 0);
-      const arr = isBn ? window.i18n.toBnNum : (v) => v;
-      if (isAvailOnly && allCoaches.length > coaches.length) {
-        seatLayoutCoachesSummary.textContent = isBn
-          ? `${arr(coaches.length)}টি খালি বগি (মোট ${arr(allCoaches.length)}) • খালি: ${arr(totalAvail)}টি সিট`
-          : `${coaches.length} Available Coaches (${allCoaches.length} total) • ${totalAvail} seats available`;
-      } else {
-        seatLayoutCoachesSummary.textContent = isBn
-          ? `${arr(coaches.length)}টি বগি • মোট খালি: ${arr(totalAvail)}টি সিট • মোট আসন: ${arr(totalSeats)}`
-          : `${coaches.length} Coaches • ${totalAvail} of ${totalSeats} seats available`;
-      }
-    }
 
     if (!seatLayoutCoachTabs) return;
     const isFetching = !!currentSeatLayoutState?.fetching;
@@ -8624,27 +8464,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
-  }
-
-  function toggleAvailableOnlyCoaches() {
-    if (!currentSeatLayoutState) return;
-    const all = currentSeatLayoutState.allCoaches || currentSeatLayoutState.coaches || [];
-    currentSeatLayoutState.availableOnly = !currentSeatLayoutState.availableOnly;
-
-    const availableCoaches = all.filter(isCoachAvailable);
-    if (currentSeatLayoutState.availableOnly) {
-      currentSeatLayoutState.coaches = availableCoaches.length > 0 ? availableCoaches : all;
-    } else {
-      currentSeatLayoutState.coaches = all;
-    }
-
-    if (currentSeatLayoutState.activeCoachIndex >= currentSeatLayoutState.coaches.length) {
-      currentSeatLayoutState.activeCoachIndex = 0;
-    }
-    currentSeatLayoutState.selectedSeat = null;
-    currentSeatLayoutState.selectedSeats = [];
-    renderSeatLayoutCoachTabs();
-    renderActiveCoachCarriage();
   }
 
   function buildExactSeatBookingUrl(mode = 'buy') {
@@ -8753,11 +8572,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seatLayoutHoldBtn) seatLayoutHoldBtn.href = holdUrl;
     if (seatLayoutBuyBtn) seatLayoutBuyBtn.href = buyUrl;
-    if (seatLayoutBookNowBtn) seatLayoutBookNowBtn.href = buyUrl;
-
-    if (seatLayoutAutoBookHint) {
-      seatLayoutAutoBookHint.classList.add('hidden');
-    }
 
     if (!hasSeats) {
       if (seatLayoutHoldText) {
@@ -8766,20 +8580,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (seatLayoutBuyText) {
         seatLayoutBuyText.textContent = isBn ? 'এখনই কিনুন' : 'Buy Now';
       }
-      if (seatLayoutBookNowText) {
-        seatLayoutBookNowText.textContent = isBn ? 'রেলওয়ে সাইটে টিকিট কাটুন' : 'Book on Railway';
-      }
       return;
     }
 
     const fallbackFare = Number(coach?.fare || st.targetFare || 0);
     const totalFare = selectedSeats.reduce((sum, s) => sum + (Number(s.fare) || fallbackFare || 0), 0);
-    const count = selectedSeats.length;
     const coachName = coach?.coach_name || selectedSeats[0]?.coach_name || '';
     const seatNamesOnly = selectedSeats.map(s => s.seat_number ? String(s.seat_number).replace(/^[^-]+-/, '') : s.seat_name);
     const seatNamesJoined = seatNamesOnly.join(', ');
 
-    const countBn = isBn && window.i18n ? window.i18n.toBnNum(count) : count;
     const fareBn = isBn && window.i18n ? window.i18n.toBnNum(totalFare) : totalFare;
     const seatNamesBn = isBn && window.i18n ? window.i18n.toBnNum(seatNamesJoined) : seatNamesJoined;
     const coachBn = isBn && window.i18n ? window.i18n.toBnNum(coachName) : coachName;
@@ -8798,18 +8607,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         seatLayoutBuyText.textContent = `Buy Now • ৳${totalFare}`;
       }
-    }
-
-    if (seatLayoutBookNowText) {
-      if (isBn) {
-        seatLayoutBookNowText.textContent = `${countBn}টি সিট কাটুন (${coachBn}-${seatNamesBn}) • ৳${fareBn}`;
-      } else {
-        seatLayoutBookNowText.textContent = `Book ${count} Seat${count > 1 ? 's' : ''} (${coachName}-${seatNamesJoined}) • ৳${totalFare}`;
-      }
-    }
-
-    if (seatLayoutAutoBookHintText) {
-      seatLayoutAutoBookHintText.textContent = '';
     }
   }
 
@@ -8908,7 +8705,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const coachClass = coach.seat_class || 'S_CHAIR';
     const classDisplayName = window.i18n ? window.i18n.getSeatClassName(coachClass) : coachClass;
-    if (seatLayoutClassBadge) seatLayoutClassBadge.textContent = coachClass;
     if (seatLayoutActiveCoachName) seatLayoutActiveCoachName.textContent = coach.coach_name || '--';
     if (seatLayoutActiveCoachClass) seatLayoutActiveCoachClass.textContent = classDisplayName;
 
@@ -12553,8 +12349,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Elements
     const autoBookCountdownTimer = document.getElementById('autoBookCountdownTimer');
-    const autoBookTabNow = document.getElementById('autoBookTabNow');
-    const autoBookTabSchedule = document.getElementById('autoBookTabSchedule');
     const autoBookFromInput = document.getElementById('autoBookFromInput');
     const autoBookFromClearBtn = document.getElementById('autoBookFromClearBtn');
     const autoBookFromDropdown = document.getElementById('autoBookFromDropdown');
@@ -12564,8 +12358,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoBookSwapBtn = document.getElementById('autoBookSwapBtn');
     const autoBookDateInput = document.getElementById('autoBookDateInput');
     const autoBookQuickDateChips = document.getElementById('autoBookQuickDateChips');
-    const autoBookTrainSelect = document.getElementById('autoBookTrainSelect'); // legacy fallback
-    const autoBookClassSelect = document.getElementById('autoBookClassSelect'); // legacy fallback
     const autoBookTrainDropdownContainer = document.getElementById('autoBookTrainDropdownContainer');
     const autoBookTrainDropdownBtn = document.getElementById('autoBookTrainDropdownBtn');
     const autoBookTrainBtnText = document.getElementById('autoBookTrainBtnText');
@@ -12593,10 +12385,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper: returns true if "Buy Now" (auto-proceed to OTP) mode is selected
     function isBuyNowMode() { return !isHoldOnlyMode(); }
 
-    const autoBookModeBanner = document.getElementById('autoBookModeBanner');
-    const autoBookModeBadgeIcon = document.getElementById('autoBookModeBadgeIcon');
-    const autoBookModeIconEl = document.getElementById('autoBookModeIconEl');
-    const autoBookModeTitle = document.getElementById('autoBookModeTitle');
     const autoBookModeTag = document.getElementById('autoBookModeTag');
     const autoBookModeSubtext = document.getElementById('autoBookModeSubtext');
     const autoBookDateBadge = document.getElementById('autoBookDateBadge');
@@ -12906,7 +12694,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectedAutoBookClasses.includes('ANY') || selectedAutoBookClasses.length === 0) {
         autoBookClassBtnText.textContent = isBnLang ? 'যেকোনো ক্লাস (Any Available)' : 'Any Available Class (যেকোনো ক্লাস)';
         if (autoBookClassCountBadge) autoBookClassCountBadge.textContent = isBnLang ? 'সব ক্লাস' : 'Any Class';
-        if (autoBookClassSelect) autoBookClassSelect.value = 'ANY';
       } else {
         const labels = selectedAutoBookClasses.map(c => window.i18n ? window.i18n.getSeatClassName(c) : c);
         autoBookClassBtnText.textContent = labels.join(', ');
@@ -12914,7 +12701,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const count = selectedAutoBookClasses.length;
           autoBookClassCountBadge.textContent = isBnLang ? `${count}টি ক্লাস` : (count === 1 ? '1 Class' : `${count} Classes`);
         }
-        if (autoBookClassSelect) autoBookClassSelect.value = selectedAutoBookClasses[0];
       }
     }
 
@@ -12925,14 +12711,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectedAutoBookTrains.includes('ALL') || selectedAutoBookTrains.length === 0) {
         autoBookTrainBtnText.textContent = isBnLang ? 'যেকোনো ট্রেন (Any Train on Route)' : 'Any Train on Route (যেকোনো ট্রেন)';
         if (autoBookTrainCountBadge) autoBookTrainCountBadge.textContent = isBnLang ? 'সব ট্রেন' : 'Any Train';
-        if (autoBookTrainSelect) autoBookTrainSelect.value = 'ALL';
       } else {
         autoBookTrainBtnText.textContent = selectedAutoBookTrains.join(', ');
         if (autoBookTrainCountBadge) {
           const count = selectedAutoBookTrains.length;
           autoBookTrainCountBadge.textContent = isBnLang ? `${count}টি ট্রেন` : (count === 1 ? '1 Train' : `${count} Trains`);
         }
-        if (autoBookTrainSelect) autoBookTrainSelect.value = selectedAutoBookTrains[0];
       }
     }
 
@@ -13380,8 +13164,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAutoBookActionState();
     }
 
-    if (autoBookTabNow) autoBookTabNow.addEventListener('click', () => setAutoBookMode('now'));
-    if (autoBookTabSchedule) autoBookTabSchedule.addEventListener('click', () => setAutoBookMode('schedule'));
     if (autoBookModeHold) autoBookModeHold.addEventListener('change', () => updateAutoBookActionState());
     if (autoBookModeBuy) autoBookModeBuy.addEventListener('change', () => updateAutoBookActionState());
 
@@ -14690,7 +14472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   relBtn.disabled = true;
                   relBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Releasing...';
                   try {
-                    const relRes = await fetch('/api/seat-release.php', {
+                    const relRes = await fetch('/api/seat-release', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ ticket_ids: tIds, route_id: rId })

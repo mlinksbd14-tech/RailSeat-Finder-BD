@@ -32,13 +32,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const isRender = !!(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_INSTANCE_ID);
-const isVercel = !!(process.env.VERCEL || process.env.NOW_REGION);
-const isLowMemory = isRender || isVercel || process.env.DISABLE_LOCAL_BROWSER === 'true' || process.env.LOW_MEMORY === 'true';
-
-if (isLowMemory) {
-  console.log('[Runtime] 🚀 Running in optimized LOW-MEMORY cloud mode (Render 512MB limit / Serverless). In-container headless browsers disabled.');
-}
+const isVercel = !!process.env.VERCEL;
 
 // On Vercel serverless lambda, the filesystem (/var/task) is read-only.
 // Use /tmp for writable storage while reading initial seed data from bundled directories.
@@ -659,11 +653,6 @@ let isTurnstileKeeperSolving = false;
 let lastTurnstileKeeperRun = 0;
 
 async function runBackgroundTurnstileKeeper(force = false) {
-  if (isLowMemory) {
-    // In low-memory cloud environments (Render 512MB / Vercel), do not spawn in-container browser
-    return;
-  }
-
   if (isTurnstileKeeperSolving) return;
   const now = Date.now();
 
@@ -688,16 +677,15 @@ async function runBackgroundTurnstileKeeper(force = false) {
   }
 }
 
-// Background Keeper Heartbeat: Only run if not in low-memory environment
-if (!isLowMemory) {
-  setInterval(() => {
-    runBackgroundTurnstileKeeper(false);
-  }, 45000);
+// Background Keeper Heartbeat: Check every 45 seconds to keep token permanently fresh
+setInterval(() => {
+  runBackgroundTurnstileKeeper(false);
+}, 45000);
 
-  setTimeout(() => {
-    runBackgroundTurnstileKeeper(false);
-  }, 3000);
-}
+// Kick off first keeper cycle 3 seconds after server start
+setTimeout(() => {
+  runBackgroundTurnstileKeeper(false);
+}, 3000);
 
 // Helper to decode rich official profile from Shohoz JWT Token
 function decodeShohozJwtProfile(token) {
@@ -4562,7 +4550,7 @@ app.all('/api/live-coach-layout', async (req, res) => {
       }
 
       // All tokens exhausted — attempt automated background Turnstile solver before falling back
-      if ((last422 || allCftTokens.length === 0) && !isLowMemory) {
+      if (last422 || allCftTokens.length === 0) {
         console.log('[LiveCoachLayout] Turnstile challenged (422). Launching headless background solver...');
         runBackgroundTurnstileKeeper(true);
         try {
@@ -4907,7 +4895,7 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.2. Direct Live Seat Layout Intake (Fast-Path from Userscript / Browser Extension)
+// 4.2. Direct Live Seat Layout Intake (Fast-Path from Userscript / Playwright)
 // ---------------------------------------------------------------------------
 app.post('/api/seat-layout/save', (req, res) => {
   const { trip_id, trip_route_id, layout, cft_response, seat_class } = req.body;
@@ -7934,7 +7922,7 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
   };
 
   const options = {
-    method: params.method || 'api', // 'api'
+    method: params.method || 'auto', // 'auto', 'api', 'puppeteer'
     sendTelegramAlert: params.notify !== false,
     session: userSession
   };
@@ -7951,47 +7939,6 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
       success: false,
       error: err.message
     });
-  }
-});
-
-// 🔓 Release Held Seat in Shohoz Cart (Method 1)
-app.post(['/api/seat-release', '/api/seat-release.php'], async (req, res) => {
-  try {
-    const { ticket_ids, ticket_id, route_id, trip_route_id } = req.body || {};
-    const tIds = (ticket_ids && Array.isArray(ticket_ids) ? ticket_ids : (ticket_id ? [ticket_id] : [])).map(Number).filter(Boolean);
-    const rId = Number(route_id || trip_route_id);
-
-    if (!tIds.length || !rId) {
-      return res.status(400).json({ success: false, error: 'ticket_id(s) and route_id are required to release seats.' });
-    }
-
-    const session = getUserShohozSession(req);
-    if (!session || !session.token) {
-      return res.status(401).json({ success: false, error: 'No active Railway session found.' });
-    }
-
-    const devId = session.deviceId || session.device_id || '34a817c48b87571632d2a7a1d50575a4';
-    const devKey = session.deviceKey || session.device_key || generateShohozDeviceKey(session.token);
-
-    const relRes = await axios.patch('https://railspaapi.shohoz.com/v1.0/web/bookings/bulk-release-seat', {
-      ticket_id: tIds,
-      route_id: rId
-    }, {
-      headers: {
-        'Authorization': `Bearer ${session.token}`,
-        'x-device-id': devId,
-        'x-device-key': devKey,
-        'Content-Type': 'application/json'
-      },
-      timeout: 6000
-    });
-
-    console.log(`[SeatRelease] 🔓 Successfully released ticket(s) ${tIds.join(', ')} from route ${rId}`);
-    return res.json({ success: true, data: relRes.data });
-  } catch (err) {
-    const errMsg = err.response?.data?.error?.messages?.[0] || err.message;
-    console.warn(`[SeatRelease] Error releasing seats:`, errMsg);
-    return res.status(500).json({ success: false, error: errMsg });
   }
 });
 
@@ -8635,7 +8582,7 @@ function findPythonExecutable() {
 }
 
 async function ensureCamoufoxDaemon() {
-  if (isLowMemory || isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
+  if (isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
   if (isSpawningDaemon) return;
 
   const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
@@ -8694,31 +8641,20 @@ function startServer(portToTry) {
     console.log(` 🛡️ Anti-Bot Protection & Request Throttling: Active`);
     console.log(` 💾 Persistent Session Storage: ${fs.existsSync(SESSION_FILE) ? 'LOADED (Active)' : 'EMPTY'}`);
     console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
-    if (isLowMemory) {
-      console.log(` ☁️ Mode: Cloud/Low-Memory Optimized (Render 512MB RAM safe)`);
-      console.log(` 🛡️ Browser Engine: Client-Side / Remote Daemon (Local browser sub-processes disabled)`);
-    } else {
-      console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
-      console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);
-    }
+    console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
+    console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);
     console.log(` 🎯 24/7 Radar Automation & Telegram Alerts: ACTIVE`);
     console.log(` ⚡ Real-Time WebSocket Seat Sync: ACTIVE`);
-    if (!isLowMemory && !isRender && !isVercel && process.env.NODE_ENV !== 'production') {
-      console.log(` 🚀 Dashboard auto-launching in browser...`);
-    }
+    console.log(` 🚀 Dashboard auto-launching in browser...`);
     console.log(`====================================================`);
 
-    // Ensure Pre-warmed Camoufox daemon is active (only in local environments with sufficient RAM)
-    if (!isLowMemory) {
-      ensureCamoufoxDaemon();
-    }
+    // Ensure Pre-warmed Camoufox daemon is active
+    ensureCamoufoxDaemon();
 
-    // Auto open dashboard in default browser (local dev only)
-    if (!isLowMemory && !isRender && !isVercel && process.env.NODE_ENV !== 'production') {
-      setTimeout(() => {
-        openBrowser(serverUrl);
-      }, 500);
-    }
+    // Auto open dashboard in default browser
+    setTimeout(() => {
+      openBrowser(serverUrl);
+    }, 500);
   });
 
   server.on('error', (err) => {

@@ -43,7 +43,7 @@ const seatClass = (cliArgs.class || cliArgs.seat_class || process.env.CLASS || p
 const trainName = cliArgs.train || cliArgs.train_name || process.env.TRAIN || process.env.TRAIN_NAME || '';
 const coach = cliArgs.coach || process.env.COACH || '';
 const seatsCount = parseInt(cliArgs.seats || cliArgs.seats_count || process.env.SEATS || process.env.SEATS_COUNT || '1', 10);
-const method = cliArgs.method || process.env.METHOD || 'api'; // 'api'
+const method = cliArgs.method || process.env.METHOD || 'auto'; // 'auto', 'api', 'puppeteer'
 const isRushMode = cliArgs.rush === true || cliArgs.watch === true || process.env.RUSH === 'true';
 const maxRetries = parseInt(cliArgs.retries || (isRushMode ? '40' : '1'), 10);
 

@@ -250,7 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const seatLayoutTrainName = document.getElementById('seatLayoutTrainName');
   const seatLayoutStartTime = document.getElementById('seatLayoutStartTime');
   const seatLayoutStartTimeText = document.getElementById('seatLayoutStartTimeText');
+  const seatLayoutTrainModel = document.getElementById('seatLayoutTrainModel');
+  const seatLayoutClassBadge = document.getElementById('seatLayoutClassBadge');
+  const seatLayoutSubtitle = document.getElementById('seatLayoutSubtitle');
   const seatLayoutCoachTabs = document.getElementById('seatLayoutCoachTabs');
+  const seatLayoutCoachesSummary = document.getElementById('seatLayoutCoachesSummary');
+  const seatLayoutAvailableOnlyToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
   const seatLayoutCoachInfoBanner = document.getElementById('seatLayoutCoachInfoBanner');
   const seatLayoutActiveCoachName = document.getElementById('seatLayoutActiveCoachName');
   const seatLayoutActiveCoachClass = document.getElementById('seatLayoutActiveCoachClass');
@@ -259,10 +264,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const seatLayoutActiveBookedCount = document.getElementById('seatLayoutActiveBookedCount');
   const seatLayoutActiveFare = document.getElementById('seatLayoutActiveFare');
   const seatLayoutContent = document.getElementById('seatLayoutContent');
+  const seatLayoutBookNowBtn = document.getElementById('seatLayoutBookNowBtn');
+  const seatLayoutBookNowText = document.getElementById('seatLayoutBookNowText');
   const seatLayoutHoldBtn = document.getElementById('seatLayoutHoldBtn');
   const seatLayoutHoldText = document.getElementById('seatLayoutHoldText');
   const seatLayoutBuyBtn = document.getElementById('seatLayoutBuyBtn');
   const seatLayoutBuyText = document.getElementById('seatLayoutBuyText');
+  const seatLayoutAutoBookHint = document.getElementById('seatLayoutAutoBookHint');
+  const seatLayoutAutoBookHintText = document.getElementById('seatLayoutAutoBookHintText');
 
   // Top Menu Notification Center Elements
   const notifCenterContainer = document.getElementById('notifCenterContainer');
@@ -2425,6 +2434,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.warn('Radar audio alert error:', e);
     }
+  }
+
+  // Alias for backward compatibility
+  function playNotificationChime() {
+    playNormalSeatReleaseSound();
   }
 
   function playUrgentAlertChime() {
@@ -7011,6 +7025,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!roomName) return;
 
     activeSeatLayoutRoomName = roomName;
+    const socketBadge = document.getElementById('seatLayoutSocketBadge');
+    const socketBadgeText = document.getElementById('seatLayoutSocketBadgeText');
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
 
     try {
       const ws = new WebSocket(RAIL_SOCKET_URL);
@@ -7030,6 +7047,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ws.send('42' + JSON.stringify(['seatLayoutOpened', { roomName, model: model || null }]));
             console.log('[SeatSocket] 📡 Announced room subscription:', roomName);
           } catch (e) {}
+          if (socketBadge) {
+            socketBadge.classList.remove('hidden');
+            socketBadge.classList.add('inline-flex');
+            if (socketBadgeText) {
+              socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
+            }
+          }
           return;
         }
 
@@ -7054,6 +7078,10 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       ws.onclose = () => {
+        if (socketBadge) {
+          socketBadge.classList.add('hidden');
+          socketBadge.classList.remove('inline-flex');
+        }
         // Auto-reconnect if seat modal is still actively open
         if (seatLayoutModal && !seatLayoutModal.classList.contains('hidden') && activeSeatLayoutRoomName === roomName) {
           if (seatSocketReconnectTimer) clearTimeout(seatSocketReconnectTimer);
@@ -7079,6 +7107,11 @@ document.addEventListener('DOMContentLoaded', () => {
       activeSeatLayoutWebSocket = null;
     }
     activeSeatLayoutRoomName = null;
+    const socketBadge = document.getElementById('seatLayoutSocketBadge');
+    if (socketBadge) {
+      socketBadge.classList.add('hidden');
+      socketBadge.classList.remove('inline-flex');
+    }
   }
 
   function handleIncomingSeatSocketEvent(payload) {
@@ -7262,6 +7295,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initSeatLayoutModule() {
+    if (seatLayoutAvailableOnlyToggle) {
+      seatLayoutAvailableOnlyToggle.addEventListener('click', () => {
+        if (typeof toggleAvailableOnlyCoaches === 'function') {
+          toggleAvailableOnlyCoaches();
+        }
+      });
+    }
+
     if (seatLayoutCloseBtn) {
       seatLayoutCloseBtn.addEventListener('click', () => {
         closeSeatLayoutModal();
@@ -7290,6 +7331,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seatLayoutBuyBtn) {
       seatLayoutBuyBtn.addEventListener('click', (e) => {
+        saveExactSeatIntent('buy');
+      });
+    }
+
+    if (seatLayoutBookNowBtn) {
+      seatLayoutBookNowBtn.addEventListener('click', (e) => {
         saveExactSeatIntent('buy');
       });
     }
@@ -7630,17 +7677,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function extractCoachesFromPayload(payload, defaultClass = 'S_CHAIR', fallbackFare = 0) {
     if (!payload) return [];
+    // Strict Live Enforcement: Discard simulated or template status_source layouts
+    if (payload.status_source === 'template' || payload.data?.status_source === 'template') {
+      return [];
+    }
     const root = (payload.data && typeof payload.data === 'object') ? payload.data : payload;
+    if (root.status_source === 'template') {
+      return [];
+    }
 
     const targetTrain = currentSeatLayoutState?.targetTrain || null;
     const resolvedDefaultClass = (defaultClass && defaultClass !== 'ANY' && defaultClass !== 'ALL')
       ? String(defaultClass).toUpperCase().trim()
       : (currentSeatLayoutState?.lastFetchedClass || 'S_CHAIR');
 
-    // 1. If coaches are already normalized, ensure accurate class/fare
+    // 1. If coaches are already normalized, verify they are genuine live coaches and ensure accurate class/fare
     if (Array.isArray(root.coaches) && root.coaches.length > 0) {
-      const coachesList = root.coaches.filter(Boolean);
-      coachesList.forEach(c => {
+      const liveCoaches = root.coaches.filter(c => c && c.status_source !== 'template');
+      liveCoaches.forEach(c => {
         const cClass = resolveAccurateCoachClass(c.coach_name, c.seat_class, targetTrain, resolvedDefaultClass);
         c.seat_class = cClass;
         c.coach_title = `${c.coach_name} (${cClass})`;
@@ -7819,30 +7873,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const departureTime = params.departureTime || targetTrain?.departure_time || targetTrain?.departure_date_time || targetTrain?.start_time || '';
 
-    // 1. Build the real train carriage structure so coaches and seats appear immediately
-    const initialCoaches = buildAccurateTrainCoachLayout(authoritativeTrainName, authoritativeTrainModel, targetClass, {
-      availableSeats: availableSeats,
-      onlineSeats: onlineSeats,
-      counterSeats: counterSeats,
-      fare: fare
-    });
-
-    let initialActiveIdx = 0;
-    if (targetClass && Array.isArray(initialCoaches)) {
-      const idx = initialCoaches.findIndex(c => 
-        (c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))) &&
-        Number(c.available_seats || 0) > 0
-      );
-      if (idx !== -1) {
-        initialActiveIdx = idx;
-      } else {
-        const anyMatch = initialCoaches.findIndex(c => 
-          c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))
-        );
-        if (anyMatch !== -1) initialActiveIdx = anyMatch;
-      }
-    }
-
+    // Live Only Mode: Do NOT display cached or template seats. Wait for 100% verified live Railway data.
     currentSeatLayoutState = {
       trainModel: authoritativeTrainModel,
       trainName: authoritativeTrainName,
@@ -7855,11 +7886,11 @@ document.addEventListener('DOMContentLoaded', () => {
       targetTrain: targetTrain,
       lastFetchedClass: targetClass,
       targetFare: fare,
-      allCoaches: initialCoaches,
-      availableOnly: false,
+      allCoaches: [],
+      availableOnly: true,
       allSoldOut: false,
-      coaches: initialCoaches,
-      activeCoachIndex: initialActiveIdx,
+      coaches: [],
+      activeCoachIndex: 0,
       selectedSeat: null,
       selectedSeats: [],
       isLive: false,
@@ -7878,6 +7909,27 @@ document.addEventListener('DOMContentLoaded', () => {
         seatLayoutStartTime.classList.remove('inline-flex');
       }
     }
+    if (seatLayoutTrainModel) seatLayoutTrainModel.textContent = cleanModel ? `#${cleanModel}` : '#---';
+    if (seatLayoutSubtitle) {
+      const fromDisplay = window.i18n ? window.i18n.getStationName(fromCity) : fromCity;
+      const toDisplay = window.i18n ? window.i18n.getStationName(toCity) : toCity;
+      const dateDisplay = isBn ? window.i18n.toBnNum(journeyDate) : journeyDate;
+      seatLayoutSubtitle.textContent = `${fromDisplay} ➔ ${toDisplay} • ${dateDisplay}`;
+    }
+
+    // Hide badges initially (they'll be controlled in the background fetch)
+    const _liveBadgeInit = document.getElementById('seatLayoutLiveBadge');
+    if (_liveBadgeInit) { _liveBadgeInit.classList.add('hidden'); _liveBadgeInit.classList.remove('inline-flex'); }
+
+    if (seatLayoutClassBadge) {
+      if (targetClass) {
+        seatLayoutClassBadge.textContent = window.i18n ? window.i18n.getSeatClassName(targetClass) : targetClass;
+        seatLayoutClassBadge.classList.remove('hidden');
+      } else {
+        seatLayoutClassBadge.classList.add('hidden');
+      }
+    }
+
     updateSeatLayoutBookNowButton();
 
     if (seatLayoutModal) seatLayoutModal.classList.remove('hidden');
@@ -7892,6 +7944,17 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSeatLayoutCoachTabs();
     renderActiveCoachCarriage();
 
+    // Show "fetching live layout" indicator in modal
+    const liveSearchingBadge = document.getElementById('seatLayoutSearchingBadge');
+    const seatLiveBadge = document.getElementById('seatLayoutLiveBadge');
+    if (liveSearchingBadge) {
+      liveSearchingBadge.classList.remove('hidden');
+      liveSearchingBadge.classList.add('inline-flex');
+    }
+    if (seatLiveBadge) {
+      seatLiveBadge.classList.add('hidden');
+      seatLiveBadge.classList.remove('inline-flex');
+    }
     // Track the in-flight request in state so the badge sync owns the spinner
     // and can always clear it, including on error.
     currentSeatLayoutState.fetching = true;
@@ -7947,7 +8010,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fare: fare !== null ? fare : '',
         trip_id: tripId || '',
         trip_route_id: tripRouteId || '',
-        no_cache: '1'
+        no_cache: '1',
+        live_only: '1'
       }).toString();
 
       let json = null;
@@ -7966,7 +8030,8 @@ document.addEventListener('DOMContentLoaded', () => {
           trip_id: tripId || '',
           trip_route_id: tripRouteId || '',
           cft_response: cft || '',
-          no_cache: true
+          no_cache: true,
+          live_only: true
         };
         const liveRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
           method: 'POST',
@@ -7988,9 +8053,10 @@ document.addEventListener('DOMContentLoaded', () => {
             available_seats: availableSeats !== null ? availableSeats : '',
             fare: fare !== null ? fare : '',
             cft_response: cft || '',
-            no_cache: true
+            no_cache: true,
+            live_only: true
           };
-          const directRes = await fetch('/api/seat-layout?no_cache=1', {
+          const directRes = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(directPayload)
@@ -8071,6 +8137,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('[SeatLayout] parallel seat-layout fetch error:', e.message);
       }
 
+      // Hide "searching" indicator
+      if (liveSearchingBadge) {
+        liveSearchingBadge.classList.add('hidden');
+        liveSearchingBadge.classList.remove('inline-flex');
+      }
       if (currentSeatLayoutState) currentSeatLayoutState.fetching = false;
 
       // Render layout whenever authentic coaches were returned (handles both normalized json.data.coaches and raw Shohoz json.data.seatLayout)
@@ -8131,6 +8202,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentSeatLayoutState.activeCoachIndex = targetIdx;
 
+        // Show live badge if official Railway server returned real data
+        if (seatLiveBadge) {
+          if (json.live) {
+            seatLiveBadge.classList.remove('hidden');
+            seatLiveBadge.classList.add('inline-flex');
+          } else {
+            seatLiveBadge.classList.add('hidden');
+            seatLiveBadge.classList.remove('inline-flex');
+          }
+        }
+
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
         syncSeatLayoutSourceBadges();
@@ -8145,6 +8227,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.warn('[SeatLayout] Background live-coach-layout error:', err);
+      if (liveSearchingBadge) {
+        liveSearchingBadge.classList.add('hidden');
+        liveSearchingBadge.classList.remove('inline-flex');
+      }
       if (currentSeatLayoutState) {
         currentSeatLayoutState.fetching = false;
         currentSeatLayoutState.error = err.message;
@@ -8161,6 +8247,11 @@ document.addEventListener('DOMContentLoaded', () => {
   async function fetchClassLiveSeatLayout(coachClass) {
     if (!currentSeatLayoutState) return;
     const cleanClass = (coachClass || '').toUpperCase();
+    const liveSearchBadge = document.getElementById('seatLayoutSearchingBadge');
+    const liveB = document.getElementById('seatLayoutLiveBadge');
+
+    if (liveSearchBadge) { liveSearchBadge.classList.remove('hidden'); liveSearchBadge.classList.add('inline-flex'); }
+    if (liveB) { liveB.classList.add('hidden'); liveB.classList.remove('inline-flex'); }
     currentSeatLayoutState.fetching = true;
     syncSeatLayoutSourceBadges();
 
@@ -8197,10 +8288,11 @@ document.addEventListener('DOMContentLoaded', () => {
           trip_id: st?.trip_id || currentSeatLayoutState.tripId || '',
           trip_route_id: st?.trip_route_id || currentSeatLayoutState.tripRouteId || '',
           cft_response: cft || '',
+          live_only: true,
           no_cache: true
         };
         try {
-          const res = await fetch('/api/live-coach-layout?no_cache=1', {
+          const res = await fetch('/api/live-coach-layout?live_only=1&no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(livePayload)
@@ -8221,10 +8313,11 @@ document.addEventListener('DOMContentLoaded', () => {
             available_seats: totalAvail !== null ? totalAvail : '',
             fare: totalFare !== null ? totalFare : '',
             cft_response: cft || '',
+            live_only: true,
             no_cache: true
           };
           try {
-            const res = await fetch('/api/seat-layout?no_cache=1', {
+            const res = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
               method: 'POST',
               headers: { ...headers, 'Content-Type': 'application/json' },
               body: JSON.stringify(fallbackPayload)
@@ -8233,6 +8326,8 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (e) {}
         }
       }
+
+      if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
 
       // Render layout whenever authentic coaches were returned (handles both normalized coaches and raw Shohoz seatLayout)
       const extractedCoaches = extractCoachesFromPayload(json, cleanClass, totalFare || 0);
@@ -8257,6 +8352,15 @@ document.addEventListener('DOMContentLoaded', () => {
           currentSeatLayoutState.tripId = json.trip_id;
           currentSeatLayoutState.tripRouteId = json.trip_route_id;
         }
+        if (liveB) {
+          if (currentSeatLayoutState.isLive) {
+            liveB.classList.remove('hidden');
+            liveB.classList.add('inline-flex');
+          } else {
+            liveB.classList.add('hidden');
+            liveB.classList.remove('inline-flex');
+          }
+        }
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
         syncSeatLayoutSourceBadges();
@@ -8269,6 +8373,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       console.warn('[SeatLayout] Coach class live-coach-layout fetch error:', e.message);
+      if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
       if (currentSeatLayoutState) {
         currentSeatLayoutState.isLive = false;
         renderActiveCoachCarriage();
@@ -8289,7 +8394,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // official per-seat endpoint; a rake that mixes live and template coaches is
   // still not fully live, and saying otherwise would misrepresent the data.
   function syncSeatLayoutSourceBadges() {
-    // Layout state sync hook
+    const isBn = window.i18n && window.i18n.getLang() === 'bn';
+    const st = currentSeatLayoutState || {};
+    const coaches = st.coaches || [];
+    const allLive = coaches.length > 0 && coaches.every(c => c.status_source === 'official_railway_server' || c.status_source === 'official_railway_mobile_app');
+    const isLive = !!st.isLive && allLive;
+
+    const setBadge = (el, on) => {
+      if (!el) return;
+      el.classList.toggle('hidden', !on);
+      el.classList.toggle('inline-flex', on);
+    };
+
+    setBadge(document.getElementById('seatLayoutLiveBadge'), isLive);
+    setBadge(document.getElementById('seatLayoutTemplateBadge'), !isLive);
+    setBadge(document.getElementById('seatLayoutQuickSyncBtn'), !isLive && !st.fetching);
+    setBadge(document.getElementById('seatLayoutSearchingBadge'), !!st.fetching);
+
+    const isSocketConnected = !!(activeSeatLayoutWebSocket && activeSeatLayoutWebSocket.readyState === WebSocket.OPEN);
+    setBadge(document.getElementById('seatLayoutSocketBadge'), isSocketConnected);
+    const socketBadgeText = document.querySelector('#seatLayoutSocketBadge span:last-child');
+    if (socketBadgeText) {
+      socketBadgeText.textContent = isBn ? 'লাইভ স্ট্রিম' : 'Live Stream';
+    }
+
+    const sub = document.getElementById('seatLayoutSubtitle');
+    if (sub) {
+      if (isLive) {
+        sub.textContent = isBn
+          ? 'লাইভ ক্যারেজ লেআউট — বাংলাদেশ রেলওয়ে শোহোজ API থেকে সরাসরি'
+          : 'Live carriage layout direct from Bangladesh Railway Shohoz API';
+      } else {
+        sub.textContent = isBn
+          ? 'অফিসিয়াল বাংলাদেশ রেলওয়ে বগির কাঠামো — ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে লাইভ সিঙ্ক হচ্ছে'
+          : 'Official Bangladesh Railway coach layout — Auto-syncing live seat status in background';
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -8367,13 +8507,54 @@ document.addEventListener('DOMContentLoaded', () => {
   if (headerQuickSyncBtn) {
     headerQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
   }
+  const seatLayoutQuickSyncBtn = document.getElementById('seatLayoutQuickSyncBtn');
+  if (seatLayoutQuickSyncBtn) {
+    seatLayoutQuickSyncBtn.addEventListener('click', () => triggerOneSecondQuickSync());
+  }
 
   function renderSeatLayoutCoachTabs() {
     const isBn = window.i18n && window.i18n.getLang() === 'bn';
     const coaches = currentSeatLayoutState?.coaches || [];
     const allCoaches = currentSeatLayoutState?.allCoaches || coaches;
+    const isAvailOnly = currentSeatLayoutState?.availableOnly !== false;
 
     syncSeatLayoutSourceBadges();
+
+    // Sync toggle button appearance
+    const availToggle = document.getElementById('seatLayoutAvailableOnlyToggle');
+    const availToggleText = document.getElementById('seatLayoutAvailableOnlyToggleText');
+    if (availToggle && availToggleText) {
+      if (isAvailOnly && allCoaches.length > coaches.length) {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
+        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length}/${allCoaches.length})`;
+        availToggle.title = isBn ? 'সকল বগি দেখতে ক্লিক করুন' : 'Click to show all coaches';
+      } else if (!isAvailOnly) {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:opacity-90 transition cursor-pointer';
+        availToggleText.textContent = isBn ? `সকল বগি (${allCoaches.length})` : `All Coaches (${allCoaches.length})`;
+        availToggle.title = isBn ? 'শুধু খালি বগি দেখতে ক্লিক করুন' : 'Click to show only coaches with available seats';
+      } else {
+        availToggle.className = 'inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:opacity-90 transition cursor-pointer shadow-xs';
+        availToggleText.textContent = isBn ? `শুধু খালি বগি (${coaches.length})` : `Available Only (${coaches.length})`;
+      }
+    }
+
+    if (seatLayoutCoachesSummary) {
+      // Only total up availability the server actually reported. Unknown
+      // coaches are counted separately instead of being read as zero.
+      const known = coaches.filter(c => c.available_seats !== null && c.available_seats !== undefined);
+      const totalAvail = known.reduce((sum, c) => sum + Number(c.available_seats || 0), 0);
+      const totalSeats = coaches.reduce((sum, c) => sum + Number(c.total_seats || 0), 0);
+      const arr = isBn ? window.i18n.toBnNum : (v) => v;
+      if (isAvailOnly && allCoaches.length > coaches.length) {
+        seatLayoutCoachesSummary.textContent = isBn
+          ? `${arr(coaches.length)}টি খালি বগি (মোট ${arr(allCoaches.length)}) • খালি: ${arr(totalAvail)}টি সিট`
+          : `${coaches.length} Available Coaches (${allCoaches.length} total) • ${totalAvail} seats available`;
+      } else {
+        seatLayoutCoachesSummary.textContent = isBn
+          ? `${arr(coaches.length)}টি বগি • মোট খালি: ${arr(totalAvail)}টি সিট • মোট আসন: ${arr(totalSeats)}`
+          : `${coaches.length} Coaches • ${totalAvail} of ${totalSeats} seats available`;
+      }
+    }
 
     if (!seatLayoutCoachTabs) return;
     const isFetching = !!currentSeatLayoutState?.fetching;
@@ -8443,6 +8624,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  }
+
+  function toggleAvailableOnlyCoaches() {
+    if (!currentSeatLayoutState) return;
+    const all = currentSeatLayoutState.allCoaches || currentSeatLayoutState.coaches || [];
+    currentSeatLayoutState.availableOnly = !currentSeatLayoutState.availableOnly;
+
+    const availableCoaches = all.filter(isCoachAvailable);
+    if (currentSeatLayoutState.availableOnly) {
+      currentSeatLayoutState.coaches = availableCoaches.length > 0 ? availableCoaches : all;
+    } else {
+      currentSeatLayoutState.coaches = all;
+    }
+
+    if (currentSeatLayoutState.activeCoachIndex >= currentSeatLayoutState.coaches.length) {
+      currentSeatLayoutState.activeCoachIndex = 0;
+    }
+    currentSeatLayoutState.selectedSeat = null;
+    currentSeatLayoutState.selectedSeats = [];
+    renderSeatLayoutCoachTabs();
+    renderActiveCoachCarriage();
   }
 
   function buildExactSeatBookingUrl(mode = 'buy') {
@@ -8551,6 +8753,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (seatLayoutHoldBtn) seatLayoutHoldBtn.href = holdUrl;
     if (seatLayoutBuyBtn) seatLayoutBuyBtn.href = buyUrl;
+    if (seatLayoutBookNowBtn) seatLayoutBookNowBtn.href = buyUrl;
+
+    if (seatLayoutAutoBookHint) {
+      seatLayoutAutoBookHint.classList.add('hidden');
+    }
 
     if (!hasSeats) {
       if (seatLayoutHoldText) {
@@ -8559,15 +8766,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (seatLayoutBuyText) {
         seatLayoutBuyText.textContent = isBn ? 'এখনই কিনুন' : 'Buy Now';
       }
+      if (seatLayoutBookNowText) {
+        seatLayoutBookNowText.textContent = isBn ? 'রেলওয়ে সাইটে টিকিট কাটুন' : 'Book on Railway';
+      }
       return;
     }
 
     const fallbackFare = Number(coach?.fare || st.targetFare || 0);
     const totalFare = selectedSeats.reduce((sum, s) => sum + (Number(s.fare) || fallbackFare || 0), 0);
+    const count = selectedSeats.length;
     const coachName = coach?.coach_name || selectedSeats[0]?.coach_name || '';
     const seatNamesOnly = selectedSeats.map(s => s.seat_number ? String(s.seat_number).replace(/^[^-]+-/, '') : s.seat_name);
     const seatNamesJoined = seatNamesOnly.join(', ');
 
+    const countBn = isBn && window.i18n ? window.i18n.toBnNum(count) : count;
     const fareBn = isBn && window.i18n ? window.i18n.toBnNum(totalFare) : totalFare;
     const seatNamesBn = isBn && window.i18n ? window.i18n.toBnNum(seatNamesJoined) : seatNamesJoined;
     const coachBn = isBn && window.i18n ? window.i18n.toBnNum(coachName) : coachName;
@@ -8587,6 +8799,18 @@ document.addEventListener('DOMContentLoaded', () => {
         seatLayoutBuyText.textContent = `Buy Now • ৳${totalFare}`;
       }
     }
+
+    if (seatLayoutBookNowText) {
+      if (isBn) {
+        seatLayoutBookNowText.textContent = `${countBn}টি সিট কাটুন (${coachBn}-${seatNamesBn}) • ৳${fareBn}`;
+      } else {
+        seatLayoutBookNowText.textContent = `Book ${count} Seat${count > 1 ? 's' : ''} (${coachName}-${seatNamesJoined}) • ৳${totalFare}`;
+      }
+    }
+
+    if (seatLayoutAutoBookHintText) {
+      seatLayoutAutoBookHintText.textContent = '';
+    }
   }
 
   function renderActiveCoachCarriage() {
@@ -8594,8 +8818,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = currentSeatLayoutState;
     if (!st || !seatLayoutContent) return;
 
-    // Show full loading spinner only if we don't have any coaches loaded yet
-    if (st.fetching && (!st.coaches || st.coaches.length === 0)) {
+    // Strict Live Enforcement: Show live spinner while fetching and reset banner stats
+    if (st.fetching) {
       if (seatLayoutActiveCoachName) seatLayoutActiveCoachName.textContent = '--';
       if (seatLayoutActiveCoachClass) seatLayoutActiveCoachClass.textContent = st.lastFetchedClass || '--';
       if (seatLayoutActiveTotalCount) seatLayoutActiveTotalCount.textContent = '--';
@@ -8613,15 +8837,15 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="space-y-1.5 max-w-sm">
             <h4 class="font-black text-base text-slate-800 dark:text-white">
-              ${isBn ? 'রেলওয়ে সার্ভার থেকে লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Loading Train Carriage & Seat Layout...'}
+              ${isBn ? 'রেলওয়ে সার্ভার থেকে ১০০% লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map from Railway Server...'}
             </h4>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              ${isBn ? 'বাংলাদেশ রেলওয়ে থেকে আসল বগির লেআউট ও লাইভ আসন লোড হচ্ছে।' : 'Retrieving official Bangladesh Railway coach layout and live seat availability.'}
+              ${isBn ? 'কোনো ক্যাশ বা অনুমানকৃত সিট দেখানো হয় না। শুধুমাত্র বাংলাদেশ রেলওয়ের আসল লাইভ সিট লোড হচ্ছে।' : 'Cached and simulated seat maps are disabled. Loading 100% verified real-time seat availability directly from Bangladesh Railway.'}
             </p>
           </div>
           <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>${isBn ? 'সার্ভার সংযোগ সক্রিয়...' : 'Railway Connection Active...'}</span>
+            <span>${isBn ? 'লাইভ সার্ভার কানেকশন সক্রিয়...' : 'Live Railway Connection Active...'}</span>
           </div>
         </div>
       `;
@@ -8684,6 +8908,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const coachClass = coach.seat_class || 'S_CHAIR';
     const classDisplayName = window.i18n ? window.i18n.getSeatClassName(coachClass) : coachClass;
+    if (seatLayoutClassBadge) seatLayoutClassBadge.textContent = coachClass;
     if (seatLayoutActiveCoachName) seatLayoutActiveCoachName.textContent = coach.coach_name || '--';
     if (seatLayoutActiveCoachClass) seatLayoutActiveCoachClass.textContent = classDisplayName;
 
@@ -12328,6 +12553,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Elements
     const autoBookCountdownTimer = document.getElementById('autoBookCountdownTimer');
+    const autoBookTabNow = document.getElementById('autoBookTabNow');
+    const autoBookTabSchedule = document.getElementById('autoBookTabSchedule');
     const autoBookFromInput = document.getElementById('autoBookFromInput');
     const autoBookFromClearBtn = document.getElementById('autoBookFromClearBtn');
     const autoBookFromDropdown = document.getElementById('autoBookFromDropdown');
@@ -12337,6 +12564,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoBookSwapBtn = document.getElementById('autoBookSwapBtn');
     const autoBookDateInput = document.getElementById('autoBookDateInput');
     const autoBookQuickDateChips = document.getElementById('autoBookQuickDateChips');
+    const autoBookTrainSelect = document.getElementById('autoBookTrainSelect'); // legacy fallback
+    const autoBookClassSelect = document.getElementById('autoBookClassSelect'); // legacy fallback
     const autoBookTrainDropdownContainer = document.getElementById('autoBookTrainDropdownContainer');
     const autoBookTrainDropdownBtn = document.getElementById('autoBookTrainDropdownBtn');
     const autoBookTrainBtnText = document.getElementById('autoBookTrainBtnText');
@@ -12364,6 +12593,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper: returns true if "Buy Now" (auto-proceed to OTP) mode is selected
     function isBuyNowMode() { return !isHoldOnlyMode(); }
 
+    const autoBookModeBanner = document.getElementById('autoBookModeBanner');
+    const autoBookModeBadgeIcon = document.getElementById('autoBookModeBadgeIcon');
+    const autoBookModeIconEl = document.getElementById('autoBookModeIconEl');
+    const autoBookModeTitle = document.getElementById('autoBookModeTitle');
     const autoBookModeTag = document.getElementById('autoBookModeTag');
     const autoBookModeSubtext = document.getElementById('autoBookModeSubtext');
     const autoBookDateBadge = document.getElementById('autoBookDateBadge');
@@ -12673,6 +12906,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectedAutoBookClasses.includes('ANY') || selectedAutoBookClasses.length === 0) {
         autoBookClassBtnText.textContent = isBnLang ? 'যেকোনো ক্লাস (Any Available)' : 'Any Available Class (যেকোনো ক্লাস)';
         if (autoBookClassCountBadge) autoBookClassCountBadge.textContent = isBnLang ? 'সব ক্লাস' : 'Any Class';
+        if (autoBookClassSelect) autoBookClassSelect.value = 'ANY';
       } else {
         const labels = selectedAutoBookClasses.map(c => window.i18n ? window.i18n.getSeatClassName(c) : c);
         autoBookClassBtnText.textContent = labels.join(', ');
@@ -12680,6 +12914,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const count = selectedAutoBookClasses.length;
           autoBookClassCountBadge.textContent = isBnLang ? `${count}টি ক্লাস` : (count === 1 ? '1 Class' : `${count} Classes`);
         }
+        if (autoBookClassSelect) autoBookClassSelect.value = selectedAutoBookClasses[0];
       }
     }
 
@@ -12690,12 +12925,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectedAutoBookTrains.includes('ALL') || selectedAutoBookTrains.length === 0) {
         autoBookTrainBtnText.textContent = isBnLang ? 'যেকোনো ট্রেন (Any Train on Route)' : 'Any Train on Route (যেকোনো ট্রেন)';
         if (autoBookTrainCountBadge) autoBookTrainCountBadge.textContent = isBnLang ? 'সব ট্রেন' : 'Any Train';
+        if (autoBookTrainSelect) autoBookTrainSelect.value = 'ALL';
       } else {
         autoBookTrainBtnText.textContent = selectedAutoBookTrains.join(', ');
         if (autoBookTrainCountBadge) {
           const count = selectedAutoBookTrains.length;
           autoBookTrainCountBadge.textContent = isBnLang ? `${count}টি ট্রেন` : (count === 1 ? '1 Train' : `${count} Trains`);
         }
+        if (autoBookTrainSelect) autoBookTrainSelect.value = selectedAutoBookTrains[0];
       }
     }
 
@@ -13143,6 +13380,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAutoBookActionState();
     }
 
+    if (autoBookTabNow) autoBookTabNow.addEventListener('click', () => setAutoBookMode('now'));
+    if (autoBookTabSchedule) autoBookTabSchedule.addEventListener('click', () => setAutoBookMode('schedule'));
     if (autoBookModeHold) autoBookModeHold.addEventListener('change', () => updateAutoBookActionState());
     if (autoBookModeBuy) autoBookModeBuy.addEventListener('change', () => updateAutoBookActionState());
 
@@ -13153,270 +13392,41 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAutoBookActionState();
     }
 
-    // 8. Auto-Book Activity Console & Telemetry Engine (Mission Control Hub)
-    let cartExpiryInterval = null;
-    let consoleStartTime = null;
-    let consoleElapsedInterval = null;
-    let isConsoleExpanded = false;
-
-    function updateConsolePipeline(stage) {
-      const steps = {
-        scan: document.getElementById('pipelineStepScan'),
-        token: document.getElementById('pipelineStepToken'),
-        hold: document.getElementById('pipelineStepHold'),
-        done: document.getElementById('pipelineStepDone')
-      };
-      const pulseEl = document.getElementById('autoBookRadarPulse');
-
-      const activeClass = 'bg-teal-950/90 text-teal-300 border-teal-600/80 shadow-xs shadow-teal-500/20';
-      const doneClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-600/60';
-      const baseClass = 'bg-slate-900 border-slate-800 text-slate-400';
-
-      Object.values(steps).forEach(s => {
-        if (s) {
-          s.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${baseClass}`;
-          const dot = s.querySelector('.step-dot');
-          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-600 step-dot';
-        }
-      });
-
-      if (pulseEl) {
-        if (stage === 'scan' || stage === 'token' || stage === 'hold') {
-          pulseEl.classList.remove('hidden');
-        } else {
-          pulseEl.classList.add('hidden');
-        }
-      }
-
-      if (stage === 'scan') {
-        if (steps.scan) {
-          steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
-          const dot = steps.scan.querySelector('.step-dot');
-          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400 step-dot';
-        }
-      } else if (stage === 'token') {
-        if (steps.scan) {
-          steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
-          const dot = steps.scan.querySelector('.step-dot');
-          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 step-dot';
-        }
-        if (steps.token) {
-          steps.token.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
-          const dot = steps.token.querySelector('.step-dot');
-          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-teal-400 step-dot';
-        }
-      } else if (stage === 'hold') {
-        if (steps.scan) steps.scan.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
-        if (steps.token) steps.token.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
-        if (steps.hold) {
-          steps.hold.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all animate-pulse ${activeClass}`;
-          const dot = steps.hold.querySelector('.step-dot');
-          if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 step-dot';
-        }
-      } else if (stage === 'done') {
-        Object.values(steps).forEach(s => {
-          if (s) {
-            s.className = `flex items-center gap-1 px-1.5 py-0.5 rounded transition-all ${doneClass}`;
-            const dot = s.querySelector('.step-dot');
-            if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 step-dot';
-          }
-        });
-      }
-    }
-
-    function startCartExpiryCountdown(totalSeconds = 300) {
-      if (cartExpiryInterval) clearInterval(cartExpiryInterval);
-
-      let remaining = totalSeconds;
-      const textEl = document.getElementById('cartExpiryCountdownText');
-      const boxEl = document.getElementById('cartExpiryCountdownBox');
-      const barEl = document.getElementById('cartExpiryProgressBar');
-
-      function render() {
-        const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
-        const secs = (remaining % 60).toString().padStart(2, '0');
-        if (textEl) textEl.textContent = `${mins}:${secs}`;
-
-        const pct = Math.max(0, Math.min(100, (remaining / totalSeconds) * 100));
-        if (barEl) {
-          barEl.style.width = `${pct}%`;
-          if (remaining <= 60) {
-            barEl.className = 'h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-all duration-1000 animate-pulse';
-            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/90 border border-rose-500 text-rose-300 shadow-md shadow-rose-900/30 animate-pulse';
-          } else if (remaining <= 120) {
-            barEl.className = 'h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000';
-            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/90 border border-amber-500 text-amber-300 shadow-xs';
-          } else {
-            barEl.className = 'h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-1000';
-            if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-500/40 text-amber-300 shadow-xs';
-          }
-        }
-
-        if (remaining <= 0) {
-          clearInterval(cartExpiryInterval);
-          if (textEl) textEl.textContent = 'EXPIRED';
-          addConsoleLog('⏳ <b>Cart Hold Expired:</b> 5-minute Shohoz cart lock time has elapsed. Re-scan required.', 'warn');
-        }
-        remaining--;
-      }
-
-      render();
-      cartExpiryInterval = setInterval(render, 1000);
-    }
-
-    function stopCartExpiryCountdown() {
-      if (cartExpiryInterval) {
-        clearInterval(cartExpiryInterval);
-        cartExpiryInterval = null;
-      }
-      const textEl = document.getElementById('cartExpiryCountdownText');
-      const barEl = document.getElementById('cartExpiryProgressBar');
-      const boxEl = document.getElementById('cartExpiryCountdownBox');
-      if (textEl) textEl.textContent = '05:00';
-      if (barEl) {
-        barEl.style.width = '100%';
-        barEl.className = 'h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full transition-all duration-1000';
-      }
-      if (boxEl) boxEl.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-500/40 text-amber-300 shadow-xs';
-    }
-
-    function startConsoleStopwatch() {
-      if (!consoleStartTime) consoleStartTime = Date.now();
-      if (!consoleElapsedInterval) {
-        consoleElapsedInterval = setInterval(() => {
-          const el = document.getElementById('autoBookConsoleTimeElapsed');
-          if (el && consoleStartTime) {
-            const secs = Math.floor((Date.now() - consoleStartTime) / 1000);
-            const m = Math.floor(secs / 60).toString().padStart(2, '0');
-            const s = (secs % 60).toString().padStart(2, '0');
-            el.textContent = `${m}:${s}`;
-          }
-        }, 1000);
-      }
-    }
-
-    function resetConsoleStopwatch() {
-      if (consoleElapsedInterval) clearInterval(consoleElapsedInterval);
-      consoleElapsedInterval = null;
-      consoleStartTime = null;
-      const el = document.getElementById('autoBookConsoleTimeElapsed');
-      if (el) el.textContent = '00:00';
-    }
-
-    // Clear Console Logs Button
+    // 8. Console Logging Helper
     const autoBookConsoleClearBtn = document.getElementById('autoBookConsoleClearBtn');
     if (autoBookConsoleClearBtn) {
       autoBookConsoleClearBtn.addEventListener('click', () => {
         if (autoBookConsoleLogs) autoBookConsoleLogs.innerHTML = '';
         const banner = document.getElementById('autoBookGrabbedBanner');
         if (banner) banner.classList.add('hidden');
-        stopCartExpiryCountdown();
-        resetConsoleStopwatch();
-        updateConsolePipeline('idle');
-        const counterEl = document.getElementById('autoBookConsoleAttemptCounter');
-        if (counterEl) counterEl.textContent = 'Attempts: 0';
-        const promptEl = document.getElementById('autoBookConsoleFootPrompt');
-        if (promptEl) promptEl.textContent = 'Terminal stream reset';
-      });
-    }
-
-    // Copy Logs Button
-    const autoBookConsoleCopyBtn = document.getElementById('autoBookConsoleCopyBtn');
-    if (autoBookConsoleCopyBtn) {
-      autoBookConsoleCopyBtn.addEventListener('click', async () => {
-        if (!autoBookConsoleLogs) return;
-        const text = autoBookConsoleLogs.innerText;
-        if (!text.trim()) {
-          showToast(isBn() ? 'লগ খালি।' : 'Console log is empty.', 'info');
-          return;
-        }
-        try {
-          await navigator.clipboard.writeText(text);
-          showToast(isBn() ? '📋 কনসোল লগ কপি করা হয়েছে!' : '📋 Console logs copied to clipboard!', 'success');
-        } catch (e) {
-          showToast('Failed to copy logs', 'error');
-        }
-      });
-    }
-
-    // Expand / Collapse Height Button
-    const autoBookConsoleExpandBtn = document.getElementById('autoBookConsoleExpandBtn');
-    const autoBookConsoleExpandIcon = document.getElementById('autoBookConsoleExpandIcon');
-    if (autoBookConsoleExpandBtn) {
-      autoBookConsoleExpandBtn.addEventListener('click', () => {
-        isConsoleExpanded = !isConsoleExpanded;
-        if (autoBookConsoleLogs) {
-          if (isConsoleExpanded) {
-            autoBookConsoleLogs.classList.remove('max-h-56');
-            autoBookConsoleLogs.classList.add('max-h-96');
-            if (autoBookConsoleExpandIcon) autoBookConsoleExpandIcon.className = 'fa-solid fa-down-left-and-up-right-to-center text-[9px] text-teal-400';
-          } else {
-            autoBookConsoleLogs.classList.remove('max-h-96');
-            autoBookConsoleLogs.classList.add('max-h-56');
-            if (autoBookConsoleExpandIcon) autoBookConsoleExpandIcon.className = 'fa-solid fa-up-right-and-down-left-from-center text-[9px]';
-          }
-        }
       });
     }
 
     function addConsoleLog(msg, type = 'info') {
       if (!autoBookConsoleBox || !autoBookConsoleLogs) return;
       autoBookConsoleBox.classList.remove('hidden');
-      startConsoleStopwatch();
       const time = new Date().toLocaleTimeString();
 
       let colorClass = 'text-slate-300';
-      let badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-900 text-slate-400 border border-slate-800 shrink-0">LOG</span>';
+      let icon = '<i class="fa-solid fa-angle-right text-[9px] text-slate-500 mt-0.5"></i>';
+      let badge = '';
 
-      const lower = msg.toLowerCase();
-      if (lower.includes('100% success') || lower.includes('secured') || type === 'success') {
+      if (type === 'success') {
         colorClass = 'text-emerald-300 font-semibold';
-        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 shadow-xs shadow-emerald-500/20 shrink-0">OK</span>';
-        updateConsolePipeline('done');
-      } else if (lower.includes('radar active') || lower.includes('executing 1-tap') || lower.includes('scanning')) {
-        colorClass = 'text-teal-300';
-        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-teal-950 text-teal-300 border border-teal-800 shadow-xs shadow-teal-500/20 shrink-0">RADAR</span>';
-        updateConsolePipeline('scan');
-      } else if (lower.includes('turnstile') || lower.includes('token')) {
-        colorClass = 'text-purple-300';
-        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-800 shrink-0">TOKEN</span>';
-        updateConsolePipeline('token');
-      } else if (lower.includes('locked in cart') || lower.includes('holding in cart')) {
-        colorClass = 'text-amber-300';
-        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-800 shrink-0">HOLD</span>';
-        updateConsolePipeline('hold');
+        icon = '<i class="fa-solid fa-circle-check text-xs text-emerald-400 mt-0.5"></i>';
+        badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">OK</span>';
       } else if (type === 'warn') {
         colorClass = 'text-amber-300';
+        icon = '<i class="fa-solid fa-triangle-exclamation text-xs text-amber-400 mt-0.5"></i>';
         badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-800 shrink-0">WAIT</span>';
       } else if (type === 'error') {
         colorClass = 'text-rose-300 font-bold';
+        icon = '<i class="fa-solid fa-circle-xmark text-xs text-rose-400 mt-0.5"></i>';
         badge = '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-950 text-rose-300 border border-rose-800 shrink-0">ERR</span>';
       }
 
-      // Update terminal prompt footer
-      const promptEl = document.getElementById('autoBookConsoleFootPrompt');
-      if (promptEl) {
-        const plainText = msg.replace(/<[^>]*>/g, '').trim();
-        promptEl.textContent = plainText.length > 50 ? plainText.substring(0, 47) + '...' : plainText;
-      }
-
-      // Update telemetry route if visible
-      const fromVal = (autoBookFromInput?.value || document.getElementById('fromInput')?.value || '').trim();
-      const toVal = (autoBookToInput?.value || document.getElementById('toInput')?.value || '').trim();
-      const telemRoute = document.getElementById('autoBookTelemetryRoute');
-      if (telemRoute && fromVal && toVal) {
-        telemRoute.textContent = `${fromVal} ➔ ${toVal}`;
-      }
-
-      // Update attempt counter if attempt text detected
-      const attemptMatch = msg.match(/Attempt #(\d+)/i) || msg.match(/attempt #(\d+)/i);
-      if (attemptMatch) {
-        const counterEl = document.getElementById('autoBookConsoleAttemptCounter');
-        if (counterEl) counterEl.textContent = `Attempts: ${attemptMatch[1]}`;
-      }
-
       const line = document.createElement('div');
-      line.className = `pt-1.5 pb-1.5 flex items-start gap-2.5 ${colorClass} hover:bg-slate-900/40 rounded px-1 transition-colors`;
+      line.className = `pt-1 pb-1 flex items-start gap-2 ${colorClass}`;
       line.innerHTML = `
         <span class="text-slate-500 text-[10px] select-none shrink-0 font-mono">[${time}]</span>
         ${badge}
@@ -14410,9 +14420,6 @@ document.addEventListener('DOMContentLoaded', () => {
           addConsoleLog(`[3/3] ⏳ <b>LOCKED IN CART FOR ~5 MINUTES!</b> Complete payment before the timer expires.`, 'warn');
           addConsoleLog(`[3/3] 📱 <b>Telegram Alert Dispatched:</b> Instant notification with 1-tap checkout button sent to your phone!`, 'info');
 
-          // Start 5-minute Cart Expiry Countdown Timer
-          startCartExpiryCountdown(det.expiresInSeconds || 300);
-
           // Highlight Banner inside Activity Console
           const grabBanner = document.getElementById('autoBookGrabbedBanner');
           if (grabBanner) {
@@ -14426,65 +14433,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clVal) clVal.textContent = det.seatClass || grabPayload.seat_class;
             if (sVal) sVal.textContent = seatsStr;
             if (tBadge) tBadge.textContent = displayTrainName;
-
-            const tIds = det.ticketIds || (det.ticketId ? [det.ticketId] : []);
-            const rId = det.tripRouteId || det.routeId;
-            let releaseBtnHtml = '';
-            if (tIds.length && rId) {
-              releaseBtnHtml = `
-                <button type="button" id="autoBookReleaseSeatBtn" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-950/80 hover:text-rose-300 text-slate-300 border border-slate-700 hover:border-rose-700/60 font-bold text-xs transition cursor-pointer" title="Release seat back to Railway inventory">
-                  <i class="fa-solid fa-lock-open text-[10px]"></i>
-                  <span>Release</span>
-                </button>
-              `;
-            }
-
             if (linkBox) {
-              linkBox.innerHTML = `
-                <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer hover:scale-[1.02] active:scale-95">💳 Pay Now (Checkout)</a>
-                ${releaseBtnHtml}
-              `;
-
-              const relBtn = document.getElementById('autoBookReleaseSeatBtn');
-              if (relBtn) {
-                relBtn.addEventListener('click', async () => {
-                  relBtn.disabled = true;
-                  relBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Releasing...';
-                  try {
-                    const relRes = await fetch('/api/seat-release', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ticket_ids: tIds, route_id: rId })
-                    });
-                    const relData = await relRes.json();
-                    if (relRes.ok && relData.success) {
-                      stopCartExpiryCountdown();
-                      addConsoleLog('[3/3] 🔓 <b>Held seat successfully released</b> back into Railway inventory.', 'info');
-                      showToast('Held seat released successfully.', 'info');
-                      if (grabBanner) grabBanner.classList.add('hidden');
-                      if (autoBookConsoleStatus) {
-                        autoBookConsoleStatus.textContent = 'Released';
-                        autoBookConsoleStatus.className = 'px-2.5 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700';
-                      }
-                      updateConsolePipeline('idle');
-                    } else {
-                      showToast(relData.error || 'Failed to release seat', 'error');
-                      relBtn.disabled = false;
-                      relBtn.innerHTML = '<i class="fa-solid fa-lock-open text-[10px]"></i> Release';
-                    }
-                  } catch (e) {
-                    showToast('Failed to release seat: ' + e.message, 'error');
-                    relBtn.disabled = false;
-                    relBtn.innerHTML = '<i class="fa-solid fa-lock-open text-[10px]"></i> Release';
-                  }
-                });
-              }
+              linkBox.innerHTML = `<a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow transition cursor-pointer">💳 Pay Now (Checkout)</a>`;
             }
           }
 
           if (autoBookConsoleStatus) {
             autoBookConsoleStatus.textContent = 'Held in Cart! 🛒';
-            autoBookConsoleStatus.className = 'px-2.5 py-0.5 rounded-full bg-emerald-950/90 text-[10px] font-bold text-emerald-300 border border-emerald-600/60 shadow-xs shadow-emerald-500/20 animate-pulse';
+            autoBookConsoleStatus.className = 'px-2 py-0.5 rounded-full bg-emerald-900/80 text-[10px] font-bold text-emerald-300 border border-emerald-700 animate-pulse';
           }
 
           if (autoBookSoundAlarmToggle && autoBookSoundAlarmToggle.checked) {

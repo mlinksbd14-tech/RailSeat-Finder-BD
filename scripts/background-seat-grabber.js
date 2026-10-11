@@ -1,16 +1,14 @@
 /**
  * scripts/background-seat-grabber.js
  * 
- * High-Speed Dual-Method Background Seat Grabber Engine
+ * High-Speed Direct Official API Background Seat Grabber Engine
  * 
- * Method 1: Pure Headless HTTP API Grab (Ultra-fast, ~200ms)
- * Method 2: Headless Browser Grabber (Puppeteer / Chromium Worker, ~2-3s)
+ * Method: Pure Headless HTTP API Grab (Ultra-fast, ~200ms)
  * 
  * Strategy:
- * 1. Tries Method 1 (Direct API Gateway) first for speed.
- * 2. If Turnstile / SSDK challenge fails, automatically cascades to Method 2 (Puppeteer).
- * 3. Locks seat in user's official Railway cart for 5 minutes.
- * 4. Delivers instant Telegram notification with 5-minute countdown and direct checkout link.
+ * 1. Uses Direct Official API Gateway for sub-second seat holding.
+ * 2. Locks seat in user's official Railway cart for 5 minutes.
+ * 3. Delivers instant Telegram notification with 5-minute countdown and direct checkout link.
  */
 
 const fs = require('fs');
@@ -471,137 +469,13 @@ async function grabSeatsViaApi(target, session) {
   return { success: false, reason: `Railway API rejected hold: ${combinedError}` };
 }
 
-// ---------------------------------------------------------------------------
-// METHOD 2: Headless Browser Grabber (Playwright / Chromium) (~1-2s)
-// ---------------------------------------------------------------------------
-
-async function grabSeatsViaPlaywright(target, session) {
-  console.log(`[Grabber:Method2] 🌐 Launching Headless Playwright Chrome Worker for ${target.trainName || 'Train'}...`);
-
-  let chromium;
-  try {
-    chromium = require('playwright').chromium;
-  } catch (e) {
-    return { success: false, reason: 'Playwright is not installed. Run: npm install playwright' };
-  }
-
-  const fromCity = target.fromCity || target.from || 'Dhaka';
-  const toCity = target.toCity || target.to || 'Chittagong';
-  const dojFormatted = formatShohozDoj(target.date || target.journeyDate || target.doj);
-  const seatClass = target.seatClass || target.className || 'S_CHAIR';
-  const coachParam = target.coach ? `&coach=${encodeURIComponent(target.coach)}&exact_coach=1` : '';
-  const seatsParam = target.seats && target.seats.length > 0 ? `&seats=${encodeURIComponent(target.seats.join(','))}` : '';
-  const countParam = target.seatsCount ? `&seats_count=${target.seatsCount}` : '&seats_count=1';
-
-  const autobookUrl = `https://eticket.railway.gov.bd/booking/train/search?fromcity=${encodeURIComponent(fromCity)}&tocity=${encodeURIComponent(toCity)}&doj=${encodeURIComponent(dojFormatted)}&class=${encodeURIComponent(seatClass)}${coachParam}${seatsParam}${countParam}&autobook=1&hold_only=1`;
-
-  const launchArgs = [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-blink-features=AutomationControlled',
-    '--window-size=1280,900'
-  ];
-
-  let browser;
-  try {
-    browser = await chromium.launch({ channel: 'chrome', headless: true, args: launchArgs });
-  } catch (err) {
-    browser = await chromium.launch({ headless: true, args: launchArgs });
-  }
-
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-  });
-
-  // Pre-seed session & auto-dismiss Disclaimer popup before page loads
-  await context.addInitScript((sessionData) => {
-    try {
-      sessionStorage.setItem('disclaimer_agreed_for_home', '1');
-      localStorage.setItem('disclaimer_agreed_for_home', '1');
-      if (sessionData && sessionData.token) {
-        localStorage.setItem('token', sessionData.token);
-        localStorage.setItem('railway_token', sessionData.token);
-        localStorage.setItem('uudid', sessionData.deviceId || '34a817c48b87571632d2a7a1d50575a4');
-        localStorage.setItem('ssdk', sessionData.deviceKey || '');
-        if (sessionData.user) localStorage.setItem('user', JSON.stringify(sessionData.user));
-        if (sessionData.deviceId) localStorage.setItem('device_id', sessionData.deviceId);
-        if (sessionData.deviceKey) localStorage.setItem('device_key', sessionData.deviceKey);
-      }
-    } catch (e) {}
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-  }, session);
-
-  const page = await context.newPage();
-  let screenshotPath = null;
-  let seatSelected = false;
-
-  try {
-    console.log(`[Grabber:Method2] 🧭 Navigating to autobook URL: ${autobookUrl}`);
-    await page.goto(autobookUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
-
-    // Auto-dismiss Disclaimer ("I AGREE") if visible
-    const agreeBtn = page.locator('.agree-btn, button.agree-btn, button:has-text("I AGREE")').first();
-    if (await agreeBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await agreeBtn.click().catch(() => {});
-    }
-
-    // Wait for train results
-    await page.waitForSelector('.single-trip-wrapper, .train-name, app-single-trip', { timeout: 15000 }).catch(() => {});
-
-    // Click Book Now button
-    const bookNowBtn = page.locator('button.book-now-btn, button:has-text("BOOK NOW")').first();
-    if (await bookNowBtn.isVisible({ timeout: 4000 }).catch(() => false)) {
-      await bookNowBtn.click().catch(() => {});
-      console.log('[Grabber:Method2] 🖱️ Clicked Book Now button via Playwright');
-    }
-
-    // Wait for seat layout view
-    await page.waitForSelector('.seat-layout-view, app-seat-layout, .seat-plan-wrapper', { timeout: 8000 }).catch(() => {});
-
-    // Select available seat
-    const freeSeat = page.locator('.seat.available, .seat-available, .free-seat, button.btn-seat:not(.seat-booked):not(.seat-disabled)').first();
-    if (await freeSeat.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await freeSeat.click().catch(() => {});
-      seatSelected = true;
-      console.log('[Grabber:Method2] 💺 Seat clicked/selected in DOM via Playwright.');
-    }
-
-    // If seat selected, click Continue Purchase to hold
-    if (seatSelected) {
-      const continueBtn = page.locator('button.continue-btn, #confirmbooking button, button:has-text("CONTINUE PURCHASE")').first();
-      if (await continueBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await continueBtn.click().catch(() => {});
-        console.log('[Grabber:Method2] 🚀 Clicked Continue Purchase to hold seat.');
-        await page.waitForTimeout(2000);
-      }
-    }
-
-    // Capture confirmation screenshot
-    const screenshotDir = path.join(__dirname, '..', 'screenshots');
-    if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
-    screenshotPath = path.join(screenshotDir, `grab_proof_${Date.now()}.png`);
-    await page.screenshot({ path: screenshotPath, fullPage: false });
-
-    const currentUrl = page.url();
-    const isCartHeld = currentUrl.includes('trip-info') || currentUrl.includes('checkout') || seatSelected;
-
-    return {
-      success: !!isCartHeld,
-      reason: isCartHeld ? null : 'No available seats found on page to select',
-      method: 'Headless Browser Playwright (Method 2)',
-      screenshot: screenshotPath,
-      currentUrl: currentUrl,
-      expiresInSeconds: 300
-    };
-
-  } catch (err) {
-    return { success: false, reason: `Playwright grab failed: ${err.message}` };
-  } finally {
-    if (browser) await browser.close().catch(() => {});
-  }
+// Direct API Grabber (Ultra-fast pure HTTP holding)
+async function grabSeatsDirect(target, session) {
+  return grabSeatsViaApi(target, session);
 }
+
+
+
 
 // ---------------------------------------------------------------------------
 // UNIFIED ENGINE: Automatic Method 1 -> Method 2 Cascade
@@ -614,32 +488,11 @@ async function grabSeatsInBackground(target, options = {}) {
   console.log('====================================================');
 
   const session = loadSession(options.session || target.session);
-  const preferredMethod = options.method || 'auto'; // 'auto', 'api', 'playwright', 'puppeteer'
-  let result = null;
-
-  // 1. Attempt Method 1 (Direct API)
-  if (preferredMethod === 'auto' || preferredMethod === 'api') {
-    result = await grabSeatsViaApi(target, session);
-    if (result.success) {
-      console.log('🎉 [Success] Method 1 (Direct API) successfully secured the seats!');
-    } else {
-      console.warn(`⚠️ [Method 1 Failed]: ${result.reason}`);
-    }
-  }
-
-  // 2. Cascade to Method 2 (Playwright) if Method 1 failed or if requested
-  if ((!result || !result.success) && (preferredMethod === 'auto' || preferredMethod === 'playwright' || preferredMethod === 'puppeteer')) {
-    console.log('🔄 Cascading to Method 2 (Headless Playwright Chrome Worker)...');
-    result = await grabSeatsViaPlaywright(target, session);
-    if (result.success) {
-      console.log('🎉 [Success] Method 2 (Playwright) successfully secured the seats!');
-    } else {
-      console.warn(`❌ [Method 2 Failed]: ${result.reason}`);
-    }
-  }
-
-  if (!result) {
-    result = { success: false, reason: 'Both grab methods failed or were disabled.' };
+  const result = await grabSeatsViaApi(target, session);
+  if (result.success) {
+    console.log('🎉 [Success] Direct Official API successfully secured the seats!');
+  } else {
+    console.warn(`⚠️ [Grab Notice]: ${result.reason || 'Could not hold seats'}`);
   }
 
   // 3. Send Telegram Notification if Successful
@@ -672,7 +525,6 @@ async function grabSeatsInBackground(target, options = {}) {
 
 module.exports = {
   grabSeatsViaApi,
-  grabSeatsViaPlaywright,
-  grabSeatsViaPuppeteer: grabSeatsViaPlaywright, // alias for backwards compatibility
+  grabSeatsDirect,
   grabSeatsInBackground
 };

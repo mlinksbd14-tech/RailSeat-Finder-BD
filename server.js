@@ -4907,7 +4907,7 @@ app.all(['/api/bookings/seat-layout', '/api/seat-layout'], async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.2. Direct Live Seat Layout Intake (Fast-Path from Userscript / Playwright)
+// 4.2. Direct Live Seat Layout Intake (Fast-Path from Userscript / Browser Extension)
 // ---------------------------------------------------------------------------
 app.post('/api/seat-layout/save', (req, res) => {
   const { trip_id, trip_route_id, layout, cft_response, seat_class } = req.body;
@@ -7934,7 +7934,7 @@ app.all(['/api/seat-grab', '/api/seat-grab.php'], async (req, res) => {
   };
 
   const options = {
-    method: params.method || 'auto', // 'auto', 'api', 'puppeteer'
+    method: params.method || 'api', // 'api'
     sendTelegramAlert: params.notify !== false,
     session: userSession
   };

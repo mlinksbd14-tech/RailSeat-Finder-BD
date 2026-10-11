@@ -7,8 +7,6 @@
     "start": "node --max-old-space-size=384 server.js",
     "dev": "node --watch server.js",
     "radar:check": "node scripts/runner-radar-automation.js",
-    "playwright:grab": "node scripts/playwright-seatmap-grabber.js",
-    "puppeteer:grab": "node scripts/playwright-seatmap-grabber.js",
     "seat:grab": "node scripts/headless-grab-cli.js",
     "camoufox:token": "python scripts/camoufox-token-worker.py --once",
     "camoufox:daemon": "python scripts/camoufox-daemon.py"
@@ -34,8 +32,6 @@
     "express": "^4.21.2",
     "firebase": "^12.18.0",
     "firebase-admin": "^14.3.0",
-    "playwright": "^1.64.0",
-    "puppeteer": "^25.12.0",
     "web-push": "^3.6.7"
   }
 }

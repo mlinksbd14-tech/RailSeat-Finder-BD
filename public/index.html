@@ -275,6 +275,32 @@
     </div>
 
     <!-- ============================================== -->
+    <!-- 🎛️ DEDICATED SECTION MODE SWITCHER BAR         -->
+    <!-- ============================================== -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-2 sm:p-2.5 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between gap-3 animate-fade-in">
+      <div class="flex items-center space-x-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200/80 dark:border-slate-800/80 w-full sm:w-auto">
+        <button type="button" id="mainTabSeatFinderBtn" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 cursor-pointer">
+          <i class="fa-solid fa-chair text-xs sm:text-sm"></i>
+          <span>Live Seat Finder</span>
+          <span class="hidden sm:inline-block px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-800/80 text-emerald-100 font-mono font-bold">Search</span>
+        </button>
+        <button type="button" id="mainTabAutoBookBtn" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800 cursor-pointer">
+          <i class="fa-solid fa-bolt text-xs sm:text-sm text-amber-500"></i>
+          <span>Auto Book Seat</span>
+          <span class="hidden sm:inline-block px-1.5 py-0.2 rounded-full text-[9px] bg-amber-500/20 text-amber-600 dark:text-amber-300 font-mono font-bold">8 AM Sniper</span>
+        </button>
+      </div>
+
+      <!-- Quick status indicator on the right of banner -->
+      <div class="hidden sm:flex items-center space-x-3 text-xs pr-2">
+        <div class="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-semibold">Shohoz Official Gateway</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
     <!-- 💺 SEAT FINDER SECTION (SEARCH, STATS, RESULTS) -->
     <!-- ============================================== -->
     <div id="seatFinderSection" class="space-y-3.5">
@@ -297,23 +323,34 @@
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" data-i18n="search_hero_desc">Official real-time vacant berths, schedules & automated 24/7 seat release scanner.</p>
         </div>
 
-        <!-- Connected Bangladesh Railway Passenger Profile Card on Dashboard -->
-        <div id="dashboardRailwayProfilePill" class="hidden items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 shadow-xs shrink-0 animate-fade-in">
-          <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
-            <i class="fa-solid fa-id-card-clip"></i>
+        <!-- Quick Corridor Direct Buttons & Railway Profile -->
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <div class="flex flex-wrap items-center gap-1.5 text-xs bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60">
+            <span class="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider px-1">Popular:</span>
+            <button type="button" class="quick-corridor-btn px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 font-semibold transition cursor-pointer text-xs" data-from="Dhaka" data-to="Chattogram">Dhaka ➔ Ctg</button>
+            <button type="button" class="quick-corridor-btn px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 font-semibold transition cursor-pointer text-xs" data-from="Dhaka" data-to="Cox's Bazar">Dhaka ➔ Cox's Bazar</button>
+            <button type="button" class="quick-corridor-btn px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 font-semibold transition cursor-pointer text-xs" data-from="Dhaka" data-to="Sylhet">Dhaka ➔ Sylhet</button>
+            <button type="button" class="quick-corridor-btn px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-600 font-semibold transition cursor-pointer text-xs" data-from="Dhaka" data-to="Rajshahi">Dhaka ➔ Rajshahi</button>
           </div>
-          <div class="min-w-0 pr-1">
-            <div class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Railway Profile</span>
-              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active</span>
+
+          <!-- Connected Bangladesh Railway Passenger Profile Card on Dashboard -->
+          <div id="dashboardRailwayProfilePill" class="hidden items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 shadow-xs shrink-0 animate-fade-in">
+            <div class="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              <i class="fa-solid fa-id-card-clip"></i>
             </div>
-            <p id="dashboardRailName" class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[160px] sm:max-w-[200px] leading-tight">---</p>
-            <p id="dashboardRailPhone" class="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate leading-none mt-0.5">---</p>
+            <div class="min-w-0 pr-1">
+              <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Railway Profile</span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active</span>
+              </div>
+              <p id="dashboardRailName" class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[160px] sm:max-w-[200px] leading-tight">---</p>
+              <p id="dashboardRailPhone" class="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate leading-none mt-0.5">---</p>
+            </div>
+            <button type="button" id="dashboardRailProfileBtn" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer" title="View Official Railway Profile & Session Details">
+              <i class="fa-solid fa-id-card mr-1"></i>Profile
+            </button>
           </div>
-          <button type="button" id="dashboardRailProfileBtn" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer" title="View Official Railway Profile & Session Details">
-            <i class="fa-solid fa-id-card mr-1"></i>Profile
-          </button>
         </div>
       </div>
 

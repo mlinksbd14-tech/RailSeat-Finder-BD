@@ -2435,9 +2435,11 @@
             <i class="fa-regular fa-clock text-[11px] text-slate-400"></i>
             <span id="seatLayoutStartTimeText">--:--</span>
           </span>
-          <!-- Hidden socket badge kept for JS compatibility -->
-          <span id="seatLayoutSocketBadge" class="hidden" aria-hidden="true">
-            <span id="seatLayoutSocketBadgeText"></span>
+          <!-- Socket Live Streaming Badge -->
+          <span id="seatLayoutSocketBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shrink-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="seatLayoutSocketBadgeText">Live Stream</span>
+            <span id="seatLayoutLiveUsersBadge" class="hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold ml-0.5"></span>
           </span>
         </div>
         
@@ -2489,6 +2491,15 @@
           <span class="text-slate-500 dark:text-slate-400">Fare: </span>
           <span id="seatLayoutActiveFare" class="font-black font-mono text-sm sm:text-base text-emerald-600 dark:text-emerald-400">--</span>
         </div>
+      </div>
+
+      <!-- Real-Time WebSocket Seat Event Banner (Held / Released Flash Notification) -->
+      <div id="seatLayoutLiveEventBanner" class="hidden px-4 py-2 border-b transition-all duration-300 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="seatLayoutLiveEventIcon" class="text-base shrink-0"></span>
+          <span id="seatLayoutLiveEventMsg" class="truncate font-bold"></span>
+        </div>
+        <div id="seatLayoutLiveEventAction" class="shrink-0"></div>
       </div>
 
       <!-- Carriage Body Canvas -->

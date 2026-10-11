@@ -15,6 +15,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const isRender = !!(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_INSTANCE_ID);
+const isVercel = !!(process.env.VERCEL || process.env.NOW_REGION);
+const isLowMemory = isRender || isVercel || process.env.DISABLE_LOCAL_BROWSER === 'true' || process.env.LOW_MEMORY === 'true';
+
 let cachedToken = null;
 let cachedTimestamp = 0;
 let ongoingSolvePromise = null;
@@ -81,6 +85,31 @@ async function solveTurnstileToken(force = false, journeyDate = '') {
     if (existing) {
       return existing.token;
     }
+  }
+
+  // Refresh from disk if available
+  initFromDisk();
+  const diskFresh = getCachedToken();
+  if (diskFresh && !force) {
+    return diskFresh.token;
+  }
+
+  // In constrained cloud environments (Render 512MB / Vercel), do NOT spawn heavy in-container browser processes
+  if (isLowMemory) {
+    // If an external daemon URL is provided, query it
+    if (process.env.CAMOUFOX_DAEMON_URL) {
+      try {
+        const axios = require('axios');
+        const dRes = await axios.get(`${process.env.CAMOUFOX_DAEMON_URL}/get-token`, { timeout: 5000 });
+        if (dRes.data?.token) {
+          cachedToken = dRes.data.token;
+          cachedTimestamp = Date.now();
+          return cachedToken;
+        }
+      } catch (e) {}
+    }
+    console.log('[Turnstile Auto-Solver] 🛡️ Running in low-memory cloud mode (Render 512MB limit). Skipping local Chromium/Firefox launch to prevent OOM crash.');
+    return cachedToken || (diskFresh ? diskFresh.token : null);
   }
 
   // If a solve is already underway, await that existing promise

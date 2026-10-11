@@ -32,7 +32,13 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const isVercel = !!process.env.VERCEL;
+const isRender = !!(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_INSTANCE_ID);
+const isVercel = !!(process.env.VERCEL || process.env.NOW_REGION);
+const isLowMemory = isRender || isVercel || process.env.DISABLE_LOCAL_BROWSER === 'true' || process.env.LOW_MEMORY === 'true';
+
+if (isLowMemory) {
+  console.log('[Runtime] 🚀 Running in optimized LOW-MEMORY cloud mode (Render 512MB limit / Serverless). In-container headless browsers disabled.');
+}
 
 // On Vercel serverless lambda, the filesystem (/var/task) is read-only.
 // Use /tmp for writable storage while reading initial seed data from bundled directories.
@@ -653,6 +659,11 @@ let isTurnstileKeeperSolving = false;
 let lastTurnstileKeeperRun = 0;
 
 async function runBackgroundTurnstileKeeper(force = false) {
+  if (isLowMemory) {
+    // In low-memory cloud environments (Render 512MB / Vercel), do not spawn in-container browser
+    return;
+  }
+
   if (isTurnstileKeeperSolving) return;
   const now = Date.now();
 
@@ -677,15 +688,16 @@ async function runBackgroundTurnstileKeeper(force = false) {
   }
 }
 
-// Background Keeper Heartbeat: Check every 45 seconds to keep token permanently fresh
-setInterval(() => {
-  runBackgroundTurnstileKeeper(false);
-}, 45000);
+// Background Keeper Heartbeat: Only run if not in low-memory environment
+if (!isLowMemory) {
+  setInterval(() => {
+    runBackgroundTurnstileKeeper(false);
+  }, 45000);
 
-// Kick off first keeper cycle 3 seconds after server start
-setTimeout(() => {
-  runBackgroundTurnstileKeeper(false);
-}, 3000);
+  setTimeout(() => {
+    runBackgroundTurnstileKeeper(false);
+  }, 3000);
+}
 
 // Helper to decode rich official profile from Shohoz JWT Token
 function decodeShohozJwtProfile(token) {
@@ -4550,7 +4562,7 @@ app.all('/api/live-coach-layout', async (req, res) => {
       }
 
       // All tokens exhausted — attempt automated background Turnstile solver before falling back
-      if (last422 || allCftTokens.length === 0) {
+      if ((last422 || allCftTokens.length === 0) && !isLowMemory) {
         console.log('[LiveCoachLayout] Turnstile challenged (422). Launching headless background solver...');
         runBackgroundTurnstileKeeper(true);
         try {
@@ -8623,7 +8635,7 @@ function findPythonExecutable() {
 }
 
 async function ensureCamoufoxDaemon() {
-  if (isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
+  if (isLowMemory || isVercel || process.env.AUTO_START_CAMOUFOX_DAEMON === 'false') return;
   if (isSpawningDaemon) return;
 
   const daemonUrl = process.env.CAMOUFOX_DAEMON_URL || 'http://127.0.0.1:5055';
@@ -8682,20 +8694,31 @@ function startServer(portToTry) {
     console.log(` 🛡️ Anti-Bot Protection & Request Throttling: Active`);
     console.log(` 💾 Persistent Session Storage: ${fs.existsSync(SESSION_FILE) ? 'LOADED (Active)' : 'EMPTY'}`);
     console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
-    console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
-    console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);
+    if (isLowMemory) {
+      console.log(` ☁️ Mode: Cloud/Low-Memory Optimized (Render 512MB RAM safe)`);
+      console.log(` 🛡️ Browser Engine: Client-Side / Remote Daemon (Local browser sub-processes disabled)`);
+    } else {
+      console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
+      console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);
+    }
     console.log(` 🎯 24/7 Radar Automation & Telegram Alerts: ACTIVE`);
     console.log(` ⚡ Real-Time WebSocket Seat Sync: ACTIVE`);
-    console.log(` 🚀 Dashboard auto-launching in browser...`);
+    if (!isLowMemory && !isRender && !isVercel && process.env.NODE_ENV !== 'production') {
+      console.log(` 🚀 Dashboard auto-launching in browser...`);
+    }
     console.log(`====================================================`);
 
-    // Ensure Pre-warmed Camoufox daemon is active
-    ensureCamoufoxDaemon();
+    // Ensure Pre-warmed Camoufox daemon is active (only in local environments with sufficient RAM)
+    if (!isLowMemory) {
+      ensureCamoufoxDaemon();
+    }
 
-    // Auto open dashboard in default browser
-    setTimeout(() => {
-      openBrowser(serverUrl);
-    }, 500);
+    // Auto open dashboard in default browser (local dev only)
+    if (!isLowMemory && !isRender && !isVercel && process.env.NODE_ENV !== 'production') {
+      setTimeout(() => {
+        openBrowser(serverUrl);
+      }, 500);
+    }
   });
 
   server.on('error', (err) => {

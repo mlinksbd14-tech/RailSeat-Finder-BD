@@ -11,3 +11,11 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: RENDER
+        value: "true"
+      - key: DISABLE_LOCAL_BROWSER
+        value: "true"
+      - key: LOW_MEMORY
+        value: "true"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=384"

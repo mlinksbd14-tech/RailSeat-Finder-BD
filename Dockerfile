@@ -34,9 +34,13 @@ COPY . .
 # Environment configuration (Render dynamically sets PORT at runtime)
 ENV PORT=10000
 ENV NODE_ENV=production
+ENV RENDER=true
+ENV DISABLE_LOCAL_BROWSER=true
+ENV LOW_MEMORY=true
+ENV NODE_OPTIONS="--max-old-space-size=384"
 ENV PYTHON_PATH=/opt/venv/bin/python3
 EXPOSE 10000
 
-# Start unified Node engine (auto-supervises Camoufox daemon, Turnstile keeper, and Radar)
-CMD ["node", "server.js"]
+# Start unified Node engine with aggressive GC to keep RAM strictly within 512MB
+CMD ["node", "--max-old-space-size=384", "server.js"]
 

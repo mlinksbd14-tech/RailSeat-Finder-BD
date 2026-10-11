@@ -96,26 +96,7 @@ async function solveTurnstileToken(force = false, journeyDate = '') {
 
   // In constrained cloud environments (Render 512MB / Vercel), do NOT spawn heavy in-container browser processes
   if (isLowMemory) {
-    // 1. If Browserless.io remote cloud browser is available, solve remotely! (~5MB RAM on Render)
-    try {
-      const { isBrowserlessAvailable, solveTurnstileRemote } = require('./browserless-manager');
-      if (isBrowserlessAvailable()) {
-        const remoteToken = await solveTurnstileRemote();
-        if (remoteToken) {
-          cachedToken = remoteToken;
-          cachedTimestamp = Date.now();
-          try {
-            if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-            fs.writeFileSync(TOKEN_FILE, JSON.stringify({ token: remoteToken, timestamp: cachedTimestamp }, null, 2));
-          } catch (e) {}
-          return remoteToken;
-        }
-      }
-    } catch (bErr) {
-      console.warn('[Turnstile Auto-Solver] Browserless remote solve notice:', bErr.message);
-    }
-
-    // 2. If an external daemon URL is provided, query it
+    // If an external daemon URL is provided, query it
     if (process.env.CAMOUFOX_DAEMON_URL) {
       try {
         const axios = require('axios');

@@ -1794,29 +1794,6 @@ app.get('/api/railway-profile', (req, res) => {
   });
 });
 
-// 2e. Browserless.io Remote Cloud Engine Status & Diagnostic API
-app.get('/api/browserless/status', async (req, res) => {
-  try {
-    const { isBrowserlessAvailable, testBrowserlessConnection } = require('./scripts/browserless-manager');
-    const available = isBrowserlessAvailable();
-    const shouldTest = req.query.test === '1' || req.query.test === 'true';
-    let testResult = null;
-    if (shouldTest && available) {
-      testResult = await testBrowserlessConnection();
-    }
-    res.json({
-      success: true,
-      available: available,
-      service: 'Browserless.io Cloud (WebSocket)',
-      ram_impact: 'Ultra-low (~5MB)',
-      render_512mb_safe: true,
-      test: testResult
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // 4. Shohoz Sign-in with Mobile & Password (Web & Mobile with Turnstile Support)
 app.post(['/api/auth/sign-in', '/api/shohoz-signin'], async (req, res) => {
   const { mobile_number, password, cft_response } = req.body;
@@ -8719,12 +8696,7 @@ function startServer(portToTry) {
     console.log(` 📋 Loaded ${stations.length} official Shohoz stations`);
     if (isLowMemory) {
       console.log(` ☁️ Mode: Cloud/Low-Memory Optimized (Render 512MB RAM safe)`);
-      const { isBrowserlessAvailable } = require('./scripts/browserless-manager');
-      if (isBrowserlessAvailable()) {
-        console.log(` 🌐 Remote Browser Engine: BROWSERLESS CLOUD (WebSocket Active, ~5MB RAM)`);
-      } else {
-        console.log(` 🛡️ Browser Engine: Client-Side Relay / Direct API (Local sub-processes disabled)`);
-      }
+      console.log(` 🛡️ Browser Engine: Client-Side / Remote Daemon (Local browser sub-processes disabled)`);
     } else {
       console.log(` 🦊 Pre-warmed Camoufox Daemon: SUPERVISED (Port 5055)`);
       console.log(` 🛡️ 24/7 Turnstile Auto-Solver: ACTIVE`);

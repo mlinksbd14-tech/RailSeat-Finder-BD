@@ -19,5 +19,3 @@ services:
         value: "true"
       - key: NODE_OPTIONS
         value: "--max-old-space-size=384"
-      - key: BROWSERLESS_API_KEY
-        sync: false

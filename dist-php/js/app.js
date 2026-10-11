@@ -7630,24 +7630,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function extractCoachesFromPayload(payload, defaultClass = 'S_CHAIR', fallbackFare = 0) {
     if (!payload) return [];
-    // Strict Live Enforcement: Discard simulated or template status_source layouts
-    if (payload.status_source === 'template' || payload.data?.status_source === 'template') {
-      return [];
-    }
     const root = (payload.data && typeof payload.data === 'object') ? payload.data : payload;
-    if (root.status_source === 'template') {
-      return [];
-    }
 
     const targetTrain = currentSeatLayoutState?.targetTrain || null;
     const resolvedDefaultClass = (defaultClass && defaultClass !== 'ANY' && defaultClass !== 'ALL')
       ? String(defaultClass).toUpperCase().trim()
       : (currentSeatLayoutState?.lastFetchedClass || 'S_CHAIR');
 
-    // 1. If coaches are already normalized, verify they are genuine live coaches and ensure accurate class/fare
+    // 1. If coaches are already normalized, ensure accurate class/fare
     if (Array.isArray(root.coaches) && root.coaches.length > 0) {
-      const liveCoaches = root.coaches.filter(c => c && c.status_source !== 'template');
-      liveCoaches.forEach(c => {
+      const coachesList = root.coaches.filter(Boolean);
+      coachesList.forEach(c => {
         const cClass = resolveAccurateCoachClass(c.coach_name, c.seat_class, targetTrain, resolvedDefaultClass);
         c.seat_class = cClass;
         c.coach_title = `${c.coach_name} (${cClass})`;
@@ -7826,7 +7819,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const departureTime = params.departureTime || targetTrain?.departure_time || targetTrain?.departure_date_time || targetTrain?.start_time || '';
 
-    // Live Only Mode: Do NOT display cached or template seats. Wait for 100% verified live Railway data.
+    // 1. Build the real train carriage structure so coaches and seats appear immediately
+    const initialCoaches = buildAccurateTrainCoachLayout(authoritativeTrainName, authoritativeTrainModel, targetClass, {
+      availableSeats: availableSeats,
+      onlineSeats: onlineSeats,
+      counterSeats: counterSeats,
+      fare: fare
+    });
+
+    let initialActiveIdx = 0;
+    if (targetClass && Array.isArray(initialCoaches)) {
+      const idx = initialCoaches.findIndex(c => 
+        (c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))) &&
+        Number(c.available_seats || 0) > 0
+      );
+      if (idx !== -1) {
+        initialActiveIdx = idx;
+      } else {
+        const anyMatch = initialCoaches.findIndex(c => 
+          c.seat_class === targetClass || (c.coach_title && c.coach_title.toUpperCase().includes(targetClass))
+        );
+        if (anyMatch !== -1) initialActiveIdx = anyMatch;
+      }
+    }
+
     currentSeatLayoutState = {
       trainModel: authoritativeTrainModel,
       trainName: authoritativeTrainName,
@@ -7839,11 +7855,11 @@ document.addEventListener('DOMContentLoaded', () => {
       targetTrain: targetTrain,
       lastFetchedClass: targetClass,
       targetFare: fare,
-      allCoaches: [],
-      availableOnly: true,
+      allCoaches: initialCoaches,
+      availableOnly: false,
       allSoldOut: false,
-      coaches: [],
-      activeCoachIndex: 0,
+      coaches: initialCoaches,
+      activeCoachIndex: initialActiveIdx,
       selectedSeat: null,
       selectedSeats: [],
       isLive: false,
@@ -7931,8 +7947,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fare: fare !== null ? fare : '',
         trip_id: tripId || '',
         trip_route_id: tripRouteId || '',
-        no_cache: '1',
-        live_only: '1'
+        no_cache: '1'
       }).toString();
 
       let json = null;
@@ -7951,8 +7966,7 @@ document.addEventListener('DOMContentLoaded', () => {
           trip_id: tripId || '',
           trip_route_id: tripRouteId || '',
           cft_response: cft || '',
-          no_cache: true,
-          live_only: true
+          no_cache: true
         };
         const liveRes = await fetch(`/api/live-coach-layout?${liveParams}`, {
           method: 'POST',
@@ -7974,10 +7988,9 @@ document.addEventListener('DOMContentLoaded', () => {
             available_seats: availableSeats !== null ? availableSeats : '',
             fare: fare !== null ? fare : '',
             cft_response: cft || '',
-            no_cache: true,
-            live_only: true
+            no_cache: true
           };
-          const directRes = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
+          const directRes = await fetch('/api/seat-layout?no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(directPayload)
@@ -8058,11 +8071,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('[SeatLayout] parallel seat-layout fetch error:', e.message);
       }
 
-      // Hide "searching" indicator
-      if (liveSearchingBadge) {
-        liveSearchingBadge.classList.add('hidden');
-        liveSearchingBadge.classList.remove('inline-flex');
-      }
       if (currentSeatLayoutState) currentSeatLayoutState.fetching = false;
 
       // Render layout whenever authentic coaches were returned (handles both normalized json.data.coaches and raw Shohoz json.data.seatLayout)
@@ -8123,17 +8131,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentSeatLayoutState.activeCoachIndex = targetIdx;
 
-        // Show live badge if official Railway server returned real data
-        if (seatLiveBadge) {
-          if (json.live) {
-            seatLiveBadge.classList.remove('hidden');
-            seatLiveBadge.classList.add('inline-flex');
-          } else {
-            seatLiveBadge.classList.add('hidden');
-            seatLiveBadge.classList.remove('inline-flex');
-          }
-        }
-
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
         syncSeatLayoutSourceBadges();
@@ -8148,10 +8145,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.warn('[SeatLayout] Background live-coach-layout error:', err);
-      if (liveSearchingBadge) {
-        liveSearchingBadge.classList.add('hidden');
-        liveSearchingBadge.classList.remove('inline-flex');
-      }
       if (currentSeatLayoutState) {
         currentSeatLayoutState.fetching = false;
         currentSeatLayoutState.error = err.message;
@@ -8204,11 +8197,10 @@ document.addEventListener('DOMContentLoaded', () => {
           trip_id: st?.trip_id || currentSeatLayoutState.tripId || '',
           trip_route_id: st?.trip_route_id || currentSeatLayoutState.tripRouteId || '',
           cft_response: cft || '',
-          live_only: true,
           no_cache: true
         };
         try {
-          const res = await fetch('/api/live-coach-layout?live_only=1&no_cache=1', {
+          const res = await fetch('/api/live-coach-layout?no_cache=1', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(livePayload)
@@ -8229,11 +8221,10 @@ document.addEventListener('DOMContentLoaded', () => {
             available_seats: totalAvail !== null ? totalAvail : '',
             fare: totalFare !== null ? totalFare : '',
             cft_response: cft || '',
-            live_only: true,
             no_cache: true
           };
           try {
-            const res = await fetch('/api/seat-layout?live_only=1&no_cache=1', {
+            const res = await fetch('/api/seat-layout?no_cache=1', {
               method: 'POST',
               headers: { ...headers, 'Content-Type': 'application/json' },
               body: JSON.stringify(fallbackPayload)
@@ -8242,8 +8233,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (e) {}
         }
       }
-
-      if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
 
       // Render layout whenever authentic coaches were returned (handles both normalized coaches and raw Shohoz seatLayout)
       const extractedCoaches = extractCoachesFromPayload(json, cleanClass, totalFare || 0);
@@ -8268,15 +8257,6 @@ document.addEventListener('DOMContentLoaded', () => {
           currentSeatLayoutState.tripId = json.trip_id;
           currentSeatLayoutState.tripRouteId = json.trip_route_id;
         }
-        if (liveB) {
-          if (currentSeatLayoutState.isLive) {
-            liveB.classList.remove('hidden');
-            liveB.classList.add('inline-flex');
-          } else {
-            liveB.classList.add('hidden');
-            liveB.classList.remove('inline-flex');
-          }
-        }
         renderSeatLayoutCoachTabs();
         renderActiveCoachCarriage();
         syncSeatLayoutSourceBadges();
@@ -8289,7 +8269,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       console.warn('[SeatLayout] Coach class live-coach-layout fetch error:', e.message);
-      if (liveSearchBadge) { liveSearchBadge.classList.add('hidden'); liveSearchBadge.classList.remove('inline-flex'); }
       if (currentSeatLayoutState) {
         currentSeatLayoutState.isLive = false;
         renderActiveCoachCarriage();
@@ -8615,8 +8594,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = currentSeatLayoutState;
     if (!st || !seatLayoutContent) return;
 
-    // Strict Live Enforcement: Show live spinner while fetching and reset banner stats
-    if (st.fetching) {
+    // Show full loading spinner only if we don't have any coaches loaded yet
+    if (st.fetching && (!st.coaches || st.coaches.length === 0)) {
       if (seatLayoutActiveCoachName) seatLayoutActiveCoachName.textContent = '--';
       if (seatLayoutActiveCoachClass) seatLayoutActiveCoachClass.textContent = st.lastFetchedClass || '--';
       if (seatLayoutActiveTotalCount) seatLayoutActiveTotalCount.textContent = '--';
@@ -8634,15 +8613,15 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="space-y-1.5 max-w-sm">
             <h4 class="font-black text-base text-slate-800 dark:text-white">
-              ${isBn ? 'রেলওয়ে সার্ভার থেকে ১০০% লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Fetching 100% Live Seat Map from Railway Server...'}
+              ${isBn ? 'রেলওয়ে সার্ভার থেকে লাইভ সিটম্যাপ আনা হচ্ছে...' : 'Loading Train Carriage & Seat Layout...'}
             </h4>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              ${isBn ? 'কোনো ক্যাশ বা অনুমানকৃত সিট দেখানো হয় না। শুধুমাত্র বাংলাদেশ রেলওয়ের আসল লাইভ সিট লোড হচ্ছে।' : 'Cached and simulated seat maps are disabled. Loading 100% verified real-time seat availability directly from Bangladesh Railway.'}
+              ${isBn ? 'বাংলাদেশ রেলওয়ে থেকে আসল বগির লেআউট ও লাইভ আসন লোড হচ্ছে।' : 'Retrieving official Bangladesh Railway coach layout and live seat availability.'}
             </p>
           </div>
           <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>${isBn ? 'লাইভ সার্ভার কানেকশন সক্রিয়...' : 'Live Railway Connection Active...'}</span>
+            <span>${isBn ? 'সার্ভার সংযোগ সক্রিয়...' : 'Railway Connection Active...'}</span>
           </div>
         </div>
       `;

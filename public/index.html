@@ -978,30 +978,22 @@
     <div id="autoBookSection" class="hidden space-y-4 animate-fade-in">
       
       <!-- Top Header & Live 8:00 AM Countdown -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-black shrink-0">
-            <i class="fa-solid fa-bolt"></i>
-          </div>
-          <div>
-            <h2 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Auto Book Seat</span>
-              <span id="autoBookModeTag" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white">Live</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1"><i class="fa-solid fa-gauge-high text-[9px]"></i> Turbo 1s Scan Active</span>
-            </h2>
-            <p id="autoBookModeSubtext" class="text-xs text-slate-500 dark:text-slate-400">
-              Select journey date to auto-grab available seats with pre-warmed sub-second engine.
-            </p>
-          </div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800">
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <span>Auto Book Seat</span>
+            <span id="autoBookModeTag" class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Live</span>
+          </h2>
+          <p id="autoBookModeSubtext" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Select journey date to auto-grab available seats with pre-warmed sub-second engine.
+          </p>
         </div>
 
-        <!-- 8:00 AM Countdown Pill -->
-        <div class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shrink-0 self-start sm:self-auto">
-          <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
-          <div>
-            <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Next 8 AM Drop</span>
-            <span id="autoBookCountdownTimer" class="font-mono text-xs font-black text-amber-600 dark:text-amber-400">--h --m --s</span>
-          </div>
+        <!-- 8:00 AM Countdown -->
+        <div class="flex items-baseline gap-2 shrink-0 self-start sm:self-auto">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Next drop</span>
+          <span id="autoBookCountdownTimer" class="font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tabular-nums">--:--:--</span>
         </div>
 
         <!-- Hidden compatibility elements to prevent JS breaks -->
@@ -1020,12 +1012,8 @@
 
         <!-- STEP 1: Route & Travel Date -->
         <section class="p-4 sm:p-5 space-y-3.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] flex items-center justify-center">1</span>
-              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Route & Travel Date</span>
-            </div>
-            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 1 of 3</span>
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Route & Travel Date</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1063,7 +1051,7 @@
             <div class="space-y-1">
               <div class="flex items-center justify-between">
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="journey_date">Date</label>
-                <span id="autoBookDateBadge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">⚡ Find Now</span>
+                <span id="autoBookDateBadge" class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Find Now</span>
               </div>
               <input type="date" id="autoBookDateInput" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer" />
               <div class="flex items-center gap-1 pt-1 flex-wrap" id="autoBookQuickDateChips"></div>
@@ -1075,12 +1063,9 @@
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Preferred Train</label>
                 <span id="autoBookTrainCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Train</span>
               </div>
-              <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
-                <span id="autoBookTrainBtnText" class="truncate">Any Train (যেকোনো ট্রেন)</span>
-                <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
-                  <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
-                  <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookTrainChevron"></i>
-                </div>
+              <button type="button" id="autoBookTrainDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-slate-400 dark:hover:border-slate-500 focus:outline-hidden cursor-pointer text-left">
+                <span id="autoBookTrainBtnText" class="truncate">Any Train</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 ml-1.5 shrink-0" id="autoBookTrainChevron"></i>
               </button>
               <div id="autoBookTrainDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
                 <div id="autoBookTrainOptionsList" class="space-y-0.5">
@@ -1093,12 +1078,8 @@
 
         <!-- STEP 2: Class & Seating Preferences -->
         <section class="p-4 sm:p-5 space-y-3.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-extrabold text-[11px] flex items-center justify-center">2</span>
-              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Class & Seat Preferences</span>
-            </div>
-            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 2 of 3</span>
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Class & Seat Preferences</span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1108,12 +1089,9 @@
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Class & Seat Preferences</label>
                 <span id="autoBookClassCountBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400">Any Class</span>
               </div>
-              <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-amber-400 focus:outline-hidden cursor-pointer text-left">
-                <span id="autoBookClassBtnText" class="truncate">Any Class (যেকোনো ক্লাস)</span>
-                <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
-                  <span class="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Multi</span>
-                  <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="autoBookClassChevron"></i>
-                </div>
+              <button type="button" id="autoBookClassDropdownBtn" class="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white flex items-center justify-between hover:border-slate-400 dark:hover:border-slate-500 focus:outline-hidden cursor-pointer text-left">
+                <span id="autoBookClassBtnText" class="truncate">Any Class</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 ml-1.5 shrink-0" id="autoBookClassChevron"></i>
               </button>
               <div id="autoBookClassDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-1.5 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800">
                 <div id="autoBookClassOptionsList" class="space-y-0.5">
@@ -1129,7 +1107,7 @@
                 <span class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">1–4 passengers</span>
               </div>
               <div id="autoBookSeatCountGroup" class="grid grid-cols-4 gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs cursor-pointer">1</button>
+                <button type="button" data-seats="1" class="autobook-seat-count-btn py-2 text-xs font-black rounded-lg transition bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer">1</button>
                 <button type="button" data-seats="2" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">2</button>
                 <button type="button" data-seats="3" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">3</button>
                 <button type="button" data-seats="4" class="autobook-seat-count-btn py-2 text-xs font-bold rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 cursor-pointer">4</button>
@@ -1155,7 +1133,7 @@
           <div id="autoBookKeepTogetherContainer" class="hidden p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 transition-all duration-200">
             <label class="flex items-center justify-between gap-3 cursor-pointer select-none">
               <div class="flex items-center gap-3">
-                <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 cursor-pointer" />
+                <input type="checkbox" id="autoBookKeepTogetherToggle" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-800 cursor-pointer" />
                 <div>
                   <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Keep my group together (seats side by side)</span>
                   <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Picks adjacent seats in the same coach row first</span>
@@ -1168,12 +1146,8 @@
 
         <!-- STEP 3: Booking Action & Options -->
         <section class="p-4 sm:p-5 space-y-3.5 bg-slate-50/50 dark:bg-slate-850/40">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-extrabold text-[11px] flex items-center justify-center">3</span>
-              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Booking Action & Execution</span>
-            </div>
-            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Step 3 of 3</span>
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Booking Action</span>
           </div>
 
           <!-- Compact Hold / Buy Toggle -->
@@ -1181,8 +1155,8 @@
             <!-- Hold Mode -->
             <label class="relative cursor-pointer group" id="autoBookHoldModeLabel">
               <input type="radio" name="autoBookMode" id="autoBookModeHold" value="hold" checked class="sr-only peer" />
-              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-50/70 dark:peer-checked:bg-blue-950/40 transition select-none">
-                <i class="fa-solid fa-hand text-blue-600 dark:text-blue-400 text-sm"></i>
+              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-slate-400 dark:peer-checked:border-slate-500 peer-checked:bg-slate-100 dark:peer-checked:bg-slate-800 transition select-none">
+                <i class="fa-solid fa-hand text-slate-400 text-sm"></i>
                 <div>
                   <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Hold Only</span>
                   <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Selects seat, no OTP</span>
@@ -1192,7 +1166,7 @@
             <!-- Buy Mode -->
             <label class="relative cursor-pointer group" id="autoBookBuyModeLabel">
               <input type="radio" name="autoBookMode" id="autoBookModeBuy" value="buy" class="sr-only peer" />
-              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/70 dark:peer-checked:bg-emerald-950/40 transition select-none">
+              <div class="flex items-center gap-2.5 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 peer-checked:border-emerald-600 peer-checked:bg-emerald-50/60 dark:peer-checked:bg-emerald-950/40 transition select-none">
                 <i class="fa-solid fa-bolt text-emerald-600 dark:text-emerald-400 text-sm"></i>
                 <div>
                   <span class="text-xs font-black text-slate-900 dark:text-white block leading-tight">Buy Now</span>
@@ -1205,7 +1179,7 @@
           <!-- Secondary Switches: Keep Trying & Sound Alarm -->
           <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             <label class="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+                <input type="checkbox" id="autoBookKeepTryingToggle" checked class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
               <div>
                 <span class="font-bold text-slate-700 dark:text-slate-300">Keep Trying (Auto-Retry)</span>
                 <span class="text-[10px] text-slate-400 block sm:inline sm:ml-1">Retries if sold out</span>
@@ -1214,7 +1188,7 @@
 
             <div class="flex items-center justify-between sm:justify-end gap-2">
               <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
+                <input type="checkbox" id="autoBookSoundAlarmToggle" checked class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 cursor-pointer" />
                 <span class="font-bold text-slate-700 dark:text-slate-300">Alarm</span>
               </label>
               <select id="autoBookRingtoneSelect" class="text-[11px] py-0.5 px-1.5 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer" title="Alarm Ringtone Sound">
@@ -1230,19 +1204,19 @@
 
         <!-- Card Footer: Action Buttons -->
         <div class="p-4 sm:p-5 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-          <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs">
-            <i class="fa-solid fa-mobile-screen text-amber-500"></i>
-            <span>📱 Mobile 3-Way Grabber</span>
-            <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase">Setup</span>
-          </button>
-          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <button type="button" id="headlessGrabNowBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-500 hover:to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Directly holds seat in your Railway cart and sends instant Telegram alert to your phone (0% phone CPU/battery)">
-              <i class="fa-solid fa-cloud-arrow-down text-emerald-200" id="headlessGrabNowIcon"></i>
-              <span id="headlessGrabNowText">📱 1-Tap Headless Cart Hold</span>
+            <button type="button" id="openMobileAutoBookSetupBtn" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-slate-200 dark:border-slate-700">
+              <i class="fa-solid fa-mobile-screen text-slate-400"></i>
+              <span>Mobile 3-Way Grabber</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-extrabold uppercase">Setup</span>
             </button>
-            <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs shadow-md shadow-orange-500/20 hover:scale-[1.01] active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+          <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <button type="button" id="headlessGrabNowBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer" title="Directly holds seat in your Railway cart and sends instant Telegram alert to your phone (0% phone CPU/battery)">
+              <i class="fa-solid fa-cloud-arrow-down" id="headlessGrabNowIcon"></i>
+              <span id="headlessGrabNowText">Headless Cart Hold</span>
+            </button>
+            <button type="button" id="autoBookActionBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center space-x-1.5 cursor-pointer">
               <i class="fa-solid fa-bolt" id="autoBookActionIcon"></i>
-              <span id="autoBookActionText">⚡ Check & Open Railway</span>
+              <span id="autoBookActionText">Check & Open Railway</span>
             </button>
           </div>
         </div>
@@ -1252,17 +1226,10 @@
         <!-- Live Activity Console -->
         <div id="autoBookConsoleBox" class="hidden rounded-2xl bg-slate-950 text-slate-100 font-mono text-xs border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
           <!-- Terminal Header Bar -->
-          <div class="flex items-center justify-between px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 text-[11px]">
+          <div class="flex items-center justify-between px-3.5 py-2 bg-slate-900 border-b border-slate-800 text-[11px]">
             <div class="flex items-center gap-2">
-              <div class="flex items-center space-x-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
-              </div>
-              <span class="font-bold text-amber-400 flex items-center gap-1.5 ml-1">
-                <i class="fa-solid fa-terminal text-[10px]"></i>
-                <span>Auto-Book Activity Console</span>
-              </span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+              <span class="font-bold text-slate-300">Activity</span>
             </div>
             <div class="flex items-center gap-2">
               <span id="autoBookConsoleStatus" class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">Idle</span>
@@ -1273,7 +1240,7 @@
           </div>
 
           <!-- Highlight Banner: Grabbed Seat & Class Showcase (Visible upon successful grab) -->
-          <div id="autoBookGrabbedBanner" class="hidden p-3 bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border-b border-emerald-500/30">
+          <div id="autoBookGrabbedBanner" class="hidden p-3 bg-emerald-950/60 border-b border-emerald-800/60">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-base font-black shadow-md shrink-0">
@@ -2516,14 +2483,14 @@
         <div class="flex items-center gap-2 shrink-0">
           <!-- Hold Only Button -->
           <a id="seatLayoutHoldBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-            class="px-3.5 sm:px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-hand text-[11px]"></i>
+            class="px-3.5 sm:px-5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-hand text-[11px] text-slate-400"></i>
             <span id="seatLayoutHoldText">Hold Only</span>
           </a>
 
           <!-- Buy Now Button -->
           <a id="seatLayoutBuyBtn" href="https://eticket.railway.gov.bd" target="_blank" rel="noopener" 
-            class="px-4 sm:px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+            class="px-4 sm:px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
             <i class="fa-solid fa-bolt text-[11px]"></i>
             <span id="seatLayoutBuyText">Buy Now</span>
           </a>
